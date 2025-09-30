@@ -1,0 +1,17 @@
+// PACKAGE/LiBRARY
+PHPMailer
+
+
+// DATABASE CHanges
+ALTER TABLE `usersapp` ADD `username` VARCHAR(100) NULL DEFAULT NULL AFTER `email`;
+ALTER TABLE `usersapp` ADD `password_hash` VARCHAR(255) NULL DEFAULT NULL AFTER `hash_salt_key`;
+ALTER TABLE `usersapp` ADD `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER `password_hash`, ADD `failed_attempts` INT NULL DEFAULT '0' AFTER `created_at`, ADD `last_failed` TIMESTAMP NULL DEFAULT NULL AFTER `failed_attempts`, ADD `lock_until` TIMESTAMP NULL DEFAULT NULL AFTER `last_failed`, ADD `remember_token_hash` VARCHAR(255) NULL DEFAULT NULL AFTER `lock_until`, ADD `remember_token_expires` TIMESTAMP NULL DEFAULT NULL AFTER `remember_token_hash`, ADD `password_salt` VARCHAR(32) NULL DEFAULT NULL AFTER `remember_token_expires`, ADD `reset_token_hash` VARCHAR(255) NULL DEFAULT NULL AFTER `password_salt`, ADD `reset_token_expires` TIMESTAMP NULL DEFAULT NULL AFTER `reset_token_hash`, ADD `mfa_enabled` TINYINT NOT NULL DEFAULT '0' AFTER `reset_token_expires`, ADD `mfa_type` ENUM('totp','sms','email','push') NULL DEFAULT NULL AFTER `mfa_enabled`, ADD `mfa_secret` VARCHAR(255) NULL DEFAULT NULL AFTER `mfa_type`, ADD `mfa_temp_token` VARCHAR(255) NULL DEFAULT NULL AFTER `m[...]
+
+
+
+
+
+
+
+// PHP Mailer কে অন্য পেজ থেকে নিয়ন্ত্রণ/মেইল পাঠানোর সিস্টেম সঠিক করা হয় নাই।
+

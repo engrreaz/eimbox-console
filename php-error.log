@@ -1,0 +1,7 @@
+[18-Sep-2025 03:26:37 Asia/Dhaka] PHP ERROR [2]: Undefined variable $caktus in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\dashboard.php on line 15
+[18-Sep-2025 03:27:55 Asia/Dhaka] PHP ERROR [2]: Undefined variable $caktus in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\dashboard.php on line 15
+[18-Sep-2025 03:29:25 Asia/Dhaka] PHP ERROR [2]: Undefined variable $caktus in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\dashboard.php on line 15
+[18-Sep-2025 03:29:32 Asia/Dhaka] PHP ERROR [2]: Undefined variable $caktus in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\dashboard.php on line 15
+[24-Sep-2025 18:17:09 Asia/Dhaka] PHP ERROR [2]: Undefined variable $email in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\permissions.php on line 12
+[24-Sep-2025 18:17:58 Asia/Dhaka] PHP ERROR [2]: Undefined variable $email in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\permissions.php on line 12
+[24-Sep-2025 18:27:28 Asia/Dhaka] PHP ERROR [2]: Undefined variable $email in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\permissions.php on line 13

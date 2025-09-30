@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Dashboard",
+    "icon": "ti ti-home",
+    "url": "dashboard.html",
+    "category": "Pages"
+  },
+  {
+    "name": "Users",
+    "icon": "ti ti-users",
+    "url": "users-list.html",
+    "category": "Apps"
+  },
+  {
+    "name": "Settings",
+    "icon": "ti ti-settings",
+    "url": "settings.html",
+    "category": "Pages"
+  },
+  {
+    "name": "Profile",
+    "icon": "ti ti-user",
+    "url": "profile.html",
+    "category": "User"
+  },
+  {
+    "name": "Reports",
+    "icon": "ti ti-report",
+    "url": "reports.html",
+    "category": "Analytics"
+  }
+]
