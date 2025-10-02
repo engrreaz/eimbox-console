@@ -14,4 +14,5 @@ ALTER TABLE `usersapp` ADD `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMES
 
 
 // PHP Mailer কে অন্য পেজ থেকে নিয়ন্ত্রণ/মেইল পাঠানোর সিস্টেম সঠিক করা হয় নাই।
-
+যেহেতু ৫মিনিট টাইম। এর পরতো ট্রাই করলোও কাজ হবেনা। সো এড়িয়ে গেলে কোন সমস্যা হওয়ার কথা না। আর OTP এর ক্ষেত্রে অবশ্যই ৩-৫বার এর বেশি একই সময় ট্রাই করার পর ১৫-৩০ মিনিট এর মধ্যে ট্রাই যাতে না করতে পারে সেটা করে দিলে আর কোন সিকিউরিটি ইস্যু থাকার কথা না
+http://localhost/eimbox-dashboard/eimbox-materio/index.php

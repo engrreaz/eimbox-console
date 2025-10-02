@@ -2,6 +2,8 @@
 require_once 'core/init.php';
 
 
+$icon_list = ['house', 'leaf', 'file', 'folder', 'image', 'table'];
+
 $release_colors = [
     0 => "#f8f8f8ff",  // white
     1 => "#808080",  // Gray
@@ -17,13 +19,13 @@ $release_colors = [
 $release_text = [
     0 => "#140202ff",  // white
     1 => "#1a0a0aff",    // Gray
-    2 => "#eccacaff",    // Red
+    2 => "#f5f5f5ff",    // Red
     3 => "#332306ff",    // Orange
     4 => "#1a180dff",    // Yellow
     5 => "#072746ff",    // Blue
-    6 => "#8ea88eff",  // Green
-    7 => "#f1bbf1ff",    // Purple
-    8 => "#c5e9c5ff"   // Dark Green
+    6 => "#ffffffff",  // Green
+    7 => "#e6d8e6ff",    // Purple
+    8 => "#edf0edff"   // Dark Green
 ];
 
 // সব রোল ফেচ
@@ -55,6 +57,7 @@ $files = array_filter(scandir(__DIR__), function ($f) {
 ?>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -97,12 +100,14 @@ $files = array_filter(scandir(__DIR__), function ($f) {
 
 <?php
 echo "<table id='permissionTable' class='table table-bordered table-striped table-hover'>";
-echo "<thead class='table-dark'>
+echo "<thead class='table-dark sticky-top'>
         <tr>
+            <th></th>
             <th>Page Name</th>
             <th>Status</th>
             <th>Module</th>
             <th>Topic</th>
+            <th>Title</th>
             <th>Description</th>";
 foreach ($roles as $role) {
     echo "<th>{$role}</th>";
@@ -110,7 +115,7 @@ foreach ($roles as $role) {
 echo "</tr></thead><tbody>";
 
 foreach ($files as $file) {
-    $stmt = $conn->prepare("SELECT module_name, module_topic, descrip , status_name
+    $stmt = $conn->prepare("SELECT module_name, module_topic, descrip , status_name, nav_title, nav_icon
                             FROM modulemanager 
                             WHERE FIND_IN_SET(?, related_pages)");
     $stmt->bind_param("s", $file);
@@ -119,12 +124,23 @@ foreach ($files as $file) {
 
     $module_name = $data['module_name'] ?? '';
     $topic = $data['module_topic'] ?? '';
+    $title = $data['nav_title'] ?? '';
     $desc = $data['descrip'] ?? '';
     $pg_status = $data['status_name'] ?? 0;
+    $icon = $data['nav_icon'] ?? 'three-dots-vertical';
+    $icon_full = '<i class="bi bi-'.$icon.'"></i>';
+
+
+
+
 
     echo "<tr>";
+    echo "<td><div class='input-group'>
+    <span class='input-group-text'><i class='bi bi-$icon'></i></span>
+    <input type='text' class='form-control inline-input' 
+                     data-field='nav_icon' data-id='{$file}' value='{$icon}'  /></div></td>";
     echo "<td><input type='text' class='form-control inline-input' 
-                     data-field='page_name' data-id='{$file}' value='{$file}' readonly /></td>";
+                     data-field='page_name' data-id='{$file}' value='{$file}' readonly disabled /></td>";
 
 
 
@@ -158,6 +174,8 @@ foreach ($files as $file) {
 
     echo "<td><input type='text' class='form-control inline-input' 
                      data-field='module_topic' data-id='{$file}' value=\"{$topic}\" /></td>";
+     echo "<td><input type='text' class='form-control inline-input' 
+                     data-field='nav_title' data-id='{$file}' value=\"{$title}\" /></td>";
     echo "<td><input type='text' class='form-control inline-input' 
                      data-field='descrip' data-id='{$file}' value=\"{$desc}\" /></td>";
 
@@ -247,6 +265,7 @@ echo "</tbody></table>";
         let id = $(this).data('id');
         let field = $(this).data('field');
         let value = $(this).val();
+        
 
         // status_name সিলেক্ট বক্স হলে background রঙ পরিবর্তন
         if (field === 'status_name') {
@@ -288,6 +307,7 @@ echo "</tbody></table>";
     $(document).on('change', '.perm-select', function () {
         let page = $(this).data('page');
         let role = $(this).data('role');
+        let title = $(this).data('title');
         let perm = $(this).val();
 
         $(this).removeClass("perm-none perm-0 perm-1 perm-2 perm-3");
@@ -300,7 +320,7 @@ echo "</tbody></table>";
 
         $(this).attr('title', tooltipText).tooltip('dispose').tooltip();
 
-        $.post('core/update_permission.php', { page_name: page, userlevel: role, permission: perm }, function (res) {
+        $.post('core/update_permission.php', { page_name: page, userlevel: role, permission: perm, title: title }, function (res) {
             console.log(res);
         });
     });

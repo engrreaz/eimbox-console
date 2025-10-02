@@ -58,7 +58,7 @@ $permission = 3;
 echo "%%" . $status;
 echo ".........." . $permission;
 
-
+include_once('page_load_query.php');
 
 if ($permission < 2) {
     include_once('block-print.php');
@@ -70,3 +70,4 @@ if ($permission == 0) {
     include_once('pages/access-denied.php');
     exit;
 }
+

@@ -10,7 +10,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?)");
 $stmt->bind_param("sisssss", $usr, $sccode, $currentFile, $ipaddr, $platform, $browser, $cur);
 $stmt->execute();
 $log_id = $stmt->insert_id; // পরবর্তী আপডেটের জন্য কাজে লাগবে
-echo $log_id;
+// echo $log_id;
 ?>
 
 <script>

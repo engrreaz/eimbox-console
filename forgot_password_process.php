@@ -23,7 +23,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $email = trim($_POST['email']);
     // echo $email;
-    $user = find_user_by_email($conn, $email);
+    $data = find_user_by_email($conn, $email);
+    $user   = $data['user'];
+$school = $data['school'];
 
     if ($user) {
         $token = bin2hex(random_bytes(32));

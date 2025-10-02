@@ -26,7 +26,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $password = $_POST['password'] ?? '';
         $remember = isset($_POST['remember']);
 
-        $user = find_user_by_email($conn, $email);
+        $data = find_user_by_email($conn, $email);
+        $user = $data['user'];
+        $school = $data['school'];
+
         if (!$user) {
             $errors[] = 'Invalid email or password';
             auth_log($conn, 'login_failed', null, $email);
@@ -46,11 +49,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Check MFA
                 if ($user['mfa_enabled']) {
                     $token = random_int(100000, 999999);
-                    echo $token;
                     $hash = password_hash($token, PASSWORD_DEFAULT);
-                    $expires = date('Y-m-d H:i:s', time() + 300); // 5 min
-                    $stmt = $conn->prepare("UPDATE usersapp SET mfa_secret=?, mfa_temp_token=?, mfa_temp_expires=? WHERE id=?");
-                    $stmt->bind_param('sssi', $token, $hash, $expires, $user['id']);
+                    $expires = date('Y-m-d H:i:s', time() + 300); // 5 মিনিট
+
+                    $stmt = $conn->prepare("UPDATE usersapp 
+                            SET mfa_temp_token=?, mfa_temp_expires=? 
+                            WHERE id=?");
+                    $stmt->bind_param('ssi', $hash, $expires, $user['id']);
                     $stmt->execute();
                     $stmt->close();
 
@@ -62,9 +67,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     exit;
                 } else {
                     // Full login
-                    store_user_session($user);
-                    if ($remember)
+                    store_user_session($user, $school);
+                    if ($remember) {
                         create_remember_token($conn, $user['id']);
+                    }
                     header('Location: core/suspicious-activity.php');
                     exit;
                 }
@@ -98,7 +104,7 @@ include_once('header-plain.php');
             <div class="card p-sm-7 p-2">
                 <!-- Logo -->
                 <div class="app-brand justify-content-center mt-5">
-                 
+
                     <?php include 'core/top-part.php'; ?>
                 </div>
                 <!-- /Logo -->
@@ -141,8 +147,7 @@ include_once('header-plain.php');
                                 <input class="form-check-input" type="checkbox" id="remember" name="remember" />
                                 <label class="form-check-label" for="remember-me"> Remember Me </label>
                             </div>
-                            <a href="forgot_password.php"
-                                class="float-end mb-1">
+                            <a href="forgot_password.php" class="float-end mb-1">
                                 <span>Forgot Password?</span>
                             </a>
                         </div>
@@ -153,8 +158,7 @@ include_once('header-plain.php');
 
                     <p class="text-center mb-5">
                         <span>New on our platform?</span>
-                        <a
-                            href="regd_new.php">
+                        <a href="regd_new.php">
                             <span>Create an account</span>
                         </a>
                     </p>

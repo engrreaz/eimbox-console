@@ -1701,12 +1701,12 @@
             {
               name: "light",
               title: "Light",
-              image: '<i class="ri ri-sun-line icon-base mb-0"></i>',
+              image: '<i class="bi bi-brightness-high icon-base mb-0"></i>',
             },
             {
               name: "dark",
               title: "Dark",
-              image: '<i class="ri ri-moon-clear-line icon-base mb-0"></i>',
+              image: '<i class="bi bi-moon-stars icon-base mb-0"></i>',
             },
             {
               name: "system",

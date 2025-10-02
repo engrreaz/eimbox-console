@@ -78,8 +78,14 @@
 <script src="assets/js/main.js"></script>
 <!-- Page JS -->
 <script src="assets/js/app-logistics-dashboard.js"></script>
+<script src="assets/js/pages-profile-user.js"></script>
+<script src="dev-log/dev-timeline.js"></script> <!-- আমাদের কাস্টম JS -->
+<script src="dev-log/dev-loader.js"></script>
 
 
+<script>
+
+</script>
 
 <script>
     // Helpers অবজেক্ট ধরে নিচ্ছি আগের মতোই
@@ -97,6 +103,8 @@
 
     // পেজ লোড হওয়ার সময় লোকাল স্টোরেজ থেকে কালার বের করে সেট করা
     window.addEventListener('DOMContentLoaded', () => {
+
+
         const savedColor = localStorage.getItem('templateCustomizer-vertical-menu-template--Color');
         if (savedColor) {
             Helpers.setColor(savedColor, false); // save=false, কারণ ইতিমধ্যেই লোকাল স্টোরেজে আছে
@@ -131,7 +139,7 @@
 
 
 
-        
+
     });
 
 
@@ -162,5 +170,13 @@
                 .then(data => console.log("Track Response:", data))
                 .catch(err => console.error("Track Error:", err));
         });
+    });
+</script>
+
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+    $(function () {
+        $("#sidebar_admin").load("dev-log/timeline.php");
     });
 </script>

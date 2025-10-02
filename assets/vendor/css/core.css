@@ -541,7 +541,7 @@ legend+* {
 
 ::file-selector-button {
     font: inherit;
-    -webkit-appearance: button
+    appearance: button
 }
 
 output {
@@ -27917,13 +27917,13 @@ body {
 }
 
 .menu .menu-sub>.menu-item>.menu-link::before {
-    position: absolute;
-    border: 1.5px solid var(--bs-body-color);
+     position: absolute;
+    /*border: 1.5px solid var(--bs-body-color);
     block-size: .625rem;
     content: "";
     inline-size: .625rem;
     inset-inline-start: 1.75rem;
-    border-radius: 50%
+    border-radius: 50% */
 }
 
 .layout-horizontal .menu .menu-sub>.menu-item>.menu-link::before {

@@ -7,7 +7,7 @@ $field = $_POST['field'] ?? '';
 $status = $_POST['status'] ?? '';
 $value = $_POST['value'] ?? '';
 
-$allowed_fields = ['module_name','module_topic','descrip', 'status_name']; // যে ফিল্ড আপডেট করতে পারবেন
+$allowed_fields = ['module_name','module_topic','descrip', 'status_name', 'nav_title', 'nav_icon']; // যে ফিল্ড আপডেট করতে পারবেন
 
 if ($page && in_array($field, $allowed_fields)) {
 
