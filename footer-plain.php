@@ -1,3 +1,18 @@
+<style>
+    #themeToggleBtn {
+        position: fixed;
+        bottom: 40px;
+        right: 45px;
+        z-index: 1000;
+    }
+</style>
+
+
+<button id="themeToggleBtn" class="btn btn-outline-primary">
+    Toggle Theme
+</button>
+
+
 <!-- Core JS -->
 <!-- build:js assets/vendor/js/theme.js  -->
 <script src="assets/vendor/libs/jquery/jquery.js"></script>
@@ -23,6 +38,7 @@
 <script src="assets/js/pages-auth.js"></script>
 <script src="assets/js/pages-auth-two-steps.js"></script>
 <script src="assets/js/app-logistics-dashboard.js"></script>
+<script src="assets/js/pages-auth-multisteps.js"></script>
 
 
 
@@ -110,6 +126,30 @@
     });
 </script>
 
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const key = "templateCustomizer-vertical-menu-template--Theme";
+    const btn = document.getElementById("themeToggleBtn");
+    const currentTheme = localStorage.getItem(key) || "light";
+    updateButtonText(currentTheme);
+
+    btn.addEventListener("click", function () {
+        const current = localStorage.getItem(key) || "light";
+        const next = current === "light" ? "dark" : "light";
+        localStorage.setItem(key, next);
+        updateButtonText(next);
+        window.location.reload();
+    });
+
+    function updateButtonText(theme) {
+        btn.innerHTML = theme === "light"
+            ? '<i class="ri-moon-line me-1"></i> Dark Mode'
+            : '<i class="ri-sun-line me-1"></i> Light Mode';
+    }
+});
+</script>
 
 <!-- ----------------------------------- -->
 <script></script>

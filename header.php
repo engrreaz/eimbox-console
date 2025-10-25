@@ -1,12 +1,13 @@
 <?php
+
 require_once 'core/init.php';
+require_once __DIR__ . '/vendor/autoload.php'; // HTMLPurifier autoload
+$logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
 ?>
 
 <!doctype html>
 <html lang="en" class=" layout-navbar-fixed layout-menu-fixed layout-compact " dir="ltr" data-skin="default"
     data-bs-theme="light" data-assets-path="assets/" data-template="vertical-menu-template">
-
-<!-- Mirrored from demos.themeselection.com/materio-bootstrap-html-admin-template/html/vertical-menu-template/app-logistics-dashboard.html by HTTrack Website Copier/3.x [XR&CO'2014], Wed, 17 Sep 2025 18:00:17 GMT -->
 
 <head>
     <meta charset="utf-8" />
@@ -59,10 +60,19 @@ require_once 'core/init.php';
     <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;ampdisplay=swap"
         rel="stylesheet" />
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;700&display=swap"
+        rel="stylesheet" />
+
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet" />
+
     <link rel="stylesheet" href="assets/vendor/fonts/iconify-icons.css" />
     <!-- Core CSS -->
     <!-- build:css assets/vendor/css/theme.css -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script> -->
 
     <link rel="stylesheet" href="assets/vendor/libs/node-waves/node-waves.css" />
     <script src="assets/vendor/libs/@algolia/autocomplete-js.js"></script>
@@ -82,6 +92,22 @@ require_once 'core/init.php';
 
     <!-- Page CSS -->
     <link rel="stylesheet" href="assets/vendor/css/pages/app-logistics-dashboard.css" />
+    <link rel="stylesheet" href="assets/vendor/libs/shepherd/shepherd.css" />
+    <link rel="stylesheet" href="assets/vendor/css/pages/app-chat.css" />
+
+    <link rel="stylesheet" href="assets/vendor/libs/spinkit/spinkit.css" />
+    <link rel="stylesheet" href="assets/vendor/libs/notiflix/notiflix.css" />
+
+    <link rel="stylesheet" href="assets/vendor/libs/quill/typography.css" />
+    <link rel="stylesheet" href="assets/vendor/libs/highlight/highlight.css" />
+    <link rel="stylesheet" href="assets/vendor/libs/quill/katex.css" />
+    <link rel="stylesheet" href="assets/vendor/libs/quill/editor.css" />
+    <!-- <link rel="stylesheet" href="assets/vendor/libs/plyr/plyr.css" /> -->
+    <link rel="stylesheet" href="assets/vendor/css/pages/page-auth.css" />
+
+
+
+    <link rel="stylesheet" href="assets/css/eimbox.css" />
 
     <!-- Helpers -->
     <script src="assets/vendor/js/helpers.js"></script>
@@ -94,7 +120,7 @@ require_once 'core/init.php';
     <script src="assets/js/config.js"></script>
 
     <script>
-        
+
     </script>
 
 </head>
@@ -113,4 +139,77 @@ require_once 'core/init.php';
 
                 <?php require_once 'topbar.php'; ?>
 
-                <div class="content-wrapper"></div>
+                <div class="content-wrapper">
+
+                    <?php
+
+                    if ($cur_page_module !== 'Core' && $is_admin < 4) {
+                        $admin_data = json_decode($admin_data, true);
+
+                        $modules = $admin_data['module'];
+                        if (!in_array($cur_page_module, $modules)) {
+
+                            echo '<div class="container-xxl flex-grow-1 container-p-y">';
+                            echo '<div class="alert alert-danger">Module Not Accessable</div>';
+
+                            echo '</div>';
+                            // header("Location: index.php");
+                            include 'footer.php';
+                            exit;
+                        }
+
+                    }
+
+
+                    if (isset($_GET['debug']) && $_GET['debug'] == 'session') {
+                        echo '<pre>';
+                        print_r($_SESSION);
+                        echo '</pre>';
+                        exit;
+                    }
+
+
+                    if (isset($_GET['debug']) && $_GET['debug'] == 'remove') {
+                        unset($_SESSION['_backup']);
+                        exit;
+                    }
+
+                    ?>
+
+
+                    <div class=" container pt-0 pb-0">
+                        <div class="divider divider-primary m-0 p-0"
+                            style="--bs-divider-color:<?php echo $release_colors[$page_status]; ?>;">
+                            <div class="divider-text fs-5 fw-bold " id="page_link_title"
+                                style="color: <?php echo $release_colors[$page_status]; ?>"><?php echo $page_title; ?>
+                            </div>
+                            <nav aria-label="breadcrumb  align-items-center">
+                                <ol
+                                    class="breadcrumb breadcrumb-custom-icon d-flex justify-content-center align-items-center">
+                                    <li class="breadcrumb-item status-color">
+                                        <a href="javascript:void(0);" class="page-title">Home</a>
+                                        <i class="breadcrumb-icon icon-base ri ri-arrow-right-s-line align-middle"></i>
+                                    </li>
+                                    <li class="breadcrumb-item">
+                                        <a href="javascript:void(0);" class="status-color"
+                                            id="parent_item"><?php echo $cur_page_module; ?></a>
+                                        <i class="breadcrumb-icon icon-base ri ri-arrow-right-s-line align-middle"></i>
+                                    </li>
+                                    <li class="breadcrumb-item active" id="page_link_sub_title">
+                                        <?php echo $page_title; ?>
+                                    </li>
+                                </ol>
+                            </nav>
+                        </div>
+                    </div>
+
+
+                    <?php
+
+                    if (!$package_check) {
+                        include_once('core/upgrade-plan.php');
+                        include_once('footer.php');
+                        exit;
+                    }
+
+                    ?>

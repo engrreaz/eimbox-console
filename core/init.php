@@ -2,7 +2,24 @@
 require_once 'config.php';
 require_once 'db.php';
 require_once 'functions.php';
+require_once 'functions-achievements.php';
+require_once __DIR__ . '/../achievements_engine.php';
 require_once 'core-val.php';
+
+?>
+
+<script>
+    (function () {
+        let theme = localStorage.getItem("templateCustomizer-vertical-menu-template--Theme");
+        if (theme && document.cookie.indexOf("site_theme=" + theme) === -1) {
+            document.cookie = "site_theme=" + theme + "; path=/";
+            // location.reload(); // একবার reload হবে, তারপর PHP থিম পাবে
+        }
+    })();
+</script>
+
+<?php
+
 
 $cookieParams = session_get_cookie_params();
 session_set_cookie_params([
@@ -28,9 +45,10 @@ if (!isset($_SESSION['created'])) {
 
 // Determine current file
 $currentFile = basename($_SERVER['PHP_SELF']);
+$_SESSION['current_page'] = $currentFile;
 
 // Publicly accessible pages (no login required)
-$publicPages = ['login.php', 'logout.php', 'mfa_verify.php', 'forgot_password.php', 'forgot_password_process', 'reset_password.php'];
+$publicPages = ['regd_new.php', 'login.php', 'logout.php', 'mfa_verify.php', 'forgot_password.php', 'forgot_password_process', 'reset_password.php'];
 
 
 
@@ -50,7 +68,16 @@ if (!in_array($currentFile, $publicPages)) {
         exit;
     } else {
         $user_id = $_SESSION['user_id'] ?? '';
+
         require_once 'global_values.php';
+        // require_once 'billing_checker.php';
         require_once 'permissions.php';
+        require_once 'package_checker.php';
+
     }
 }
+if($_SESSION['checked_suspicious'] == false){
+require_once('suspicious-activity.php');
+}
+
+// createNotification($user_id, "Contrats!", 'You have won the achievements', 'my-achievements.php', 'achievement');

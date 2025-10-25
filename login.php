@@ -4,7 +4,7 @@ require_once 'core/init.php';
 
 if (isset($_SESSION['user_id'])) {
     // Already logged in → redirect to dashboard
-    header('Location: dashboard.php');
+    header('Location: index.php');
     exit;
 }
 
@@ -30,15 +30,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = $data['user'];
         $school = $data['school'];
 
+
         if (!$user) {
+            // User not found
             $errors[] = 'Invalid email or password';
             auth_log($conn, 'login_failed', null, $email);
         } else {
-            // lockout check
-            if ($user['lock_until'] && strtotime($user['lock_until']) > time()) {
+            // Safe access with defaults
+            $lockUntil = $user['lock_until'] ?? null;
+            $failedAttempts = intval($user['failed_attempts'] ?? 0);
+            $passwordHash = $user['password_hash'] ?? null;
+
+            // Check account lock
+            if ($lockUntil && strtotime($lockUntil) > time()) {
                 $errors[] = 'Account locked. Try later.';
-            } elseif (password_verify($password, $user['password_hash'])) {
-                // reset failed attempts
+            }
+            // Check password
+            elseif ($passwordHash && password_verify($password, $passwordHash)) {
+                // Reset failed attempts
                 $stmt = $conn->prepare("UPDATE usersapp SET failed_attempts=0, lock_until=NULL WHERE id=?");
                 $stmt->bind_param('i', $user['id']);
                 $stmt->execute();
@@ -46,42 +55,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 auth_log($conn, 'login_success', $user['id']);
 
-                // Check MFA
-                if ($user['mfa_enabled']) {
-                    $token = random_int(100000, 999999);
+                // -------------------
+                // MFA check
+                // -------------------
+                if (!empty($user['mfa_enabled'])) {
+                    $token = sprintf("%06d", random_int(0, 999999));
                     $hash = password_hash($token, PASSWORD_DEFAULT);
-                    $expires = date('Y-m-d H:i:s', time() + 300); // 5 মিনিট
+                    $expires = date('Y-m-d H:i:s', time() + 300);
 
                     $stmt = $conn->prepare("UPDATE usersapp 
-                            SET mfa_temp_token=?, mfa_temp_expires=? 
-                            WHERE id=?");
-                    $stmt->bind_param('ssi', $hash, $expires, $user['id']);
+                    SET mfa_secret=?, mfa_temp_token=?, mfa_temp_expires=? 
+                    WHERE id=?");
+                    $stmt->bind_param('sssi', $token, $hash, $expires, $user['id']);
                     $stmt->execute();
                     $stmt->close();
 
-                    // send token via user's MFA method
-                    send_mfa_token($user, $token);
-
                     $_SESSION['partial_auth'] = $user['id'];
-                    header('Location: mfa_verify.php');
-                    exit;
-                } else {
-                    // Full login
-                    store_user_session($user, $school);
-                    if ($remember) {
-                        create_remember_token($conn, $user['id']);
-                    }
-                    header('Location: core/suspicious-activity.php');
+
+                    // Redirect first, send mail after flush
+                    ob_end_clean();
+                    header("Location: mfa_verify.php");
+                    flush();
+                    send_mfa_token($user, $token); // email OTP
                     exit;
                 }
+
+                // -------------------
+                // Full login
+                // -------------------
+                store_user_session($user, $school);
+
+                if ($remember) {
+                    create_remember_token($conn, $user['id']);
+                }
+
+                // Suspicious activity flag
+                $_SESSION['checked_suspicious'] = false;
+
+                header('Location: core/suspicious-activity.php');
+                exit;
+
             } else {
-                // failed attempt
-                $fa = $user['failed_attempts'] + 1;
-                $lock = null;
-                if ($fa >= MAX_FAILED_ATTEMPTS)
-                    $lock = date('Y-m-d H:i:s', time() + LOCKOUT_TIME_SECONDS);
+                // -------------------
+                // Failed login attempt
+                // -------------------
+                $failedAttempts++;
+                $lockUntil = null;
+                if ($failedAttempts >= MAX_FAILED_ATTEMPTS) {
+                    $lockUntil = date('Y-m-d H:i:s', time() + LOCKOUT_TIME_SECONDS);
+                }
+
                 $stmt = $conn->prepare("UPDATE usersapp SET failed_attempts=?, lock_until=? WHERE id=?");
-                $stmt->bind_param('isi', $fa, $lock, $user['id']);
+                $stmt->bind_param('isi', $failedAttempts, $lockUntil, $user['id']);
                 $stmt->execute();
                 $stmt->close();
 
@@ -89,6 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 auth_log($conn, 'login_failed', $user['id'], $email);
             }
         }
+
     }
 }
 
@@ -182,6 +208,10 @@ include_once('header-plain.php');
 
                         <a href="javascript:;" class="btn btn-icon btn-lg rounded-pill btn-text-google-plus">
                             <i class="icon-base ri ri-google-fill icon-24px"></i>
+                        </a>
+
+                        <a href="javascript:;" class="btn btn-icon btn-lg rounded-pill btn-text-linkedin">
+                            <i class="icon-base bi bi-qr-code icon-20px"></i>
                         </a>
                     </div>
                 </div>

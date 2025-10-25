@@ -17,13 +17,7 @@ include_once('header-plain.php');
             <div class="card p-sm-7 p-2">
                 <!-- Logo -->
                 <div class="app-brand justify-content-center mt-5">
-                    <a href="https://demos.themeselection.com/materio-bootstrap-html-admin-template/html/vertical-menu-template/index.html"
-                        class="app-brand-link gap-3">
-                        <span class="app-brand-logo demo">
-                            <span class="text-primary"> LOGO </span>
-                        </span>
-                        <span class="app-brand-text demo text-heading fw-semibold">Materio</span>
-                    </a>
+                    <?php include 'core/top-part.php'; ?>
                 </div>
                 <!-- /Logo -->
                 <!-- Reset Password -->
@@ -74,9 +68,9 @@ include_once('header-plain.php');
                             Set new password
                         </button>
                         <div class="text-center">
-                            <a href="https://demos.themeselection.com/materio-bootstrap-html-admin-template/html/vertical-menu-template/auth-login-cover.html"
+                            <a href="login.php"
                                 class="d-flex align-items-center justify-content-center">
-                                <i class="icon-base ri ri-arrow-left-s-line scaleX-n1-rtl icon-20px me-1_5"></i>
+                                <i class="icon-base bi bi-arrow-left scaleX-n1-rtl icon-20px me-1_5"></i>
                                 Back to login
                             </a>
                         </div>

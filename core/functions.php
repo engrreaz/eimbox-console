@@ -1,5 +1,6 @@
 <?php
 require_once 'db.php';
+require_once 'core-val.php';
 
 // ========================
 // XSS Safe Output
@@ -69,7 +70,8 @@ function validate_password($pwd)
 // ========================
 function find_user_by_email($conn, $email)
 {
-    $stmt = $conn->prepare("SELECT * FROM usersapp WHERE email=? LIMIT 1");
+    // ইউজার ডেটা বের করো
+    $stmt = $conn->prepare("SELECT * FROM usersapp WHERE email = ? LIMIT 1");
     $stmt->bind_param('s', $email);
     $stmt->execute();
     $res = $stmt->get_result();
@@ -77,24 +79,27 @@ function find_user_by_email($conn, $email)
     $stmt->close();
 
     if (!$user) {
-        return null; // ইউজার পাওয়া যায়নি
+        $user = [];
+        $school = [];
+        return [
+            "user" => $user,
+            "school" => $school
+        ];
     }
 
-    // ২) স্কুল ডেটা ফেচ করা (sccode দিয়ে)
-    $stmt2 = $conn->prepare("SELECT * FROM scinfo WHERE sccode=? LIMIT 1");
-    $stmt2->bind_param('i', $user['sccode']);
+    // স্কুল ডেটা বের করো
+    $stmt2 = $conn->prepare("SELECT * FROM scinfo WHERE sccode = ? LIMIT 1");
+
+    // 's' ব্যবহার করো, কারণ sccode string হতে পারে (leading zero থাকতে পারে)
+    $stmt2->bind_param('s', $user['sccode']);
     $stmt2->execute();
     $res2 = $stmt2->get_result();
     $school = $res2->fetch_assoc();
     $stmt2->close();
 
-    // ৩) সেশনে রাখা
-    // $_SESSION['user'] = $user;
-    // $_SESSION['school'] = $school ?: [];
-
     return [
         "user" => $user,
-        "school" => $school
+        "school" => $school ?? []
     ];
 }
 
@@ -103,23 +108,28 @@ function find_user_by_email($conn, $email)
 // ========================
 function store_user_session($user, $school = [])
 {
-    $_SESSION['user_id'] = $user['id'];
-    $_SESSION['user_email'] = $user['email'];
-    $_SESSION['user_name'] = $user['username'];
+    $_SESSION['user_id'] = $user['id'] ?? '';
+    $_SESSION['user_email'] = $user['email'] ?? '';
+    $_SESSION['user_name'] = $user['username'] ?? '';
     $_SESSION['first_name'] = $user['first_name'] ?? '';
     $_SESSION['last_name'] = $user['last_name'] ?? '';
     $_SESSION['phone'] = $user['phone'] ?? '';
     $_SESSION['address'] = $user['address'] ?? '';
     $_SESSION['dob'] = $user['dob'] ?? '';
     $_SESSION['user_role'] = $user['role'] ?? 'user';
-    $_SESSION['userlevel'] = $user['user_level'] ?? '';
+    $_SESSION['userlevel'] = $user['userlevel'] ?? '';
     $_SESSION['sccode'] = $user['sccode'] ?? '';
     $_SESSION['photourl'] = $user['photourl'] ?? '';
+    $_SESSION['isadmin'] = $user['admin'] ?? 0;
+    $_SESSION['fullname'] = $user['profilename'] ?? $user['email'] ?? '';
 
     // স্কুল ইনফো
     $_SESSION['scname'] = $school['scname'] ?? '';
     $_SESSION['sccategory'] = $school['sccategory'] ?? '';
+    $_SESSION['admin_data'] = $school['admin_data'] ?? '';
+    $_SESSION['scaddress_top'] = $school['ps'] . ', ' . $school['dist'];
 }
+
 
 
 // ========================
@@ -199,12 +209,13 @@ function verify_remember_token($conn)
 // ========================
 // Send MFA Token (Stub)
 // ========================
-function send_mfa_token($user, $token)
+function send_mfa_token($user, $token, $flag = 'otp')
 {
+
     $to = $user['email'];
     $subject = "Your MFA code";
     $message = "Your one-time code is: $token\nIt expires in 5 minutes.";
-    $headers = "From: noreply@example.com\r\n";
+    $headers = "From: thisisengrreaz@gmail.com\r\n";
 
     $mail_type = 'otp';
     $mail_to = $to;
@@ -212,14 +223,13 @@ function send_mfa_token($user, $token)
     $mail_subject = 'EIMBox OTP for MFA';
     $mail_attach = '';
     $msg_success = "Your OTP has been send to your mail $mail_to";
-    include('mailer/send-mail.php');
+    if ($flag == 'otp') {
+        include('mailer/send-mail.php');
+    } else {
+        include('../mailer/send-mail.php');
+    }
 
 
-
-    // Uncomment to send email if mail server configured
-    // mail($to, $subject, $message, $headers);
-
-    // SMS / Push integration এখানে করতে পারেন
 }
 
 
@@ -304,3 +314,199 @@ register_shutdown_function(function () {
     }
 });
 
+
+/*
+// Notificate Create
+function createNotification($user_id, $title, $message, $link = null)
+{
+    global $conn;
+    $stmt = $conn->prepare("INSERT INTO notifications (user_id, title, message, link) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("isss", $user_id, $title, $message, $link);
+    $stmt->execute();
+}
+
+// Fetch 
+function getUnreadNotifications($user_id)
+{
+    global $conn;
+    $stmt = $conn->prepare("SELECT * FROM notifications WHERE user_id = ? AND is_read = 0 ORDER BY created_at DESC");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return $result->fetch_all(MYSQLI_ASSOC);
+}
+
+// read
+function markAsRead($notification_id)
+{
+    global $conn;
+    $stmt = $conn->prepare("UPDATE notifications SET is_read = 1 WHERE id = ?");
+    $stmt->bind_param("i", $notification_id);
+    $stmt->execute();
+}
+
+*/
+
+
+// core/notifications.php
+// Assumes $conn is the mysqli connection from your core/db.php
+// and session is already started (header.php includes these).
+
+/**
+ * Create notification for a user
+ * @param int $user_id
+ * @param string $title
+ * @param string $message
+ * @param string|null $link
+ * @param string|null $type
+ * @return int|false inserted id or false
+ */
+function createNotification($user_id, $title, $message = '', $link = null, $type = null)
+{
+    global $conn;
+    $stmt = $conn->prepare("INSERT INTO notifications (user_id, type, title, message, link) VALUES (?, ?, ?, ?, ?)");
+    if (!$stmt)
+        return false;
+    $stmt->bind_param("issss", $user_id, $type, $title, $message, $link);
+    if ($stmt->execute()) {
+        $insert_id = $stmt->insert_id;
+        $stmt->close();
+        return $insert_id;
+    }
+    $stmt->close();
+    return false;
+}
+
+/**
+ * Get notifications for a user
+ * @param int $user_id
+ * @param int $limit
+ * @return array
+ */
+function getNotifications($user_id, $limit = 10)
+{
+    global $conn;
+    $stmt = $conn->prepare("SELECT id, type, title, message, link, is_read, created_at FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT ?");
+    $stmt->bind_param("ii", $user_id, $limit);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $rows = $res->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
+    return $rows;
+}
+
+/**
+ * Count unread notifications
+ * @param int $user_id
+ * @return int
+ */
+function countUnreadNotifications($user_id)
+{
+    global $conn;
+    $stmt = $conn->prepare("SELECT COUNT(*) as cnt FROM notifications WHERE user_id = ? AND is_read = 0");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $res = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    return (int) $res['cnt'];
+}
+
+/**
+ * Mark a notification as read (single id)
+ * @param int $notification_id
+ * @param int|null $user_id - optional security check
+ * @return bool
+ */
+function markNotificationAsRead($notification_id, $user_id = null)
+{
+    global $conn;
+    if ($user_id) {
+        $stmt = $conn->prepare("UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?");
+        $stmt->bind_param("ii", $notification_id, $user_id);
+    } else {
+        $stmt = $conn->prepare("UPDATE notifications SET is_read = 1 WHERE id = ?");
+        $stmt->bind_param("i", $notification_id);
+    }
+    if (!$stmt)
+        return false;
+    $ok = $stmt->execute();
+    $stmt->close();
+    return $ok;
+}
+
+/**
+ * Mark all notifications as read for a user
+ * @param int $user_id
+ * @return bool
+ */
+function markAllAsRead($user_id)
+{
+    global $conn;
+    $stmt = $conn->prepare("UPDATE notifications SET is_read = 1 WHERE user_id = ?");
+    $stmt->bind_param("i", $user_id);
+    if (!$stmt)
+        return false;
+    $ok = $stmt->execute();
+    $stmt->close();
+    return $ok;
+}
+
+
+
+function timeAgo($datetime, $full = false)
+{
+    $now = new DateTime();
+    $ago = new DateTime($datetime);
+    $diff = $now->diff($ago);
+    $weeks = floor($diff->d / 7);
+    $days = $diff->d - ($weeks * 7);
+    $units = ['y' => 'year', 'm' => 'month', 'w' => 'week', 'd' => 'day', 'h' => 'hour', 'i' => 'minute', 's' => 'second'];
+    $values = ['y' => $diff->y, 'm' => $diff->m, 'w' => $weeks, 'd' => $days, 'h' => $diff->h, 'i' => $diff->i, 's' => $diff->s];
+    $strings = [];
+    foreach ($units as $k => $label) {
+        if ($values[$k] > 0)
+            $strings[$k] = $values[$k] . ' ' . $label . ($values[$k] > 1 ? 's' : '');
+    }
+    if (!$full)
+        $strings = array_slice($strings, 0, 1);
+    return $strings ? implode(', ', $strings) . ' ago' : 'just now';
+}
+
+// ⚠️ header.php তে config/db আগে থেকেই ইনক্লুড করা আছে, তাই এখানে আবার লাগবে না।
+
+function logSuspiciousActivity($conn, $user_id, $email, $event_type, $description = '')
+{
+    // ইউজারের IP ও User-Agent নেওয়া
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $ua = $_SERVER['HTTP_USER_AGENT'] ?? 'unknown';
+
+    // master টেবিল থেকে matching rule খোঁজা
+    $stmt = $conn->prepare("SELECT id, risk_score, recommended_action FROM suspicious_activity_types WHERE title = ?");
+    $stmt->bind_param("s", $event_type);
+    $stmt->execute();
+    $rule = $stmt->get_result()->fetch_assoc();
+
+    $risk = $rule['risk_score'] ?? 10;
+    $action = $rule['recommended_action'] ?? 'log_only';
+    $rule_id = $rule['id'] ?? NULL;
+
+    // ইভেন্ট লগ করা
+    $stmt2 = $conn->prepare("INSERT INTO suspicious_events (user_id, email, ip_address, user_agent, event_type, description, risk_score, recommended_action, matched_rule_id)
+                             VALUES (?,?,?,?,?,?,?,?,?)");
+    $stmt2->bind_param("isssssisi", $user_id, $email, $ip, $ua, $event_type, $description, $risk, $action, $rule_id);
+    $stmt2->execute();
+
+    // অটো অ্যাকশন নেওয়া
+    if ($action == 'block') {
+        // IP ব্লক করার উদাহরণ
+        file_put_contents(__DIR__ . '/../logs/blocked_ips.txt', $ip . "\n", FILE_APPEND);
+        // বিকল্প: সেশনে ফ্ল্যাগ সেট
+        $_SESSION['blocked'] = true;
+    } elseif ($action == 'alert') {
+        // ইমেইল বা সিস্টেম অ্যাডমিনকে নোটিফাই (placeholder)
+        error_log("🚨 Suspicious Activity Alert: $event_type from $ip ($email)");
+    } elseif ($action == 'review') {
+        // পর্যালোচনার জন্য লগ রাখা
+        error_log("🔎 Review Needed: $event_type - $email - $ip");
+    }
+}

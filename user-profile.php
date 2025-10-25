@@ -10,30 +10,28 @@
         <div class="user-profile-header-banner">
           <img
             src="https://demos.themeselection.com/materio-bootstrap-html-admin-template/assets/img/pages/profile-banner.png"
-            alt="Banner image" class="rounded-top  " style="width:100%;" />
+            alt="Banner image" class="rounded-top  " style="width:100%; height:100px;" />
         </div>
-        <div style="margin-top:-30px;" class="user-profile-header d-flex flex-column flex-lg-row text-sm-start text-center mb-4">
+        <div style="margin-top:-30px;"
+          class="user-profile-header d-flex flex-column flex-lg-row text-sm-start text-center mb-4">
           <div class="flex-shrink-0 mt-n2 mx-sm-0 mx-auto">
-            <img src="https://demos.themeselection.com/materio-bootstrap-html-admin-template/assets/img/avatars/1.png"
-              alt="user image" class="d-block h-auto ms-0 ms-sm-5 rounded user-profile-img"  />
+            <img src="<?php echo $pth; ?>" alt="user image"
+              class="d-block h-auto ms-0 ms-sm-5 rounded user-profile-img" />
           </div>
           <div class="flex-grow-1 mt-3 mt-lg-5">
             <div
               class="d-flex align-items-md-end align-items-sm-start align-items-center justify-content-md-between justify-content-start mx-5 flex-md-row flex-column gap-4">
               <div class="user-profile-info">
-                <h4 class="mb-2 mt-lg-6">John Doe</h4>
+                <h4 class="mb-0 mt-lg-6"><?php echo $fullname; ?></h4>
                 <ul
-                  class="list-inline mb-0 d-flex align-items-center flex-wrap justify-content-sm-start justify-content-center gap-4">
-                  <li class="list-inline-item"><i class="icon-base ri ri-palette-line me-2 icon-24px"></i><span
-                      class="fw-medium">UX Designer</span></li>
-                  <li class="list-inline-item"><i class="icon-base ri ri-map-pin-line me-2 icon-24px"></i><span
-                      class="fw-medium">Vatican City</span></li>
-                  <li class="list-inline-item"><i class="icon-base ri ri-calendar-line me-2 icon-24px"></i><span
-                      class="fw-medium"> Joined April 2021</span></li>
+                  class="list-inline mt-0 mb-0 d-flex align-items-center flex-wrap justify-content-sm-start justify-content-center gap-4">
+                  <li class="list-inline-item text-small"><i class="icon-base bi bi-person me-2 icon-16px"></i><span
+                      class="fw-medium"> <?php echo str_replace('%', '', $userlevel); ?> </span></li>
+
                 </ul>
               </div>
-              <a href="javascript:void(0)" class="btn btn-primary"> <i
-                  class="icon-base ri ri-user-follow-line icon-16px me-1_5"></i>Connected </a>
+              <!-- <a href="javascript:void(0)" class="btn btn-primary"> <i
+                  class="icon-base ri ri-user-follow-line icon-16px me-1_5"></i>Connected </a> -->
             </div>
           </div>
         </div>
@@ -52,19 +50,13 @@
                 class="icon-base ri ri-user-3-line icon-sm me-1_5"></i>Profile</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link"
-              href="https://demos.themeselection.com/materio-bootstrap-html-admin-template/html/vertical-menu-template/pages-profile-teams.html"><i
-                class="icon-base ri ri-team-line icon-sm me-1_5"></i>Teams</a>
+            <a class="nav-link" href="#"><i class="icon-base ri ri-team-line icon-sm me-1_5"></i>Security</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link"
-              href="https://demos.themeselection.com/materio-bootstrap-html-admin-template/html/vertical-menu-template/pages-profile-projects.html"><i
-                class="icon-base ri ri-computer-line icon-sm me-1_5"></i>Projects</a>
+            <a class="nav-link" href="#"><i class="icon-base ri ri-computer-line icon-sm me-1_5"></i>Settings</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link"
-              href="https://demos.themeselection.com/materio-bootstrap-html-admin-template/html/vertical-menu-template/pages-profile-connections.html"><i
-                class="icon-base ri ri-link-m icon-sm me-1_5"></i>Connections</a>
+            <a class="nav-link" href="#"><i class="icon-base ri ri-link-m icon-sm me-1_5"></i>Activity Log</a>
           </li>
         </ul>
       </div>
@@ -76,7 +68,7 @@
   <div class="row">
     <div class="col-xl-4 col-lg-5 col-md-5">
       <!-- About User -->
-      <div class="card mb-6">
+      <div class="card mb-6" hidden>
         <div class="card-body">
           <small class="card-text text-uppercase text-body-secondary small">About</small>
           <ul class="list-unstyled my-3 py-1">
@@ -117,7 +109,7 @@
       </div>
       <!--/ About User -->
       <!-- Profile Overview -->
-      <div class="card mb-6">
+      <div class="card mb-6" hidden>
         <div class="card-body">
           <small class="card-text text-uppercase text-body-secondary small">Overview</small>
           <ul class="list-unstyled mb-0 mt-3 pt-1">
@@ -134,7 +126,7 @@
     </div>
     <div class="col-xl-8 col-lg-7 col-md-7">
       <!-- Activity Timeline -->
-      <div class="card card-action mb-6">
+      <div class="card card-action mb-6" hidden>
         <div class="card-header align-items-center">
           <h5 class="card-action-title mb-0"><i
               class="icon-base ri ri-bar-chart-2-line icon-24px text-body me-4"></i>Activity Timeline</h5>
@@ -227,7 +219,7 @@
         </div>
       </div>
       <!--/ Activity Timeline -->
-      <div class="row">
+      <div class="row" hidden>
         <!-- Connections -->
         <div class="col-lg-12 col-xl-6">
           <div class="card card-action mb-6">
@@ -479,9 +471,9 @@
       </div>
 
       <!-- Project table -->
-      <div class="card mb-4">
+      <div class="card mb-4" hidden>
         <div class="card-datatable pb-0 mb-n4">
-          <table class="table datatable-project table-border-bottom-0">
+          <table class="table datatable-projects table-border-bottom-0">
             <thead>
               <tr>
                 <th></th>

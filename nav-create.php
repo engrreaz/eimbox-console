@@ -3,9 +3,9 @@ include 'core/config.php';
 include 'core/db.php';
 
 // Variables
-$sccode = '103187';    // উদাহরণ
-$userlevel = 'Administrator';  // উদাহরণ
-$usr = 'engrreaz@gmail.com';
+// $sccode = '103187';    // উদাহরণ
+// $userlevel = 'Administrator';  // উদাহরণ
+
 $email_null = '';
 
 // SQL query

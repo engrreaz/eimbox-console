@@ -1,5 +1,11 @@
 <?php
 
+$GLOBALS['script_end'] = microtime(true);
+$GLOBALS['execution_time'] = round(($GLOBALS['script_end'] - $GLOBALS['script_start']), 4);
+
+echo "Queries: {$GLOBALS['queries_count']}, Time: {$GLOBALS['execution_time']}s";
+// var_dump($GLOBALS['query_text']);
+
 $ipaddr = $_SERVER['REMOTE_ADDR'];
 $platform = $_SERVER['HTTP_USER_AGENT']; // চাইলে OS ডিটেক্টর লাইব্রেরি ব্যবহার করতে পারেন
 $browser = $_SERVER['HTTP_USER_AGENT'];
@@ -11,6 +17,7 @@ $stmt->bind_param("sisssss", $usr, $sccode, $currentFile, $ipaddr, $platform, $b
 $stmt->execute();
 $log_id = $stmt->insert_id; // পরবর্তী আপডেটের জন্য কাজে লাগবে
 // echo $log_id;
+
 ?>
 
 <script>
@@ -24,8 +31,4 @@ $log_id = $stmt->insert_id; // পরবর্তী আপডেটের জ�
             duration: duration
         }));
     });
-
-
-
 </script>
-

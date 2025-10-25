@@ -1,5 +1,8 @@
 // PACKAGE/LiBRARY
 PHPMailer
+composer require mpdf/mpdf
+composer require ezyang/htmlpurifier
+tinymceEditor
 
 
 // DATABASE CHanges

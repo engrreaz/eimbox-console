@@ -1,0 +1,35 @@
+ #preview {
+     width: 200px;
+     height: 200px;
+     border: 1px dashed #ccc;
+     display: flex;
+     justify-content: center;
+     align-items: center;
+     overflow: hidden;
+     cursor: pointer;
+ }
+
+ #preview img {
+     max-width: 100%;
+ }
+/* মডাল বডির ভেতরে ইমেজ পুরো জায়গায় সুন্দরভাবে থাকবে */
+#cropModal .modal-body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    min-height: 400px; /* ইমেজ স্পেস একটু বড় */
+    max-height: 70vh;;
+}
+
+/* ইমেজ যেন পুরো স্ক্রিনে সুন্দরভাবে ফিট করে */
+#cropImage {
+    max-width: 90%;
+    max-height: 50vh;
+    min-width: 80%;
+    min-height: 50vh;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+    border-radius: 8px;
+}

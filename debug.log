@@ -1,0 +1,3 @@
+
+TABLE: scinfo
+COLUMN: `active` int(11) NOT NULL DEFAULT 0

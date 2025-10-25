@@ -1,7 +1,11 @@
 <?php
-require_once 'core/init.php';
+require_once 'header.php';
 
+$not_assign = 0;
 
+$dsbl = '';
+if ($is_admin != 5)
+    $dsbl = 'disabled';
 $icon_list = ['house', 'leaf', 'file', 'folder', 'image', 'table'];
 
 $release_colors = [
@@ -55,15 +59,6 @@ $files = array_filter(scandir(__DIR__), function ($f) {
 });
 
 ?>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-
 <style>
     .perm-select option {
         color: black !important;
@@ -94,135 +89,158 @@ $files = array_filter(scandir(__DIR__), function ($f) {
         background-color: seagreen !important;
         color: white !important;
     }
+
+    thead th {
+        position: sticky;
+        top: 60px;
+        background-color: #fff;
+        /* হেডারের ব্যাকগ্রাউন্ড রাখতে */
+        z-index: 10;
+        /* হেডারকে সব কন্টেন্টের উপরে রাখে */
+    }
 </style>
 
-<h2>Module Structure & Default Permission Manager</h2>
 
-<?php
-echo "<table id='permissionTable' class='table table-bordered table-striped table-hover'>";
-echo "<thead class='table-dark sticky-top'>
-        <tr>
-            <th></th>
+<div class="container-xxl flex-grow-1 container-p-y">
+
+    <h3>Module Structure & Default Permission Manager</h3>
+
+
+    <?php
+    echo "<table id='permissionTable' class='table align-middle table-bordered table-hover table-sm'>";
+    echo "<thead class='table-dark table-light sticky-top'>
+        <tr class='table-sm'>
+            <th style='min-width:70px;'></th>
             <th>Page Name</th>
             <th>Status</th>
             <th>Module</th>
             <th>Topic</th>
             <th>Title</th>
             <th>Description</th>";
-foreach ($roles as $role) {
-    echo "<th>{$role}</th>";
-}
-echo "</tr></thead><tbody>";
+    foreach ($roles as $role) {
+        $rolesh = substr($role, 0, 7);
+        echo "<th>{$rolesh}</th>";
+    }
+    echo "</tr></thead><tbody>";
 
-foreach ($files as $file) {
-    $stmt = $conn->prepare("SELECT module_name, module_topic, descrip , status_name, nav_title, nav_icon
+    foreach ($files as $file) {
+        $stmt = $conn->prepare("SELECT module_name, module_topic, descrip , status_name, nav_title, nav_icon
                             FROM modulemanager 
                             WHERE FIND_IN_SET(?, related_pages)");
-    $stmt->bind_param("s", $file);
-    $stmt->execute();
-    $data = $stmt->get_result()->fetch_assoc();
+        $stmt->bind_param("s", $file);
+        $stmt->execute();
+        $data = $stmt->get_result()->fetch_assoc();
 
-    $module_name = $data['module_name'] ?? '';
-    $topic = $data['module_topic'] ?? '';
-    $title = $data['nav_title'] ?? '';
-    $desc = $data['descrip'] ?? '';
-    $pg_status = $data['status_name'] ?? 0;
-    $icon = $data['nav_icon'] ?? 'three-dots-vertical';
-    $icon_full = '<i class="bi bi-'.$icon.'"></i>';
-
-
+        $module_name = $data['module_name'] ?? '';
+        $topic = $data['module_topic'] ?? '';
+        $title = $data['nav_title'] ?? '';
+        $desc = $data['descrip'] ?? '';
+        $pg_status = $data['status_name'] ?? 0;
+        $icon = $data['nav_icon'] ?? 'three-dots-vertical';
+        $icon_full = '<i class="bi bi-' . $icon . '"></i>';
 
 
 
-    echo "<tr>";
-    echo "<td><div class='input-group'>
-    <span class='input-group-text'><i class='bi bi-$icon'></i></span>
+
+
+        echo "<tr class='pt-1 pb-3'>";
+        echo "<td class='p-0'>
+       
+        <div class='input-group input-group-sm d-inline-flex'>
+    <a href='{$file}' target='_blank'> <span class='input-group-text'><i class='bi bi-$icon'></i></span></a>
     <input type='text' class='form-control inline-input' 
                      data-field='nav_icon' data-id='{$file}' value='{$icon}'  /></div></td>";
-    echo "<td><input type='text' class='form-control inline-input' 
+        echo "<td class='input-group-sm p-0' style='min-width:120px;'><input type='text' class='form-control inline-input' 
                      data-field='page_name' data-id='{$file}' value='{$file}' readonly disabled /></td>";
 
 
+        echo "<td class='input-group-sm p-0'><select style='background:{$release_colors[$pg_status]}; color:{$release_text[$pg_status]}' class='form-select inline-select' data-field='status_name' data-id='{$file}'>";
+        echo "<option value='' {$selected}></option>";
+        foreach ($status_list as $slist) {
+            $selected = ($slist['id'] == $pg_status) ? "selected" : "";
+            echo "<option value='{$slist['id']}' {$selected}>{$slist['status']}</option>";
+        }
+        echo "</select></td>";
 
-    echo "<td><select style='background:{$release_colors[$pg_status]}; color:{$release_text[$pg_status]}' class='form-select inline-select' data-field='status_name' data-id='{$file}'>";
-    echo "<option value='' {$selected}></option>";
-    foreach ($status_list as $slist) {
-        $selected = ($slist['id'] == $pg_status) ? "selected" : "";
-        echo "<option value='{$slist['id']}' {$selected}>{$slist['status']}</option>";
-    }
-    echo "</select></td>";
+        if ($module_name == 'Core') {
+            $bgc = 'seagreen';
+        } else if ($module_name == 'Backend') {
+            $bgc = 'red';
+        } else if ($module_name == 'Admin') {
+            $bgc = 'darkcyan';
+        } else if ($module_name == 'Orion') {
+            $bgc = 'purple';
+        }else if ($module_name == 'Seed') {
+            $bgc = 'black';
+        }else {
+            $bgc = 'transparent';
+        }
 
-    // if($module_name == 'Core'){
-    //     $bgc = 'seagreen';
-    // } else if($module_name == 'Backend'){
-    //     $bgc = 'red';
-    // } else {
-    //     $bgc = 'transparent';
-    // }
-    
-    $bgc = 'transparent';
-    echo "<td><select style='background:$bgc' class='form-select inline-select' data-field='module_name' data-id='{$file}'>";
-    echo "<option value='' {$selected}></option>";
-    foreach ($modules as $mod) {
-        $selected = ($mod == $module_name) ? "selected" : "";
-        echo "<option value='{$mod}' {$selected}>{$mod}</option>";
-    }
-    echo "</select></td>";
+        // $bgc = 'transparent';
+        echo "<td class='input-group-sm p-0'><select style='background:$bgc' class='form-select inline-select' data-field='module_name' data-id='{$file}' $dsbl>";
+        echo "<option style='background:$bgc' value='' {$selected}></option>";
+        foreach ($modules as $mod) {
+            $selected = ($mod == $module_name) ? "selected" : "";
+            echo "<option value='{$mod}' {$selected}>{$mod}</option>";
+        }
+        echo "</select></td>";
 
 
 
 
-    echo "<td><input type='text' class='form-control inline-input' 
+        echo "<td class='input-group-sm p-0'><input type='text' class='form-control inline-input' 
                      data-field='module_topic' data-id='{$file}' value=\"{$topic}\" /></td>";
-     echo "<td><input type='text' class='form-control inline-input' 
+        echo "<td class='input-group-sm p-0'><input type='text' class='form-control inline-input' 
                      data-field='nav_title' data-id='{$file}' value=\"{$title}\" /></td>";
-    echo "<td><input type='text' class='form-control inline-input' 
+        echo "<td class='input-group-sm p-0'><input type='text' class='form-control inline-input' 
                      data-field='descrip' data-id='{$file}' value=\"{$desc}\" /></td>";
 
-    foreach ($roles as $role) {
-        $stmt2 = $conn->prepare("SELECT permission 
+        foreach ($roles as $role) {
+            $stmt2 = $conn->prepare("SELECT permission 
                          FROM permission_map 
                          WHERE (sccode IS NULL OR sccode='' OR sccode='0')
                            AND page_name=? 
                            AND userlevel=? 
                          LIMIT 1");
-        $stmt2->bind_param("ss", $file, $role);
-        $stmt2->execute();
-        $perm_row = $stmt2->get_result()->fetch_assoc();
-        $perm_val = isset($perm_row['permission']) ? (string) $perm_row['permission'] : '';
+            $stmt2->bind_param("ss", $file, $role);
+            $stmt2->execute();
+            $perm_row = $stmt2->get_result()->fetch_assoc();
+            $perm_val = isset($perm_row['permission']) ? (string) $perm_row['permission'] : '';
 
 
 
-        $perm_val = isset($perm_row['permission']) ? (string) $perm_row['permission'] : '';
+            $perm_val = isset($perm_row['permission']) ? (string) $perm_row['permission'] : '';
 
-        $cssClass = 'perm-none';
-        $tooltip = 'Not Assigned';
-
-        if ($perm_val === '0') {
-            $cssClass = 'perm-0';
-            $tooltip = 'No Access';
-        } elseif ($perm_val === '1') {
-            $cssClass = 'perm-1';
-            $tooltip = 'Read';
-        } elseif ($perm_val === '2') {
-            $cssClass = 'perm-2';
-            $tooltip = 'Write';
-        } elseif ($perm_val === '3') {
-            $cssClass = 'perm-3';
-            $tooltip = 'Full';
-        } else {
-            $cssClass = 'perm';
+            $cssClass = 'perm-none';
             $tooltip = 'Not Assigned';
-        }
 
-        if ($module_name == 'Core' || $module_name == 'Backend') {
-            $block_dis = 'disabled';
-        } else {
-            $block_dis = '';
-        }
+            if ($perm_val === '0') {
+                $cssClass = 'perm-0';
+                $tooltip = 'No Access';
+            } elseif ($perm_val === '1') {
+                $cssClass = 'perm-1';
+                $tooltip = 'Read';
+            } elseif ($perm_val === '2') {
+                $cssClass = 'perm-2';
+                $tooltip = 'Write';
+            } elseif ($perm_val === '3') {
+                $cssClass = 'perm-3';
+                $tooltip = 'Full';
+            } else {
+                $cssClass = 'perm';
+                $tooltip = 'Not Assigned';
+                $not_assign++;
+            }
+
+            if ($module_name == 'Core' || $module_name == 'Backend') {
+                $block_dis = 'disabled';
+                $not_assign--;
+            } else {
+                $block_dis = '';
+            }
 
 
-        echo "<td>
+            echo "<td class='input-group-sm p-0'>
         <select class='form-select perm-select {$cssClass}'
                 data-bs-toggle='tooltip' title='{$tooltip}'
                 data-page='{$file}' data-role='{$role}' $block_dis>
@@ -233,24 +251,31 @@ foreach ($files as $file) {
             <option style='background:green;' value='3' " . ($perm_val === '3' ? "selected" : "") . ">3 - Full</option>
         </select>
       </td>";
+        }
+
+        echo "</tr>";
     }
+    echo "</tbody></table>";
 
-    echo "</tr>";
-}
-echo "</tbody></table>";
+    echo 'Total Not Assign : ' . $not_assign;
+    ?>
+</div>
 
 
-?>
-
+<?php include('footer.php'); ?>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function () {
-        // Initialize DataTables
+        // Initialize DataTables with horizontal & vertical scroll
         var table = $('#permissionTable').DataTable({
             pageLength: 20,
             lengthMenu: [10, 20, 50, 100],
-            responsive: true
+            scrollX: true,        // horizontal scroll for many columns
+            scrollY: "600px",     // set max height for vertical scroll
+            scrollCollapse: true,
+            responsive: true,
+            fixedHeader: true     // fixed header on scroll
         });
 
         // Initialize Bootstrap tooltips
@@ -265,35 +290,31 @@ echo "</tbody></table>";
         let id = $(this).data('id');
         let field = $(this).data('field');
         let value = $(this).val();
-        
 
-        // status_name সিলেক্ট বক্স হলে background রঙ পরিবর্তন
         if (field === 'status_name') {
-            // release_colors কে JS এও ডিফাইন করতে হবে
             let release_colors = {
-                0: "#f8f8f8ff",  // white
-                1: "#808080",    // Gray
-                2: "#FF0000",    // Red
-                3: "#FFA500",    // Orange
-                4: "#FFD700",    // Yellow
-                5: "#1E90FF",    // Blue
-                6: "#07af07ff",  // Green
-                7: "#800080",    // Purple
-                8: "#012201ff"   // Dark Green
+                0: "#f8f8f8ff",
+                1: "#808080",
+                2: "#FF0000",
+                3: "#FFA500",
+                4: "#FFD700",
+                5: "#1E90FF",
+                6: "#07af07ff",
+                7: "#800080",
+                8: "#012201ff"
             };
             let release_text = {
-                0: "#f8f8f8ff",  // white
-                1: "#1a0a0aff",    // Gray
-                2: "#eccacaff",    // Red
-                3: "#1a180dff",    // Orange
-                4: "#1a180dff",    // Yellow
-                5: "#072746ff",    // Blue
-                6: "#8ea88eff",  // Green
-                7: "#f1bbf1ff",    // Purple
-                8: "#c5e9c5ff"   // Dark Green
+                0: "#f8f8f8ff",
+                1: "#1a0a0aff",
+                2: "#eccacaff",
+                3: "#1a180dff",
+                4: "#1a180dff",
+                5: "#072746ff",
+                6: "#8ea88eff",
+                7: "#f1bbf1ff",
+                8: "#c5e9c5ff"
             };
 
-            // background আপডেট
             $(this).css("background-color", release_colors[value] || "#ffffff");
             $(this).css("color", release_text[value] || "#ffffff");
         }
@@ -324,6 +345,9 @@ echo "</tbody></table>";
             console.log(res);
         });
     });
-
-
 </script>
+
+
+</body>
+
+</html>

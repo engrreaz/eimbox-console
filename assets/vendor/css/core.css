@@ -78,7 +78,7 @@
     --bs-font-monospace: "SFMono-Regular", menlo, monaco, consolas, "Liberation Mono", "Courier New", monospace;
     --bs-gradient: linear-gradient(180deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0));
     --bs-root-font-size: 16px;
-    --bs-body-font-family: var(--bs-font-sans-serif);
+    --bs-body-font-family: var(--bs-font-sans-serif), 'Noto Sans Bengali', sans-serif;
     --bs-body-font-size: 0.9375rem;
     --bs-body-font-weight: 400;
     --bs-body-line-height: 1.375;
@@ -4529,6 +4529,7 @@ textarea.form-control-lg {
     color: var(--bs-nav-pills-link-active-color);
     background-color: var(--bs-nav-pills-link-active-bg)
 }
+
 
 .nav-underline {
     --bs-nav-underline-gap: 1rem;
@@ -12970,7 +12971,7 @@ button:focus, button:focus-visible {
 
 .card-action.card-fullscreen {
     position: fixed;
-    z-index: 9999;
+    z-index: 999999;
     display: block;
     overflow: auto;
     border: 0;
@@ -28833,11 +28834,13 @@ body {
 
 .layout-navbar .navbar-dropdown .dropdown-menu {
     overflow: hidden;
-    min-inline-size: 23.75rem
+    min-inline-size: 30.00rem
+    /* min-inline-size: 23.75rem */
 }
 
 .layout-navbar .navbar-dropdown .dropdown-menu .dropdown-item {
-    min-block-size: 2.375rem
+    min-block-size: 10.0rem
+    /* min-block-size: 2.375rem */
 }
 
 .layout-navbar .navbar-dropdown .dropdown-menu .last-login {

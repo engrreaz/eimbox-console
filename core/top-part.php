@@ -1,4 +1,4 @@
-<a href="https://main.eimbox.com" class="app-brand-link gap-3">
+<a href="index.php" class="app-brand-link gap-3">
     <table style="text-align:center;">
         <tr>
             <td class="pe-3">

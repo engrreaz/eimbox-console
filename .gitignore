@@ -3,3 +3,6 @@ core/config.php
 thrown/*.*
 nav/nav copy.php
 inc.php
+prototype/*.*
+firebase/firebase.js
+firebase-messaging-sw.js

@@ -1,4 +1,15 @@
+<?php 
+ob_start(); // Output buffering শুরু
+require_once 'header.php';
 
+if($_SESSION['suspicious'] !== true && $is_admin == 0 ) {
+    header('Location: index.php');
+    exit;
+}
+ob_end_flush(); // Output send করা হবে
+?>
+
+<pre>
 ১) অস্বাভাবিক লোকেশন বা IP থেকে লগইন
 
 কি দেখবেন (Signals):
@@ -260,3 +271,147 @@ Telemetry & alerting — suspicious patterns automated alerts to security ops.
 A/B testing ও gradual rollout — নতুন heuristics small % users-এ চালাবেন false positive কমাতে। 
 OWASP Cheat Sheet Series
 +1
+
+
+
+
+
+</pre>
+
+<hr style="width:10px;" />
+
+<pre>
+  🧩 ১️⃣ লগইন ও অথেনটিকেশন সম্পর্কিত সন্দেহজনক আচরণ
+#	আচরণ
+1	একাধিক ব্যর্থ লগইন (short time window-এ)
+2	অচেনা বা নতুন IP থেকে হঠাৎ লগইন
+3	একই ইউজার একসাথে একাধিক সেশনে লগইন
+4	ভিন্ন দেশ/অঞ্চল থেকে এক ঘন্টার মধ্যে একাধিক লগইন
+5	একই IP থেকে বহু ভিন্ন ইউজার লগইন প্রচেষ্টা
+6	“Remember me” token reuse বা expired session reuse
+7	লগইনের পর তৎক্ষণাৎ logout (automation indicator)
+8	Invalid user-agent সহ লগইন
+9	Login without referrer header (direct script access)
+10	VPN, Proxy, TOR নেটওয়ার্ক থেকে লগইন
+🧠 ২️⃣ অ্যাকাউন্ট সেটিংস / প্রোফাইল আচরণ
+#	আচরণ
+11	ঘন ঘন পাসওয়ার্ড পরিবর্তন (e.g., মিনিটে কয়েকবার)
+12	একাধিকবার পাসওয়ার্ড রিসেট ইমেইল রিকোয়েস্ট
+13	ইমেইল/ফোন নাম্বার পরিবর্তন করে পুনরায় আগেরটিতে ফিরে যাওয়া
+14	Two-factor authentication নিষ্ক্রিয় করা
+15	অজানা ডিভাইস থেকে security settings পরিবর্তন
+16	প্রোফাইল ইনফো-তে অস্বাভাবিক বা গার্বেজ ডেটা (e.g., “asdf”, “123”)
+17	“Session hijacking” — ভিন্ন IP + একই session cookie detected
+💾 ৩️⃣ ফাইল, ইনপুট ও আপলোড সম্পর্কিত সন্দেহজনক আচরণ
+#	আচরণ
+18	executable ফাইল (.php, .exe, .js) আপলোড করার চেষ্টা
+19	বড় ফাইল বারবার আপলোড করা (resource abuse)
+20	ইনপুটে SQL/XSS প্যাটার্ন (e.g., ' OR 1=1 --)
+21	Base64 encoded / obfuscated script ফর্মে আপলোড
+22	ফাইল নাম অদ্ভুত (e.g., .php.jpg, double extension)
+23	ফাইল আপলোডের পর সাথে সাথে access চেষ্টা (execution intent)
+24	Cross-site request forgery (forged origin header)
+25	Repeated invalid MIME type submissions
+🌍 ৪️⃣ ট্রাফিক ও ইউজার বিহেভিয়ার
+#	আচরণ
+26	প্রতি মিনিটে অনেক বেশি রিকোয়েস্ট (automation / bot)
+27	খুব দ্রুত পেজ নেভিগেশন (impossible human speed)
+28	একাধিক পেজ একই timestamp-এ hit (multi-threaded bot)
+29	Suspicious referrer — অন্য domain থেকে redirect attempt
+30	একই অ্যাকাউন্টে ভিন্ন timezone-এর থেকে একসাথে কাজ
+31	পেজ access sequence অস্বাভাবিক (e.g., সরাসরি settings-এ jump)
+32	Session cookie পরিবর্তন / inject করা
+33	Invalid / missing headers (X-CSRF, Origin, UA)
+34	High frequency GET + POST mix (data scraping indicator)
+35	User idle অনেকক্ষণ, তারপর burst activity
+36	Frequent reload বা auto-refresh (DDOS বা crawling intent)
+🧾 ৫️⃣ ডেটা অ্যাক্সেস ও এক্সপোর্ট আচরণ
+#	আচরণ
+37	Short time-এ অনেক ডেটা ডাউনলোড / এক্সপোর্ট
+38	unauthorized resource access (ID tampering: ?id=5 instead of ?id=3)
+39	sensitive API endpoint hit (without permission)
+40	ডেটা filter-less export (fetch all records attempts)
+41	mass download of files / reports
+42	একই রিকোয়েস্ট পুনরায় পাঠানো (replay attack)
+43	অনেক সময় একই ইউজার ভিন্ন role দিয়ে একসাথে ডেটা দেখছে
+44	অন্য ইউজারের রেকর্ড দেখার চেষ্টা (Privilege escalation attempt)
+💳 ৬️⃣ ফাইনান্স / পেমেন্ট / ট্রানজাকশন
+#	আচরণ
+45	একই কার্ড দিয়ে বারবার ছোট ট্রানজাকশন (test payment)
+46	refund abuse — frequent refunds
+47	ভিন্ন একাউন্ট থেকে একই কার্ড ব্যবহার
+48	কারেন্সি mismatch (geo vs transaction)
+49	high-value transaction without history
+50	payment gateway থেকে mismatch response
+51	repeated failed payment attempts
+52	coupon abuse (same coupon multiple times)
+⚙️ ৭️⃣ সিস্টেম এক্সপ্লয়ট / ইনজেকশন প্রচেষ্টা
+#	আচরণ
+53	URL-এ script/tag injection (e.g., script)
+54	Admin panel বা hidden endpoint-এ direct access চেষ্টা
+55	Directory traversal (../../etc/passwd)
+56	Query parameter-এ encoded shell command (%3B ls -la)
+57	Form input-এ HTML injection
+58	Suspicious API payload (malformed JSON, hex blobs)
+59	Error-triggering input (SQL error forcing attempt)
+60	Suspicious automation tools user-agent (curl, python-requests)
+61	Cookie manipulation / JWT tampering
+62	Suspicious Referer Spoofing
+🕹 ৮️⃣ বট বা স্ক্রিপ্ট-ভিত্তিক আচরণ
+#	আচরণ
+63	same IP-থেকে মিনিটে শতাধিক রিকোয়েস্ট
+64	non-browser UA (e.g., “python”, “curl”, “wget”)
+65	no JS execution detected (JS-disabled bots)
+66	একই IP থেকে অনেক account তৈরি
+67	একই প্যাটার্নে ইনপুট (auto form filler)
+68	অনিয়মিত mouse movement / keyboard events
+69	headless browser (puppeteer, selenium UA)
+70	API key brute force attempt
+71	token reuse after expiry
+🧮 ৯️⃣ অভ্যন্তরীণ (insider / privilege abuse)
+#	আচরণ
+72	Admin user বারবার অন্যদের role পরিবর্তন করছে
+73	অপ্রয়োজনীয় bulk data export
+74	নিজস্ব record modify করার চেষ্টা
+75	privileged action without justification
+76	off-hours (midnight) এ data access
+77	বারবার sensitive টেবিল access (users, payments ইত্যাদি)
+78	config বা setting ফাইল ডাউনলোড
+79	admin action failure-এর পরে retry
+80	অন্য অ্যাডমিনের সেশন থেকে unauthorized task
+🧰 🔟 সিস্টেম বা নেটওয়ার্ক স্তরে সন্দেহজনক আচরণ
+#	আচরণ
+81	high latency burst / unusual bandwidth usage
+82	malformed request / 400 spam flood
+83	repeated 404 scanning (probing for hidden files)
+84	repeated 500/403 responses (probing for exploit)
+85	Login flood from same subnet
+86	POST request-এ invalid Content-Length
+87	unusual API call sequence
+88	JSON বা XML bomb attempt
+89	frequent CORS preflight anomalies
+90	WebSocket flood or continuous reconnect attempts
+⚡ ১১️⃣ অন্য গুরুত্বপূর্ণ Miscellaneous আচরণ
+#	আচরণ
+91	User repeatedly disables email notifications
+92	Multiple account creation from same device/IP
+93	Suspicious referral chain (self-referral loops)
+94	Rapid switching between multiple roles
+95	Device time manipulation (for session expiry bypass)
+96	Fake geolocation info
+97	Repeated login using temporary/disposable emails
+98	Abnormal timezone mismatch (login UTC+6, logout UTC-8)
+99	Automated “forgot password” spam
+100	abnormal high error 403/401 patterns per user
+
+✅ মোট: প্রায় ১০০টি ভিন্ন “Suspicious Activity”
+(এগুলোর মধ্যে থেকেই আপনি আপনার সিস্টেম অনুযায়ী detection rule বানাতে পারেন।)
+</pre>
+
+<?php require_once 'footer.php'; ?>
+
+<!-- ----------------------------------- -->
+<script></script>
+<!-- ----------------------------------- -->
+</body>
+</html>

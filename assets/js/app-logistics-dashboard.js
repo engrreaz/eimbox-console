@@ -1,3 +1,4 @@
+/*
 document.addEventListener("DOMContentLoaded", function (e) {
   let t, s, r, o, a, i, n, l, c, d, p;
   (d = isDarkStyle
@@ -433,3 +434,4 @@ document.addEventListener("DOMContentLoaded", function (e) {
       });
     }, 100);
 });
+*/

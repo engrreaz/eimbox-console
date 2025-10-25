@@ -1,0 +1,1 @@
+UPDATE modulemanager SET id="4",module_name="User Management",module_topic="DashKant",descrip="Nigarstan",status_name="4",related_pages="dashboard.php",nav_icon="house",nav_title="Dashboard",entryby="NULL",modifieddate="2025-09-23 18:23:04" WHERE id=4;;

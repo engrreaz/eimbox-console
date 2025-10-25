@@ -1,7 +1,5 @@
 <?php
-require_once 'core/config.php';
-require_once 'core/db.php';
-require_once 'core/global_values.php';
+require_once 'header.php';
 
 $perm_color = [0 => 'red', 1 => 'orange', 2 => 'blue', 3 => 'seagreen'];
 
@@ -176,7 +174,8 @@ while ($row = $result->fetch_assoc())
                                 ?>
                                 <div class="role-box">
                                     <h5 style="display:inline-block; color: gray; margin:0;"><?php echo $p['email']; ?> (Custom)
-                                        <?php echo $p['id']; ?></h5>
+                                        <?php echo $p['id']; ?>
+                                    </h5>
                                     <select class="permission-select" data-id="<?php echo $p['id']; ?>"
                                         data-sccode="<?php echo $u['sccode']; ?>" data-role="" data-user="<?php echo $p['email']; ?>"
                                         data-page="<?php echo $page_name; ?>" style="color:<?php echo $perm_color[$p['permission']]; ?>;">
@@ -218,6 +217,8 @@ while ($row = $result->fetch_assoc())
         <button id="closeModalBtn">Close</button>
     </div>
     <div id="modalOverlay"></div>
+
+    <?php include_once('footer.php'); ?>
 
     <script>
         function showToast(msg) { $('#toast').text(msg).fadeIn(200).delay(10000).fadeOut(400); }
@@ -308,6 +309,12 @@ while ($row = $result->fetch_assoc())
             subModuleDiv.append(newDiv);
             $('#customModal, #modalOverlay').fadeOut(200);
         });
+
+
+
+
+        
+
     </script>
 
 </body>

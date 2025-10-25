@@ -14,8 +14,8 @@
                 style="height:30px; width:30px; border-radius:50%;" />
         </div>
         <div class="me-8">
-            <div class="m-0 p-0  fw-bold btn"><a href="index.php"><?php echo $scname; ?></a></div>
-            <div class="p-0 m-0 pt-1 text-muted fs-tiny ">Bangladesh Bokkorbaji Institute</div>
+            <div class="m-0 p-0  fw-bold btn"><a href="index.php"><?php echo $_SESSION['scname']; ?></a></div>
+            <div class="p-0 m-0 pt-1 text-muted fs-tiny "><?php echo $_SESSION['scaddress_top']; ?></div>
 
         </div>
 
@@ -45,8 +45,8 @@
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li>
-                        <a class="dropdown-item" href="javascript:void(0);" data-language="en"
-                            data-text-direction="ltr">
+                        <a class="dropdown-item" href="javascript:void(0);" data-language="en" data-text-direction="ltr"
+                            data-notrack="true">
                             <span>English</span>
                         </a>
                     </li>
@@ -79,22 +79,29 @@
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li>
-                        <a class="dropdown-item" href="user-profile.php">
+                        <a class="dropdown-item text-primary" href="#" data-bs-toggle="modal"
+                            data-bs-target="#documentation">
                             <i class="icon-base bi bi-file-text icon-22px me-2"></i>
                             <span class="align-middle"> Documentation </span>
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="user-profile.php">
+                        <a href="#" class="dropdown-item " data-bs-toggle="modal" data-bs-target="#youtubeModal"
+                            style="color: crimson;">
                             <i class="icon-base bi bi-youtube icon-22px me-2"></i>
-                            <span class="align-middle"> Youtube Tutorial </span>
+                            <span class="align-middle">Watch Video</span>
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="user-profile.php">
+                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#featuresModal"
+                            style="color: <?php echo $release_colors[$page_status]; ?>">
                             <i class="icon-base bi bi-file-earmark icon-22px me-2"></i>
-                            <span class="align-middle"> About This Page </span>
+                            <span class="align-middle">
+                                About This Page </span>
                         </a>
+
+
+
                     </li>
 
 
@@ -136,100 +143,10 @@
             <!-- / Style Switcher-->
 
 
+
+            <?php include_once('core/shortcut-icon.php'); ?>
             <!-- Quick links -->
-            <li class="nav-item dropdown-shortcuts navbar-dropdown dropdown me-sm-2 me-xl-0">
-                <a class="nav-link dropdown-toggle hide-arrow btn btn-icon btn-text-secondary rounded-pill"
-                    href="javascript:void(0);" data-bs-toggle="dropdown" data-bs-auto-close="outside"
-                    aria-expanded="false">
-                    <i class="icon-base bi bi-bookmark-star icon-22px"></i>
-                </a>
-                <div class="dropdown-menu dropdown-menu-end p-0">
-                    <div class="dropdown-menu-header border-bottom">
-                        <div class="dropdown-header d-flex align-items-center py-2 my-50">
-                            <h6 class="mb-0 me-auto">Shortcuts</h6>
-                            <a href="javascript:void(0)"
-                                class="dropdown-shortcuts-add btn btn-text-secondary rounded-pill btn-icon"
-                                data-bs-toggle="tooltip" data-bs-placement="top" title="Add shortcuts">
-                                <i class="icon-base ri ri-add-line icon-20px text-heading"></i>
-                            </a>
-                        </div>
-                    </div>
-                    <div class="dropdown-shortcuts-list scrollable-container">
-                        <div class="row row-bordered overflow-visible g-0">
-                            <div class="dropdown-shortcuts-item col">
-                                <span class="dropdown-shortcuts-icon rounded-circle mb-3">
-                                    <i class="icon-base ri ri-calendar-line icon-26px text-heading"></i>
-                                </span>
-                                <a href="https://demos.themeselection.com/materio-bootstrap-html-admin-template/html/vertical-menu-template/app-calendar.html"
-                                    class="stretched-link">Calendar</a>
-                                <small>Appointments</small>
-                            </div>
-                            <div class="dropdown-shortcuts-item col">
-                                <span class="dropdown-shortcuts-icon rounded-circle mb-3">
-                                    <i class="icon-base ri ri-file-text-line icon-26px text-heading"></i>
-                                </span>
-                                <a href="https://demos.themeselection.com/materio-bootstrap-html-admin-template/html/vertical-menu-template/app-invoice-list.html"
-                                    class="stretched-link">Invoice App</a>
-                                <small>Manage Accounts</small>
-                            </div>
-                        </div>
-                        <div class="row row-bordered overflow-visible g-0">
-                            <div class="dropdown-shortcuts-item col">
-                                <span class="dropdown-shortcuts-icon rounded-circle mb-3">
-                                    <i class="icon-base ri ri-user-line icon-26px text-heading"></i>
-                                </span>
-                                <a href="https://demos.themeselection.com/materio-bootstrap-html-admin-template/html/vertical-menu-template/app-user-list.html"
-                                    class="stretched-link">User App</a>
-                                <small>Manage Users</small>
-                            </div>
-                            <div class="dropdown-shortcuts-item col">
-                                <span class="dropdown-shortcuts-icon rounded-circle mb-3">
-                                    <i class="icon-base ri ri-computer-line icon-26px text-heading"></i>
-                                </span>
-                                <a href="https://demos.themeselection.com/materio-bootstrap-html-admin-template/html/vertical-menu-template/app-access-roles.html"
-                                    class="stretched-link">Role Management</a>
-                                <small>Permission</small>
-                            </div>
-                        </div>
-                        <div class="row row-bordered overflow-visible g-0">
-                            <div class="dropdown-shortcuts-item col">
-                                <span class="dropdown-shortcuts-icon rounded-circle mb-3">
-                                    <i class="icon-base ri ri-pie-chart-2-line icon-26px text-heading"></i>
-                                </span>
-                                <a href="https://demos.themeselection.com/materio-bootstrap-html-admin-template/html/vertical-menu-template/index.html"
-                                    class="stretched-link">Dashboard</a>
-                                <small>User Dashboard</small>
-                            </div>
-                            <div class="dropdown-shortcuts-item col">
-                                <span class="dropdown-shortcuts-icon rounded-circle mb-3">
-                                    <i class="icon-base ri ri-settings-4-line icon-26px text-heading"></i>
-                                </span>
-                                <a href="https://demos.themeselection.com/materio-bootstrap-html-admin-template/html/vertical-menu-template/pages-account-settings-account.html"
-                                    class="stretched-link">Setting</a>
-                                <small>Account Settings</small>
-                            </div>
-                        </div>
-                        <div class="row row-bordered overflow-visible g-0">
-                            <div class="dropdown-shortcuts-item col">
-                                <span class="dropdown-shortcuts-icon rounded-circle mb-3">
-                                    <i class="icon-base ri ri-question-line icon-26px text-heading"></i>
-                                </span>
-                                <a href="https://demos.themeselection.com/materio-bootstrap-html-admin-template/html/vertical-menu-template/pages-faq.html"
-                                    class="stretched-link">FAQs</a>
-                                <small>FAQs & Articles</small>
-                            </div>
-                            <div class="dropdown-shortcuts-item col">
-                                <span class="dropdown-shortcuts-icon rounded-circle mb-3">
-                                    <i class="icon-base ri ri-tv-2-line icon-26px text-heading"></i>
-                                </span>
-                                <a href="https://demos.themeselection.com/materio-bootstrap-html-admin-template/html/vertical-menu-template/modal-examples.html"
-                                    class="stretched-link">Modals</a>
-                                <small>Useful Popups</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </li>
+
             <!-- Quick links -->
 
             <!-- Notification -->
@@ -239,7 +156,8 @@
                     aria-expanded="false">
                     <span class="position-relative">
                         <i class="icon-base bi bi-bell icon-22px"></i>
-                        <span class="badge rounded-pill bg-danger badge-dot badge-notifications border"></span>
+                        <span id="dotBadge"
+                            class="badge rounded-pill bg-gray bg-danger badge-dot badge-notifications border"></span>
                     </span>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end p-0">
@@ -247,7 +165,8 @@
                         <div class="dropdown-header d-flex align-items-center py-3">
                             <h6 class="mb-0 me-auto">Notification</h6>
                             <div class="d-flex align-items-center h6 mb-0">
-                                <span class="badge bg-label-primary rounded-pill me-2">8 New</span>
+                                <span class="badge bg-label-primary rounded-pill me-2" id="notifCountBadge">
+                                    0</span>
                                 <a href="javascript:void(0)" class="dropdown-notifications-all p-2"
                                     data-bs-toggle="tooltip" data-bs-placement="top" title="Mark all as read">
                                     <i class="icon-base ri ri-mail-open-line text-heading"></i>
@@ -256,217 +175,12 @@
                         </div>
                     </li>
                     <li class="dropdown-notifications-list scrollable-container">
-                        <ul class="list-group list-group-flush">
-                            <li class="list-group-item list-group-item-action dropdown-notifications-item">
-                                <div class="d-flex">
-                                    <div class="flex-shrink-0 me-3">
-                                        <div class="avatar">
-                                            <img src="https://demos.themeselection.com/materio-bootstrap-html-admin-template/assets/img/avatars/1.png"
-                                                alt="alt" class="rounded-circle" />
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h6 class="small mb-50">Congratulation Lettie 🎉</h6>
-                                        <small class="mb-1 d-block text-body">Won the monthly best
-                                            seller gold badge</small>
-                                        <small class="text-body-secondary">1h ago</small>
-                                    </div>
-                                    <div class="flex-shrink-0 dropdown-notifications-actions">
-                                        <a href="javascript:void(0)" class="dropdown-notifications-read"> <span
-                                                class="badge badge-dot"></span></a>
-                                        <a href="javascript:void(0)" class="dropdown-notifications-archive"> <span
-                                                class="icon-base ri ri-close-line"></span></a>
-                                    </div>
-                                </div>
-                            </li>
-                            <li class="list-group-item list-group-item-action dropdown-notifications-item">
-                                <div class="d-flex">
-                                    <div class="flex-shrink-0 me-3">
-                                        <div class="avatar">
-                                            <span class="avatar-initial rounded-circle bg-label-danger">CF</span>
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h6 class="small mb-50">Charles Franklin</h6>
-                                        <small class="mb-1 d-block text-body">Accepted your
-                                            connection</small>
-                                        <small class="text-body-secondary">12hr ago</small>
-                                    </div>
-                                    <div class="flex-shrink-0 dropdown-notifications-actions">
-                                        <a href="javascript:void(0)" class="dropdown-notifications-read"> <span
-                                                class="badge badge-dot"></span></a>
-                                        <a href="javascript:void(0)" class="dropdown-notifications-archive"> <span
-                                                class="icon-base ri ri-close-line"></span></a>
-                                    </div>
-                                </div>
-                            </li>
-                            <li
-                                class="list-group-item list-group-item-action dropdown-notifications-item marked-as-read">
-                                <div class="d-flex">
-                                    <div class="flex-shrink-0 me-3">
-                                        <div class="avatar">
-                                            <img src="https://demos.themeselection.com/materio-bootstrap-html-admin-template/assets/img/avatars/2.png"
-                                                alt="alt" class="rounded-circle" />
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h6 class="small mb-50">New Message ✉️</h6>
-                                        <small class="mb-1 d-block text-body">You have new message from
-                                            Natalie</small>
-                                        <small class="text-body-secondary">1h ago</small>
-                                    </div>
-                                    <div class="flex-shrink-0 dropdown-notifications-actions">
-                                        <a href="javascript:void(0)" class="dropdown-notifications-read"> <span
-                                                class="badge badge-dot"></span></a>
-                                        <a href="javascript:void(0)" class="dropdown-notifications-archive"> <span
-                                                class="icon-base ri ri-close-line"></span></a>
-                                    </div>
-                                </div>
-                            </li>
-                            <li class="list-group-item list-group-item-action dropdown-notifications-item">
-                                <div class="d-flex">
-                                    <div class="flex-shrink-0 me-3">
-                                        <div class="avatar">
-                                            <span class="avatar-initial rounded-circle bg-label-success">
-                                                <i class="icon-base ri ri-car-line"></i>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h6 class="small mb-50">Whoo! You have new order 🛒</h6>
-                                        <small class="mb-1 d-block text-body">ACME Inc. made new order
-                                            $1,154</small>
-                                        <small class="text-body-secondary">1 day ago</small>
-                                    </div>
-                                    <div class="flex-shrink-0 dropdown-notifications-actions">
-                                        <a href="javascript:void(0)" class="dropdown-notifications-read"> <span
-                                                class="badge badge-dot"></span></a>
-                                        <a href="javascript:void(0)" class="dropdown-notifications-archive"> <span
-                                                class="icon-base ri ri-close-line"></span></a>
-                                    </div>
-                                </div>
-                            </li>
-                            <li
-                                class="list-group-item list-group-item-action dropdown-notifications-item marked-as-read">
-                                <div class="d-flex">
-                                    <div class="flex-shrink-0 me-3">
-                                        <div class="avatar">
-                                            <img src="https://demos.themeselection.com/materio-bootstrap-html-admin-template/assets/img/avatars/9.png"
-                                                alt="alt" class="rounded-circle" />
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h6 class="small mb-50">Application has been approved 🚀</h6>
-                                        <small class="mb-1 d-block text-body">Your ABC project
-                                            application has been approved.</small>
-                                        <small class="text-body-secondary">2 days ago</small>
-                                    </div>
-                                    <div class="flex-shrink-0 dropdown-notifications-actions">
-                                        <a href="javascript:void(0)" class="dropdown-notifications-read"> <span
-                                                class="badge badge-dot"></span></a>
-                                        <a href="javascript:void(0)" class="dropdown-notifications-archive"> <span
-                                                class="icon-base ri ri-close-line"></span></a>
-                                    </div>
-                                </div>
-                            </li>
-                            <li
-                                class="list-group-item list-group-item-action dropdown-notifications-item marked-as-read">
-                                <div class="d-flex">
-                                    <div class="flex-shrink-0 me-3">
-                                        <div class="avatar">
-                                            <span class="avatar-initial rounded-circle bg-label-success">
-                                                <i class="icon-base ri ri-pie-chart-2-line"></i>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h6 class="small mb-50">Monthly report is generated</h6>
-                                        <small class="mb-1 d-block text-body">July monthly financial
-                                            report is generated </small>
-                                        <small class="text-body-secondary">3 days ago</small>
-                                    </div>
-                                    <div class="flex-shrink-0 dropdown-notifications-actions">
-                                        <a href="javascript:void(0)" class="dropdown-notifications-read"> <span
-                                                class="badge badge-dot"></span></a>
-                                        <a href="javascript:void(0)" class="dropdown-notifications-archive"> <span
-                                                class="icon-base ri ri-close-line"></span></a>
-                                    </div>
-                                </div>
-                            </li>
-                            <li
-                                class="list-group-item list-group-item-action dropdown-notifications-item marked-as-read">
-                                <div class="d-flex">
-                                    <div class="flex-shrink-0 me-3">
-                                        <div class="avatar">
-                                            <img src="https://demos.themeselection.com/materio-bootstrap-html-admin-template/assets/img/avatars/5.png"
-                                                alt="alt" class="rounded-circle" />
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h6 class="small mb-50">Send connection request</h6>
-                                        <small class="mb-1 d-block text-body">Peter sent you connection
-                                            request</small>
-                                        <small class="text-body-secondary">4 days ago</small>
-                                    </div>
-                                    <div class="flex-shrink-0 dropdown-notifications-actions">
-                                        <a href="javascript:void(0)" class="dropdown-notifications-read"> <span
-                                                class="badge badge-dot"></span></a>
-                                        <a href="javascript:void(0)" class="dropdown-notifications-archive"> <span
-                                                class="icon-base ri ri-close-line"></span></a>
-                                    </div>
-                                </div>
-                            </li>
-                            <li class="list-group-item list-group-item-action dropdown-notifications-item">
-                                <div class="d-flex">
-                                    <div class="flex-shrink-0 me-3">
-                                        <div class="avatar">
-                                            <img src="https://demos.themeselection.com/materio-bootstrap-html-admin-template/assets/img/avatars/6.png"
-                                                alt="alt" class="rounded-circle" />
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h6 class="small mb-50">New message from Jane</h6>
-                                        <small class="mb-1 d-block text-body">Your have new message from
-                                            Jane</small>
-                                        <small class="text-body-secondary">5 days ago</small>
-                                    </div>
-                                    <div class="flex-shrink-0 dropdown-notifications-actions">
-                                        <a href="javascript:void(0)" class="dropdown-notifications-read"> <span
-                                                class="badge badge-dot"></span></a>
-                                        <a href="javascript:void(0)" class="dropdown-notifications-archive"> <span
-                                                class="icon-base ri ri-close-line"></span></a>
-                                    </div>
-                                </div>
-                            </li>
-                            <li
-                                class="list-group-item list-group-item-action dropdown-notifications-item marked-as-read">
-                                <div class="d-flex">
-                                    <div class="flex-shrink-0 me-3">
-                                        <div class="avatar">
-                                            <span class="avatar-initial rounded-circle bg-label-warning">
-                                                <i class="icon-base ri ri-error-warning-line"></i>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h6 class="small mb-50">CPU is running high</h6>
-                                        <small class="mb-1 d-block text-body">CPU Utilization Percent is
-                                            currently at 88.63%,</small>
-                                        <small class="text-body-secondary">5 days ago</small>
-                                    </div>
-                                    <div class="flex-shrink-0 dropdown-notifications-actions">
-                                        <a href="javascript:void(0)" class="dropdown-notifications-read"> <span
-                                                class="badge badge-dot"></span></a>
-                                        <a href="javascript:void(0)" class="dropdown-notifications-archive"> <span
-                                                class="icon-base ri ri-close-line"></span></a>
-                                    </div>
-                                </div>
-                            </li>
+                        <ul id="notifList" aria-atomic="" class="list-group list-group-flush">
                         </ul>
                     </li>
                     <li class="border-top">
                         <div class="d-grid p-4">
-                            <a class="btn btn-primary btn-sm d-flex h-px-34" href="javascript:void(0);">
+                            <a class="btn btn-primary btn-sm d-flex h-px-34" href="notifications.php">
                                 <small class="align-middle">View all notifications</small>
                             </a>
                         </div>
@@ -474,6 +188,11 @@
                 </ul>
             </li>
             <!--/ Notification -->
+
+
+
+
+
 
             <!-- User -->
             <li class="nav-item navbar-dropdown dropdown-user dropdown">
@@ -484,8 +203,7 @@
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end mt-3 py-2">
                     <li>
-                        <a class="dropdown-item"
-                            href="https://demos.themeselection.com/materio-bootstrap-html-admin-template/html/vertical-menu-template/pages-account-settings-account.html">
+                        <a class="dropdown-item" style="min-block-size:auto;" href="#">
                             <div class="d-flex align-items-center">
                                 <div class="flex-shrink-0 me-2">
                                     <div class="avatar avatar-online">
@@ -494,8 +212,9 @@
                                     </div>
                                 </div>
                                 <div class="flex-grow-1">
-                                    <h6 class="mb-0 small">John Doe</h6>
-                                    <small class="text-body-secondary">Admin</small>
+                                    <h6 class="mb-0 small"><?php echo $fullname; ?></h6>
+                                    <small class="text-body-secondary"><?php echo trim($usr, '%'); ?></small><br>
+                                    <small class="text-body-info"><?php echo trim($userlevel, '%'); ?></small>
                                 </div>
                             </div>
                         </a>
@@ -504,20 +223,20 @@
                         <div class="dropdown-divider"></div>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="user-profile.php">
+                        <a class="dropdown-item" style="min-block-size:auto;" href="user-profile.php">
                             <i class="icon-base ri ri-user-3-line icon-22px me-2"></i>
                             <span class="align-middle">My Profile</span>
                         </a>
                     </li>
-                    <li>
-                        <a class="dropdown-item"
+                    <li hidden>
+                        <a class="dropdown-item" style="min-block-size:auto;"
                             href="https://demos.themeselection.com/materio-bootstrap-html-admin-template/html/vertical-menu-template/pages-account-settings-account.html">
                             <i class="icon-base ri ri-settings-4-line icon-22px me-2"></i>
                             <span class="align-middle">Settings</span>
                         </a>
                     </li>
-                    <li>
-                        <a class="dropdown-item"
+                    <li hidden>
+                        <a class="dropdown-item" style="min-block-size:auto;"
                             href="https://demos.themeselection.com/materio-bootstrap-html-admin-template/html/vertical-menu-template/pages-account-settings-billing.html">
                             <span class="d-flex align-items-center align-middle">
                                 <i class="flex-shrink-0 icon-base ri ri-file-text-line icon-22px me-2"></i>
@@ -530,20 +249,33 @@
                     <li>
                         <div class="dropdown-divider"></div>
                     </li>
-                    <li>
-                        <a class="dropdown-item"
+                    <li hidden>
+                        <a class="dropdown-item" style="min-block-size:auto;"
                             href="https://demos.themeselection.com/materio-bootstrap-html-admin-template/html/vertical-menu-template/pages-pricing.html">
                             <i class="icon-base ri ri-money-dollar-circle-line icon-22px me-2"></i>
                             <span class="align-middle">Pricing</span>
                         </a>
                     </li>
-                    <li>
-                        <a class="dropdown-item"
-                            href="https://demos.themeselection.com/materio-bootstrap-html-admin-template/html/vertical-menu-template/pages-faq.html">
-                            <i class="icon-base ri ri-question-line icon-22px me-2"></i>
-                            <span class="align-middle">FAQ</span>
-                        </a>
-                    </li>
+
+                    <?php if (isset($_SESSION['_backup'])) { ?>
+                        <li>
+                            <a class="dropdown-item" style="min-block-size:auto;" href="core/back-log.php">
+                                <i class="icon-base bi bi-box-arrow-right icon-22px me-2"></i>
+                                <span class="align-middle text-danger fw-bolder"> Back Login </span>
+                            </a>
+                        </li>
+                    <?php } ?>
+
+
+                    <?php if ($is_admin > 4) { ?>
+                        <li>
+                            <a class="dropdown-item text-danger" style="min-block-size:auto;" href="admin-home.php">
+                                <i class="icon-base bi bi-anthropic icon-22px me-2"></i>
+                                <span class="align-middle  fw-bolder"> Admin Panel </span>
+                            </a>
+                        </li>
+                    <?php } ?>
+
                     <li>
                         <div class="d-grid px-4 pt-2 pb-1">
                             <a class="btn btn-danger d-flex" href="logout.php" target="_blank">
@@ -560,3 +292,132 @@
     </div>
 
 </nav>
+
+
+
+<div class="modal fade" id="youtubeModal" tabindex="-1" aria-labelledby="youtubeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="youtubeModalLabel">Video Tutorial</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="ratio ratio-16x9">
+                    <iframe id="youtubeIframe" src="https://www.youtube.com/embed/Cn4G2lZ_g2I"
+                        title="YouTube video player" frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="modal fade responsive" id="documentation" tabindex="-1" aria-labelledby="documentationLabel"
+    aria-hidden="true" style="max-height:95vh;">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content ">
+            <div class="modal-header">
+                <h5 class="modal-title" id="documentationLabel">Documentation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body " style="overflow-y: auto;" ;>
+
+                <!-- ducumentation page wrapper..... -->
+                <?php
+
+
+                if (!$documentation_data) {
+                    echo "<div class='alert alert-warning'>Documentation not found.</div>";
+                } else {
+                    echo "<div class='text-center'>";
+                    echo "<h5 class='text-primary p-0 m-0'> $page_title </h5>";
+                    echo "<h6 class='text-secondary text-small p-0 m-0'> $currentFile </h6>";
+                    echo "</div>";
+                    foreach ($documentation_data as $doc) {
+
+
+
+                        // 🧹 HTML Purifier config (safe but allows rich HTML)
+                        $config = HTMLPurifier_Config::createDefault();
+
+                        // iframe whitelist
+                        $config->set('HTML.SafeIframe', true);
+                        $config->set('URI.SafeIframeRegexp', '#^(https?:)?//(www\.youtube\.com/embed/|player\.vimeo\.com/video/)#');
+
+                        // ✅ data:image/* allow করা
+                        $config->set('URI.AllowedSchemes', array(
+                            'http' => true,
+                            'https' => true,
+                            'data' => true
+                        ));
+
+                        // ✅ HTML allow list
+                        $config->set('HTML.Allowed', 'p,br,b,strong,i,em,u,a[href|target],ul,ol,li,img[src|alt|width|height|style],h1,h2,h3,h4,h5,h6,table,tr,td,th,thead,tbody,pre,code,blockquote,iframe');
+                        $config->set('CSS.AllowedProperties', ['width', 'height', 'float', 'margin', 'border', 'background', 'color']);
+
+                        $purifier = new HTMLPurifier($config);
+
+                        // 🔒 Safe render
+                        $safe_html = $purifier->purify($doc['full_documentation']);
+
+                        ?>
+
+                        <style>
+                            .documentation-content {
+                                font-size: 16px;
+                                line-height: 1.6;
+                            }
+
+                            .documentation-content img {
+                                max-width: 100%;
+                                border-radius: 6px;
+                                margin: 10px 0;
+                                display: block;
+                            }
+
+                            .documentation-content iframe {
+                                max-width: 100%;
+                                min-height: 300px;
+                                border: none;
+                            }
+
+                            .documentation-content pre {
+                                background: #f8f9fa;
+                                padding: 10px;
+                                border-radius: 4px;
+                                overflow-x: auto;
+                            }
+
+                            .documentation-content a {
+                                color: #0d6efd;
+                                text-decoration: underline;
+                            }
+                        </style>
+
+                        <div class="container mt-4 responsive">
+                            <h6 class="mb-0"><?= htmlspecialchars($doc['feature_title']) ?></h6>
+                            <div class="mb-2 text-secondary small">
+                                <strong>Feature:</strong> <?= htmlspecialchars($doc['feature_title']) ?>
+                                <span class="ps-4"><i class="bi bi-file-diff-fill"></i></span>
+                                <strong>Version:</strong> <?= htmlspecialchars($doc['version']) ?>
+                            </div>
+
+
+
+                            <div class="documentation-content overflow-auto" style="max-height:40vh;">
+                                <?= $safe_html ?>
+                            </div>
+                        </div>
+                        <hr>
+                    <?php }
+                } ?>
+
+            </div>
+        </div>
+    </div>
+</div>

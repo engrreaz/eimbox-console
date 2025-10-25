@@ -1,54 +1,14 @@
 <?php
-
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-require 'vendor/autoload.php'; // Composer autoload
-include_once('core/core-val.php');
+require dirname(__DIR__) . '/vendor/autoload.php';
 
-// $mail_type = 'forgot-password';
-// $mail_to = $email;
-// $mail_name = 'EIMBox User';
-// $mail_subject = 'Reset EIMBox Password';
-// $mail_attach = '';
-// $msg_success = "Reset Password mail has been send to your mail $mail_to";
-
-echo MAIL_SECRET;
-echo $resetLink;
-
-// --------------------------------------------------------------------
-$htmlTemplate = file_get_contents('mailer/mail-templete-' . $mail_type . '.php'); // অথবা সরাসরি স্ট্রিং হিসেবে.
-
-if ($mail_type == 'forgot-password') {
-  $html = str_replace('%NAME%', htmlspecialchars($mail_to, ENT_QUOTES, 'UTF-8'), $htmlTemplate);
-  $html = str_replace('%RESET_LINK%', htmlspecialchars($resetLink, ENT_QUOTES, 'UTF-8'), $html);
-  $mail_alt = '';
-} else if ($mail_type == 'otp') {
-  $otp = $token;
-
-  $otp = str_pad(preg_replace('/\D/', '', $otp), 6, '0', STR_PAD_LEFT);
-  $digits = str_split($otp);
-  $html = str_replace('%OTP%', htmlspecialchars($otp, ENT_QUOTES, 'UTF-8'), $htmlTemplate);
-  for ($i = 0; $i < 6; $i++) {
-    $html = str_replace('%D' . ($i + 1) . '%', htmlspecialchars($digits[$i], ENT_QUOTES, 'UTF-8'), $html);
-  }
-  $html = str_replace('%NAME%', htmlspecialchars($to_name, ENT_QUOTES, 'UTF-8'), $html);
-  $mail_alt = '';
-}
-
-
-
-
-// ********************************************************************
-$to_mail = $mail_to;
-$to_name = $mail_name;
-$mail_body = $html;
-$pht = $mail_attach;
-$success_message = $msg_success;
-// *********************************************************************************************************
-$mail = new PHPMailer(true);
+// Load core variables
+include_once(dirname(__DIR__) . '/core/core-val.php');
 
 try {
+  $mail = new PHPMailer(true);
   $mail->isSMTP();
   $mail->Host = 'smtp.gmail.com';
   $mail->SMTPAuth = true;
@@ -57,23 +17,70 @@ try {
   $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
   $mail->Port = 465;
 
-
   $mail->setFrom(MAIL_FROM, MAIL_NAME);
-  $mail->addAddress($to_mail, $to_name);
+  $mail->addAddress($mail_to, $mail_name);
   $mail->addReplyTo(MAIL_ADMIN, NAME_ADMIN);
   $mail->addBCC(MAIL_CC, NAME_CC);
 
-  if (file_exists($pht)) {
-    $mail->addAttachment($pht);
+  if ($mail_attach && file_exists($mail_attach)) {
+    $mail->addAttachment($mail_attach);
+  }
+
+  // Load template
+  $template_path = dirname(__DIR__) . "/mailer/mail-templete-$mail_type.php";
+  if (!file_exists($template_path)) {
+    throw new Exception("Mail template not found: $template_path");
+  }
+  $htmlTemplate = file_get_contents($template_path);
+
+  if ($mail_type === 'new-ins') {
+
+    $html = str_replace('%NAME%', htmlspecialchars($mail_name, ENT_QUOTES, 'UTF-8'), $htmlTemplate);
+    $html = str_replace('%ACTIVATION_LINK%', htmlspecialchars($resetLink, ENT_QUOTES, 'UTF-8'), $html);
+    $html = str_replace('%INSTITUTE_NAME%', htmlspecialchars($mail_name, ENT_QUOTES, 'UTF-8'), $html);
+    $mail_alt = '';
+
+  } else if ($mail_type === 'otp') {
+
+    $html = str_replace('%NAME%', htmlspecialchars($mail_name, ENT_QUOTES, 'UTF-8'), $htmlTemplate);
+    $html = str_replace('%ACTIVATION_LINK%', htmlspecialchars($resetLink, ENT_QUOTES, 'UTF-8'), $html);
+    $html = str_replace('%INSTITUTE_NAME%', htmlspecialchars($mail_name, ENT_QUOTES, 'UTF-8'), $html);
+
+    $digits = str_split($token); // ['4','8','2','1','5','9']
+    // প্লেসহোল্ডারগুলো একে একে রিপ্লেস করা
+    for ($i = 0; $i < 6; $i++) {
+      $html = str_replace('%D' . ($i + 1) . '%', $digits[$i], $html);
+    }
+
+    // পুরো OTP প্লেসহোল্ডারে বসানো
+    $html = str_replace('%OTP%', $token, $html);
+
+    $mail_alt = '';
+
+  } else if ($mail_type == 'forgot-password') {
+
+    $html = str_replace('%NAME%', htmlspecialchars($mail_to, ENT_QUOTES, 'UTF-8'), $htmlTemplate);
+    $html = str_replace('%RESET_LINK%', htmlspecialchars($resetLink, ENT_QUOTES, 'UTF-8'), $html);
+    $mail_alt = '';
+
+  } else if ($mail_type == 'new-user') {
+
+
+    $html = str_replace('%EMAIL%', htmlspecialchars($mail_to, ENT_QUOTES, 'UTF-8'), $htmlTemplate);
+    $html = str_replace('%ACTIVATION_LINK%', htmlspecialchars($resetLink, ENT_QUOTES, 'UTF-8'), $html);
+    $html = str_replace(' %INSTITUTE_NAME%', htmlspecialchars($scname, ENT_QUOTES, 'UTF-8'), $html);
+
+    $mail_alt = '';
+
   }
 
   $mail->isHTML(true);
   $mail->Subject = $mail_subject;
-  $mail->Body = $mail_body;
+  $mail->Body = $html;
   $mail->AltBody = $mail_alt;
 
   $mail->send();
-  echo $success_message;
+
 } catch (Exception $e) {
-  echo "Mail could not be sent. Error: {$mail->ErrorInfo}";
+  throw new Exception("Mail could not be sent. Error: {$mail->ErrorInfo}");
 }

@@ -1,0 +1,43 @@
+[2025-10-14 01:18:28] APPLIED: -- 2025-10-13 23:21:59.054427
+[2025-10-14 01:18:28] SKIPPED: ALTER TABLE `chats` ADD `sccode` INT NOT NULL AFTER `sent_at`;
+[2025-10-14 01:18:28] APPLIED: -- 2025-10-13 23:21:59.083974
+[2025-10-14 01:18:28] SKIPPED: ALTER TABLE `chats` ADD `sccode` INT NOT NULL AFTER `sent_at`;
+[2025-10-14 01:18:28] APPLIED: -- 2025-10-13 23:21:59.097698
+[2025-10-14 01:18:28] SKIPPED: ALTER TABLE `chats` ADD `sccode` INT NOT NULL AFTER `sent_at`;
+[2025-10-14 01:18:28] APPLIED: -- 2025-10-13 23:21:59.116180
+[2025-10-14 01:18:28] SKIPPED: ALTER TABLE `chats` ADD `sccode` INT NOT NULL AFTER `sent_at`;
+[2025-10-14 01:18:28] APPLIED: -- 2025-10-13 23:21:59.125698
+[2025-10-14 01:18:28] SKIPPED: ALTER TABLE `chats` ADD `sccode` INT NOT NULL AFTER `sent_at`;
+[2025-10-14 01:18:28] APPLIED: -- 2025-10-13 23:21:59.134089
+[2025-10-14 01:18:28] SKIPPED: ALTER TABLE `chats` ADD `sccode` INT NOT NULL AFTER `sent_at`;
+[2025-10-14 01:18:28] APPLIED: -- 2025-10-13 23:21:59.143526
+[2025-10-14 01:18:28] SKIPPED: ALTER TABLE `chats` ADD `sccode` INT NOT NULL AFTER `sent_at`;
+[2025-10-14 01:18:28] APPLIED: -- 2025-10-13 23:21:59.155141
+[2025-10-14 01:18:28] SKIPPED: ALTER TABLE `chats` ADD `sccode` INT NOT NULL AFTER `sent_at`;
+[2025-10-14 01:18:28] APPLIED: -- 2025-10-14 01:06:00.433499
+[2025-10-14 01:18:28] FAILED: CREATE TABLE faqs ( -- ERROR: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '' at line 1
+[2025-10-14 01:18:28] FAILED: id INT AUTO_INCREMENT PRIMARY KEY, -- ERROR: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'id INT AUTO_INCREMENT PRIMARY KEY,' at line 1
+[2025-10-14 01:18:28] FAILED: page_name VARCHAR(100) NOT NULL,   -- যেমন 'admission', 'attendance' -- ERROR: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'page_name VARCHAR(100) NOT NULL,   -- যেমন 'admission', 'attendance'' at line 1
+[2025-10-14 01:18:28] FAILED: question TEXT NOT NULL, -- ERROR: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'question TEXT NOT NULL,' at line 1
+[2025-10-14 01:18:28] FAILED: answer TEXT NOT NULL, -- ERROR: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'answer TEXT NOT NULL,' at line 1
+[2025-10-14 01:18:28] FAILED: status TINYINT(1) DEFAULT 1,       -- 1=Active, 0=Inactive -- ERROR: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'status TINYINT(1) DEFAULT 1,       -- 1=Active, 0=Inactive' at line 1
+[2025-10-14 01:18:28] FAILED: created_at DATETIME DEFAULT CURRENT_TIMESTAMP -- ERROR: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'created_at DATETIME DEFAULT CURRENT_TIMESTAMP' at line 1
+[2025-10-14 01:18:28] FAILED: ); -- ERROR: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ')' at line 1
+[2025-10-14 15:58:27] APPLIED: -- 2025-10-14 01:18:28.515429
+[2025-10-14 15:58:29] SKIPPED: ALTER TABLE `chats` ADD `sccode` INT NOT NULL AFTER `sent_at`;
+[2025-10-14 15:58:29] APPLIED: -- 2025-10-14 01:18:28.550737
+[2025-10-14 15:58:29] SKIPPED: ALTER TABLE `chats` ADD `sccode` INT NOT NULL AFTER `sent_at`;
+[2025-10-14 15:58:29] APPLIED: -- 2025-10-14 01:18:28.561335
+[2025-10-14 15:58:29] SKIPPED: ALTER TABLE `chats` ADD `sccode` INT NOT NULL AFTER `sent_at`;
+[2025-10-14 15:58:29] APPLIED: -- 2025-10-14 01:18:28.581706
+[2025-10-14 15:58:29] SKIPPED: ALTER TABLE `chats` ADD `sccode` INT NOT NULL AFTER `sent_at`;
+[2025-10-14 15:58:29] APPLIED: -- 2025-10-14 01:18:28.622881
+[2025-10-14 15:58:29] SKIPPED: ALTER TABLE `chats` ADD `sccode` INT NOT NULL AFTER `sent_at`;
+[2025-10-14 15:58:29] APPLIED: -- 2025-10-14 01:18:28.641957
+[2025-10-14 15:58:29] SKIPPED: ALTER TABLE `chats` ADD `sccode` INT NOT NULL AFTER `sent_at`;
+[2025-10-14 15:58:29] APPLIED: -- 2025-10-14 01:18:28.653511
+[2025-10-14 15:58:29] SKIPPED: ALTER TABLE `chats` ADD `sccode` INT NOT NULL AFTER `sent_at`;
+[2025-10-14 15:58:29] APPLIED: -- 2025-10-14 01:18:28.664158
+[2025-10-14 15:58:29] SKIPPED: ALTER TABLE `chats` ADD `sccode` INT NOT NULL AFTER `sent_at`;
+[2025-10-14 15:58:29] APPLIED: -- 2025-10-14 01:18:28.673074
+[2025-10-14 15:58:29] FAILED: CREATE TABLE faqs (; -- ERROR: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '' at line 1

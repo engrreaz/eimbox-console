@@ -43,9 +43,9 @@ include_once('header-plain.php');
                         <button type="submit" class="btn btn-primary d-grid w-100 mb-5">Send Reset Link</button>
                     </form>
                     <div class="text-center">
-                        <a href="https://demos.themeselection.com/materio-bootstrap-html-admin-template/html/vertical-menu-template/auth-login-basic.html"
+                        <a href="index.php"
                             class="d-flex align-items-center justify-content-center">
-                            <i class="icon-base ri ri-arrow-left-s-line scaleX-n1-rtl icon-20px me-1_5"></i>
+                            <i class="icon-base bi bi-arrow-left scaleX-n1-rtl icon-20px me-1_5"></i>
                             Back to login
                         </a>
                     </div>
