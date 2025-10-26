@@ -17,8 +17,8 @@ try {
     $mail->Username = MAIL_FROM;   // উদাহরণ: noreply@eimbox.com
     $mail->Password = MAIL_SECRET; // ইমেইল পাসওয়ার্ড
     $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS; // SSL
-    $mail->SMTPDebug = 2;
-    $mail->Debugoutput = 'html';
+    // $mail->SMTPDebug = 2;
+    // $mail->Debugoutput = 'html';
     $mail->Port = 465;
 
     // SSL সার্টিফিকেট যদি self-signed হয় (শুধু টেস্টের জন্য)
