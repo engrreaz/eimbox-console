@@ -21,4 +21,4 @@ jobs:
           server-dir: /public_html/eimbox-console/
           local-dir: ./        # লোকাল রেপো ফাইল যেখানে আছে সেটা দেখাও
           timeout: 600000      # 10 মিনিট
-          log-level: info      # optional: upload log দেখার জন্য
+          log-level: standard      # optional: upload log দেখার জন্য
