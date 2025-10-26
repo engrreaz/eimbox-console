@@ -78,8 +78,7 @@ if (!in_array($currentFile, $publicPages)) {
 
     }
 }
- $_SESSION['checked_suspicious'] = true;
-if ($_SESSION['checked_suspicious'] && $_SESSION['checked_suspicious'] == false) {
+if (isset($_SESSION['checked_suspicious']) && $_SESSION['checked_suspicious'] == false) {
     require_once('suspicious-activity.php');
 }
 
