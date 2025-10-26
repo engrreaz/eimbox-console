@@ -73,9 +73,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['partial_auth'] = $user['id'];
 
                     // Redirect first, send mail after flush
-                    ob_end_clean();
+                    // ob_end_clean();
                     header("Location: mfa_verify.php");
-                    flush();
+                    // flush();
                     send_mfa_token($user, $token); // email OTP
                     exit;
                 }
