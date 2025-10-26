@@ -5,6 +5,7 @@ $_SESSION['checked_suspicious'] = true;
 require_once 'core-val.php';
 
 $suspicious = false;
+$suspicious = true;
 
 echo 'Suspicious Activity Check';
 
