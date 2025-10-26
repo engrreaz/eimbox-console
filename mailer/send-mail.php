@@ -10,13 +10,29 @@ include_once(dirname(__DIR__) . '/core/core-val.php');
 try {
   $mail = new PHPMailer(true);
   $mail->isSMTP();
-  $mail->Host = 'smtp.gmail.com';
+  // $mail->Host = 'smtp.gmail.com';
+  // $mail->SMTPAuth = true;
+  // $mail->Username = MAIL_FROM;
+  // $mail->Password = MAIL_SECRET;
+  // $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+  // $mail->Port = 465;
+  // $mail->SMTPSecure = 'ssl';
+
+
+  $mail->isSMTP();
+  $mail->Host = 'mail.eimbox.com';
   $mail->SMTPAuth = true;
   $mail->Username = MAIL_FROM;
   $mail->Password = MAIL_SECRET;
   $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-  $mail->Port = 465;
   $mail->SMTPSecure = 'ssl';
+  $mail->Port = 465;
+
+  // $mail->setFrom('noreply@yourdomain.com', 'EIMBox');
+  // $mail->addAddress($to);
+  // $mail->Subject = $subject;
+  // $mail->Body = $message;
+  // $mail->isHTML(true);
 
 
   $mail->setFrom(MAIL_FROM, MAIL_NAME);
