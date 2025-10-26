@@ -16,6 +16,8 @@ try {
   $mail->Password = MAIL_SECRET;
   $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
   $mail->Port = 465;
+  $mail->SMTPSecure = 'ssl';
+
 
   $mail->setFrom(MAIL_FROM, MAIL_NAME);
   $mail->addAddress($mail_to, $mail_name);
