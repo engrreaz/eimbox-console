@@ -7,3 +7,5 @@ prototype/*.*
 firebase/firebase.js
 firebase-messaging-sw.js
 eimbox-materio.zip
+core/php-error.log
+php-error.log
