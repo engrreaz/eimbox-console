@@ -4,10 +4,10 @@ session_start();
 $_SESSION['checked_suspicious'] = true;
 require_once 'core-val.php';
 
-// $suspicious = false;
-$suspicious = true;
+$suspicious = false;
+// $suspicious = true;
 
-echo 'Suspicious Activity Check';
+// echo 'Suspicious Activity Check';
 
 if ($suspicious == true) {
     $_SESSION['suspicious'] = true;
@@ -24,3 +24,4 @@ if ($suspicious == false) {
     $redi = APP_PATH;
     header("Location: $redi");
 }
+
