@@ -1,4 +1,5 @@
 name: 🚀 Deploy to cPanel via FTP
+
 on:
   push:
     branches:
@@ -18,5 +19,6 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           server-dir: /public_html/eimbox-console/
-          passive: true
-          timeout: 600000
+          local-dir: ./        # লোকাল রেপো ফাইল যেখানে আছে সেটা দেখাও
+          timeout: 600000      # 10 মিনিট
+          log-level: info      # optional: upload log দেখার জন্য
