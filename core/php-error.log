@@ -1,0 +1,1 @@
+[27-Oct-2025 01:17:20 Asia/Dhaka] Uncaught Exception: Mail could not be sent. Error: SMTP Error: Could not authenticate. in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\mailer\send-mail.php on line 94
