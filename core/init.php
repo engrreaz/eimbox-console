@@ -85,12 +85,3 @@ if (isset($_SESSION['checked_suspicious']) && $_SESSION['checked_suspicious'] ==
 // createNotification($user_id, "Contrats!", 'You have won the achievements', 'my-achievements.php', 'achievement');
 
 ?>
-<script>
-    (function () {
-        let theme = localStorage.getItem("templateCustomizer-vertical-menu-template--Theme");
-        if (theme && document.cookie.indexOf("site_theme=" + theme) === -1) {
-            document.cookie = "site_theme=" + theme + "; path=/";
-            // location.reload(); // একবার reload হবে, তারপর PHP থিম পাবে
-        }
-    })();
-</script>

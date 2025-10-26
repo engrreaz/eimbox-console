@@ -66,8 +66,7 @@ $release_colors = [
             <div class="row">
                 <div class="col-12 col-sm-6 col-md-3 mb-6 mb-sm-0">
                     <h4 class="fw-bold mb-1">
-                        <a href="index.php"
-                            target="_blank" class="footer-brand">EIMBox </a>
+                        <a href="index.php" target="_blank" class="footer-brand">EIMBox </a>
                     </h4>
                     <span class="mb-2">for a paperless institute</span>
 
@@ -625,4 +624,14 @@ $release_colors = [
             }
         });
     });
+</script>
+
+<script>
+    (function () {
+        let theme = localStorage.getItem("templateCustomizer-vertical-menu-template--Theme");
+        if (theme && document.cookie.indexOf("site_theme=" + theme) === -1) {
+            document.cookie = "site_theme=" + theme + "; path=/";
+            // location.reload(); // একবার reload হবে, তারপর PHP থিম পাবে
+        }
+    })();
 </script>
