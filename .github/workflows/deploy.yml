@@ -1,24 +1,24 @@
-name: 🚀 Deploy to cPanel via FTP
+# name: 🚀 Deploy to cPanel via FTP
 
-on:
-  push:
-    branches:
-      - main
+# on:
+#   push:
+#     branches:
+#       - main
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout Repository
+#         uses: actions/checkout@v3
 
-      - name: Upload Files to cPanel via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: /public_html/eimbox-console/
-          local-dir: ./        # লোকাল রেপো ফাইল যেখানে আছে সেটা দেখাও
-          timeout: 600000      # 10 মিনিট
-          log-level: standard      # optional: upload log দেখার জন্য
+#       - name: Upload Files to cPanel via FTP
+#         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+#         with:
+#           server: ${{ secrets.FTP_SERVER }}
+#           username: ${{ secrets.FTP_USERNAME }}
+#           password: ${{ secrets.FTP_PASSWORD }}
+#           server-dir: /public_html/eimbox-console/
+#           local-dir: ./        # লোকাল রেপো ফাইল যেখানে আছে সেটা দেখাও
+#           timeout: 600000      # 10 মিনিট
+#           log-level: standard      # optional: upload log দেখার জন্য
