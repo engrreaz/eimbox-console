@@ -78,8 +78,9 @@ if (!in_array($currentFile, $publicPages)) {
 
     }
 }
-if($_SESSION['checked_suspicious'] && $_SESSION['checked_suspicious'] == false){
-require_once('suspicious-activity.php');
+ $_SESSION['checked_suspicious'] = true;
+if ($_SESSION['checked_suspicious'] && $_SESSION['checked_suspicious'] == false) {
+    require_once('suspicious-activity.php');
 }
 
 // createNotification($user_id, "Contrats!", 'You have won the achievements', 'my-achievements.php', 'achievement');
@@ -94,4 +95,3 @@ require_once('suspicious-activity.php');
         }
     })();
 </script>
-
