@@ -8,10 +8,9 @@ require_once 'core/core-val.php';
 if (session_status() === PHP_SESSION_NONE)
     session_start();
 
-
 $email = trim($_POST['email']);
 $cs = trim($_POST['csrf_token']);
-echo $email . '//' . $cs;
+// echo $email . '//' . $cs;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_validate($_POST['csrf_token'])) {
