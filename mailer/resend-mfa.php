@@ -6,7 +6,7 @@ require_once '../core/core-val.php';
 require_once '../core/functions.php';
 
 
-var_dump($_SESSION);
+// var_dump($_SESSION);
 
 if (!isset($_SESSION['partial_auth'])) {
     $redi = APP_PATH . 'login.php';
@@ -41,7 +41,7 @@ $stmt->bind_param('sssi', $newCode, $hashedCode, $expires, $userId);
 $stmt->execute();
 $stmt->close();
 
-echo $user['email'] . '<br>' . $newCode;
+// echo $user['email'] . '<br>' . $newCode;
 
 send_mfa_token($user, $newCode, 'resend');
 
