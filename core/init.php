@@ -6,19 +6,7 @@ require_once 'functions-achievements.php';
 require_once __DIR__ . '/../achievements_engine.php';
 require_once 'core-val.php';
 
-?>
 
-<script>
-    (function () {
-        let theme = localStorage.getItem("templateCustomizer-vertical-menu-template--Theme");
-        if (theme && document.cookie.indexOf("site_theme=" + theme) === -1) {
-            document.cookie = "site_theme=" + theme + "; path=/";
-            // location.reload(); // একবার reload হবে, তারপর PHP থিম পাবে
-        }
-    })();
-</script>
-
-<?php
 
 
 $cookieParams = session_get_cookie_params();
@@ -47,8 +35,34 @@ if (!isset($_SESSION['created'])) {
 $currentFile = basename($_SERVER['PHP_SELF']);
 $_SESSION['current_page'] = $currentFile;
 
+
+
+?>
+
+<script>
+    (function () {
+        let theme = localStorage.getItem("templateCustomizer-vertical-menu-template--Theme");
+        if (theme && document.cookie.indexOf("site_theme=" + theme) === -1) {
+            document.cookie = "site_theme=" + theme + "; path=/";
+            // location.reload(); // একবার reload হবে, তারপর PHP থিম পাবে
+        }
+    })();
+</script>
+
+<?php
+
+
+
+
+
+
+
+
+
 // Publicly accessible pages (no login required)
 $publicPages = ['regd_new.php', 'login.php', 'logout.php', 'mfa_verify.php', 'forgot_password.php', 'forgot_password_process', 'reset_password.php'];
+
+
 
 
 

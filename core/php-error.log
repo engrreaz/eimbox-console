@@ -1021,3 +1021,12 @@
 [26-Oct-2025 14:52:26 Asia/Dhaka] PHP ERROR [2]: Undefined array key "user_email" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\footer-plain.php on line 116
 [26-Oct-2025 14:52:26 Asia/Dhaka] PHP ERROR [2]: Undefined array key "user_email" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\footer-plain.php on line 116
 [26-Oct-2025 14:52:26 Asia/Dhaka] PHP ERROR [2]: Undefined array key "user_email" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\footer-plain.php on line 116
+[26-Oct-2025 22:20:51 Asia/Dhaka] PHP ERROR [2]: Undefined array key "user_email" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\footer-plain.php on line 116
+[26-Oct-2025 22:20:51 Asia/Dhaka] PHP ERROR [2]: Undefined array key "user_email" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\footer-plain.php on line 116
+[26-Oct-2025 22:20:51 Asia/Dhaka] PHP ERROR [2]: Undefined array key "user_email" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\footer-plain.php on line 116
+[26-Oct-2025 22:20:51 Asia/Dhaka] PHP ERROR [2]: Undefined array key "user_email" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\footer-plain.php on line 116
+[26-Oct-2025 22:20:51 Asia/Dhaka] PHP ERROR [2]: Undefined array key "checked_suspicious" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\core\init.php on line 79
+[26-Oct-2025 22:20:51 Asia/Dhaka] PHP ERROR [8]: session_start(): Ignoring session_start() because a session is already active in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\core\suspicious-activity.php on line 3
+[26-Oct-2025 22:20:51 Asia/Dhaka] PHP ERROR [2]: Undefined array key "user_email" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\footer-plain.php on line 116
+[26-Oct-2025 22:20:51 Asia/Dhaka] PHP ERROR [2]: Undefined array key "user_email" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\footer-plain.php on line 116
+[26-Oct-2025 23:32:43 Asia/Dhaka] PHP ERROR [2]: Undefined array key "user_email" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\footer-plain.php on line 116
