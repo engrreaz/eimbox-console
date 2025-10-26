@@ -85,7 +85,6 @@ require_once('suspicious-activity.php');
 // createNotification($user_id, "Contrats!", 'You have won the achievements', 'my-achievements.php', 'achievement');
 
 ?>
-
 <script>
     (function () {
         let theme = localStorage.getItem("templateCustomizer-vertical-menu-template--Theme");
