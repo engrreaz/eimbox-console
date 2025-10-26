@@ -20,7 +20,6 @@ if ($suspicious && $currentFile !== 'mfa-3.php') {
 }
 
 if ($suspicious == false) {
-    echo 'No Suspicious Activity';
     $redi = APP_PATH;
     header("Location: $redi");
 }
