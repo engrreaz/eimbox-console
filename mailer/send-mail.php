@@ -25,20 +25,13 @@ try {
   $mail->Username = MAIL_FROM;
   $mail->Password = MAIL_SECRET;
   $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-  $mail->SMTPSecure = 'ssl';
   $mail->Port = 465;
-
-  // $mail->setFrom('noreply@yourdomain.com', 'EIMBox');
-  // $mail->addAddress($to);
-  // $mail->Subject = $subject;
-  // $mail->Body = $message;
-  // $mail->isHTML(true);
 
 
   $mail->setFrom(MAIL_FROM, MAIL_NAME);
   $mail->addAddress($mail_to, $mail_name);
-  $mail->addReplyTo(MAIL_ADMIN, NAME_ADMIN);
-  $mail->addBCC(MAIL_CC, NAME_CC);
+  // $mail->addReplyTo(MAIL_ADMIN, NAME_ADMIN);
+  // $mail->addBCC(MAIL_CC, NAME_CC);
 
   if ($mail_attach && file_exists($mail_attach)) {
     $mail->addAttachment($mail_attach);

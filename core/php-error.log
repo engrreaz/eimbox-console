@@ -1034,3 +1034,11 @@
 [26-Oct-2025 23:55:57 Asia/Dhaka] PHP ERROR [2]: Undefined array key "user_email" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\footer-plain.php on line 116
 [26-Oct-2025 23:55:59 Asia/Dhaka] PHP ERROR [2]: Undefined array key "user_email" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\footer-plain.php on line 116
 [26-Oct-2025 23:56:07 Asia/Dhaka] PHP ERROR [2]: Undefined array key "user_email" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\footer-plain.php on line 116
+[27-Oct-2025 00:14:47 Asia/Dhaka] PHP ERROR [2]: Undefined array key "user_email" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\footer-plain.php on line 116
+[27-Oct-2025 00:14:49 Asia/Dhaka] PHP ERROR [2]: Undefined array key "user_email" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\footer-plain.php on line 116
+[27-Oct-2025 00:14:56 Asia/Dhaka] Uncaught Exception: Mail could not be sent. Error: SMTP Error: Could not authenticate. in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\mailer\send-mail.php on line 103
+[27-Oct-2025 00:16:15 Asia/Dhaka] Uncaught Exception: Mail could not be sent. Error: SMTP Error: Could not authenticate. in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\mailer\send-mail.php on line 103
+[27-Oct-2025 00:21:54 Asia/Dhaka] Uncaught Exception: Mail could not be sent. Error: SMTP Error: Could not authenticate. in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\mailer\send-mail.php on line 103
+[27-Oct-2025 00:24:21 Asia/Dhaka] PHP ERROR [2]: Undefined array key "user_email" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\footer-plain.php on line 116
+[27-Oct-2025 00:24:23 Asia/Dhaka] PHP ERROR [2]: Undefined array key "user_email" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\footer-plain.php on line 116
+[27-Oct-2025 00:24:29 Asia/Dhaka] Uncaught Exception: Mail could not be sent. Error: SMTP Error: Could not authenticate. in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\mailer\send-mail.php on line 96
