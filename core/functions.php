@@ -259,7 +259,7 @@ function custom_error_handler($errno, $errstr, $errfile, $errline)
         echo "<pre>$errorMessage</pre>";
     } else {
         // Normal users → redirect or show generic page
-        echo "<pre>$errorMessage</pre>";
+        // echo "<pre>$errorMessage</pre>";
         // if(!headers_sent()){
         //     header("Location: error_page.php");
         //     exit;
