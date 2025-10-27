@@ -40,6 +40,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors[] = "Incorrect MFA code.";
         } else {
             // ✅ MFA successful → full login
+
+            $data = find_user_by_email($conn, $user['email']);
+
+            $school = $data['school'];
+
             store_user_session($user, $school);
 
             // Clear temporary MFA token
