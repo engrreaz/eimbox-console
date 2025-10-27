@@ -42,7 +42,7 @@ $stmt->execute();
 $stmt->close();
 
 // echo $user['email'] . '<br>' . $newCode;
-$resetLink = $hashedCode;
+// $resetLink = $hashedCode;
 send_mfa_token($user, $newCode, 'resend');
 
 // যদি তুমি সত্যিকারের SMS / Email পাঠাতে চাও,

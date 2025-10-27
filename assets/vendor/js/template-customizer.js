@@ -1560,8 +1560,8 @@
                         String(t)
                       ),
                         this._showResetBtnNotification();
-               
-                        
+
+
                     } catch (e) { }
                   },
                 },
@@ -1788,20 +1788,19 @@
               direction_label: "Direction",
             },
             ar: {
-              panel_header: "Ø£Ø¯Ø§Ø© ØªØ®ØµÙŠØµ Ø§Ù„Ù‚Ø§Ù„Ø¨",
-              panel_sub_header:
-                "ØªØ®ØµÙŠØµ ÙˆÙ…Ø¹Ø§ÙŠÙ†Ø© ÙÙŠ Ø§Ù„ÙˆÙ‚Øª Ø§Ù„Ø­Ù‚ÙŠÙ‚ÙŠ",
-              theming_header: "Ø§Ù„Ø³Ù…Ø§Øª",
-              color_label: "Ø§Ù„Ù„ÙˆÙ† Ø§Ù„Ø£Ø³Ø§Ø³ÙŠ",
-              theme_label: "Ø³Ù…Ø©",
-              skin_label: "Ø¬Ù„ÙˆØ¯",
-              semiDark_label: "Ø´Ø¨Ù‡ Ø¯Ø§ÙƒÙ†",
-              layout_header: "ØªÙŽØ®Ø·ÙÙŠØ·",
-              layout_label: "Ø§Ù„Ù‚Ø§Ø¦Ù…Ø© (Ø§Ù„Ù…Ù„Ø§Ø­Ø©)",
-              layout_header_label: "Ø£Ù†ÙˆØ§Ø¹ Ø§Ù„Ø±Ø£Ø³",
-              content_label: "Ù…Ø­ØªÙˆÙ‰",
-              layout_navbar_label: "Ù†ÙˆØ¹ Ø´Ø±ÙŠØ· Ø§Ù„ØªÙ†Ù‚Ù„",
-              direction_label: "Ø§ØªØ¬Ø§Ù‡",
+              panel_header: "أداة تخصيص القالب",
+              panel_sub_header: "تخصيص ومعاينة في الوقت الحقيقي",
+              theming_header: "التصميم",
+              color_label: "اللون الأساسي",
+              theme_label: "السمة",
+              skin_label: "المظاهر",
+              semiDark_label: "نصف داكن",
+              layout_header: "التخطيط",
+              layout_label: "القائمة (التنقل)",
+              layout_header_label: "أنواع الرأس",
+              content_label: "المحتوى",
+              layout_navbar_label: "نوع شريط التنقل",
+              direction_label: "الاتجاه"
             },
             de: {
               panel_header: "Vorlagen-Anpasser",
