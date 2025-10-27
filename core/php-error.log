@@ -1,8 +1,0 @@
-[27-Oct-2025 12:50:43 Asia/Dhaka] PHP ERROR [2]: Undefined array key "user_email" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\footer-plain.php on line 116
-[27-Oct-2025 12:50:43 Asia/Dhaka] PHP ERROR [2]: Undefined array key "user_email" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\footer-plain.php on line 116
-[27-Oct-2025 12:50:45 Asia/Dhaka] PHP ERROR [2]: Undefined array key "user_email" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\footer-plain.php on line 116
-[27-Oct-2025 12:50:45 Asia/Dhaka] PHP ERROR [2]: Undefined array key "user_email" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\footer-plain.php on line 116
-[28-Oct-2025 01:00:54 Asia/Dhaka] Uncaught Exception: Can't find record in 'general_log' in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\core\db.php on line 19
-[28-Oct-2025 01:06:16 Asia/Dhaka] Uncaught Exception: Can't find record in 'general_log' in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\core\db.php on line 19
-[28-Oct-2025 01:08:18 Asia/Dhaka] Uncaught Exception: Can't find record in 'general_log' in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\core\db.php on line 19
-[28-Oct-2025 01:09:40 Asia/Dhaka] Uncaught Exception: Can't find record in 'general_log' in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\core\db.php on line 19
