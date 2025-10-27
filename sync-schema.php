@@ -2,6 +2,22 @@
 require_once 'header.php';
 ?>
 
+<script>
+
+    function reve(current) {
+        if (current == '1') {
+            window.location.href = "sync-schema.php?reverse=1";
+        }
+        else if (current == '0') {
+            window.location.href = "sync-schema.php?reverse=0";
+        }
+        else {
+            window.location.href = "sync-schema.php";
+        }
+    }
+
+</script>
+
 <div class="container-xxl flex-grow-1 container-p-y">
 
     <?php
@@ -29,25 +45,21 @@ require_once 'header.php';
     ?>
 
 
-    <button class="btn btn-primary float-end" onclick="reve();"> <i class="bi bi-arrow-repeat"></i>
+    <button class="btn btn-primary float-end" onclick="reve(2);">
+        <i class="bi bi-arrow-repeat"></i>
         &nbsp;Switch</button>
+    <button class="btn btn-primary float-end" onclick="reve(0);">
+        <i class="bi bi-database-down"></i>
+        &nbsp;Local</button>
+    <button class="btn btn-primary float-end" onclick="reve(1);">
+        <i class="bi bi-database-fill-down"></i>
+        &nbsp;Remote</button>
+
+
+
     <h4 class="mb-4"> Download Schema <span class="text-warning fw-bold"><?php echo $ttl; ?></span></h4>
 
-    <script>
-        function reve() {
-            const url = new URL(window.location);
-            const current = url.searchParams.get('reverse');
 
-            if (current === '1') {
-                url.searchParams.set('reverse', '0');
-            } else if (current === '0') {
-                url.searchParams.set('reverse', '1');
-            } else {
-                url.searchParams.set('reverse', '0');
-            }
-            window.location = url.toString();
-        }
-    </script>
 
     <?php
 
@@ -72,11 +84,6 @@ require_once 'header.php';
 
 <?php require_once 'footer.php'; ?>
 
-
-
-
-<!-- ----------------------------------- -->
-<script></script>
 
 
 
