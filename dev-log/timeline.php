@@ -223,7 +223,7 @@ function statusBadge($status)
                     <h6><?= ucfirst($page_title) ?> FAQs</h6>
                     <?php if ($is_admin >= 4) { ?>
                         <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#faqModal"
-                            onclick="openAddModal()">➕ Add FAQ</button>
+                            onclick="openAddModal()"><i class="bi bi-plus"></i> Add FAQ</button>
                     <?php } ?>
                 </div>
 
