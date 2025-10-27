@@ -4,21 +4,17 @@ header('Content-Type: application/json');
 error_reporting(0);
 ini_set('display_errors', 0);
 session_start();
-$rev = isset($_SESSION['reverse']) ? $_SESSION['reverse'] : 0;
+
+$rev = isset($_SESSION['reverse']) ? (int) $_SESSION['reverse'] : 0;
 
 include_once 'core/config.php';
+
 // DB credentials
 $host = DB_HOST;
-$dbname = DB_SYNC;
 $user = DB_USER;
 $pass = DB_PASS;
 $port = 3306;
-
-if ($rev == 0) {
-    $dbname = DB_NAME;
-} else {
-    $dbname = DB_SYNC;
-}
+$dbname = ($rev === 0) ? DB_NAME : DB_SYNC;
 
 $conn_sync = new mysqli($host, $user, $pass, $dbname, $port);
 if ($conn_sync->connect_error) {
@@ -29,7 +25,9 @@ if ($conn_sync->connect_error) {
 
 $results = [];
 
-// ✅ Sync Columns
+// ---------------------------
+// ✅ Column Sync
+// ---------------------------
 if (!empty($_POST['items'])) {
     $items = json_decode($_POST['items'], true);
     if (!is_array($items)) {
@@ -39,46 +37,49 @@ if (!empty($_POST['items'])) {
     }
 
     foreach ($items as $item) {
-        $table = $conn_sync->real_escape_string($item['table']);
-        $column = $item['column'];
+        if (!isset($item['table'], $item['column']))
+            continue;
 
-        // ✅ Extract column name
-        $colName = '';
-        if (preg_match('/^`([^`]+)`/', $column, $m)) {
+        $table = $conn_sync->real_escape_string($item['table']);
+        $column = trim($item['column']);
+
+        // ✅ Extract column name safely
+        if (preg_match('/^`?([a-zA-Z0-9_]+)`?/', $column, $m)) {
             $colName = $conn_sync->real_escape_string($m[1]);
+        } else {
+            $colName = '';
         }
 
-        // ✅ Check if table exists
+        if (!$colName) {
+            $results[] = ['table' => $table, 'column' => $column, 'status' => 'skipped', 'error' => 'Invalid column name'];
+            continue;
+        }
+
+        // ✅ Check table exists
         $checkTable = $conn_sync->query("SHOW TABLES LIKE '$table'");
         if (!$checkTable || $checkTable->num_rows === 0) {
             $results[] = ['table' => $table, 'column' => $column, 'status' => 'skipped', 'error' => 'Table not found'];
             continue;
         }
 
-        // ✅ Check if column already exists
+        // ✅ Drop column if exists
         $checkCol = $conn_sync->query("SHOW COLUMNS FROM `$table` LIKE '$colName'");
         if ($checkCol && $checkCol->num_rows > 0) {
-            $results[] = ['table' => $table, 'column' => $column, 'status' => 'skipped', 'error' => "Column '$colName' already exists"];
-            // continue;
-            $sql = "ALTER TABLE `$table` DROP COLUMN `$colName`";
-            $conn_sync->query($sql);
-
-
-            // ✅ Try to add column
-            $sql = "ALTER TABLE `$table` ADD $column";
-            if ($conn_sync->query($sql) === TRUE) {
-                $results[] = ['table' => $table, 'column' => $column, 'status' => 'DROP & ADD applied'];
+            $sqlDrop = "ALTER TABLE `$table` DROP COLUMN `$colName`";
+            if ($conn_sync->query($sqlDrop) === TRUE) {
+                $results[] = ['table' => $table, 'column' => $colName, 'status' => 'dropped'];
             } else {
-                $results[] = ['table' => $table, 'column' => $column, 'status' => 'error', 'error' => $conn_sync->error];
+                $results[] = ['table' => $table, 'column' => $colName, 'status' => 'error', 'error' => $conn_sync->error];
+                continue;
             }
         }
 
-        // ✅ Try to add column
-        $sql = "ALTER TABLE `$table` ADD $column";
-        if ($conn_sync->query($sql) === TRUE) {
-            $results[] = ['table' => $table, 'column' => $column, 'status' => 'applied'];
+        // ✅ Add column
+        $sqlAdd = "ALTER TABLE `$table` ADD $column";
+        if ($conn_sync->query($sqlAdd) === TRUE) {
+            $results[] = ['table' => $table, 'column' => $colName, 'status' => 'applied'];
         } else {
-            $results[] = ['table' => $table, 'column' => $column, 'status' => 'error', 'error' => $conn_sync->error];
+            $results[] = ['table' => $table, 'column' => $colName, 'status' => 'error', 'error' => $conn_sync->error];
         }
     }
 
@@ -87,10 +88,12 @@ if (!empty($_POST['items'])) {
     exit;
 }
 
-// ✅ Sync Table fallback
+// ---------------------------
+// ✅ Table Sync
+// ---------------------------
 if (!empty($_POST['create']) && !empty($_POST['table'])) {
-    $table = $_POST['table'];
-    $createSQL = $_POST['create'];
+    $table = $conn_sync->real_escape_string($_POST['table']);
+    $createSQL = trim($_POST['create']);
 
     $checkTable = $conn_sync->query("SHOW TABLES LIKE '$table'");
     if ($checkTable && $checkTable->num_rows > 0) {
@@ -108,7 +111,9 @@ if (!empty($_POST['create']) && !empty($_POST['table'])) {
     exit;
 }
 
+// ---------------------------
 // ✅ No valid input
+// ---------------------------
 ob_end_clean();
 echo json_encode(['status' => 'error', 'msg' => '❌ No valid input received']);
 $conn_sync->close();
