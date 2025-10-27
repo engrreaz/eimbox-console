@@ -2,11 +2,12 @@
 // SET GLOBAL general_log = 'ON';
 // SET GLOBAL log_output = 'TABLE';
 
-include 'header.php'; // এতে তোমার $conn আছে
+include 'header.php';
 $log_file = "schema_changes.txt";
 $last_run_file = "schema_last_export_time.txt";
 
 ?>
+
 <div class="container-xxl flex-grow-1 container-p-y">
     <div class="row">
         <div class="col-12">
@@ -18,22 +19,19 @@ $last_run_file = "schema_last_export_time.txt";
 
                     <?php
 
-
-
-
                     // শেষবার কখন এক্সপোর্ট করেছিলাম সেটা বের করি
                     $last_time = file_exists($last_run_file) ? trim(file_get_contents($last_run_file)) : '1970-01-01 00:00:00';
 
                     $sql = "SELECT event_time, argument 
-        FROM mysql.general_log
-        WHERE event_time > '$last_time'
-        AND (
-            argument LIKE 'ALTER TABLE%' OR 
-            argument LIKE 'CREATE TABLE%' OR 
-            argument LIKE 'DROP TABLE%' OR
-            argument LIKE 'RENAME TABLE%'
-        )
-        ORDER BY event_time ASC";
+                    FROM mysql.general_log
+                    WHERE event_time > '$last_time'
+                    AND (
+                        argument LIKE 'ALTER TABLE%' OR 
+                        argument LIKE 'CREATE TABLE%' OR 
+                        argument LIKE 'DROP TABLE%' OR
+                        argument LIKE 'RENAME TABLE%'
+                    )
+                    ORDER BY event_time ASC";
 
                     $res = $conn->query($sql);
 

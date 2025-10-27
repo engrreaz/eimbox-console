@@ -1,8 +1,8 @@
-OK MOKE
+Access Denied.
 <?php
 
 echo $error_message;
 
-echo '<pre>';
-print_r($_SESSION);
-echo '</pre>';
+// echo '<pre>';
+// print_r($_SESSION);
+// echo '</pre>';

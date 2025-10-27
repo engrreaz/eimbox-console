@@ -2,13 +2,18 @@
 
 <div class="container-xxl flex-grow-1 container-p-y">
 
-    <h4 class="mb-1">Roles List</h4>
-    <p class="mb-6">A role provides access to predefined menus and features so that depending on assigned role an
-        administrator can control user access.</p>
+    <div class="row">
+        <div class="col-12">
+            <div class="mb-3 text-end float-end">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRoleModal">Add Role</button>
+            </div>
 
-    <div class="mb-3 text-end">
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRoleModal">Add Role</button>
+            <h4 class="mb-1">Roles List</h4>
+        </div>
     </div>
+
+
+
 
     <!-- Role cards -->
     <div class="row g-6" id="roleList">
@@ -25,9 +30,9 @@
                 <div class="card h-100 ">
                     <div class="card-header">
                         <div class="float-end">
-                            <button class="btn btn-sm btn-info editRoleBtn" data-id="<?= $row['id'] ?>"
-                                data-bs-toggle="modal" data-bs-target="#editRoleModal">Edit</button>
-                            <button class="btn btn-sm btn-danger deleteRoleBtn" data-id="<?= $row['id'] ?>">Delete</button>
+                            <button class="btn btn-sm btn-outline-info editRoleBtn" data-id="<?= $row['id'] ?>"
+                                data-bs-toggle="modal" data-bs-target="#editRoleModal"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-sm btn-outline-danger deleteRoleBtn" data-id="<?= $row['id'] ?>"><i class="bi bi-trash"></i></button>
                         </div>
 
                         <div class="role-heading">
