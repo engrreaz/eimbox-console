@@ -59,7 +59,7 @@ try {
     } else if ($mail_type === 'otp') {
         $html = str_replace(
             ['%NAME%', '%ACTIVATION_LINK%', '%INSTITUTE_NAME%'],
-            [htmlspecialchars($mail_name), htmlspecialchars($resetLink), htmlspecialchars($mail_name)],
+            [htmlspecialchars($mail_name), htmlspecialchars($hashedCode), htmlspecialchars($mail_name)],
             $htmlTemplate
         );
 
