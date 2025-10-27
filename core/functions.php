@@ -258,16 +258,9 @@ function custom_error_handler($errno, $errstr, $errfile, $errline)
         // Admin sees detailed error
         echo "<pre>$errorMessage</pre>";
     } else {
-        // Normal users → redirect or show generic page
-        // echo "<pre>$errorMessage</pre>";
-        // if(!headers_sent()){
-        //     header("Location: error_page.php");
-        //     exit;
-        // } else {
 
         // echo "<h2>Something went wrong. Please try again later.</h2>";
-        //     exit;
-        // }
+
     }
 }
 
