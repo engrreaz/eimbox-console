@@ -265,7 +265,7 @@ function custom_error_handler($errno, $errstr, $errfile, $errline)
         //     exit;
         // } else {
 
-        echo "<h2>Something went wrong. Please try again later.</h2>";
+        // echo "<h2>Something went wrong. Please try again later.</h2>";
         //     exit;
         // }
     }
