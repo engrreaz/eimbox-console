@@ -113,7 +113,7 @@
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    email: "<?php echo $_SESSION['user_email']; ?>",
+                    email: "<?php echo $_SESSION['user_email'] ?? ''; ?>",
                     page: page,
                     action: action,
                     timestamp: new Date().toISOString()
@@ -129,26 +129,26 @@
 
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-    const key = "templateCustomizer-vertical-menu-template--Theme";
-    const btn = document.getElementById("themeToggleBtn");
-    const currentTheme = localStorage.getItem(key) || "light";
-    updateButtonText(currentTheme);
+    document.addEventListener("DOMContentLoaded", function () {
+        const key = "templateCustomizer-vertical-menu-template--Theme";
+        const btn = document.getElementById("themeToggleBtn");
+        const currentTheme = localStorage.getItem(key) || "light";
+        updateButtonText(currentTheme);
 
-    btn.addEventListener("click", function () {
-        const current = localStorage.getItem(key) || "light";
-        const next = current === "light" ? "dark" : "light";
-        localStorage.setItem(key, next);
-        updateButtonText(next);
-        window.location.reload();
+        btn.addEventListener("click", function () {
+            const current = localStorage.getItem(key) || "light";
+            const next = current === "light" ? "dark" : "light";
+            localStorage.setItem(key, next);
+            updateButtonText(next);
+            window.location.reload();
+        });
+
+        function updateButtonText(theme) {
+            btn.innerHTML = theme === "light"
+                ? '<i class="ri-moon-line me-1"></i> Dark Mode'
+                : '<i class="ri-sun-line me-1"></i> Light Mode';
+        }
     });
-
-    function updateButtonText(theme) {
-        btn.innerHTML = theme === "light"
-            ? '<i class="ri-moon-line me-1"></i> Dark Mode'
-            : '<i class="ri-sun-line me-1"></i> Light Mode';
-    }
-});
 </script>
 
 <!-- ----------------------------------- -->
