@@ -1,13 +1,13 @@
-<?php 
-require_once 'header.php'; 
+<?php
+require_once 'header.php';
 if (isLocalhost()) {
-    echo "🖥️ Running on Localhost";
+  echo "🖥️ Running on Localhost";
 } else {
-    echo "🌐 Running on Remote Server";
+  echo "🌐 Running on Remote Server";
 }
 
 
-echo '<pre>'.print_r($_SESSION).'</pre>';
+echo '<pre>' . print_r($_SESSION) . '</pre>';
 ?>
 
 <div class="container-xxl flex-grow-1 container-p-y">
