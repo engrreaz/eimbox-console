@@ -42,13 +42,11 @@ DROP TABLE IF EXISTS `achievements_category`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `achievements_category` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
   `sl` int(11) NOT NULL DEFAULT 0,
   `category` varchar(25) DEFAULT NULL,
   `created_by` varchar(100) DEFAULT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -284,22 +282,22 @@ CREATE TABLE `logbook` (
   `email` varchar(120) DEFAULT NULL,
   `sccode` int(11) DEFAULT NULL,
   `pagename` varchar(100) DEFAULT NULL,
-  `duration` int(11) DEFAULT 0,
   `filesize` float NOT NULL DEFAULT 0,
-  `ipaddr` varchar(45) DEFAULT NULL,
   `platform` varchar(120) DEFAULT NULL,
   `browser` varchar(120) DEFAULT NULL,
-  `location` varchar(100) DEFAULT NULL,
   `entrytime` datetime DEFAULT NULL,
   `modifieddate` datetime DEFAULT NULL,
   `bandwidth` bigint(20) DEFAULT 0,
+  `ipaddr` varchar(45) DEFAULT NULL,
+  `location` varchar(100) DEFAULT NULL,
+  `duration` int(11) DEFAULT 0,
   PRIMARY KEY (`id`),
   KEY `idx_email` (`email`),
   KEY `idx_page` (`pagename`),
   KEY `idx_time` (`entrytime`),
   KEY `idx_logbook_email_entry` (`email`,`entrytime`),
   KEY `idx_logbook_page` (`pagename`)
-) ENGINE=InnoDB AUTO_INCREMENT=5056 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5081 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1120,7 +1118,7 @@ CREATE TABLE `user_actions` (
   PRIMARY KEY (`id`),
   KEY `idx_useractions_email_ts` (`email`,`timestamp`),
   KEY `idx_useractions_action` (`action`)
-) ENGINE=InnoDB AUTO_INCREMENT=10426 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10531 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1483,4 +1481,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-10-28  3:09:41
+-- Dump completed on 2025-10-28 10:45:11

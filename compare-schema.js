@@ -1,4 +1,6 @@
 // 🔹 Switch Button
+
+
 function reve() {
     const url = new URL(window.location);
     if (url.searchParams.get('reverse') === '1') url.searchParams.delete('reverse');
@@ -47,7 +49,9 @@ document.querySelectorAll('.sync-table').forEach(btn => {
                     else alert(`ℹ️ ${r.status} for "${r.table}"`);
                     location.reload();
                 } else alert(data.msg || '❌ Unknown server error');
-            } catch(e){ alert('❌ JSON parse error: '+e.message+'\nRaw:\n'+text); }
+            } catch(e){ alert('❌ JSON parse error: '+e.message+'\nRaw:\n'+text);
+                console.log('❌ JSON parse error: '+e.message+'\nRaw:\n'+text);
+             }
         })
         .catch(err=>alert('❌ AJAX error: '+err.message));
     });

@@ -1,4 +1,11 @@
-<?php require_once 'header.php'; ?>
+<?php 
+require_once 'header.php'; 
+if (isLocalhost()) {
+    echo "🖥️ Running on Localhost";
+} else {
+    echo "🌐 Running on Remote Server";
+}
+?>
 
 <div class="container-xxl flex-grow-1 container-p-y">
 

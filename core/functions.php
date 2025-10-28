@@ -11,6 +11,14 @@ function h($s)
 }
 
 // ========================
+// Localhost / Remote 
+// ========================
+function isLocalhost() {
+    $whitelist = ['127.0.0.1', '::1', 'localhost'];
+    return in_array($_SERVER['SERVER_NAME'], $whitelist);
+}
+
+// ========================
 // CSRF Token
 // ========================
 function csrf_token()
