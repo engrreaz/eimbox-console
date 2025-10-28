@@ -42,10 +42,10 @@ DROP TABLE IF EXISTS `achievements_category`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `achievements_category` (
-  `sl` int(11) NOT NULL DEFAULT 0,
-  `category` varchar(25) DEFAULT NULL,
   `created_by` varchar(100) DEFAULT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `sl` int(11) NOT NULL DEFAULT 0,
+  `category` varchar(25) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -132,7 +132,7 @@ CREATE TABLE `auth_logs` (
   `action` varchar(50) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=208 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=209 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -297,7 +297,7 @@ CREATE TABLE `logbook` (
   KEY `idx_time` (`entrytime`),
   KEY `idx_logbook_email_entry` (`email`,`entrytime`),
   KEY `idx_logbook_page` (`pagename`)
-) ENGINE=InnoDB AUTO_INCREMENT=5092 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5135 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -719,7 +719,7 @@ CREATE TABLE `rolemanager` (
   `entryby` varchar(120) DEFAULT NULL,
   `modifieddate` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -796,8 +796,6 @@ CREATE TABLE `scinfo` (
   `monthly_backup` int(11) NOT NULL DEFAULT 0,
   `cloud_storage` int(11) NOT NULL DEFAULT 0,
   `last_backup_time` datetime DEFAULT NULL,
-  `active` int(11) NOT NULL DEFAULT 0,
-  `status` int(11) NOT NULL DEFAULT 0,
   `display` int(11) NOT NULL DEFAULT 1,
   `last_login_time` datetime DEFAULT NULL,
   `sms_send` int(11) NOT NULL DEFAULT 0,
@@ -817,6 +815,8 @@ CREATE TABLE `scinfo` (
   `sms_month_report` varchar(500) DEFAULT NULL,
   `reg_hash` varchar(32) DEFAULT NULL,
   `hash_expire` datetime DEFAULT NULL,
+  `active` int(11) NOT NULL DEFAULT 0,
+  `status` int(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=277 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -1118,7 +1118,7 @@ CREATE TABLE `user_actions` (
   PRIMARY KEY (`id`),
   KEY `idx_useractions_email_ts` (`email`,`timestamp`),
   KEY `idx_useractions_action` (`action`)
-) ENGINE=InnoDB AUTO_INCREMENT=10536 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10624 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1399,7 +1399,6 @@ DROP TABLE IF EXISTS `usersapp_new`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `usersapp_new` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
   `email` varchar(255) NOT NULL,
   `fullname` varchar(63) DEFAULT NULL,
   `username` varchar(100) NOT NULL,
@@ -1419,15 +1418,14 @@ CREATE TABLE `usersapp_new` (
   `mfa_secret` varchar(255) DEFAULT NULL,
   `mfa_temp_token` varchar(255) DEFAULT NULL,
   `mfa_temp_expires` timestamp NULL DEFAULT NULL,
-  `first_name` varchar(100) DEFAULT NULL,
   `last_name` varchar(100) DEFAULT NULL,
   `phone` varchar(20) DEFAULT NULL,
   `address` text DEFAULT NULL,
   `dob` date DEFAULT NULL,
-  PRIMARY KEY (`id`),
+  `first_name` varchar(100) DEFAULT NULL,
   UNIQUE KEY `email` (`email`),
   UNIQUE KEY `username` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1482,4 +1480,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-10-28 11:38:57
+-- Dump completed on 2025-10-28 23:01:43

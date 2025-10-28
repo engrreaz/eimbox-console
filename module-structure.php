@@ -232,7 +232,7 @@ $files = array_filter(scandir(__DIR__), function ($f) {
                 $not_assign++;
             }
 
-            if ($module_name == 'Core' || $module_name == 'Backend') {
+            if ($module_name == 'Core' || $module_name == 'Backend' || $module_name == 'Orion' || $module_name == 'Seed') {
                 $block_dis = 'disabled';
                 $not_assign--;
             } else {

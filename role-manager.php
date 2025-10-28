@@ -1,4 +1,6 @@
-<?php require_once 'header.php'; ?>
+<?php require_once 'header.php';
+// $is_admin = 0; 
+?>
 
 <div class="container-xxl flex-grow-1 container-p-y">
 
@@ -13,26 +15,35 @@
     </div>
 
 
-
-
     <!-- Role cards -->
     <div class="row g-6" id="roleList">
         <?php
         $roles = $conn->query("SELECT * FROM rolemanager where sccode=0 or sccode='$sccode' ORDER BY id");
         while ($row = $roles->fetch_assoc()):
             // count users assigned to this role
-            $sccode = intval($row['sccode']);
+            $role_sccode = intval($row['sccode']);
             $userlevel = $conn->real_escape_string($row['userlevel']);
             $userCountRes = $conn->query("SELECT COUNT(*) as total FROM usersapp WHERE sccode=$sccode AND userlevel='$userlevel'");
             $userCount = $userCountRes->fetch_assoc()['total'];
+
+
+            if ($is_admin < 4 && $role_sccode == 0) {
+                $edit_mode = 'disabled';
+                $back = 'white';
+            } else {
+                $edit_mode = '';
+                $back = 'white';
+            }
             ?>
             <div class="col-xl-4 col-lg-6 col-md-6 role-card" data-id="<?= $row['id'] ?>">
-                <div class="card h-100 ">
+                <div class="card h-100 bg-<?php echo $back; ?> ">
+
                     <div class="card-header">
                         <div class="float-end">
                             <button class="btn btn-sm btn-outline-info editRoleBtn" data-id="<?= $row['id'] ?>"
-                                data-bs-toggle="modal" data-bs-target="#editRoleModal"><i class="bi bi-pencil"></i></button>
-                            <button class="btn btn-sm btn-outline-danger deleteRoleBtn" data-id="<?= $row['id'] ?>"><i class="bi bi-trash"></i></button>
+                                data-bs-toggle="modal" data-bs-target="#editRoleModal" <?php echo $edit_mode; ?>><i
+                                    class="bi bi-pencil"></i></button>
+                            <button class="btn btn-sm btn-outline-danger deleteRoleBtn" data-id="<?= $row['id'] ?>" <?php echo $edit_mode; ?>><i class="bi bi-trash"></i></button>
                         </div>
 
                         <div class="role-heading">
@@ -85,10 +96,19 @@
                         <label>Description</label>
                         <textarea class="form-control" name="descrip" rows="3"></textarea>
                     </div>
+                    <?php
+                    if ($is_admin < 4) {
+                        $role_sccode = $sccode;
+                    } else {
+                        $role_sccode = 0;
+                    }
+                    ?>
+
                     <div class="mb-3">
                         <label>SCCODE</label>
-                        <input type="number" class="form-control" name="sccode" value="0">
+                        <input type="number" class="form-control" name="sccode" value="<?= $role_sccode; ?>" disabled>
                     </div>
+
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-primary">Save</button>
@@ -152,7 +172,8 @@
                     $('#editRoleId').val(res.data.id);
                     $('#editUserLevel').val(res.data.userlevel);
                     $('#editDescrip').val(res.data.descrip);
-                    $('#editSccode').val(res.data.sccode);
+                    // $('#editSccode').val(res.data.sccode);
+                    $('#editSccode').val(res.data.sccode).prop('disabled', true);
                 } else alert(res.message);
             });
         });
