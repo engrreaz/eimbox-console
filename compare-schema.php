@@ -7,7 +7,7 @@ if (isLocalhost()) {
 }
 
 
-echo '<pre>' . print_r($_SESSION) . '</pre>';
+// echo '<pre>' . print_r($_SESSION) . '</pre>';
 ?>
 
 <div class="container-xxl flex-grow-1 container-p-y">
