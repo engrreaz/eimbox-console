@@ -448,6 +448,7 @@ $release_colors = [
             const point = target.dataset.point || 0;
             const url = window.location.pathname;
             const sccode = '<?php echo $sccode; ?>';
+            if(sccode=='') sccode = 0;
             const page = '<?php echo $currentFile; ?>';
             fetch("core/track_action.php", {
                 method: "POST",
