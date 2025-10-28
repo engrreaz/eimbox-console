@@ -447,7 +447,7 @@ $release_colors = [
             const action = target.dataset.feature || target.dataset.action || target.innerText.trim() || target.value;
             const point = target.dataset.point || 0;
             const url = window.location.pathname;
-            const sccode = <?php echo $sccode; ?>;
+            const sccode = '<?php echo $sccode; ?>';
             const page = '<?php echo $currentFile; ?>';
             fetch("core/track_action.php", {
                 method: "POST",
