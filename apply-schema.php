@@ -4,6 +4,19 @@ header('Content-Type: application/json');
 error_reporting(0);
 session_start();
 
+
+header('Content-Type: application/json; charset=utf-8');
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+
+// যদি request JSON না হয়, তাহলে রিজেক্ট করো
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['status' => 'error', 'message' => 'Only POST allowed']);
+    exit;
+}
+
+
 $rev = isset($_SESSION['reverse']) ? $_SESSION['reverse'] : 0;
 
 include_once 'core/config.php';

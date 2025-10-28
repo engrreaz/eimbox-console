@@ -32,28 +32,27 @@ document.querySelectorAll('.sync-table').forEach(btn => {
     btn.addEventListener('click', () => {
         const table = btn.dataset.table;
         const createSQL = btn.dataset.create;
+        fetch("apply-schema.php", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            body: JSON.stringify({ action: "apply", schema: schemaData })
+        })
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error("HTTP " + res.status + " " + res.statusText);
+                }
+                return res.json();
+            })
+            .then(data => {
+                console.log("✅ Response:", data);
+            })
+            .catch(err => {
+                console.error("❌ Error:", err);
+            });
 
-        fetch('apply-schema.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `table=${encodeURIComponent(table)}&create=${encodeURIComponent(createSQL)}`
-        })
-        .then(res => res.text())
-        .then(text => {
-            try {
-                const data = JSON.parse(text);
-                if(data.status==='ok'){
-                    const r = data.results[0];
-                    if(r.status==='table_created') alert(`✅ Table "${r.table}" created successfully`);
-                    else if(r.status==='error') alert(`❌ Error creating "${r.table}": ${r.error}`);
-                    else alert(`ℹ️ ${r.status} for "${r.table}"`);
-                    location.reload();
-                } else alert(data.msg || '❌ Unknown server error');
-            } catch(e){ alert('❌ JSON parse error: '+e.message+'\nRaw:\n'+text);
-                console.log('❌ JSON parse error: '+e.message+'\nRaw:\n'+text);
-             }
-        })
-        .catch(err=>alert('❌ AJAX error: '+err.message));
     });
 });
 
@@ -63,69 +62,69 @@ document.querySelectorAll('.sync-column').forEach(btn => {
         const table = btn.dataset.table;
         const column = btn.dataset.column;
 
-        const payload = JSON.stringify([{table,column}]);
+        const payload = JSON.stringify([{ table, column }]);
         fetch('apply-schema.php', {
             method: 'POST',
-            headers: { 'Content-Type':'application/x-www-form-urlencoded' },
-            body: 'items='+encodeURIComponent(payload)
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'items=' + encodeURIComponent(payload)
         })
-        .then(res=>res.text())
-        .then(text=>{
-            try{
-                const data = JSON.parse(text);
-                if(data.status==='ok'){
-                    const r = data.results[0];
-                    if(r.status==='applied') alert(`✅ Column applied: ${r.table} → ${r.column}`);
-                    else if(r.status==='skipped') alert(`⚠️ Skipped: ${r.table} → ${r.column}\nReason: ${r.error}`);
-                    else alert(`❌ Error: ${r.table} → ${r.column}\n${r.error}`);
-                    location.reload();
-                } else showMessage('❌ Server error: '+data.msg,'danger');
-            } catch(e){
-                showMessage('❌ JSON parse error: '+e.message+'\nRaw:\n'+text,'danger');
-            }
-        })
-        .catch(err=>showMessage('❌ AJAX error: '+err.message,'danger'));
+            .then(res => res.text())
+            .then(text => {
+                try {
+                    const data = JSON.parse(text);
+                    if (data.status === 'ok') {
+                        const r = data.results[0];
+                        if (r.status === 'applied') alert(`✅ Column applied: ${r.table} → ${r.column}`);
+                        else if (r.status === 'skipped') alert(`⚠️ Skipped: ${r.table} → ${r.column}\nReason: ${r.error}`);
+                        else alert(`❌ Error: ${r.table} → ${r.column}\n${r.error}`);
+                        location.reload();
+                    } else showMessage('❌ Server error: ' + data.msg, 'danger');
+                } catch (e) {
+                    showMessage('❌ JSON parse error: ' + e.message + '\nRaw:\n' + text, 'danger');
+                }
+            })
+            .catch(err => showMessage('❌ AJAX error: ' + err.message, 'danger'));
     });
 });
 
 // 🔹 Toggle Checkboxes
 document.querySelectorAll('.toggle-check').forEach(btn => {
-    btn.addEventListener('click', ()=>{
+    btn.addEventListener('click', () => {
         const table = btn.dataset.table;
-        document.querySelectorAll(`.check-column[data-table='${table}']`).forEach(c=>c.checked=!c.checked);
+        document.querySelectorAll(`.check-column[data-table='${table}']`).forEach(c => c.checked = !c.checked);
     });
 });
 
 // 🔹 Sync Selected Columns
-document.getElementById('syncSelected').addEventListener('click',()=>{
+document.getElementById('syncSelected').addEventListener('click', () => {
     const selected = [];
-    document.querySelectorAll('.check-column:checked').forEach(chk=>{
-        selected.push({table:chk.dataset.table,column:chk.dataset.column});
+    document.querySelectorAll('.check-column:checked').forEach(chk => {
+        selected.push({ table: chk.dataset.table, column: chk.dataset.column });
     });
 
-    if(selected.length===0){
-        showMessage('❌ No columns selected!','danger');
+    if (selected.length === 0) {
+        showMessage('❌ No columns selected!', 'danger');
         return;
     }
 
-    fetch('apply-schema.php',{
-        method:'POST',
-        headers:{'Content-Type':'application/x-www-form-urlencoded'},
-        body:'items='+encodeURIComponent(JSON.stringify(selected))
+    fetch('apply-schema.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'items=' + encodeURIComponent(JSON.stringify(selected))
     })
-    .then(res=>res.text())
-    .then(text=>{
-        try{
-            const data = JSON.parse(text);
-            if(data.status==='ok'){
-                let msg = '✅ Sync completed:\n';
-                data.results.forEach(r=>{
-                    msg+=`${r.table} → ${r.column} : ${r.status}\n`;
-                    if(r.error) msg+='⚠️ Error: '+r.error+'\n';
-                });
-                showMessage(msg,'success');
-            } else showMessage('❌ Server error: '+data.msg,'danger');
-        } catch(e){ showMessage('❌ JSON parse error: '+e.message+'\nRaw:\n'+text,'danger'); }
-    })
-    .catch(err=>showMessage('❌ AJAX error: '+err.message,'danger'));
+        .then(res => res.text())
+        .then(text => {
+            try {
+                const data = JSON.parse(text);
+                if (data.status === 'ok') {
+                    let msg = '✅ Sync completed:\n';
+                    data.results.forEach(r => {
+                        msg += `${r.table} → ${r.column} : ${r.status}\n`;
+                        if (r.error) msg += '⚠️ Error: ' + r.error + '\n';
+                    });
+                    showMessage(msg, 'success');
+                } else showMessage('❌ Server error: ' + data.msg, 'danger');
+            } catch (e) { showMessage('❌ JSON parse error: ' + e.message + '\nRaw:\n' + text, 'danger'); }
+        })
+        .catch(err => showMessage('❌ AJAX error: ' + err.message, 'danger'));
 });
