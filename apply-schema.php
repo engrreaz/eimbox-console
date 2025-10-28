@@ -9,6 +9,8 @@ header('Content-Type: application/json; charset=utf-8');
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 
+
+
 // যদি request JSON না হয়, তাহলে রিজেক্ট করো
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
