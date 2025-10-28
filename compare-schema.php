@@ -5,6 +5,9 @@ if (isLocalhost()) {
 } else {
     echo "🌐 Running on Remote Server";
 }
+
+
+echo '<pre>'.print_r($_SESSION).'</pre>';
 ?>
 
 <div class="container-xxl flex-grow-1 container-p-y">
