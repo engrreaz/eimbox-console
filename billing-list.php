@@ -1,0 +1,297 @@
+<?php require_once 'header.php'; ?>
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="fw-bold py-3 mb-4">
+        🧾 সকল ইনভয়েস তালিকা
+    </h4>
+
+    <div class="card">
+        <div class="card-body">
+            <table id="invoiceTable" class="table table-bordered table-striped table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>প্রতিষ্ঠান</th>
+                        <th>ইনভয়েস নং</th>
+                        <th>তারিখ</th>
+                        <th>গ্র্যান্ড টোটাল</th>
+                        <th>পেমেন্ট</th>
+                        <th>ডিউ</th>
+                        <th>স্ট্যাটাস</th>
+                        <th>অ্যাকশন</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Payment Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="paymentForm">
+                <div class="modal-header">
+                    <h5 class="modal-title">💰 ইনভয়েস পেমেন্ট</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="invoice_id" name="invoice_id">
+
+                    <div class="mb-3">
+                        <label class="form-label">পেমেন্টের তারিখ</label>
+                        <input type="date" name="payment_date" class="form-control" required
+                            value="<?= date('Y-m-d') ?>">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">পেমেন্ট এমাউন্ট</label>
+                        <input type="number" name="amount" class="form-control" step="0.01" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">পদ্ধতি</label>
+                        <select name="method" class="form-select">
+                            <option>Cash</option>
+                            <option>Bank</option>
+                            <option>Mobile</option>
+                            <option>Adjustment</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">নোট (ঐচ্ছিক)</label>
+                        <textarea name="note" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">✅ Save Payment</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">❌ Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
+
+<?php require_once 'footer.php'; ?>
+
+<!-- ----------------------------------- -->
+<script>
+    $(document).ready(function () {
+
+        loadInvoices();
+
+        function loadInvoices() {
+            $.ajax({
+                url: "ajax/load_invoices.php",
+                type: "GET",
+                dataType: "json",
+                success: function (res) {
+                    let rows = "";
+                    let i = 1;
+                    res.forEach(row => {
+                        let statusClass = {
+                            "Pending": "warning",
+                            "Partial": "info",
+                            "Paid": "success",
+                            "Cancelled": "secondary",
+                            "unpaid": "danger"
+                        }[row.status] || "light";
+
+                        rows += `
+          <tr>
+            <td>${i++}</td>
+            <td>${row.scname}</td>
+            <td>${row.invoice_no || row.id}</td>
+            <td>${row.invoice_date}</td>
+            <td>${row.grand_total}</td>
+            <td>${row.paid_amount || 0}</td>
+            <td>${row.due_amount || row.grand_total}</td>
+            <td><span class="badge bg-${statusClass}">${row.status}</span></td>
+            <td>
+              <button class="btn btn-sm btn-primary viewBtn" data-id="${row.id}">দেখুন</button>
+              <button class="btn btn-sm btn-success payBtn" data-id="${row.id}">পেমেন্ট</button>
+              <button class="btn btn-sm btn-danger delBtn" data-id="${row.id}">ডিলিট</button>
+              <button class="btn btn-sm btn-info" onclick="window.open('billing-pdf.php?id=<?= $row['id'] ?>', '_blank')">ডাউনলোড / প্রিন্ট</button>
+
+            </td>
+          </tr>`;
+                    });
+
+                    $("#invoiceTable tbody").html(rows);
+                }
+            });
+        }
+
+        // view, payment, delete বাটন হ্যান্ডলার
+        $(document).on("click", ".viewBtn", function () {
+            const id = $(this).data("id");
+            window.location.href = `billing-view.php?id=${id}`;
+        });
+
+        $(document).on("click", ".payBtn", function () {
+            const id = $(this).data("id");
+            $("#invoice_id").val(id);
+            $("#paymentModal").modal("show");
+        });
+
+        $(document).on("click", ".delBtn", function () {
+            const id = $(this).data("id");
+            if (confirm("আপনি কি নিশ্চিতভাবে এই ইনভয়েস ডিলিট করতে চান?")) {
+                $.post("ajax/delete_invoice.php", { id }, function (res) {
+                    if (res.success) {
+                        alert("ডিলিট সম্পন্ন হয়েছে!");
+                        loadInvoices();
+                    } else {
+                        alert("ডিলিট করতে সমস্যা হয়েছে!");
+                    }
+                }, "json");
+            }
+        });
+
+    });
+</script>
+
+
+
+<script>
+    // Payment Modal Show
+    $(document).on("click", ".payBtn", function () {
+        const id = $(this).data("id");
+        $("#invoice_id").val(id);
+        $("#paymentModal").modal("show");
+    });
+
+    // Payment Form Submit
+    $("#paymentForm").on("submit", function (e) {
+        e.preventDefault();
+
+        $.ajax({
+            url: "ajax/add_payment.php",
+            type: "POST",
+            data: $(this).serialize(),
+            dataType: "json",
+            success: function (res) {
+                if (res.success) {
+                    alert("✅ পেমেন্ট সফলভাবে সংরক্ষিত হয়েছে!");
+                    $("#paymentModal").modal("hide");
+                    loadInvoices(); // টেবিল রিফ্রেশ
+                } else {
+                    alert("❌ " + res.message);
+                }
+            }
+        });
+    });
+
+</script>
+
+<script>
+    // Load invoices function - global scope
+    function loadInvoices() {
+        $.ajax({
+            url: "ajax/load_invoices.php",
+            type: "GET",
+            dataType: "json",
+            success: function (res) {
+                console.log(res); // Debug
+                let rows = "";
+                let i = 1;
+
+                res.forEach(row => {
+                    let statusClass = {
+                        "Pending": "warning",
+                        "Partial": "info",
+                        "Paid": "success",
+                        "Cancelled": "secondary"
+                    }[row.status] || "light";
+
+                    rows += `
+                <tr>
+                    <td>${i++}</td>
+                    <td>${row.scname}</td>
+                    <td>${row.invoice_no || row.id}</td>
+                    <td>${row.invoice_date}</td>
+                    <td>${row.grand_total}</td>
+                    <td>${row.paid_amount}</td>
+                    <td>${row.due_amount}</td>
+                    <td><span class="badge bg-${statusClass}">${row.status}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-primary viewBtn" data-id="${row.id}">দেখুন</button>
+                        <button class="btn btn-sm btn-success payBtn" data-id="${row.id}">পেমেন্ট</button>
+                        <button class="btn btn-sm btn-danger delBtn" data-id="${row.id}">ডিলিট</button>
+                        <button class="btn btn-sm btn-info" onclick="window.open('billing-pdf.php?id=${row.id}','_blank')">PDF</button>
+                    </td>
+                </tr>`;
+                });
+
+                $("#invoiceTable tbody").html(rows);
+            },
+            error: function (xhr) {
+                console.error("Ajax Error:", xhr.responseText);
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        loadInvoices();
+
+        // পেমেন্ট modal
+        $(document).on("click", ".payBtn", function () {
+            const id = $(this).data("id");
+            $("#invoice_id").val(id);
+            $("#paymentModal").modal("show");
+        });
+
+        // Payment Form submit
+        $("#paymentForm").on("submit", function (e) {
+            e.preventDefault();
+            $.ajax({
+                url: "ajax/add_payment.php",
+                type: "POST",
+                data: $(this).serialize(),
+                dataType: "json",
+                success: function (res) {
+                    if (res.success) {
+                        alert("✅ পেমেন্ট সংরক্ষিত হয়েছে!");
+                        $("#paymentModal").modal("hide");
+                        loadInvoices(); // টেবিল রিফ্রেশ
+                    } else {
+                        alert("❌ " + res.message);
+                    }
+                }
+            });
+        });
+
+        // Delete invoice
+        $(document).on("click", ".delBtn", function () {
+            const id = $(this).data("id");
+            if (confirm("আপনি কি নিশ্চিতভাবে এই ইনভয়েস ডিলিট করতে চান?")) {
+                $.post("ajax/delete_invoice.php", { id }, function (res) {
+                    if (res.success) {
+                        alert("ডিলিট সম্পন্ন হয়েছে!");
+                        loadInvoices();
+                    } else {
+                        alert("ডিলিট করতে সমস্যা হয়েছে!");
+                    }
+                }, "json");
+            }
+        });
+
+        // View invoice
+        $(document).on("click", ".viewBtn", function () {
+            const id = $(this).data("id");
+            window.location.href = `billing-view.php?id=${id}`;
+        });
+    });
+
+</script>
+<!-- ----------------------------------- -->
+</body>
+
+</html>

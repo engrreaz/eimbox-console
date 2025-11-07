@@ -1,9 +1,12 @@
 <?php
 
 require_once 'core/init.php';
+
 require_once __DIR__ . '/vendor/autoload.php'; // HTMLPurifier autoload
 $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
 ?>
+
+
 
 <!doctype html>
 <html lang="en" class=" layout-navbar-fixed layout-menu-fixed layout-compact " dir="ltr" data-skin="default"
@@ -39,6 +42,8 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
 
 
     <script>
+
+
         (function (w, d, s, l, i) {
             w[l] = w[l] || [];
             w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
@@ -126,6 +131,8 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
 </head>
 
 <body>
+
+   
     <noscript>
         <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5DDHKGP" height="0" width="0"
             style="display: none; visibility: hidden"></iframe>
@@ -133,6 +140,7 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
 
     <div class="layout-wrapper layout-content-navbar  ">
         <div class="layout-container">
+       
             <?php require_once 'nav/nav.php'; ?>
 
             <div class="layout-page">
@@ -144,9 +152,11 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
                     <?php
 
                     if ($cur_page_module !== 'Core' && $is_admin < 4) {
-                        $admin_data = json_decode($admin_data, true);
 
+                        // $admin_data = json_decode($admin_data, true);
+                    
                         $modules = $admin_data['module'];
+                        $modules[] = 'Support';
                         if (!in_array($cur_page_module, $modules)) {
 
                             echo '<div class="container-xxl flex-grow-1 container-p-y">';
@@ -202,6 +212,75 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
                             </nav>
                         </div>
                     </div>
+
+
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="nav-align-top">
+                                <ul class="nav nav-pills flex-column flex-sm-row mb-6 gap-sm-0 gap-2">
+
+
+
+
+
+
+
+                                    <!-- ************************************************* -->
+                                    <?php
+
+                                    $stmt = $conn->prepare("
+                                        SELECT 
+                                            id, module_name, nav_icon, descrip, root_page, nav_title, related_pages
+                                        FROM 
+                                            modulemanager
+                                        WHERE 
+                                            FIND_IN_SET(?, related_pages)
+                                            OR FIND_IN_SET(?, related_pages)
+                                            OR root_page = ?
+                                            OR root_page = ?
+                                        ORDER BY root_page, related_pages
+                                    ");
+                                    $stmt->bind_param("ssss", $currentFile, $MUL_PATA, $currentFile, $MUL_PATA);
+                                    $stmt->execute();
+                                    $result = $stmt->get_result();
+
+                                    if ($result->num_rows > 1) {
+
+                                        while ($row = $result->fetch_assoc()) {
+                                            $icon = htmlspecialchars($row['nav_icon']);
+                                            $name = htmlspecialchars($row['module_name']);
+                                            $descrip = htmlspecialchars($row['descrip']);
+                                            $root_page = htmlspecialchars($row['root_page']);
+                                            $title = htmlspecialchars($row['nav_title']);
+                                            $pageURI = htmlspecialchars($row['related_pages']);
+
+                                            $act = '';
+                                            if($currentFile == $pageURI) {
+                                                $act = ' active ';
+                                            }
+                                            ?>
+
+                                            <li class="nav-item me-3">
+                                                <a class="nav-link waves-effect waves-light <?php echo $act;?> " href="<?php echo $pageURI; ?> "
+                                                    title="<?= $descrip; ?> "> <i class="bi bi-<?= $icon; ?> me-2"></i> <?= $title; ?>
+                                                </a>
+                                            </li>
+
+                                            <?php
+
+                                        }
+                                    }
+                                    $stmt->close();
+                                    ?>
+
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ************************************************* -->
+
 
 
                     <?php

@@ -35,6 +35,7 @@ $files = array_filter(scandir(__DIR__), function ($f) {
                 <tbody>
                     <?php
                     $i = 1;
+                    $not_assign = 1;
                     foreach ($files as $page) {
                         // modulemanager থেকে মিলে যাওয়ার চেষ্টা
                         $modStmt = $conn->prepare("SELECT module_name, nav_title FROM modulemanager WHERE related_pages=?");
@@ -52,6 +53,7 @@ $files = array_filter(scandir(__DIR__), function ($f) {
                 <td>{$page}</td>
                 <td>{$navTitle}</td>";
 
+
                         foreach ($packages as $pkg) {
                             $mapQ = $conn->prepare("SELECT * FROM package_map WHERE page_name=? AND package_id=?");
                             $mapQ->bind_param("si", $page, $pkg['id']);
@@ -68,27 +70,32 @@ $files = array_filter(scandir(__DIR__), function ($f) {
                             $print = $map['print'] ?? null;
                             $modified_time = $map['modified_time'] ?? null;
 
-                            // বাটন ক্লাস + লেবেল
+                            // ডিফল্ট অবস্থা
+                            $btnClass = 'btn-outline-secondary';
+                            $btnLabel = '—';
+                            $disabled = '';
+                            $disoff = '';
+
+                            // Access অনুযায়ী বাটন কালার/লেবেল
                             if ($access === "Yes") {
                                 $btnClass = 'btn-outline-success';
                                 $btnLabel = '✅';
-                                $disabled = '';
                             } elseif ($access === "No") {
                                 $btnClass = 'btn-outline-danger';
                                 $btnLabel = '❌';
-                                $disabled = '';
                             } else {
-                                $btnClass = 'btn-outline-secondary';
-                                $btnLabel = '—';
-                                $disabled = '';
+                                $not_assign++;
                             }
 
-                            
-                            if($moduleName == 'Core' || $moduleName == 'Backend' || $moduleName == 'Orion') {
-                                $disoff = ' disabled';
+                            // এই মডিউলগুলো disable থাকবে
+                    
+                            if (($mod['module_name'] == '') || (in_array($moduleName, ['Core', 'Backend', 'Orion', 'Seed', 'Authority', '']))) {
+                                $disoff = 'disabled';
+                                $disabled = 'disabled';
+                                $not_assign--; // Optional
                             }
                             ?>
-                            <td class='text-center' <?php echo $disoff;?>>
+                            <td class='text-center'>
                                 <button type="button" class="btn btn-sm <?= $btnClass ?> editMap"
                                     data-page="<?= htmlspecialchars($page) ?>" data-pkg="<?= $pkg['id'] ?>"
                                     data-name="<?= htmlspecialchars($pkg['package_name']) ?>" data-bs-toggle="popover"
@@ -103,11 +110,12 @@ $files = array_filter(scandir(__DIR__), function ($f) {
                                         '<b>Print:</b> ' . ($print ?: "N/A") . '<br>' .
                                         '<b>Modified:</b> ' . ($modified_time ?: "—")
                                         ?>" <?= $disabled ?>>
-                                    <?= $btnLabel ?>
+                                    <?= $btnLabel  ?>
                                 </button>
                             </td>
                             <?php
                         }
+
 
                         echo "</tr>";
                         $i++;
@@ -116,6 +124,7 @@ $files = array_filter(scandir(__DIR__), function ($f) {
                 </tbody>
             </table>
 
+            <?php echo 'Not Assigned : ' . $not_assign; ?>
         </div>
     </div>
 </div>
@@ -196,10 +205,13 @@ $files = array_filter(scandir(__DIR__), function ($f) {
         $('#page_name').val(page);
         $('#package_id').val(pkgId);
 
-        $.post('package-manager/package_map_action.php', { action: 'get_page_settings', page_name: page, package_id: pkgId }, function (res) {
+        $.post('package-manager/package_map_action.php', {
+            action: 'get_page_settings',
+            page_name: page,
+            package_id: pkgId
+        }, function (res) {
             if (res) {
                 let data = JSON.parse(res);
-                // alert(res);
                 $('[name=access]').val(data.access);
                 $('[name=entry_limit]').val(data.entry_limit);
                 $('[name=view_limit]').val(data.view_limit);
@@ -210,19 +222,28 @@ $files = array_filter(scandir(__DIR__), function ($f) {
             } else {
                 $('#mapSettingsForm')[0].reset();
             }
-            $('#mapSettingsModal').modal('show');
+
+            const modalEl = document.getElementById('mapSettingsModal');
+            const mapModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            mapModal.show();
         });
     });
 
     $('#mapSettingsForm').submit(function (e) {
         e.preventDefault();
-        $.post('package-manager/package_map_action.php', $(this).serialize() + '&action=save_page_settings', function (msg) {
-            alert(msg);
-            $('#mapSettingsModal').modal('hide');
-            location.reload();
-        });
+        $.post('package-manager/package_map_action.php',
+            $(this).serialize() + '&action=save_page_settings',
+            function (msg) {
+                alert(msg);
+                const modalEl = document.getElementById('mapSettingsModal');
+                const mapModal = bootstrap.Modal.getInstance(modalEl);
+                mapModal?.hide();
+                location.reload();
+            }
+        );
     });
 </script>
+
 
 
 <!-- ----------------------------------- -->

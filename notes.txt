@@ -41,3 +41,27 @@ footer a EIMBOX ar sathe starting theke running year ta bosaiya diyen
 
 আরেকটা সমস্যা পাইছি। উপরের লগআউট বাটনে ক্লিক করে নিউ ইউন্ডোজে গিয়ে লগআউট হয়। সেইম পেইজে করে দিয়েন
 
+
+
+নোটিশঃ (MIC)
+স. অভিভাবক, আপনার সন্তান আজ কলেজে অনুপস্থিত। 
+-অধ্যক্ষ
+
+eecc44fa8248ab66
+e42eac1b
+
+
+function sendSMSToStudent($appKey, $secretKey, $message, $mobile)
+{
+    
+    $url = "http://cpanel.smsvaults.work/sendtext?apikey=$appKey&secretkey=$secretKey&callerID=01844015757&toUser=$mobile&messageContent=$message";
+
+    $ch = curl_init(); // Initialize cURL
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_HEADER, 0);
+    $response = curl_exec($ch); // This is the result from the API
+    curl_close($ch);
+    
+    return $response;
+}

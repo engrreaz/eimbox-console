@@ -11,6 +11,9 @@ $restrict_page_list = [];
 $orion_page_list = [];
 $seed_page_list = [];
 $status = 0;
+
+
+
 $result = $conn->query("SELECT module_name, related_pages, status_name FROM modulemanager where module_name = 'Core' or  module_name = 'Backend' or related_pages = '$currentFile'");
 while ($row = $result->fetch_assoc()) {
 
@@ -20,7 +23,7 @@ while ($row = $result->fetch_assoc()) {
     }
 
 
-    if ($md == 'Core') {
+    if ($md == 'Core' || $md == 'Support') {
         $access_page_list[] = $row['related_pages'];
     } else if ($md == 'Orion') {
         $orion_page_list[] = $row['related_pages'];
@@ -39,9 +42,12 @@ while ($row = $result->fetch_assoc()) {
 // echo '<hr>';
 // var_dump($restrict_page_list);
 
+
+
 if (in_array($currentFile, $access_page_list)) {
     $permission = 3; // Full access
     $_SESSION["permission_message"] = "White Listed Page";
+
 } else if (in_array($currentFile, $orion_page_list)) {
     $permission = 0; // Full access
     $_SESSION["permission_message"] = "Orion Listed Page";
@@ -83,7 +89,9 @@ if (in_array($currentFile, $access_page_list)) {
 
     $permission = $permission_data['permission'] ?? 0;
     $_SESSION["permission_message"] = "Role&mdash;Institute&mdash;User Based";
+
 }
+
 
 if ($usr == 'engrreaz@gmail.com') {
     $permission = 3;
@@ -100,8 +108,7 @@ if ($permission < 2) {
 
 if ($permission == 0) {
     $error_message = "Access Denied: You do not have permission to access this page.";
-    // header('Location: access-denied.php');
+    // header('Location: pages/access-denied.php');
     include_once('pages/access-denied.php');
     exit;
 }
-

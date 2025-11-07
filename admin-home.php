@@ -671,31 +671,7 @@ require_once 'header.php';
 <!-- ----------------------------------- -->
 <script></script>
 
-<script>
-document.querySelectorAll('.backend-login').forEach(function(button) {
-    button.addEventListener('click', function() {
-        const email = this.dataset.mail; // data-mail থেকে email নাও
 
-        fetch('backend/backend-login.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: 'email=' + encodeURIComponent(email)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if(data.status === 'success'){
-                window.location.href = 'index.php';
-            } else {
-                alert(data.message || 'Login failed');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('AJAX request failed');
-        });
-    });
-});
-</script>
 
 
 

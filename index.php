@@ -1,8 +1,8 @@
 <?php
 require_once 'header.php';
 // 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
- 
 
+// echo '<pre>' . print_r($_SESSION) . '</pre>';
 ?>
 
 <!-- Content -->
@@ -13,7 +13,7 @@ require_once 'header.php';
 
         <!-- <?= $sccode_current_package ?>
 
-        <?php echo '<pre>' . print_r($_SESSION, true) . '</pre>';?> -->
+        <?php echo '<pre>' . print_r($_SESSION, true) . '</pre>'; ?> -->
 
         <!-- Students Attendance -->
         <div class="col-12 col-sm-6 col-lg-3">

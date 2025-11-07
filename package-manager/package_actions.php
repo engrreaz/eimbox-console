@@ -91,9 +91,17 @@ if ($action == 'save_settings') {
             WHERE package_id=? AND ins_cat=? AND id=?");
         $stmt->bind_param(
             "dddddsssisi",
-            $pA, $pB, $pC, $pD, $pE,
-            $billing, $payment, $status,
-            $package_id, $ins_cat, $id
+            $pA,
+            $pB,
+            $pC,
+            $pD,
+            $pE,
+            $billing,
+            $payment,
+            $status,
+            $package_id,
+            $ins_cat,
+            $id
         );
 
         if ($stmt->execute()) {
@@ -110,9 +118,16 @@ if ($action == 'save_settings') {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->bind_param(
             "isddddssss",
-            $package_id, $ins_cat,
-            $pA, $pB, $pC, $pD, $pE,
-            $billing, $payment, $status
+            $package_id,
+            $ins_cat,
+            $pA,
+            $pB,
+            $pC,
+            $pD,
+            $pE,
+            $billing,
+            $payment,
+            $status
         );
 
         if ($stmt->execute()) {

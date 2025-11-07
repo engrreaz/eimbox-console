@@ -1,5 +1,6 @@
 <?php
 include_once('dev-log/feedback.php');
+include_once('core/page_status_access.php');
 
 
 
@@ -45,12 +46,87 @@ $release_colors = [
         right: 0;
         z-index: 10300;
     }
+
+
+
+    #idleProgressContainer {
+        /* position: fixed; */
+        /* bottom: 10px; */
+        /* right: 10px; */
+        /* width: 100%; */
+        height: 3px;
+        background: #ddd;
+        border-radius: 5px;
+        overflow: hidden;
+        z-index: 99999;
+    }
+
+    #idleProgressBar {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to right, #28a745, #ffc107, #dc3545);
+        transition: width 1s linear;
+    }
+
+    #idleTimeText {
+        position: absolute;
+        top: -20px;
+        right: 0;
+        font-size: 12px;
+        color: #333;
+        background: #fff;
+        padding: 2px 4px;
+        border-radius: 3px;
+    }
 </style>
+
+</styl#idleProgressContainer>
+
+
+<!-- Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="notice-title">Static Backdrop Modal</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="notice-body">
+                Modal body content goes here.
+            </div>
+            <div class="modal-footer" id="notice-footer">
+                <button type="button" class="btn btn-dark" onclick="goback();" data-bs-dismiss="modal">Go Back
+                    Please</button>
+                <button type="button" id="proceed-button" class="btn btn-danger" onclick="proceed();"
+                    data-bs-dismiss="modal">Yes,
+                    Proceed</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
 
 
 <footer>
     <div class="footer  bg-light" id="extend-footer">
+
+        <div id="idleProgressContainer">
+            <div id="idleProgressBar"></div>
+            <span id="idleTimeText">ffffff</span>
+        </div>
+
         <div class="container-fluid container-p-x pt-3 pb-3">
+
+
+
+
+
             <div class="row">
                 <div class="col-12">
                     <?php
@@ -128,7 +204,7 @@ $release_colors = [
                             <a href="javascript:void(0)" class="footer-link d-block pb-2">Documentation</a>
                         </li>
                         <li>
-                            <a href="javascript:void(0)" class="footer-link d-block pb-2">Changelog</a>
+                            <a href="changelog.php" class="footer-link d-block pb-2">Changelog</a>
                         </li>
                     </ul>
                 </div>
@@ -151,7 +227,7 @@ $release_colors = [
                             <a href="javascript:void(0)" class="footer-link d-block pb-2">Documetation Writer</a>
                         </li>
                         <li>
-                            <a href="javascript:void(0)" class="footer-link d-block pb-2">Package & Pricing</a>
+                            <a href="package-pricing.php" class="footer-link d-block pb-2">Package & Pricing</a>
                         </li>
                     </ul>
                 </div>
@@ -171,7 +247,7 @@ $release_colors = [
             <div class="d-flex flex-column flex-sm-row gap-4">
                 <div class="form-check footer-link mb-0 mt-2">
                     <input class="form-check-input" type="checkbox" value="" id="customCheck2" checked="checked" />
-                    <label class="form-check-label" for="customCheck2"> Show Always </label>
+                    <label class="form-check-label" for="customCheck2"> Always Show </label>
                 </div>
                 <div class="dropdown dropup footer-link" hidden>
                     <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle"
@@ -188,6 +264,10 @@ $release_colors = [
                                 class="icon-base ri ri-btc-line me-2"></i>Bitcoin</a>
                     </div>
                 </div>
+
+                <button id="manualLock" class="btn btn-sm btn-outline-warning"> <i class="bi bi-lock-fill"></i>
+                </button>
+
                 <a href="logout.php" class="btn btn-sm btn-outline-danger">
                     <i class="icon-base ri ri-logout-box-r-line icon-xs me-1"></i>Logout</a>
 
@@ -245,7 +325,7 @@ $release_colors = [
 <script src="assets/vendor/js/menu.js"></script>
 <script src="assets/vendor/libs/notiflix/notiflix.js"></script>
 <script src="assets/js/forms-editors.js"></script>
-<script src="assets/js/cards-action.js"></script>
+
 
 <script src="assets/js/app-logistics-dashboard.js"></script>
 <script src="assets/js/extended-ui-tour.js"></script>
@@ -253,7 +333,7 @@ $release_colors = [
 <script src="dev-log/dev-timeline.js"></script> <!-- আমাদের কাস্টম JS -->
 <script src="dev-log/dev-loader.js"></script>
 <script src="assets/js/app-chat.js"></script>
-<script src="assets/js/cards-actions.js"></script>
+<script src="assets/js/cards-action.js"></script>
 <script src="assets/js/notifications.js"></script>
 <!-- <script src="assets/js/extended-ui-media-player.js"></script> -->
 <script src="assets/js/pages-auth-multisteps.js"></script>
@@ -448,7 +528,7 @@ $release_colors = [
             const point = target.dataset.point || 0;
             const url = window.location.pathname;
             const sccode = '<?php echo $sccode; ?>';
-            if(sccode=='') sccode = 0;
+            if (sccode == '') sccode = 0;
             const page = '<?php echo $currentFile; ?>';
             fetch("core/track_action.php", {
                 method: "POST",
@@ -457,7 +537,10 @@ $release_colors = [
                     email: "<?php echo $_SESSION['user_email'] ?? ''; ?>",
                     page: page, url: url, sccode: sccode, action: action, point: point, timestamp: new Date().toISOString()
                 })
-            }).then(res => res.text()).then(data => console.log("Track Response:", data)).catch(err => console.error(err));
+            })
+                .then(res => res.text())
+                .then(data => console.log("Track Response:", data))
+                .catch(err => console.error(err));
         });
     });
 </script>
@@ -635,4 +718,189 @@ $release_colors = [
             // location.reload(); // একবার reload হবে, তারপর PHP থিম পাবে
         }
     })();
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.backend-login').forEach(function (button) {
+            button.addEventListener('click', function () {
+                const email = this.dataset.mail; // data-mail থেকে email নাও
+
+                alert(email);
+
+                fetch('backend/backend-login.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'email=' + encodeURIComponent(email)
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            window.location.href = 'index.php';
+                        } else {
+                            alert(data.message || 'Login failed');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('AJAX request failed');
+                    });
+            });
+        });
+    });
+
+</script>
+
+
+
+
+<script>
+    function loginuser(email) {
+        alert(email);
+
+        fetch('backend/backend-login.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'email=' + encodeURIComponent(email)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    window.location.href = 'index.php';
+                } else {
+                    alert(data.message || 'Login failed');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('AJAX request failed');
+            });
+
+
+    }
+</script>
+
+
+
+
+<script>
+
+    let idleTime = 0;
+    let idleLimit = 0;
+    if (<?php echo $_SESSION['locktime']; ?> == 0) {
+        idleLimit = 10;
+    } else {
+        idleLimit = <?php echo $_SESSION['locktime']; ?>;
+    }
+    const progressBar = document.getElementById('idleProgressBar');
+    const timeText = document.getElementById('idleTimeText');
+
+    // প্রতি সেকেন্ডে টাইম কাউন্ট হবে
+    setInterval(function () {
+        idleTime++;
+        const remain = idleLimit - idleTime;
+        const percent = (remain / idleLimit) * 100;
+
+        // প্রগ্রেসবার আপডেট
+        progressBar.style.width = percent + '%';
+        timeText.textContent = remain + 's বাকি';
+
+        // লক ট্রিগার
+        if (idleTime >= idleLimit) {
+            localStorage.setItem('screenLocked', '1');
+            location.href = "lock.php";
+        }
+    }, 1000);
+
+    // ইউজার নড়াচড়া করলে idle reset
+    function resetIdle() {
+        idleTime = 0;
+        progressBar.style.width = '100%';
+        timeText.textContent = idleLimit + 's বাকি';
+    }
+
+    ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => {
+        document.addEventListener(evt, resetIdle);
+    });
+
+</script>
+
+
+
+
+
+<script>
+    // Idle lock
+    document.onmousemove = document.onkeypress = function () { idleTime = 0; }
+
+    // Manual Lock Button
+    document.getElementById('manualLock').addEventListener('click', function () {
+        // বর্তমান পেজের নাম বের করা
+        const currentPage = window.location.pathname.split('/').pop();
+
+        // পেজ নাম POST মেথডে পাঠানো
+        fetch('core/lock_manual.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: 'page=' + encodeURIComponent(currentPage)
+        })
+            .then(() => {
+                localStorage.setItem('screenLocked', '1');
+                location.href = "lock.php";
+            })
+            .catch(err => console.error('Error:', err));
+    });
+
+
+    // Check lock status on load
+    if (localStorage.getItem('screenLocked') === '1') {
+        location.href = 'lock.php';
+    }
+</script>
+
+
+
+<script>
+    let access_grant = <?php echo $access_grant ? 'true' : 'false'; ?>;
+
+    if (access_grant === false) {
+
+        let proceed_grant = <?php echo $proceed_grant ? 'true' : 'false'; ?>;
+
+        let page_status = '<?php echo $page_status; ?>';
+        let page_status_name = '<?php echo $page_status_names[$page_status]; ?>';
+        let page_status_color = '<?php echo $page_status_colors[$page_status]; ?>';
+        let en_text = '<?php echo $status_desc_en[$page_status]; ?>';
+        let bn_text = '<?php echo $status_desc_bn[$page_status]; ?>';
+
+        $('#notice-title').text('<?= $page_title; ?>');
+
+        $('#notice-body').html(<?php
+        $body = 'Dear ' . ($fullname ?? $usr) . ', ';
+        $body .= '<br> You\'ve accessed this page <b>"' . $page_title . '"</b>, currently in <b>' . $page_status_names[$page_status] . '</b> development status.<br>';
+        $body .= $status_desc_en[$page_status] . '<hr class="m-2 p-2 bd-danger">' . $status_desc_bn[$page_status];
+        $body .= '<br>Please note that using this page may involve risks. Proceed at your own risk.<br>';
+        $body .= 'Alternatively, close this modal and return to the previous page.<br>Thank You.';
+        echo json_encode($body);
+        ?>);
+
+        $('#notice-body').css('color', page_status_color);
+
+        if (proceed_grant === false) {
+            document.getElementById('proceed-button').disabled = true;
+        }
+
+        var modalEl = document.getElementById('myModal');
+        var myModal = new bootstrap.Modal(modalEl, {
+            backdrop: 'static',
+            keyboard: false
+        });
+        myModal.show();
+    }
+
+    function goback() {
+        window.history.back();
+    }
 </script>

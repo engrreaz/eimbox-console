@@ -51,6 +51,7 @@ document.querySelectorAll('.sync-table').forEach(btn => {
         const table = btn.dataset.table;
         const createSQL = btn.dataset.create;
 
+        console.log(createSQL);
         const res = await postData('apply-schema.php', {
             action: 'apply-table',
             table,

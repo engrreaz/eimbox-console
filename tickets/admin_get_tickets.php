@@ -1,12 +1,18 @@
 <?php
 require_once '../core/config.php';
 require_once '../core/db.php';
+require_once '../core/global_values.php';
 
 $query = "
-SELECT tickets.*, users.name AS username 
-FROM tickets 
-JOIN users ON users.id = tickets.user_id
+SELECT 
+    tickets.*, 
+    usersapp.profilename AS username, 
+    scinfo.scname AS scname
+FROM tickets
+JOIN usersapp ON usersapp.id = tickets.user_id
+JOIN scinfo ON scinfo.sccode = tickets.sccode
 ORDER BY tickets.created_at DESC
+LIMIT 7;
 ";
 $result = $conn->query($query);
 
@@ -25,7 +31,8 @@ while ($row = $result->fetch_assoc()) {
         <div class="d-flex justify-content-between align-items-center">
             <div>
                 <strong>#'.$row['id'].'</strong> '.$row['subject'].'<br>
-                <small class="text-muted">'.$row['username'].'</small>
+                <small class="text-muted">'.$row['username'].'</small><br>
+                <small class="text-muted">'.$row['scname'].'</small>
             </div>
             <span class="badge '.$badge.'">'.ucfirst($row['status']).'</span>
         </div>

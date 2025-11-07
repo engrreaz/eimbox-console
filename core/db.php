@@ -8,7 +8,7 @@ function db_connect() {
     static $conn;
 
     if ($conn === null) {
-        // Error ধরতে পারার জন্য রিপোর্ট মোড চালু
+        // Error ধরতে পারার জন্য রিপোর্ট মোecho চালু
         mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
         // Extend করে mysqli ব্যবহার

@@ -233,6 +233,88 @@ CREATE TABLE `achievement_events` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `achievements_category`
+--
+
+DROP TABLE IF EXISTS `achievements_category`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `achievements_category` (
+  `sl` int(11) NOT NULL DEFAULT 0,
+  `created_by` varchar(100) DEFAULT NULL,
+  `category` varchar(25) DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `achievements_list`
+--
+
+DROP TABLE IF EXISTS `achievements_list`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `achievements_list` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `code` varchar(50) DEFAULT NULL,
+  `name` varchar(100) NOT NULL,
+  `description` text DEFAULT NULL,
+  `level_requirement` varchar(200) DEFAULT NULL,
+  `tbl_name` varchar(30) DEFAULT NULL,
+  `aggregate` varchar(20) DEFAULT NULL,
+  `field` varchar(20) DEFAULT NULL,
+  `params` varchar(255) DEFAULT NULL COMMENT 'extra condition : parameters',
+  `requirement` varchar(20) DEFAULT NULL,
+  `points` int(11) DEFAULT 0,
+  `category` varchar(50) DEFAULT NULL,
+  `type` varchar(20) NOT NULL DEFAULT 'Basic',
+  `tier` enum('Bronze','Silver','Gold','Platinum','Diamond') DEFAULT 'Bronze',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `code` (`code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `active_sessions`
+--
+
+DROP TABLE IF EXISTS `active_sessions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `active_sessions` (
+  `session_id` varchar(128) NOT NULL,
+  `user_id` bigint(20) NOT NULL,
+  `ip` varchar(45) NOT NULL,
+  `user_agent` text DEFAULT NULL,
+  `device_fp` varchar(255) DEFAULT NULL,
+  `started_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `last_seen` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `is_authenticated` tinyint(1) DEFAULT 0,
+  `auth_level` enum('password','otp','mfa_hard') DEFAULT 'password',
+  PRIMARY KEY (`session_id`),
+  KEY `user_id` (`user_id`),
+  KEY `last_seen` (`last_seen`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `activity_log`
+--
+
+DROP TABLE IF EXISTS `activity_log`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `activity_log` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `activity_type` varchar(100) DEFAULT NULL,
+  `points` int(11) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `adminnotes`
 --
 
@@ -793,6 +875,25 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
+
+--
+-- Table structure for table `auth_logs`
+--
+
+DROP TABLE IF EXISTS `auth_logs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `auth_logs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) DEFAULT NULL,
+  `email_attempted` varchar(255) DEFAULT NULL,
+  `ip` varchar(45) NOT NULL,
+  `user_agent` varchar(255) DEFAULT NULL,
+  `action` varchar(50) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=225 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Table structure for table `backup_info`
@@ -5906,7 +6007,7 @@ CREATE TABLE `logbook` (
   `modifieddate` datetime DEFAULT NULL,
   `bandwidth` bigint(20) DEFAULT 0,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8927 DEFAULT CHARSET=utf32 COLLATE=utf32_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10534 DEFAULT CHARSET=utf32 COLLATE=utf32_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -6983,7 +7084,7 @@ CREATE TABLE `otp` (
   `otptime` datetime DEFAULT NULL,
   `login` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7250 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7252 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -10920,7 +11021,7 @@ CREATE TABLE `sms` (
   `comments` varchar(100) DEFAULT NULL,
   `modifieddate` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=48 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -11351,7 +11452,7 @@ CREATE TABLE `stattnd` (
   `time8` datetime DEFAULT NULL,
   `modifieddate` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=79359 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=79362 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -11457,7 +11558,7 @@ CREATE TABLE `stattndsummery` (
   `submittime` datetime DEFAULT NULL,
   `modifieddate` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1666 DEFAULT CHARSET=utf32 COLLATE=utf32_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1668 DEFAULT CHARSET=utf32 COLLATE=utf32_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -11592,7 +11693,7 @@ CREATE TABLE `stfinance` (
   `splitid` varchar(10) DEFAULT NULL,
   `scan_status` int(11) NOT NULL DEFAULT 3,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=657934 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=657941 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -11832,7 +11933,7 @@ CREATE TABLE `stpr` (
   `cashbook` int(11) NOT NULL DEFAULT 0,
   `modifieddate` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7391 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7415 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -15077,7 +15178,7 @@ CREATE TABLE `todolist` (
   `responsetime` datetime DEFAULT NULL,
   `modifieddate` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6197 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6198 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -15183,7 +15284,7 @@ CREATE TABLE `trackbook` (
   `platform` varchar(10) DEFAULT NULL,
   `modifieddate` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=507 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=510 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -16137,6 +16238,13 @@ CREATE TABLE `users` (
   `smstemp` int(11) NOT NULL DEFAULT 1,
   `eimboxid` varchar(10) NOT NULL,
   `token` text DEFAULT NULL,
+  `sccode` int(11) DEFAULT NULL,
+  `name` varchar(100) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `role` varchar(50) DEFAULT 'User',
+  `avatar` varchar(255) DEFAULT NULL,
+  `status` enum('online','away','busy','offline') DEFAULT 'online',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `user_name` (`user_name`),
   UNIQUE KEY `user_email` (`user_email`),
@@ -16280,6 +16388,21 @@ CREATE TABLE `usersapp` (
   `reset_link` varchar(150) DEFAULT NULL,
   `st_entry_fld` varchar(1024) DEFAULT NULL,
   `username` varchar(100) DEFAULT NULL,
+  `failed_attempts` int(11) DEFAULT 0,
+  `last_failed` timestamp NULL DEFAULT NULL,
+  `lock_until` timestamp NULL DEFAULT NULL,
+  `remember_token_hash` varchar(255) DEFAULT NULL,
+  `remember_token_expires` timestamp NULL DEFAULT NULL,
+  `password_salt` varchar(32) DEFAULT NULL,
+  `reset_token_hash` varchar(255) DEFAULT NULL,
+  `reset_token_expires` timestamp NULL DEFAULT NULL,
+  `mfa_enabled` tinyint(4) NOT NULL DEFAULT 0,
+  `mfa_type` enum('totp','sms','email','push') DEFAULT NULL,
+  `mfa_secret` varchar(255) DEFAULT NULL,
+  `mfa_temp_token` varchar(255) DEFAULT NULL,
+  `mfa_temp_expires` timestamp NULL DEFAULT NULL,
+  `password_hash` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=951 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -16365,6 +16488,43 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
+
+--
+-- Table structure for table `usersapp_new`
+--
+
+DROP TABLE IF EXISTS `usersapp_new`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `usersapp_new` (
+  `email` varchar(255) NOT NULL,
+  `fullname` varchar(63) DEFAULT NULL,
+  `username` varchar(100) NOT NULL,
+  `password_hash` varchar(255) NOT NULL,
+  `user_level` varchar(25) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `failed_attempts` int(11) DEFAULT 0,
+  `last_failed` timestamp NULL DEFAULT NULL,
+  `lock_until` timestamp NULL DEFAULT NULL,
+  `remember_token_hash` varchar(255) DEFAULT NULL,
+  `remember_token_expires` timestamp NULL DEFAULT NULL,
+  `password_salt` varchar(32) DEFAULT NULL,
+  `reset_token_hash` varchar(255) DEFAULT NULL,
+  `reset_token_expires` timestamp NULL DEFAULT NULL,
+  `mfa_enabled` tinyint(1) DEFAULT 0,
+  `mfa_type` enum('totp','sms','email','push') DEFAULT NULL,
+  `mfa_secret` varchar(255) DEFAULT NULL,
+  `mfa_temp_token` varchar(255) DEFAULT NULL,
+  `mfa_temp_expires` timestamp NULL DEFAULT NULL,
+  `last_name` varchar(100) DEFAULT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `address` text DEFAULT NULL,
+  `dob` date DEFAULT NULL,
+  `first_name` varchar(100) DEFAULT NULL,
+  UNIQUE KEY `email` (`email`),
+  UNIQUE KEY `username` (`username`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Table structure for table `usersrequest`
@@ -16700,4 +16860,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-10-28  2:55:20
+-- Dump completed on 2025-11-06 16:09:01

@@ -16,6 +16,41 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
+-- Table structure for table `accesslevel`
+--
+
+DROP TABLE IF EXISTS `accesslevel`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `accesslevel` (
+  `permission` varchar(255) NOT NULL,
+  `platinum` int(11) NOT NULL,
+  `gold` int(11) NOT NULL,
+  `silver` int(11) NOT NULL,
+  `bronge` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `accounts`
+--
+
+DROP TABLE IF EXISTS `accounts`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `accounts` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `sccode` varchar(20) NOT NULL,
+  `company` varchar(100) NOT NULL,
+  `descn` varchar(100) NOT NULL,
+  `amount` decimal(11,2) NOT NULL,
+  `date` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `sms` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `achievement_events`
 --
 
@@ -24,13 +59,12 @@ DROP TABLE IF EXISTS `achievement_events`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `achievement_events` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `email` varchar(120) NOT NULL,
   `achievement_id` int(10) unsigned NOT NULL,
   `event_type` enum('awarded','revoked') NOT NULL,
   `reason` varchar(255) DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `email` (`email`)
+  `email` varchar(120) NOT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -42,9 +76,9 @@ DROP TABLE IF EXISTS `achievements_category`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `achievements_category` (
+  `sl` int(11) NOT NULL DEFAULT 0,
   `created_by` varchar(100) DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `sl` int(11) NOT NULL DEFAULT 0,
   `category` varchar(25) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -132,7 +166,79 @@ CREATE TABLE `auth_logs` (
   `action` varchar(50) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=209 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=241 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `billing_invoices`
+--
+
+DROP TABLE IF EXISTS `billing_invoices`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `billing_invoices` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `sccode` varchar(20) NOT NULL,
+  `customer_name` varchar(50) DEFAULT NULL,
+  `invoice_no` varchar(30) NOT NULL,
+  `invoice_date` date NOT NULL,
+  `due_date` date DEFAULT NULL,
+  `total_amount` decimal(10,2) NOT NULL,
+  `discount` decimal(10,2) DEFAULT 0.00,
+  `vat_percent` decimal(5,2) DEFAULT 0.00,
+  `vat_amount` decimal(10,2) DEFAULT 0.00,
+  `grand_total` decimal(10,2) NOT NULL,
+  `paid_amount` decimal(10,2) DEFAULT 0.00,
+  `due_amount` decimal(10,2) DEFAULT 0.00,
+  `payment_status` enum('unpaid','partial','paid','cancelled') DEFAULT 'unpaid',
+  `created_by` varchar(50) DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp(),
+  `updated_at` datetime DEFAULT NULL ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `invoice_no` (`invoice_no`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `billing_items`
+--
+
+DROP TABLE IF EXISTS `billing_items`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `billing_items` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `invoice_id` int(11) NOT NULL,
+  `description` varchar(255) NOT NULL,
+  `qty` decimal(10,2) DEFAULT 1.00,
+  `rate` decimal(10,2) NOT NULL,
+  `amount` decimal(10,2) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `invoice_id` (`invoice_id`),
+  CONSTRAINT `billing_items_ibfk_1` FOREIGN KEY (`invoice_id`) REFERENCES `billing_invoices` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `billing_payments`
+--
+
+DROP TABLE IF EXISTS `billing_payments`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `billing_payments` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `invoice_id` int(11) NOT NULL,
+  `payment_date` date NOT NULL,
+  `payment_method` enum('cash','bank','bkash','nagad','card','other') DEFAULT 'cash',
+  `transaction_id` varchar(50) DEFAULT NULL,
+  `amount` decimal(10,2) NOT NULL,
+  `remarks` varchar(255) DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `invoice_id` (`invoice_id`),
+  CONSTRAINT `billing_payments_ibfk_1` FOREIGN KEY (`invoice_id`) REFERENCES `billing_invoices` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -150,7 +256,28 @@ CREATE TABLE `chats` (
   `message` text DEFAULT NULL,
   `sent_at` datetime DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `dev_notes`
+--
+
+DROP TABLE IF EXISTS `dev_notes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `dev_notes` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `ref_id` int(11) DEFAULT NULL,
+  `sccode` int(11) DEFAULT NULL,
+  `ticket_id` int(11) NOT NULL,
+  `admin_id` int(11) NOT NULL,
+  `note_line` text NOT NULL,
+  `status` enum('New','Open','Waiting','Replied','Progress','Hold','Resolved','Closed') NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `ticket_id` (`ticket_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=67 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -170,7 +297,7 @@ CREATE TABLE `dev_timeline` (
   `logged_by` varchar(100) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=168 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=178 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -249,26 +376,97 @@ CREATE TABLE `feedbacks` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `invoices`
+-- Table structure for table `globalsettings`
 --
 
-DROP TABLE IF EXISTS `invoices`;
+DROP TABLE IF EXISTS `globalsettings`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `invoices` (
-  `invoice_id` int(11) NOT NULL AUTO_INCREMENT,
-  `invoice_number` varchar(50) NOT NULL,
-  `sccode` varchar(50) NOT NULL,
-  `amount` decimal(10,2) NOT NULL,
-  `status` enum('Pending','Paid','Partial','Cancelled') DEFAULT 'Pending',
-  `bill_date` date NOT NULL,
-  `payment_date` date DEFAULT NULL,
-  `created_at` datetime DEFAULT current_timestamp(),
-  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `notes` text DEFAULT NULL,
-  PRIMARY KEY (`invoice_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE `globalsettings` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `sccode` int(11) DEFAULT NULL,
+  `stattnd_sort` varchar(10) DEFAULT 'rollno',
+  `stattnd_multi` int(11) DEFAULT 1,
+  `tattnd` int(11) DEFAULT 0,
+  `collection` int(11) NOT NULL DEFAULT 0 COMMENT '0 = Class Teacher, 1 = Administrator, 2 = Head Teacher',
+  `tattndradius` int(11) NOT NULL DEFAULT 50,
+  `tattndout` int(11) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=80 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `globalsettings_after_insert` AFTER INSERT ON `globalsettings` FOR EACH ROW BEGIN
+        INSERT INTO sldijsf87sxckf.audit_log(table_name, action, row_id, new_data, changed_by)
+        VALUES(
+            'globalsettings',
+            'INSERT',
+            NEW.`id`,
+            JSON_OBJECT('id', NEW.`id`,'sccode', NEW.`sccode`,'stattnd_sort', NEW.`stattnd_sort`,'stattnd_multi', NEW.`stattnd_multi`,'tattnd', NEW.`tattnd`,'collection', NEW.`collection`,'tattndradius', NEW.`tattndradius`,'tattndout', NEW.`tattndout`),
+            COALESCE(@current_user,'system')
+        );
+    END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `globalsettings_after_update` AFTER UPDATE ON `globalsettings` FOR EACH ROW BEGIN
+        INSERT INTO sldijsf87sxckf.audit_log(table_name, action, row_id, old_data, new_data, changed_by)
+        VALUES(
+            'globalsettings',
+            'UPDATE',
+            NEW.`id`,
+            JSON_OBJECT('id', OLD.`id`,'sccode', OLD.`sccode`,'stattnd_sort', OLD.`stattnd_sort`,'stattnd_multi', OLD.`stattnd_multi`,'tattnd', OLD.`tattnd`,'collection', OLD.`collection`,'tattndradius', OLD.`tattndradius`,'tattndout', OLD.`tattndout`),
+            JSON_OBJECT('id', NEW.`id`,'sccode', NEW.`sccode`,'stattnd_sort', NEW.`stattnd_sort`,'stattnd_multi', NEW.`stattnd_multi`,'tattnd', NEW.`tattnd`,'collection', NEW.`collection`,'tattndradius', NEW.`tattndradius`,'tattndout', NEW.`tattndout`),
+            COALESCE(@current_user,'system')
+        );
+    END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `globalsettings_after_delete` AFTER DELETE ON `globalsettings` FOR EACH ROW BEGIN
+        INSERT INTO sldijsf87sxckf.audit_log(table_name, action, row_id, old_data, changed_by)
+        VALUES(
+            'globalsettings',
+            'DELETE',
+            OLD.`id`,
+            JSON_OBJECT('id', OLD.`id`,'sccode', OLD.`sccode`,'stattnd_sort', OLD.`stattnd_sort`,'stattnd_multi', OLD.`stattnd_multi`,'tattnd', OLD.`tattnd`,'collection', OLD.`collection`,'tattndradius', OLD.`tattndradius`,'tattndout', OLD.`tattndout`),
+            COALESCE(@current_user,'system')
+        );
+    END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
 -- Table structure for table `logbook`
@@ -297,7 +495,7 @@ CREATE TABLE `logbook` (
   KEY `idx_time` (`entrytime`),
   KEY `idx_logbook_email_entry` (`email`,`entrytime`),
   KEY `idx_logbook_page` (`pagename`)
-) ENGINE=InnoDB AUTO_INCREMENT=5135 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6738 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -333,7 +531,7 @@ CREATE TABLE `modulelist` (
   `entryby` varchar(120) DEFAULT NULL,
   `modifieddate` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -352,10 +550,11 @@ CREATE TABLE `modulemanager` (
   `related_pages` varchar(500) DEFAULT NULL,
   `nav_icon` varchar(25) NOT NULL DEFAULT 'three-dots-vertical',
   `nav_title` varchar(50) DEFAULT NULL,
+  `root_page` varchar(50) DEFAULT NULL,
   `entryby` varchar(120) DEFAULT NULL,
   `modifieddate` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=57 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=65 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -490,7 +689,7 @@ CREATE TABLE `package_map` (
   `modified_time` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`),
   KEY `package_id` (`package_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -518,7 +717,7 @@ CREATE TABLE `package_settings` (
   `cat_e_per` enum('Student','Fixed') DEFAULT 'Student',
   `status` enum('active','inactive') DEFAULT 'active',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -601,7 +800,7 @@ CREATE TABLE `permission_audit` (
   `changed_by` varchar(120) DEFAULT NULL,
   `changed_at` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=97 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=109 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -621,7 +820,7 @@ CREATE TABLE `permission_map` (
   `entryby` varchar(120) DEFAULT NULL,
   `modifiedtime` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=116 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=128 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -682,6 +881,44 @@ CREATE TABLE `project_documentation` (
   `version` varchar(50) DEFAULT '1.0',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `registrations`
+--
+
+DROP TABLE IF EXISTS `registrations`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `registrations` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `sessionyear` varchar(10) NOT NULL DEFAULT '2026',
+  `sccode` int(11) DEFAULT NULL,
+  `roll_no` int(11) DEFAULT NULL,
+  `reg_id` varchar(32) NOT NULL,
+  `pin` varchar(10) NOT NULL,
+  `stnameeng` varchar(255) DEFAULT NULL,
+  `stnameben` varchar(255) DEFAULT NULL,
+  `fname` varchar(255) DEFAULT NULL,
+  `mname` varchar(255) DEFAULT NULL,
+  `mnumber` varchar(30) DEFAULT NULL,
+  `dist` varchar(120) DEFAULT NULL,
+  `ps` varchar(120) DEFAULT NULL,
+  `po` varchar(120) DEFAULT NULL,
+  `village` varchar(255) DEFAULT NULL,
+  `testno` varchar(100) DEFAULT NULL,
+  `insdist` varchar(120) DEFAULT NULL,
+  `insps` varchar(120) DEFAULT NULL,
+  `inspo` varchar(120) DEFAULT NULL,
+  `insname` varchar(255) DEFAULT NULL,
+  `photo` varchar(255) DEFAULT NULL,
+  `otp` varchar(10) DEFAULT NULL,
+  `otp_expires` datetime DEFAULT NULL,
+  `verified` tinyint(1) DEFAULT 0,
+  `verifytime` timestamp NOT NULL DEFAULT current_timestamp(),
+  `created_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -895,6 +1132,189 @@ DELIMITER ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
+-- Table structure for table `sessionyear`
+--
+
+DROP TABLE IF EXISTS `sessionyear`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `sessionyear` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `sccode` int(11) DEFAULT NULL,
+  `syear` varchar(7) DEFAULT NULL,
+  `active` int(11) NOT NULL DEFAULT 0,
+  `entryby` varchar(120) DEFAULT NULL,
+  `entrytime` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=205 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `sessionyear_after_insert` AFTER INSERT ON `sessionyear` FOR EACH ROW BEGIN
+        INSERT INTO sldijsf87sxckf.audit_log(table_name, action, row_id, new_data, changed_by)
+        VALUES(
+            'sessionyear',
+            'INSERT',
+            NEW.`id`,
+            JSON_OBJECT('id', NEW.`id`,'sccode', NEW.`sccode`,'syear', NEW.`syear`,'active', NEW.`active`,'entryby', NEW.`entryby`,'entrytime', NEW.`entrytime`),
+            COALESCE(@current_user,'system')
+        );
+    END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `sessionyear_after_update` AFTER UPDATE ON `sessionyear` FOR EACH ROW BEGIN
+        INSERT INTO sldijsf87sxckf.audit_log(table_name, action, row_id, old_data, new_data, changed_by)
+        VALUES(
+            'sessionyear',
+            'UPDATE',
+            NEW.`id`,
+            JSON_OBJECT('id', OLD.`id`,'sccode', OLD.`sccode`,'syear', OLD.`syear`,'active', OLD.`active`,'entryby', OLD.`entryby`,'entrytime', OLD.`entrytime`),
+            JSON_OBJECT('id', NEW.`id`,'sccode', NEW.`sccode`,'syear', NEW.`syear`,'active', NEW.`active`,'entryby', NEW.`entryby`,'entrytime', NEW.`entrytime`),
+            COALESCE(@current_user,'system')
+        );
+    END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `sessionyear_after_delete` AFTER DELETE ON `sessionyear` FOR EACH ROW BEGIN
+        INSERT INTO sldijsf87sxckf.audit_log(table_name, action, row_id, old_data, changed_by)
+        VALUES(
+            'sessionyear',
+            'DELETE',
+            OLD.`id`,
+            JSON_OBJECT('id', OLD.`id`,'sccode', OLD.`sccode`,'syear', OLD.`syear`,'active', OLD.`active`,'entryby', OLD.`entryby`,'entrytime', OLD.`entrytime`),
+            COALESCE(@current_user,'system')
+        );
+    END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+
+--
+-- Table structure for table `settings`
+--
+
+DROP TABLE IF EXISTS `settings`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `settings` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `slno` int(11) DEFAULT NULL,
+  `setting_title` varchar(100) DEFAULT NULL,
+  `sccode` int(11) DEFAULT 0,
+  `descrip` varchar(500) DEFAULT NULL,
+  `settings_value` varchar(100) DEFAULT NULL,
+  `modifieddate` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=179 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `settings_after_insert` AFTER INSERT ON `settings` FOR EACH ROW BEGIN
+        INSERT INTO sldijsf87sxckf.audit_log(table_name, action, row_id, new_data, changed_by)
+        VALUES(
+            'settings',
+            'INSERT',
+            NEW.`id`,
+            JSON_OBJECT('id', NEW.`id`,'slno', NEW.`slno`,'setting_title', NEW.`setting_title`,'sccode', NEW.`sccode`,'descrip', NEW.`descrip`,'settings_value', NEW.`settings_value`,'modifieddate', NEW.`modifieddate`),
+            COALESCE(@current_user,'system')
+        );
+    END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `settings_after_update` AFTER UPDATE ON `settings` FOR EACH ROW BEGIN
+        INSERT INTO sldijsf87sxckf.audit_log(table_name, action, row_id, old_data, new_data, changed_by)
+        VALUES(
+            'settings',
+            'UPDATE',
+            NEW.`id`,
+            JSON_OBJECT('id', OLD.`id`,'slno', OLD.`slno`,'setting_title', OLD.`setting_title`,'sccode', OLD.`sccode`,'descrip', OLD.`descrip`,'settings_value', OLD.`settings_value`,'modifieddate', OLD.`modifieddate`),
+            JSON_OBJECT('id', NEW.`id`,'slno', NEW.`slno`,'setting_title', NEW.`setting_title`,'sccode', NEW.`sccode`,'descrip', NEW.`descrip`,'settings_value', NEW.`settings_value`,'modifieddate', NEW.`modifieddate`),
+            COALESCE(@current_user,'system')
+        );
+    END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `settings_after_delete` AFTER DELETE ON `settings` FOR EACH ROW BEGIN
+        INSERT INTO sldijsf87sxckf.audit_log(table_name, action, row_id, old_data, changed_by)
+        VALUES(
+            'settings',
+            'DELETE',
+            OLD.`id`,
+            JSON_OBJECT('id', OLD.`id`,'slno', OLD.`slno`,'setting_title', OLD.`setting_title`,'sccode', OLD.`sccode`,'descrip', OLD.`descrip`,'settings_value', OLD.`settings_value`,'modifieddate', OLD.`modifieddate`),
+            COALESCE(@current_user,'system')
+        );
+    END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+
+--
 -- Table structure for table `settings_ins`
 --
 
@@ -913,6 +1333,128 @@ CREATE TABLE `settings_ins` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `sms`
+--
+
+DROP TABLE IF EXISTS `sms`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `sms` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `sccode` int(11) DEFAULT NULL,
+  `sessionyear` varchar(10) DEFAULT NULL,
+  `date` date DEFAULT NULL,
+  `campaign` int(11) DEFAULT NULL,
+  `sms_type` varchar(100) DEFAULT NULL,
+  `mobile_number` varchar(11) DEFAULT NULL,
+  `sms_text` varchar(1024) DEFAULT NULL,
+  `sms_len` int(11) NOT NULL DEFAULT 0,
+  `count` int(11) NOT NULL DEFAULT 0,
+  `send_by` varchar(120) DEFAULT NULL,
+  `send_time` datetime DEFAULT NULL,
+  `cost` float NOT NULL DEFAULT 0,
+  `response_code` int(11) NOT NULL DEFAULT 0,
+  `message_id` varchar(10) DEFAULT NULL,
+  `success_message` varchar(50) DEFAULT NULL,
+  `error_message` varchar(50) DEFAULT NULL,
+  `status` int(11) NOT NULL DEFAULT 0,
+  `comments` varchar(100) DEFAULT NULL,
+  `modifieddate` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `sms_after_insert` AFTER INSERT ON `sms` FOR EACH ROW BEGIN
+        INSERT INTO sldijsf87sxckf.audit_log(table_name, action, row_id, new_data, changed_by)
+        VALUES(
+            'sms',
+            'INSERT',
+            NEW.`id`,
+            JSON_OBJECT('id', NEW.`id`,'sccode', NEW.`sccode`,'sessionyear', NEW.`sessionyear`,'date', NEW.`date`,'campaign', NEW.`campaign`,'sms_type', NEW.`sms_type`,'mobile_number', NEW.`mobile_number`,'sms_text', NEW.`sms_text`,'sms_len', NEW.`sms_len`,'count', NEW.`count`,'send_by', NEW.`send_by`,'send_time', NEW.`send_time`,'cost', NEW.`cost`,'response_code', NEW.`response_code`,'message_id', NEW.`message_id`,'success_message', NEW.`success_message`,'error_message', NEW.`error_message`,'status', NEW.`status`,'comments', NEW.`comments`,'modifieddate', NEW.`modifieddate`),
+            COALESCE(@current_user,'system')
+        );
+    END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `sms_after_update` AFTER UPDATE ON `sms` FOR EACH ROW BEGIN
+        INSERT INTO sldijsf87sxckf.audit_log(table_name, action, row_id, old_data, new_data, changed_by)
+        VALUES(
+            'sms',
+            'UPDATE',
+            NEW.`id`,
+            JSON_OBJECT('id', OLD.`id`,'sccode', OLD.`sccode`,'sessionyear', OLD.`sessionyear`,'date', OLD.`date`,'campaign', OLD.`campaign`,'sms_type', OLD.`sms_type`,'mobile_number', OLD.`mobile_number`,'sms_text', OLD.`sms_text`,'sms_len', OLD.`sms_len`,'count', OLD.`count`,'send_by', OLD.`send_by`,'send_time', OLD.`send_time`,'cost', OLD.`cost`,'response_code', OLD.`response_code`,'message_id', OLD.`message_id`,'success_message', OLD.`success_message`,'error_message', OLD.`error_message`,'status', OLD.`status`,'comments', OLD.`comments`,'modifieddate', OLD.`modifieddate`),
+            JSON_OBJECT('id', NEW.`id`,'sccode', NEW.`sccode`,'sessionyear', NEW.`sessionyear`,'date', NEW.`date`,'campaign', NEW.`campaign`,'sms_type', NEW.`sms_type`,'mobile_number', NEW.`mobile_number`,'sms_text', NEW.`sms_text`,'sms_len', NEW.`sms_len`,'count', NEW.`count`,'send_by', NEW.`send_by`,'send_time', NEW.`send_time`,'cost', NEW.`cost`,'response_code', NEW.`response_code`,'message_id', NEW.`message_id`,'success_message', NEW.`success_message`,'error_message', NEW.`error_message`,'status', NEW.`status`,'comments', NEW.`comments`,'modifieddate', NEW.`modifieddate`),
+            COALESCE(@current_user,'system')
+        );
+    END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `sms_after_delete` AFTER DELETE ON `sms` FOR EACH ROW BEGIN
+        INSERT INTO sldijsf87sxckf.audit_log(table_name, action, row_id, old_data, changed_by)
+        VALUES(
+            'sms',
+            'DELETE',
+            OLD.`id`,
+            JSON_OBJECT('id', OLD.`id`,'sccode', OLD.`sccode`,'sessionyear', OLD.`sessionyear`,'date', OLD.`date`,'campaign', OLD.`campaign`,'sms_type', OLD.`sms_type`,'mobile_number', OLD.`mobile_number`,'sms_text', OLD.`sms_text`,'sms_len', OLD.`sms_len`,'count', OLD.`count`,'send_by', OLD.`send_by`,'send_time', OLD.`send_time`,'cost', OLD.`cost`,'response_code', OLD.`response_code`,'message_id', OLD.`message_id`,'success_message', OLD.`success_message`,'error_message', OLD.`error_message`,'status', OLD.`status`,'comments', OLD.`comments`,'modifieddate', OLD.`modifieddate`),
+            COALESCE(@current_user,'system')
+        );
+    END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+
+--
+-- Table structure for table `sms_logs`
+--
+
+DROP TABLE IF EXISTS `sms_logs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `sms_logs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `to_number` varchar(30) DEFAULT NULL,
+  `message` text DEFAULT NULL,
+  `status` varchar(50) DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `sql_backup_log`
 --
 
@@ -927,7 +1469,7 @@ CREATE TABLE `sql_backup_log` (
   `changed_at` datetime DEFAULT current_timestamp(),
   `exported` tinyint(1) DEFAULT 0,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=120 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=170 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1019,9 +1561,10 @@ CREATE TABLE `ticket_messages` (
   `ticket_id` int(11) NOT NULL,
   `sender_id` int(11) NOT NULL,
   `message` text NOT NULL,
+  `admin_response` int(11) NOT NULL DEFAULT 0,
   `sent_at` datetime DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1033,12 +1576,14 @@ DROP TABLE IF EXISTS `tickets`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `tickets` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
+  `sccode` int(11) DEFAULT NULL,
   `user_id` int(11) NOT NULL,
   `subject` varchar(255) NOT NULL,
   `status` enum('open','in_progress','closed') DEFAULT 'open',
+  `ticket_for` enum('Institute','Application','Personal','') DEFAULT 'Institute',
   `created_at` datetime DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1118,7 +1663,7 @@ CREATE TABLE `user_actions` (
   PRIMARY KEY (`id`),
   KEY `idx_useractions_email_ts` (`email`,`timestamp`),
   KEY `idx_useractions_action` (`action`)
-) ENGINE=InnoDB AUTO_INCREMENT=10624 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13635 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1158,7 +1703,7 @@ CREATE TABLE `user_shortcuts` (
   `status` enum('active','inactive') DEFAULT 'active',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1314,6 +1859,7 @@ CREATE TABLE `usersapp` (
   `reset_hash` varchar(32) DEFAULT NULL,
   `reset_link` varchar(150) DEFAULT NULL,
   `st_entry_fld` varchar(1024) DEFAULT NULL,
+  `page_status_grant` int(11) NOT NULL DEFAULT 6,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=978 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -1480,4 +2026,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-10-28 23:01:43
+-- Dump completed on 2025-11-06 16:06:13

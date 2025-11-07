@@ -103,7 +103,9 @@ $files = array_filter(scandir(__DIR__), function ($f) {
 
 <div class="container-xxl flex-grow-1 container-p-y">
 
-    <h3>Module Structure & Default Permission Manager</h3>
+    <div class="float-end pt-3" id="not-assign"></div>
+
+    <h4>Module Structure & Default Permission Manager</h4>
 
 
     <?php
@@ -116,7 +118,9 @@ $files = array_filter(scandir(__DIR__), function ($f) {
             <th>Module</th>
             <th>Topic</th>
             <th>Title</th>
-            <th>Description</th>";
+            <th>Description</th>
+            <th>Root Page</th>
+            ";
     foreach ($roles as $role) {
         $rolesh = substr($role, 0, 7);
         echo "<th>{$rolesh}</th>";
@@ -124,7 +128,7 @@ $files = array_filter(scandir(__DIR__), function ($f) {
     echo "</tr></thead><tbody>";
 
     foreach ($files as $file) {
-        $stmt = $conn->prepare("SELECT module_name, module_topic, descrip , status_name, nav_title, nav_icon
+        $stmt = $conn->prepare("SELECT module_name, module_topic, descrip , status_name, nav_title, nav_icon, root_page
                             FROM modulemanager 
                             WHERE FIND_IN_SET(?, related_pages)");
         $stmt->bind_param("s", $file);
@@ -137,6 +141,7 @@ $files = array_filter(scandir(__DIR__), function ($f) {
         $desc = $data['descrip'] ?? '';
         $pg_status = $data['status_name'] ?? 0;
         $icon = $data['nav_icon'] ?? 'three-dots-vertical';
+        $root_page = $data['root_page'] ?? '';
         $icon_full = '<i class="bi bi-' . $icon . '"></i>';
 
 
@@ -144,11 +149,11 @@ $files = array_filter(scandir(__DIR__), function ($f) {
 
 
         echo "<tr class='pt-1 pb-3'>";
-        echo "<td class='p-0'>
+        echo "<td class='p-0' style='min-width:165px;'>
        
         <div class='input-group input-group-sm d-inline-flex'>
-    <a href='{$file}' target='_blank'> <span class='input-group-text'><i class='bi bi-$icon'></i></span></a>
-    <input type='text' class='form-control inline-input' 
+    <a href='{$file}' style='width:50px; text-align:center;' target='_blank'> <span class='input-group-text'><i class='bi bi-$icon'></i></span></a>
+    <input type='text' class='form-control inline-input' style='min-width:115px;'
                      data-field='nav_icon' data-id='{$file}' value='{$icon}'  /></div></td>";
         echo "<td class='input-group-sm p-0' style='min-width:120px;'><input type='text' class='form-control inline-input' 
                      data-field='page_name' data-id='{$file}' value='{$file}' readonly disabled /></td>";
@@ -170,9 +175,11 @@ $files = array_filter(scandir(__DIR__), function ($f) {
             $bgc = 'darkcyan';
         } else if ($module_name == 'Orion') {
             $bgc = 'purple';
-        }else if ($module_name == 'Seed') {
+        } else if ($module_name == 'Seed') {
             $bgc = 'black';
-        }else {
+        } else if ($module_name == 'Authority') {
+            $bgc = 'darkteal';
+        } else {
             $bgc = 'transparent';
         }
 
@@ -194,6 +201,8 @@ $files = array_filter(scandir(__DIR__), function ($f) {
                      data-field='nav_title' data-id='{$file}' value=\"{$title}\" /></td>";
         echo "<td class='input-group-sm p-0'><input type='text' class='form-control inline-input' 
                      data-field='descrip' data-id='{$file}' value=\"{$desc}\" /></td>";
+        echo "<td class='input-group-sm p-0'><input type='text' class='form-control inline-input' 
+                     data-field='root_page' data-id='{$file}' value=\"{$root_page}\" /></td>";
 
         foreach ($roles as $role) {
             $stmt2 = $conn->prepare("SELECT permission 
@@ -232,7 +241,7 @@ $files = array_filter(scandir(__DIR__), function ($f) {
                 $not_assign++;
             }
 
-            if ($module_name == 'Core' || $module_name == 'Backend' || $module_name == 'Orion' || $module_name == 'Seed') {
+            if ($module_name == 'Core' || $module_name == 'Backend' || $module_name == 'Orion' || $module_name == 'Seed' || $module_name == 'Authority') {
                 $block_dis = 'disabled';
                 $not_assign--;
             } else {
@@ -265,6 +274,11 @@ $files = array_filter(scandir(__DIR__), function ($f) {
 <?php include('footer.php'); ?>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    $('#not-assign').html('Total Not Assign : <b><?php echo $not_assign; ?></b>');
+</script>
+
 <script>
     $(document).ready(function () {
         // Initialize DataTables with horizontal & vertical scroll
@@ -329,6 +343,7 @@ $files = array_filter(scandir(__DIR__), function ($f) {
         let page = $(this).data('page');
         let role = $(this).data('role');
         let title = $(this).data('title');
+    
         let perm = $(this).val();
 
         $(this).removeClass("perm-none perm-0 perm-1 perm-2 perm-3");
@@ -339,9 +354,9 @@ $files = array_filter(scandir(__DIR__), function ($f) {
         else if (perm === '2') { $(this).addClass('perm-2'); tooltipText = 'Write'; }
         else if (perm === '3') { $(this).addClass('perm-3'); tooltipText = 'Full'; }
 
-        $(this).attr('title', tooltipText).tooltip('dispose').tooltip();
+    //    $(this).attr('title', tooltipText).tooltip('dispose').tooltip();
 
-        $.post('core/update_permission.php', { page_name: page, userlevel: role, permission: perm, title: title }, function (res) {
+        $.post('core/update_permission.php', { page_name: page, userlevel: role, permission: perm, title: title, root_page: root_page }, function (res) {
             console.log(res);
         });
     });

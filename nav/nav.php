@@ -12,6 +12,7 @@ $sql = "SELECT mm.id AS module_id,
                mm.nav_title,
                mm.related_pages,
                mm.nav_icon AS mm_nav_icon,
+               mm.root_page,
                ml.module_icon AS ml_module_icon,
                pm.page_name,
                pm.permission,
@@ -72,6 +73,12 @@ while ($row = $result->fetch_assoc()) {
     $page = $row['page_name'] ?: $row['related_pages'];
     $permission = $row['permission'] ?? 0;
     $nav_icon = $row['mm_nav_icon'] ?? 'three-dots-vertical'; // সাবমেনুর আইকন
+    $root_page = $row['root_page'] ?? '';
+
+
+    if (!empty($root_page)) {
+        continue; // root_page সেট থাকলে সাবপেজ মেনুতে যোগ হবে না
+    }
 
     if ($is_admin < 4 && $permission == 0) {
         continue; // skip no permission
@@ -101,6 +108,9 @@ while ($row = $result->fetch_assoc()) {
             'permission' => $permission
         ];
     }
+
+
+
 }
 
 $stmt->close();
@@ -153,20 +163,22 @@ $stmt->close();
 
 
 
-        <?php foreach ($menu as $moduleName => $moduleData): 
-            if($moduleName == 'Backend'){
+        <?php foreach ($menu as $moduleName => $moduleData):
+            if ($moduleName == 'Backend') {
                 $mname_color = '#991ab3ff';
-            } else if($moduleName == 'Orion'){
+            } else if ($moduleName == 'Orion') {
                 $mname_color = '#ec0a0aff';
-            }  else if($moduleName == 'Seed'){
+            } else if ($moduleName == 'Seed') {
                 $mname_color = '#5f0909ff';
+            } else if ($moduleName == 'Authority') {
+                $mname_color = '#186958ff';
             } else {
                 $mname_color = 'gray';
             }
-            
+
             ?>
             <li class="menu-item parent">
-                <a href="javascript:void(0);" class="menu-link menu-toggle" style="color:<?php echo $mname_color;?>">
+                <a href="javascript:void(0);" class="menu-link menu-toggle" style="color:<?php echo $mname_color; ?>">
                     <i class="menu-icon icon-base bi bi-<?php echo $moduleData['module_icon']; ?>"></i>
                     <div data-i18n="<?= htmlspecialchars($moduleName) ?>"><?= htmlspecialchars($moduleName) ?></div>
                 </a>
@@ -191,59 +203,61 @@ $stmt->close();
 </aside>
 
 
+<script>
+    const pageRoots = <?php
+    $rootMap = [];
+    $res = $conn->query("SELECT related_pages AS page_name, root_page FROM modulemanager WHERE root_page != ''");
+    if ($res) {
+        while ($rp = $res->fetch_assoc()) {
+            $rootMap[$rp['page_name']] = $rp['root_page'];
+        }
+    }
+    echo json_encode($rootMap, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    ?>;
+</script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        // Current page filename
         let currentFile = window.location.pathname.split("/").pop();
-
-        // সব menu link
         let links = document.querySelectorAll("#layout-menu a");
-
         let matchedLink = null;
-        // document.getElementById("parent_item").innerHTML = '&mdash;';
 
-
-        // ১. Find the matching link first
         links.forEach(link => {
             let hrefFile = link.getAttribute("href");
             if (hrefFile && hrefFile.split("/").pop() === currentFile) {
                 matchedLink = link;
-                let linkText = matchedLink.innerText; // বা matchedLink.textContent
-                // alert(linkText);
-                console.log('linkText');
-                // document.getElementById("page_link_title").innerHTML = linkText;
+                let linkText = matchedLink.innerText;
                 document.getElementById("page_link_sub_title").innerHTML = linkText;
             }
         });
 
-        if (!matchedLink) {
-            // No menu item corresponds to current page
-            // document.getElementById("page_link_title").innerHTML = "EIMBox";
-
-            return; // Exit, no active/open class will be set
+        if (!matchedLink && pageRoots[currentFile]) {
+            const root = pageRoots[currentFile];
+            console.log(`(EIMBox) Root-page fallback: ${currentFile} → ${root}`);
+            links.forEach(link => {
+                let hrefFile = link.getAttribute("href");
+                if (hrefFile && hrefFile.split("/").pop() === root) {
+                    matchedLink = link;
+                }
+            });
         }
 
-        // ২. Current link active
-        let li = matchedLink.closest(".menu-item");
-        if (li) li.classList.add("active");
+        let li = matchedLink ? matchedLink.closest(".menu-item") : null;
+        if (!li) return;
 
-        // ৩. Parent chain open only for this link
+        li.classList.add("active");
+
         let parent = li.parentElement;
         while (parent && parent.id !== "layout-menu") {
             let parentLi = parent.closest(".menu-item.parent");
-
             if (parentLi) {
                 parentLi.classList.add("active", "open");
-                // Move up to the next parent
                 parent = parentLi.parentElement;
                 let menuLink = parentLi.querySelector("a.menu-link");
-
                 if (menuLink) {
-                    let linkText = menuLink.innerText; // বা menuLink.textContent
+                    let linkText = menuLink.innerText;
                     document.getElementById("parent_item").innerHTML = linkText;
                 }
-
             } else {
                 break;
             }

@@ -14,8 +14,8 @@ if ($status === 'closed') {
 }
 
 if (!empty($message)) {
-    $conn->query("INSERT INTO ticket_messages (ticket_id, sender_id, message)
-                    VALUES ($ticket_id, $sender_id, '$message')");
+    $conn->query("INSERT INTO ticket_messages (ticket_id, sender_id, message, admin_response)
+                    VALUES ($ticket_id, $sender_id, '$message', 1)");
     echo "sent";
 }
 ?>

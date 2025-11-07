@@ -13,7 +13,8 @@ function h($s)
 // ========================
 // Localhost / Remote 
 // ========================
-function isLocalhost() {
+function isLocalhost()
+{
     $whitelist = ['127.0.0.1', '::1', 'localhost'];
     return in_array($_SERVER['SERVER_NAME'], $whitelist);
 }
@@ -129,7 +130,10 @@ function store_user_session($user, $school = [])
     $_SESSION['sccode'] = $user['sccode'] ?? '';
     $_SESSION['photourl'] = $user['photourl'] ?? '';
     $_SESSION['isadmin'] = $user['admin'] ?? 0;
+    $_SESSION['page_status_grant'] = $user['page_status_grant'] ?? 6;
     $_SESSION['fullname'] = $user['profilename'] ?? $user['email'] ?? '';
+
+    $_SESSION['locktime'] = 10000; //$user['admin'] ?? 0;
 
     // স্কুল ইনফো
     $_SESSION['scname'] = $school['scname'] ?? '';
@@ -305,7 +309,7 @@ register_shutdown_function(function () {
             echo "<pre>$msg</pre>";
         } else {
             if (!headers_sent()) {
-                header("Location: pages/error_page.php");
+                header("Location: error_page.php");
                 exit;
             } else {
                 echo "<h2>Something went wrong. Please try again later.</h2>";

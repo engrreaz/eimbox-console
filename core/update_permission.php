@@ -2,10 +2,11 @@
 require_once 'config.php';
 require_once 'db.php';
 
-$page_name  = $_POST['page_name'] ?? '';
-$userlevel  = $_POST['userlevel'] ?? '';
+$page_name = $_POST['page_name'] ?? '';
+$userlevel = $_POST['userlevel'] ?? '';
 $permission = $_POST['permission'] ?? '';
 $title = $_POST['title'] ?? '';
+
 
 if ($page_name && $userlevel) {
     // যদি Not Assigned (permission = '') হয় → DELETE

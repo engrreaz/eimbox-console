@@ -18,3 +18,5 @@ $browser = $_SERVER['HTTP_USER_AGENT'];
 
 $stmt->bind_param("ssssssssi", $sccode, $email, $url,  $page, $action, $timestamp, $ip, $browser, $point);
 $stmt->execute();
+
+echo 'Success';

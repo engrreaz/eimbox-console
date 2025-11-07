@@ -22,6 +22,12 @@ session_set_cookie_params([
 if (session_status() === PHP_SESSION_NONE)
     session_start();
 
+
+if (isset($_SESSION['locked']) && $_SESSION['locked'] === true) {
+    header("Location: lock.php");
+    exit;
+}
+
 // Regenerate session occasionally
 if (!isset($_SESSION['created'])) {
     session_regenerate_id(true);
@@ -64,6 +70,10 @@ $publicPages = ['regd_new.php', 'login.php', 'logout.php', 'mfa_verify.php', 'fo
 // }
 
 // Only check session for protected pages
+
+
+
+
 if (!in_array($currentFile, $publicPages)) {
     if (empty($_SESSION['user_id'])) {
         header("Location: login.php");
@@ -73,11 +83,17 @@ if (!in_array($currentFile, $publicPages)) {
 
         require_once 'global_values.php';
         // require_once 'billing_checker.php';
+   
         require_once 'permissions.php';
         require_once 'package_checker.php';
+       
 
     }
 }
+
+
+
+
 if (isset($_SESSION['checked_suspicious']) && $_SESSION['checked_suspicious'] == false) {
     require_once('suspicious-activity.php');
 }

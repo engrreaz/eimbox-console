@@ -6,7 +6,13 @@ $page_title = 'EIMBox';
 $page_icon = 'app';
 $cur_page_module = '&mdash;';
 
-$stmt = $conn->prepare("SELECT module_name, nav_title, nav_icon, status_name FROM modulemanager WHERE related_pages = ? ORDER BY id DESC LIMIT 1");
+$stmt = $conn->prepare("
+            SELECT module_name, nav_title, nav_icon, status_name, root_page 
+            FROM modulemanager 
+            WHERE FIND_IN_SET(?, related_pages)
+            ORDER BY id DESC 
+            LIMIT 1
+        ");
 if ($stmt) {
     $stmt->bind_param("s", $currentFile);
     $stmt->execute();
@@ -16,6 +22,7 @@ if ($stmt) {
         $page_title = $row['nav_title'] ?? 'EIMBox';
         $page_icon = $row['nav_icon'] ?? 'app';
         $cur_page_module = $row['module_name'] ?? '';
+        $MUL_PATA = $row['root_page'] ?? '';
     }
 }
 $stmt->close();

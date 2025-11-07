@@ -140,6 +140,7 @@ $username = $_SESSION['user_name'] ?? '';
 $pth = $_SESSION['photourl'] ?? '';
 $userlevel = $_SESSION['userlevel'] ?? '';
 $is_admin = $_SESSION['isadmin'] ?? 0;
+$page_status_grant = $_SESSION['page_status_grant'] ?? 6;
 
 $fullname = $_SESSION['fullname'] ?? $usr;
 

@@ -62,6 +62,7 @@
   </div>
 </div>
 
+
 <!-- ================= Settings Modal ================= -->
 <div class="modal fade" id="settingsModal" tabindex="-1">
   <div class="modal-dialog modal-xl">
@@ -145,12 +146,15 @@
     </div>
   </div>
 </div>
+<button onclick="$('#settingsModal').modal('show')" class="btn btn-success">Test Settings Modal</button>
+
 
 <?php require_once 'footer.php'; ?>
 
+
+
 <script>
-  $(function () {
-    // Load packages
+  $(document).ready(function () {
     function loadPackages() {
       $.post('package-manager/package_actions.php', { action: 'load_packages' }, function (data) {
         $('#packageTable').html(data);
@@ -163,7 +167,8 @@
       e.preventDefault();
       $.post('package-manager/package_actions.php', $(this).serialize(), function (res) {
         alert(res);
-        $('#addPackageModal').modal('hide');
+        const addModal = bootstrap.Modal.getInstance(document.getElementById('addPackageModal'));
+        addModal?.hide();
         $('#addPackageForm')[0].reset();
         loadPackages();
       });
@@ -172,7 +177,11 @@
     // Open Settings Modal
     $(document).on('click', '.btn-settings', function () {
       let pkgId = $(this).data('id');
-      $('#settingsModal').modal('show');
+      const modalEl = document.getElementById('settingsModal');
+      let myModal = bootstrap.Modal.getInstance(modalEl);
+      if (!myModal) myModal = new bootstrap.Modal(modalEl);
+      myModal.show();
+
       $.post('package-manager/package_settings_view.php', { package_id: pkgId }, function (html) {
         $('#settingsTableContainer').html(html);
       });
@@ -182,7 +191,6 @@
     $(document).on('click', '.btn-edit-setting', function () {
       let pkgId = $(this).data('package-id');
       let insCat = $(this).data('ins-cat') || '';
-      alert(pkgId + '/' + insCat);
       $('#package_id').val(pkgId);
       $('#settingForm')[0].reset();
 
@@ -191,25 +199,30 @@
           Object.entries(data).forEach(([k, v]) => $('[name="' + k + '"]').val(v));
         }, 'json');
       }
-      $('#editSettingModal').modal('show');
+
+      const modalEl = document.getElementById('editSettingModal');
+      let bsModal = bootstrap.Modal.getInstance(modalEl);
+      if (!bsModal) bsModal = new bootstrap.Modal(modalEl);
+      bsModal.show();
     });
 
     // Save Setting
     $('#settingForm').submit(function (e) {
       e.preventDefault();
-      alert($(this).serialize());
       $.post('package-manager/package_actions.php', $(this).serialize(), function (res) {
         alert(res);
-        $('#editSettingModal').modal('hide');
-        $('#settingsModal').modal('hide');
+
+        const editModal = bootstrap.Modal.getInstance(document.getElementById('editSettingModal'));
+        const settingsModal = bootstrap.Modal.getInstance(document.getElementById('settingsModal'));
+        editModal?.hide();
+        settingsModal?.hide();
+
         loadPackages();
       });
     });
   });
-
-
-
 </script>
+
 
 
 </body>

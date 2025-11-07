@@ -4,8 +4,6 @@ $package_check = true;
 
 
 $mapQ = $conn->prepare("SELECT * FROM package_map WHERE page_name=? AND package_id=?");
-
-
 $mapQ->bind_param("si", $currentFile, $sccode_current_package);
 $mapQ->execute();
 $mapR = $mapQ->get_result();
@@ -64,6 +62,7 @@ if ($access != 'Yes') {
 
     if ($print == 'No') {
         $permission = 1;
+        include_once('core/block-print.php');
     }
 }
 
@@ -77,6 +76,6 @@ if ($module_name == 'Backend' || $cur_page_module == 'Orion') {
     $package_check = false;
 }
 
-if ($is_admin >= 4 || $cur_page_module == 'Core') {
+if ($is_admin >= 4 || $cur_page_module == 'Core' || $cur_page_module == 'Support') {
     $package_check = true;
 }

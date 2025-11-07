@@ -261,7 +261,7 @@
                         <li>
                             <a class="dropdown-item" style="min-block-size:auto;" href="core/back-log.php">
                                 <i class="icon-base bi bi-box-arrow-right icon-22px me-2"></i>
-                                <span class="align-middle text-danger fw-bolder"> Back Login </span>
+                                <span class="align-middle text-danger fw-bolder"> Back to Admin </span>
                             </a>
                         </li>
                     <?php } ?>

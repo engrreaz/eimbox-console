@@ -70,32 +70,75 @@ function statusBadge($status)
 
 ?>
 
+<style>
+    .fs-username {
+        font-size: 12px;
+        font-weight: bold;
+    }
+</style>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/dataTables.bootstrap5.min.css">
+<script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.5/js/dataTables.bootstrap5.min.js"></script>
+
 <script>
     // Real all Features Element
     // const featureElements = document.querySelectorAll('[data-feature]');
     // const features = Array.from(featureElements).map(el => el.dataset.feature);
     // document.getElementById("page_features_list").innerHTML = features;
     // console.log("Features on page:", features);
+
+
 </script>
 
 <div class="nav-align-top nav-tabs-shadow">
     <ul class="nav nav-tabs nav-fill" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button type="button" class="nav-link waves-effect active" role="tab" data-bs-toggle="tab"
-                data-bs-target="#navs-justified-home" aria-controls="navs-justified-home" aria-selected="true">
-                <span class="d-none d-sm-inline-flex align-items-center">
-                    <i class="icon-base ri ri-home-smile-line icon-sm me-1_5"></i>
-                    <!-- <span class="badge rounded-pill badge-center h-px-20 w-px-20 bg-label-danger ms-1_5">3</span> -->
-                </span>
-                <i class="icon-base bi bi-house icon-sm d-sm-none"></i>
-            </button>
-        </li>
+
+
+        <?php if ($is_admin >= 4) { ?>
+            <li class="nav-item" role="presentation">
+                <button type="button" class="nav-link waves-effect active" role="tab" data-bs-toggle="tab"
+                    data-bs-target="#navs-justified-dev-note" aria-controls="navs-justified-home" aria-selected="true">
+                    <span class="d-none d-sm-inline-flex align-items-center">
+                        <i class="icon-base bi bi-braces icon-sm me-1_5"></i>
+                        <!-- <span class="badge rounded-pill badge-center h-px-20 w-px-20 bg-label-danger ms-1_5">3</span> -->
+                    </span>
+                    <i class="icon-base bi bi-check icon-sm d-sm-none"></i>
+                </button>
+            </li>
+
+            <li class="nav-item" role="presentation">
+                <button type="button" class="nav-link waves-effect " role="tab" data-bs-toggle="tab"
+                    data-bs-target="#navs-justified-home-pre" aria-controls="navs-justified-home" aria-selected="true">
+                    <span class="d-none d-sm-inline-flex align-items-center">
+                        <i class="icon-base bi bi-person-workspace icon-sm me-1_5"></i>
+                        <!-- <span class="badge rounded-pill badge-center h-px-20 w-px-20 bg-label-danger ms-1_5">3</span> -->
+                    </span>
+                    <i class="icon-base bi bi-check icon-sm d-sm-none"></i>
+                </button>
+            </li>
+
+
+            <li class="nav-item" role="presentation">
+                <button type="button" class="nav-link waves-effect " role="tab" data-bs-toggle="tab"
+                    data-bs-target="#navs-justified-home" aria-controls="navs-justified-home" aria-selected="true">
+                    <span class="d-none d-sm-inline-flex align-items-center">
+                        <i class="icon-base bi bi-code-square icon-sm me-1_5"></i>
+                        <!-- <span class="badge rounded-pill badge-center h-px-20 w-px-20 bg-label-danger ms-1_5">3</span> -->
+                    </span>
+                    <i class="icon-base bi bi-house icon-sm d-sm-none"></i>
+                </button>
+            </li>
+        <?php } ?>
+
+
         <li class="nav-item" role="presentation">
             <button type="button" class="nav-link waves-effect" role="tab" data-bs-toggle="tab"
                 data-bs-target="#navs-justified-profile" aria-controls="navs-justified-profile" aria-selected="false"
                 tabindex="-1">
                 <span class="d-none d-sm-inline-flex align-items-center"><i
-                        class="icon-base ri ri-user-3-line icon-sm me-1_5"></i></span>
+                        class="icon-base bi bi-chat-square icon-sm me-1_5"></i></span>
                 <i class="icon-base bi bi-setting icon-sm d-sm-none"></i>
             </button>
         </li>
@@ -104,7 +147,7 @@ function statusBadge($status)
                 data-bs-target="#navs-justified-messages" aria-controls="navs-justified-messages" aria-selected="false"
                 tabindex="-1">
                 <span class="d-none d-sm-inline-flex align-items-center"><i
-                        class="icon-base bi bi-question icon-sm me-1_5"></i></span>
+                        class="icon-base bi bi-question-square icon-sm me-1_5"></i></span>
                 <i class="icon-base bi bi-question icon-sm d-sm-none"></i>
             </button>
         </li>
@@ -112,8 +155,172 @@ function statusBadge($status)
 
 
     <div class="tab-content p-0">
+
         <?php if ($is_admin >= 4) { ?>
-            <div class="tab-pane fade active show" id="navs-justified-home" role="tabpanel">
+
+            <div class="tab-pane fade active show" id="navs-justified-dev-note" role="tabpanel">
+
+                <div class="col-lg-12 p-0">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-bold mb-0">Developer Notes</h6>
+                        <button class="btn btn-sm btn-primary" onclick="openModal(0);" data-notrack="true">
+                            <i class="bi bi-plus-circle me-1"></i> Add Note
+                        </button>
+                    </div>
+
+                    <div id="devNotesContainer" class="demo-inline-spacing mt-2" style="max-height:60vh; overflow-y:auto;">
+                        <?php
+                        $q = $conn->prepare("
+                            SELECT dn1.*, u.profilename AS admin_name
+                            FROM dev_notes dn1
+                            INNER JOIN (
+                                SELECT COALESCE(ref_id, id) AS group_id, MAX(id) AS last_id
+                                FROM dev_notes
+                                WHERE sccode = ?
+                                GROUP BY group_id
+                            ) dn2 ON dn1.id = dn2.last_id
+                            LEFT JOIN usersapp u ON dn1.admin_id = u.id
+                            ORDER BY dn1.created_at DESC
+                        ");
+                        $q->bind_param("s", $sccode);
+                        $q->execute();
+                        $res = $q->get_result();
+
+
+                        if ($res->num_rows > 0) {
+                            echo '<ul class="list-group">';
+                            while ($row = $res->fetch_assoc()) {
+                                $statusColors = [
+                                    'New' => 'secondary',
+                                    'Open' => 'primary',
+                                    'Waiting' => 'warning',
+                                    'Replied' => 'info',
+                                    'Progress' => 'success',
+                                    'Hold' => 'dark',
+                                    'Resolved' => 'success',
+                                    'Closed' => 'danger'
+                                ];
+                                $color = $statusColors[$row['status']] ?? 'secondary';
+                                $ref_id = $row['ref_id'] ?: $row['id'];
+                                ?>
+
+                                <li class="list-group-item mb-2 border rounded shadow-sm small">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span class="badge bg-<?= $color ?> me-1">
+                                                <?= htmlspecialchars($row['status']) ?></span>
+                                            <small
+                                                class=" fs-tiny text-muted ms-2"><?= htmlspecialchars($row['created_at']) ?></small>
+                                        </div>
+                                        <div class="d-flex">
+                                            <button class="btn btn-sm btn-outline-secondary p-1 ps-2 pe-2 me-1"
+                                                onclick="openModal(<?= $row['id'] ?>);">
+                                                <i class="bi bi-arrow-repeat"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-info  p-1 ps-2 pe-2"
+                                                onclick="toggleHistory(<?= $ref_id ?>, this);">
+                                                <i class="bi bi-clock-history"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 text-dark"><?= nl2br(htmlspecialchars($row['note_line'])) ?></div>
+                                    <div class="text-end mt-1 text-muted fst-italic small">
+                                        — <?= htmlspecialchars($row['admin_name'] ?? 'Unknown') ?>
+                                    </div>
+                                    <div id="history-<?= $ref_id ?>" class="mt-2 ps-3 border-start d-none"></div>
+                                </li>
+
+                                <?php
+                            }
+                            echo '</ul>';
+                        } else {
+                            echo '<div class="alert alert-warning small">No developer notes found.</div>';
+                        }
+                        $q->close();
+                        ?>
+                    </div>
+                </div>
+
+
+            </div>
+
+
+            <div class="tab-pane fade " id="navs-justified-home-pre" role="tabpanel">
+                <div class="col-lg-12 p-0">
+                    <div class="row mt-3">
+
+
+                        <div class="col pt-3">
+                            <small class="fw-medium">User List</small>
+                        </div>
+
+                        <div class="col">
+                            <button class="float-end btn btn-primary " id="openInsList">Ins List</button>
+                        </div>
+
+
+
+                    </div>
+
+
+                    <div class="demo-inline-spacing mt-2" style="max-height:70vh; overflow-y:auto;">
+                        <?php
+                        // usersapp টেবিল থেকে নির্দিষ্ট প্রতিষ্ঠানের (sccode) ইউজার লিস্ট
+                        $query = $conn->prepare("SELECT id, email, profilename, userlevel FROM usersapp WHERE sccode = ? and hiddenuser = 0 ORDER BY profilename ASC");
+                        $query->bind_param("s", $sccode);
+                        $query->execute();
+                        $res = $query->get_result();
+
+                        echo '<ul class="list-group">';
+                        if ($res->num_rows > 0) {
+
+                            $i = 1;
+                            while ($row = $res->fetch_assoc()) {
+                                ?>
+
+                                <li class="list-item mt-2 mb-2">
+                                    <div class="row">
+                                        <div class="col-1"> <i class="bi bi-person-fill me-2 text-primary"></i></div>
+                                        <div class="col-8">
+                                            <div class="fs-username  text-success">
+                                                <?php echo $row['profilename'] ?? '<span class="text-danger">No Name Define.</span>'; ?>
+                                                <span class="text-secondary fw-normal "> |
+                                                    <?php echo htmlspecialchars($row['userlevel']); ?> </span>
+                                            </div>
+                                            <div class="fs-tiny fw-normal text-small text-dark">
+                                                <?php echo htmlspecialchars($row['email']); ?>
+                                            </div>
+                                        </div>
+
+                                        <div class="col">
+                                            <button class=" btn btn-sm text-primary "
+                                                onclick="loginuser('<?php echo addslashes($row['email']); ?>');">
+                                                <i class="bi bi-box-arrow-right"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </li>
+
+                                <?php
+
+                            }
+
+                            echo '</ul>';
+                        } else {
+                            echo '<div class="alert alert-warning small">No users found for this institution.</div>';
+                        }
+
+                        $query->close();
+                        ?>
+                    </div>
+
+                </div>
+            </div>
+
+
+
+
+            <div class="tab-pane fade  " id="navs-justified-home" role="tabpanel">
                 <div class="col-lg-12 p-0">
                     <div class="row mt-3">
                         <div class="col pt-3">
@@ -209,7 +416,6 @@ function statusBadge($status)
         <div class="tab-pane fade" id="navs-justified-messages" role="tabpanel">
             <?php
 
-
             // FAQ লোড
             $sql = "SELECT * FROM faqs WHERE page_name=? ORDER BY id DESC";
             $stmt = $conn->prepare($sql);
@@ -257,10 +463,6 @@ function statusBadge($status)
                     } ?>
                 </div>
             </div>
-
-
-
-
         </div>
     </div>
 </div>
@@ -268,6 +470,44 @@ function statusBadge($status)
 
 
 
+<!-- Modal -->
+<div class="modal fade" id="insListModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content ">
+            <div class="modal-header">
+                <h5 class="modal-title">Institution List</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body m-5 fs-6" id="ins-list" style="max-height:70vh; overflow-y:auto;">
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Institution Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <div id="ins-details" class="p-2 text-center text-secondary">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
 
 <!-- Modal -->
 <div class="modal fade" id="faqModal" tabindex="-1">
@@ -340,6 +580,47 @@ function statusBadge($status)
             });
     }
 </script>
+
+
+
+
+
+<div class="modal fade" id="devNoteModal" tabindex="-1" aria-labelledby="devNoteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="devNoteModalLabel">Add Developer Note</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="devNoteForm">
+                    <input type="hidden" id="dev_ticket_id" name="ticket_id" value="">
+                    <input type="hidden" id="dev_note_id" name="dev_note_id" value="">
+                    <textarea class="form-control mb-3" id="dev_note_text" name="note" rows="5"
+                        placeholder="Write your note (each line will be a separate record)..."></textarea>
+
+                    <select id="dev_note_status" name="status" class="form-select">
+                        <option value="New">New</option>
+                        <option value="Open">Open</option>
+                        <option value="Waiting">Waiting</option>
+                        <option value="Replied">Replied</option>
+                        <option value="Progress">Progress</option>
+                        <option value="Hold">Hold</option>
+                        <option value="Resolved">Resolved</option>
+                        <option value="Closed">Closed</option>
+                    </select>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="save_dev_note();"
+                    id="saveDevNoteBtn">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
 
 
 
@@ -501,4 +782,137 @@ function statusBadge($status)
 
 
 
+</script>
+
+
+<script>
+
+    document.getElementById('openInsList').addEventListener('click', function () {
+        const modalEl = document.getElementById('insListModal');
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+        fetch('core/get-ins-list.php')
+            .then(res => res.text()) // HTML রেসপন্স পড়া
+            .then(html => {
+                document.getElementById('ins-list').innerHTML = html;
+            })
+            .catch(err => console.error('❌ Fetch error:', err));
+    });
+
+</script>
+
+
+<script>
+    function viewDetails(sccode) {
+        // মডাল ওপেন
+        var detailsModal = new bootstrap.Modal(document.getElementById('detailsModal'));
+        detailsModal.show();
+
+        // লোডিং স্পিনার দেখাও
+        const insList = document.getElementById('ins-details');
+        insList.innerHTML = `
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    `;
+
+        // AJAX request
+        fetch('core/get-ins-details.php?sccode=' + encodeURIComponent(sccode))
+            .then(res => res.text())
+            .then(html => {
+                insList.innerHTML = html; // রেসপন্স HTML মডালে দেখাও
+            })
+            .catch(err => {
+                console.error(err);
+                insList.innerHTML = '<div class="text-danger">Failed to load data</div>';
+            });
+    }
+</script>
+
+<script>
+    function loginSccode(sccode) {
+        if (!confirm("Do you want to login as " + sccode + "?")) return;
+
+        fetch('core/admin-login-sccode.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'sccode=' + encodeURIComponent(sccode)
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('✅ Logged in as ' + sccode);
+                    location.reload();
+                } else {
+                    alert('❌ ' + (data.message || 'Failed to update sccode.'));
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('⚠️ Request failed!');
+            });
+    }
+</script>
+
+
+<script>
+    function openModal(id) {
+        const modalEl = document.getElementById("devNoteModal");
+        const modal = new bootstrap.Modal(modalEl);
+
+        document.getElementById("devNoteModalLabel").innerText = "Add Developer Note";
+        document.getElementById("dev_note_text").value = "";
+        document.getElementById("dev_note_status").value = "New";
+        document.getElementById("dev_ticket_id").value = "";
+        document.getElementById("dev_note_id").value = id;
+        delete modalEl.dataset.mode; // respond মোড রিসেট
+
+        modal.show();
+    }
+
+    function save_dev_note() {
+        const noteText = $("#dev_note_text").val().trim();
+        const status = $("#dev_note_status").val();
+        if (!noteText) return alert("Please write something first.");
+
+        const mode = $("#devNoteModal").data("mode") || "add";
+        const url = "tickets/respond_devnote.php";
+
+        $.post(url, {
+            sccode: <?= json_encode($sccode); ?>,
+            ref_id: $("#dev_note_id").val(),
+            ticket_id: $("#dev_ticket_id").val() || 0,
+            status: status,
+            note: noteText,
+            notes: noteText
+        }, function (res) {
+            if (res === "success") {
+                alert("Note saved successfully!");
+                $("#devNoteModal").modal("hide"); // ✅ এটিই যথেষ্ট
+                $("#devNotesContainer").load(location.href + " #devNotesContainer>*", "");
+            } else {
+                alert("Error: " + res);
+                console.log("Error: " + res);
+            }
+        });
+
+        $("#devNoteModal").modal("hide");
+    }
+
+</script>
+
+<script>
+    function toggleHistory(ref_id, btn) {
+        const container = $("#history-" + ref_id);
+        if (container.hasClass("d-none")) {
+            $(btn).html('<i class="bi bi-dash-circle p-1 ps-2 pe-2"></i>');
+            // Load all history for this ref_id
+            $.get("tickets/load_devnote_history.php", { ref_id }, function (data) {
+                container.html(data).removeClass("d-none");
+            });
+        } else {
+            $(btn).html('<i class="bi bi-clock-history p-1 ps-2 pe-2"></i>');
+            container.addClass("d-none");
+        }
+    }
 </script>

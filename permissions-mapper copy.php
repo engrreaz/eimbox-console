@@ -1,6 +1,9 @@
 <?php
 require_once 'header.php';
 
+$module_list = $admin_data['module'];
+$active_module_list = $admin_data['active_module'];
+
 $perm_color = [0 => 'red', 1 => 'orange', 2 => 'blue', 3 => 'seagreen'];
 
 // ==================== Load Module List ====================
@@ -304,11 +307,6 @@ while ($row = $result->fetch_assoc())
         subModuleDiv.append(newDiv);
         $('#customModal, #modalOverlay').fadeOut(200);
     });
-
-
-
-
-
 
 </script>
 

@@ -1,0 +1,17 @@
+Array
+(
+    [sccode] => 105676
+    [active_syear] => 2025
+    [globalsetting1] => 
+    [settings] => Array
+        (
+            [Medium] => Bengali
+            [Version] => Bengali
+            [Module] => Result
+            [Weekends] => Friday.Saturday
+            [Collection] => Class Teacher.Accountants.Head Teacher.Administrator
+            [Profile Entry] => Class Teacher.Administrator.Head Teacher
+            [Panel] => Admin.Teacher
+        )
+
+)

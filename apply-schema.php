@@ -1,4 +1,12 @@
 <?php
+/**
+ * ============================================================
+ * 🔧 apply-schema.php
+ * Safe DB Schema Apply Script
+ * Compatible with: PHP + MySQLi (not PDO)
+ * ============================================================
+ */
+
 ob_start();
 header('Content-Type: application/json; charset=utf-8');
 error_reporting(E_ALL);
@@ -12,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-// ✅ reverse মোড চেক (যদি sync/compare পরিবর্তিত হয়)
+// ✅ Reverse মোড (যদি sync/compare পরিবর্তিত হয়)
 $rev = isset($_SESSION['reverse']) ? $_SESSION['reverse'] : 0;
 
 // ✅ ডাটাবেজ কানেকশন সেটআপ
@@ -21,7 +29,12 @@ $host = DB_HOST;
 $user = DB_USER;
 $pass = DB_PASS;
 $port = 3306;
-$dbname = $rev ? DB_SYNC : DB_NAME;
+if ($_SESSION['reverse' == 0]) {
+    $dbname = DB_SYNC ?? DB_NAME;
+} else {
+    $dbname = DB_NAME;
+}
+
 
 $conn_sync = new mysqli($host, $user, $pass, $dbname, $port);
 if ($conn_sync->connect_error) {
@@ -29,6 +42,9 @@ if ($conn_sync->connect_error) {
     echo json_encode(['status' => 'error', 'msg' => 'Connection failed: ' . $conn_sync->connect_error]);
     exit;
 }
+// $hh = $host . $user . '/' . $pass . '/' . $dbname;
+// echo json_encode(['status' => 'error', 'msg' => $hh]);
+// exit;
 
 // ✅ ইনপুট ডাটা পার্স
 $data = $_POST['data'] ?? '';
@@ -46,43 +62,66 @@ if (!$data || !isset($data['action'])) {
 $action = $data['action'];
 $results = [];
 
-
-// ========================================================
-// 🔹 1️⃣ APPLY NEW TABLE
-// ========================================================
+/* ============================================================
+ 🔹 1️⃣ APPLY NEW TABLE (Upgraded & Safe Version)
+============================================================ */
 if ($action === 'apply-table') {
-    $table = $conn_sync->real_escape_string($data['table']);
-    $createSQL = html_entity_decode($data['sql'] ?? '', ENT_QUOTES);
+    $table = $conn_sync->real_escape_string($data['table'] ?? '');
+    $createSQL = html_entity_decode(trim($data['sql'] ?? ''), ENT_QUOTES);
 
-    if (empty($table) || stripos($createSQL, 'CREATE TABLE') !== 0) {
-        echo json_encode(['status' => 'error', 'msg' => 'Invalid table SQL']);
+    // 🧩 Debug লগ (চাইলে আনকমেন্ট করো)
+    // file_put_contents('debug_create_sql.log', $createSQL);
+
+    // ✅ Validation
+    if (empty($table)) {
+        echo json_encode(['status' => 'error', 'msg' => 'Table name missing']);
         exit;
     }
 
-    $checkTable = $conn_sync->query("SHOW TABLES LIKE '$table'");
-    if ($checkTable && $checkTable->num_rows > 0) {
-        $results[] = ['table' => $table, 'status' => 'skipped', 'error' => 'Table already exists'];
-    } else {
-        if ($conn_sync->query($createSQL)) {
-            $results[] = ['table' => $table, 'status' => 'table_created'];
-        } else {
-            $results[] = ['table' => $table, 'status' => 'error', 'error' => $conn_sync->error];
-        }
+    if (stripos($createSQL, 'CREATE TABLE') !== 0) {
+        echo json_encode(['status' => 'error', 'msg' => 'Invalid table SQL syntax']);
+        exit;
     }
 
-    ob_end_clean();
-    echo json_encode(['status' => 'ok', 'results' => $results]);
+    // ✅ Check if table already exists
+    $checkTable = $conn_sync->query("SHOW TABLES LIKE '$table'");
+    if ($checkTable && $checkTable->num_rows > 0) {
+        ob_end_clean();
+        echo json_encode([
+            'status' => 'error',
+            'msg' => "Table '$table' already exists."
+        ]);
+        $conn_sync->close();
+        exit;
+    }
+
+    // ✅ Create table
+    if ($conn_sync->query($createSQL)) {
+        ob_end_clean();
+        echo json_encode([
+            'status' => 'ok',
+            'msg' => "✅ Table '$table' created successfully",
+            'results' => [['table' => $table, 'status' => 'table_created']]
+        ]);
+    } else {
+        ob_end_clean();
+        echo json_encode([
+            'status' => 'error',
+            'msg' => 'MySQL Error: ' . $conn_sync->error,
+            'sql' => $createSQL
+        ]);
+    }
+
     $conn_sync->close();
     exit;
 }
 
-
-// ========================================================
-// 🔹 2️⃣ APPLY SINGLE COLUMN
-// ========================================================
+/* ============================================================
+ 🔹 2️⃣ APPLY SINGLE COLUMN
+============================================================ */
 if ($action === 'apply-column') {
-    $table = $conn_sync->real_escape_string($data['table']);
-    $columnDef = html_entity_decode($data['column'] ?? '', ENT_QUOTES);
+    $table = $conn_sync->real_escape_string($data['table'] ?? '');
+    $columnDef = html_entity_decode(trim($data['column'] ?? ''), ENT_QUOTES);
 
     if (!$table || !$columnDef) {
         echo json_encode(['status' => 'error', 'msg' => 'Missing table or column']);
@@ -109,21 +148,27 @@ if ($action === 'apply-column') {
     }
 
     if ($conn_sync->query("ALTER TABLE `$table` ADD $columnDef")) {
-        $results[] = ['table' => $table, 'column' => $colName, 'status' => 'applied'];
+        ob_end_clean();
+        echo json_encode([
+            'status' => 'ok',
+            'msg' => "✅ Column '$colName' applied to '$table'",
+            'results' => [['table' => $table, 'column' => $colName, 'status' => 'applied']]
+        ]);
     } else {
-        $results[] = ['table' => $table, 'column' => $colName, 'status' => 'error', 'error' => $conn_sync->error];
+        ob_end_clean();
+        echo json_encode([
+            'status' => 'error',
+            'msg' => 'MySQL Error: ' . $conn_sync->error
+        ]);
     }
 
-    ob_end_clean();
-    echo json_encode(['status' => 'ok', 'results' => $results]);
     $conn_sync->close();
     exit;
 }
 
-
-// ========================================================
-// 🔹 3️⃣ APPLY MULTIPLE SELECTED COLUMNS
-// ========================================================
+/* ============================================================
+ 🔹 3️⃣ APPLY MULTIPLE SELECTED COLUMNS
+============================================================ */
 if ($action === 'apply-selected') {
     $items = $data['items'] ?? [];
     if (!is_array($items) || count($items) === 0) {
@@ -133,7 +178,7 @@ if ($action === 'apply-selected') {
 
     foreach ($items as $item) {
         $table = $conn_sync->real_escape_string($item['table']);
-        $columnDef = html_entity_decode($item['column'], ENT_QUOTES);
+        $columnDef = html_entity_decode(trim($item['column']), ENT_QUOTES);
 
         preg_match('/^`([^`]+)`/', $columnDef, $m);
         $colName = $m[1] ?? '';
@@ -162,10 +207,9 @@ if ($action === 'apply-selected') {
     exit;
 }
 
-
-// ========================================================
-// ❌ INVALID REQUEST
-// ========================================================
+/* ============================================================
+ ❌ INVALID REQUEST
+============================================================ */
 ob_end_clean();
 echo json_encode(['status' => 'error', 'msg' => 'Invalid action']);
 $conn_sync->close();

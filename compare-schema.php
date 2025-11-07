@@ -70,20 +70,39 @@ if (isLocalhost()) {
   $total_table = count($localTables);
   ?>
 
+  <script>
+    function updatediffmiss(diff, miss, block) {
+      // alert(diff + miss + block);
+      if (diff + miss > 0) {
+        let blk = document.getElementById('diffmiss-' + block);
+        let a = "<span class='badge bg-warning'>" + diff + "</span>";
+        let b = "<span class='badge bg-danger'>" + miss + "</span>";
+        blk.innerHTML = a + " " + b;
+      }
+    }
+  </script>
+
   <button class="btn btn-primary float-end" onclick="reve();"> <i class="bi bi-arrow-repeat"></i> &nbsp;Switch</button>
   <h4 class="mb-4"> Schema Comparison <span class="text-warning fw-bold"><?php echo $ttl; ?></span></h4>
-
+  একশন অ্যাপ্লাই করার পর ‍এসকিউএল ফাইল থেকে টেক্স মুছে ফেলার চেষ্টা করতে হবে।
   <div class="card bg-light mb-4 border">
     <div class="card-body d-flex flex-wrap gap-3">
-      <div><strong>Total Tables:</strong> <span id="count-total-tables">0</span></div>
-      <div><strong>Found in Remote:</strong> <span id="count-found-tables" class="text-success">0</span></div>
-      <div><strong>Missing in Remote:</strong> <span id="count-missing-tables" class="text-danger">0</span></div>
-      <div class="border-start ps-3"><strong>Total Columns:</strong> <span id="count-total-cols">0</span></div>
-      <div><strong>Matched:</strong> <span id="count-match-cols" class="text-success">0</span></div>
-      <div><strong>Different:</strong> <span id="count-diff-cols" class="text-warning">0</span></div>
-      <div><strong>Missing:</strong> <span id="count-missing-cols" class="text-danger">0</span></div>
+      <div><strong>Total Tables:</strong> <span id="count-total-tables"><?php echo $total_table; ?></span></div>
+      <div><strong>Found in Remote:</strong> <span id="count-found-tables"
+          class="text-success"><?php echo $found_table; ?></span></div>
+      <div><strong>Missing in Remote:</strong> <span id="count-missing-tables"
+          class="text-danger"><?php echo $missing_table; ?></span></div>
+      <div class="border-start ps-3"><strong>Total Columns:</strong> <span
+          id="count-total-cols"><?php echo $total_column; ?></span></div>
+      <div><strong>Matched:</strong> <span id="count-match-cols"
+          class="text-success"><?php echo $match_column; ?></span></div>
+      <div><strong>Different:</strong> <span id="count-diff-cols"
+          class="text-warning"><?php echo $different_column; ?></span></div>
+      <div><strong>Missing:</strong> <span id="count-missing-cols"
+          class="text-danger"><?php echo $missing_column; ?></span></div>
     </div>
   </div>
+
 
   <?php
   $index = 0;
@@ -108,15 +127,17 @@ if (isLocalhost()) {
                 data-table='$tableName' 
                 data-create='" . htmlspecialchars($createStmt, ENT_QUOTES) . "'>➕ Sync Table</button>";
     } else {
-      echo "<span style='min-width:100px;'></span>";
+      echo "<span style='min-width:100px;' id='diffmiss-$tableName'></span>";
     }
+
+    // echo htmlspecialchars($createStmt, ENT_QUOTES);
     echo "<button class='btn btn-sm' data-bs-toggle='collapse' data-bs-target='#$collapseId'><i class='bi bi-chevron-down'></i></button>";
     echo "</div></div>";
 
     echo "<div id='$collapseId' class='collapse'><div class='card-body'>";
     echo "<table class='table table-sm table-bordered align-middle'>";
     echo "<thead><tr><th>Column / Definition</th><th>Status</th><th>Action</th><th class='text-center'><button class='btn btn-sm btn-outline-secondary toggle-check p-1' data-table='$tableName'>Toggle</button></th></tr></thead><tbody>";
-
+    $curdiff = $curmiss = 0;
     foreach ($localCols as $colDef) {
       $total_column++;
       preg_match('/^`([^`]+)`/', $colDef, $cm);
@@ -125,17 +146,22 @@ if (isLocalhost()) {
       $existsByName = in_array($colName, $remoteColNames);
       $isExactMatch = in_array($colDef, $remoteCols);
 
-      if ($isExactMatch)
+      if ($isExactMatch) {
         $match_column++;
-      elseif ($existsByName)
+      } elseif ($existsByName) {
         $different_column++;
-      else
+        $curdiff++;
+      } else {
         $missing_column++;
+        $curmiss++;
+      }
+
 
       $status = $isExactMatch ? "<span class='badge bg-success'>Matched</span>" :
         ($existsByName ? "<span class='badge bg-warning'>Different</span>" : "<span class='badge bg-danger'>Missing</span>");
       $actionBtn = $isExactMatch ? '' : "<button class='btn btn-sm btn-outline-primary sync-column' style='min-width:90px;' data-table='$tableName' data-column='" . htmlspecialchars($colDef, ENT_QUOTES) . "'>⚙️ Apply</button>";
       $disabled = $isExactMatch ? 'disabled' : '';
+      echo '<script>updatediffmiss(' . $curdiff . ', ' . $curmiss . ', "' . $tableName . '");;</script>';
 
       echo "<tr>
                 <td><code>$colDef</code></td>
@@ -156,6 +182,83 @@ if (isLocalhost()) {
 <?php require_once 'footer.php'; ?>
 
 <script src="compare-schema.js"></script> <!-- JS logic এখানে আলাদা ফাইলেও রাখতে পারো -->
+
+<script>
+  // Function to update summary counts dynamically
+  function updateSummaryCounts() {
+    const rows = document.querySelectorAll('table tbody tr');
+
+    let totalCols = 0, matchCols = 0, diffCols = 0, missingCols = 0;
+    rows.forEach(row => {
+      totalCols++;
+      const statusBadge = row.querySelector('td:nth-child(2) span');
+      if (!statusBadge) return;
+      const status = statusBadge.textContent.trim().toLowerCase();
+      if (status.includes('matched')) matchCols++;
+      else if (status.includes('different')) diffCols++;
+      else if (status.includes('missing')) missingCols++;
+    });
+
+    document.getElementById('count-total-cols').textContent = totalCols;
+    document.getElementById('count-match-cols').textContent = matchCols;
+    document.getElementById('count-diff-cols').textContent = diffCols;
+    document.getElementById('count-missing-cols').textContent = missingCols;
+
+    // Update tables counts
+    const tableCards = document.querySelectorAll('.card.mb-3');
+    let foundTables = 0, missingTables = 0;
+    tableCards.forEach(card => {
+      const badge = card.querySelector('.card-header .badge');
+      if (!badge) return;
+      if (badge.textContent.toLowerCase().includes('found')) foundTables++;
+      else if (badge.textContent.toLowerCase().includes('missing')) missingTables++;
+    });
+    document.getElementById('count-found-tables').textContent = foundTables;
+    document.getElementById('count-missing-tables').textContent = missingTables;
+  }
+
+
+  // Call initially
+  updateSummaryCounts();
+
+  // Update counts after Sync Table / Apply Column
+  document.addEventListener('click', async (e) => {
+    if (e.target.matches('.sync-table, .sync-column')) {
+      const btn = e.target;
+      const table = btn.dataset.table;
+      const column = btn.dataset.column || null;
+      const action = column ? 'apply-column' : 'apply-table';
+      const sql = column || btn.dataset.create;
+
+      btn.disabled = true;
+
+      try {
+        const res = await postData('apply-schema.php', { action, table, sql });
+        if (res.status === 'ok') {
+          // Update row badge if column applied
+          if (column) {
+            const row = btn.closest('tr');
+            row.querySelector('td:nth-child(2)').innerHTML = "<span class='badge bg-success'>Matched</span>";
+            btn.remove();
+          } else {
+            // Table synced → reload page or mark found
+            btn.closest('.card.mb-3').querySelector('.card-header .badge').textContent = "Found in Remote";
+            btn.remove();
+          }
+          updateSummaryCounts();
+        } else {
+          alert("Error: " + res.msg);
+          btn.disabled = false;
+        }
+      } catch (err) {
+        console.error(err);
+        btn.disabled = false;
+      }
+    }
+  });
+
+</script>
+
 
 </body>
 
