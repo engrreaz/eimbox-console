@@ -32,3 +32,26 @@
 [08-Nov-2025 00:03:40 Asia/Dhaka] PHP ERROR [2]: Undefined array key "module_name" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\core\package_checker.php on line 24
 [08-Nov-2025 04:46:24 Asia/Dhaka] PHP ERROR [2]: Undefined array key "module_name" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\core\package_checker.php on line 24
 [08-Nov-2025 04:52:17 Asia/Dhaka] PHP ERROR [2]: Undefined array key "module_name" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\core\package_checker.php on line 24
+[08-Nov-2025 22:51:23 Asia/Dhaka] PHP ERROR [2]: Undefined array key "module_name" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\core\package_checker.php on line 24
+[08-Nov-2025 23:18:54 Asia/Dhaka] PHP ERROR [2]: include(inc/action_message.php): Failed to open stream: No such file or directory in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\payment.php on line 17
+[08-Nov-2025 23:18:54 Asia/Dhaka] PHP ERROR [2]: include(): Failed opening 'inc/action_message.php' for inclusion (include_path='D:\XAMPP\php\PEAR') in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\payment.php on line 17
+[08-Nov-2025 23:19:36 Asia/Dhaka] PHP ERROR [2]: include(inc/action_message.php): Failed to open stream: No such file or directory in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\payment.php on line 17
+[08-Nov-2025 23:19:36 Asia/Dhaka] PHP ERROR [2]: include(): Failed opening 'inc/action_message.php' for inclusion (include_path='D:\XAMPP\php\PEAR') in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\payment.php on line 17
+[08-Nov-2025 23:20:03 Asia/Dhaka] PHP ERROR [2]: include(inc/action_message.php): Failed to open stream: No such file or directory in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\payment.php on line 17
+[08-Nov-2025 23:20:03 Asia/Dhaka] PHP ERROR [2]: include(): Failed opening 'inc/action_message.php' for inclusion (include_path='D:\XAMPP\php\PEAR') in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\payment.php on line 17
+[08-Nov-2025 23:21:16 Asia/Dhaka] PHP ERROR [2]: include(inc/action_message.php): Failed to open stream: No such file or directory in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\payment.php on line 16
+[08-Nov-2025 23:21:16 Asia/Dhaka] PHP ERROR [2]: include(): Failed opening 'inc/action_message.php' for inclusion (include_path='D:\XAMPP\php\PEAR') in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\payment.php on line 16
+[08-Nov-2025 23:26:18 Asia/Dhaka] PHP ERROR [2]: include(inc/action_message.php): Failed to open stream: No such file or directory in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\payment.php on line 16
+[08-Nov-2025 23:26:18 Asia/Dhaka] PHP ERROR [2]: include(): Failed opening 'inc/action_message.php' for inclusion (include_path='D:\XAMPP\php\PEAR') in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\payment.php on line 16
+[08-Nov-2025 23:27:46 Asia/Dhaka] PHP ERROR [2]: include(inc/action_message.php): Failed to open stream: No such file or directory in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\payment.php on line 16
+[08-Nov-2025 23:27:46 Asia/Dhaka] PHP ERROR [2]: include(): Failed opening 'inc/action_message.php' for inclusion (include_path='D:\XAMPP\php\PEAR') in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\payment.php on line 16
+[08-Nov-2025 23:42:12 Asia/Dhaka] PHP ERROR [2]: Undefined array key "module_name" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\core\package_checker.php on line 24
+[08-Nov-2025 23:45:41 Asia/Dhaka] PHP ERROR [2]: Undefined array key "module_name" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\core\package_checker.php on line 24
+[08-Nov-2025 23:51:58 Asia/Dhaka] PHP ERROR [2]: Undefined array key "module_name" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\core\package_checker.php on line 24
+[09-Nov-2025 00:02:14 Asia/Dhaka] PHP ERROR [2]: Undefined array key "module_name" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\core\package_checker.php on line 24
+[09-Nov-2025 00:08:48 Asia/Dhaka] PHP ERROR [2]: Undefined array key "module_name" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\core\package_checker.php on line 24
+[09-Nov-2025 00:08:54 Asia/Dhaka] PHP ERROR [2]: Undefined array key "module_name" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\core\package_checker.php on line 24
+[09-Nov-2025 00:15:43 Asia/Dhaka] PHP ERROR [2]: Undefined array key "module_name" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\core\package_checker.php on line 24
+[09-Nov-2025 00:16:49 Asia/Dhaka] PHP ERROR [2]: Undefined array key "module_name" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\core\package_checker.php on line 24
+[09-Nov-2025 00:18:58 Asia/Dhaka] PHP ERROR [2]: Undefined array key "module_name" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\core\package_checker.php on line 24
+[09-Nov-2025 00:23:44 Asia/Dhaka] PHP ERROR [2]: Undefined array key "module_name" in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\core\package_checker.php on line 24
