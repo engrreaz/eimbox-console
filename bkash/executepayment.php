@@ -1,5 +1,5 @@
 <?php
-session_start();
+session_start(); 
 
 $strJsonFileContents = file_get_contents("config.json");
 $array = json_decode($strJsonFileContents, true);
@@ -20,9 +20,8 @@ $posttoken = json_encode($post_token);
 $header = array(
     'Content-Type:application/json',
     'Authorization:' . $auth,
-    'X-APP-Key:' . $appKey
+    'X-APP-Key:'.$appKey
 );
-
 curl_setopt($url, CURLOPT_HTTPHEADER, $header);
 curl_setopt($url, CURLOPT_CUSTOMREQUEST, "POST");
 curl_setopt($url, CURLOPT_RETURNTRANSFER, true);
@@ -32,6 +31,8 @@ curl_setopt($url, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
 $resultdata = curl_exec($url);
 
 curl_close($url);
+
 $obj = json_decode($resultdata);
+
 
 ?>

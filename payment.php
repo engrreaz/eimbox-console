@@ -1,103 +1,125 @@
 <?php
-include_once("header.php");
 
-echo '<pre>' . var_dump($_SESSION) . '</pre>';
-
-$stid = '1031873512';
-$payerReference = 'Payment for ' . $stid;
-$amount = 10;
+// validate user session 
 ?>
+<!DOCTYPE html>
+<html lang="en">
 
-<!-- <script id="myScript" src="https://scripts.pay.bka.sh/versions/1.2.0-beta/checkout/bKash-checkout.js"></script> -->
-<script src="https://scripts.sandbox.bka.sh/versions/1.2.0-beta/checkout/bKash-checkout-sandbox.js"></script>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment</title>
+    <meta name="description" content="">
+    <meta name="keywords" content="">
+    <link rel="icon" type="image/png" sizes="120x120" href="">
+    <link rel="stylesheet" href="">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/toastr@2.1.4/toastr.min.js"></script>
+    <!-- <script id="myScript" src="https://scripts.pay.bka.sh/versions/1.2.0-beta/checkout/bKash-checkout.js"></script> -->
+    <script src="https://scripts.sandbox.bka.sh/versions/1.2.0-beta/checkout/bKash-checkout-sandbox.js"></script>
+
+    <style>
+        th,
+        td {
+            padding: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- <?php include 'inc/action_message.php'; ?> -->
+    <!-- Navbar -->
 
 
-<button id="bKash_button">
-    Bkash Pay
-</button>
+    <!-- Pay Now Button -->
+    <button id="bKash_button">
+        Bkash Pay
+    </button>
 
-<?php include_once("footer.php"); ?>
+    </div>
 
-<script type="text/javascript">
 
-    var accessToken = '';
-    $(document).ready(function () {
-        $.ajax({
-            url: "bkash/token.php",
-            type: 'POST',
-            contentType: 'application/json',
-            success: function (data) {
+    <script type="text/javascript">
 
-                console.log(data);
-                accessToken = JSON.stringify(data);
-                console.log(accessToken);
+        var accessToken = '';
+        $(document).ready(function () {
+            $.ajax({
+                url: "bkash/token.php",
+                type: 'POST',
+                contentType: 'application/json',
+                success: function (data) {
 
-            },
-            error: function () {
-                console.log('error');
+                    console.log(data);
+                    accessToken = JSON.stringify(data);
+                    console.log(accessToken);
 
-            }
-        });
+                },
+                error: function () {
+                    console.log('error');
 
-        var paymentConfig = {
-            createCheckoutURL: "bkash/createpayment.php",
-        };
+                }
+            });
 
-        var amount = <?= $amount; ?>;
-        var payerReference = '<?= $payerReference; ?>';
+            var paymentConfig = {
+                createCheckoutURL: "bkash/createpayment.php",
+            };
 
-        // alert(payerReference);
+            var amount = 10;
+            var payerReference = '8afisd923ufasopdh';
 
-        var paymentRequest;
-        var cBURL = '<?= BASEURL; ?>payment_confirm_check.php';
-        paymentRequest = { mode: '0011', payerReference: payerReference, callbackURL: cBURL, amount: amount, currency: 'BDT', intent: 'sale' };
+            // alert(payerReference);
 
-        bKash.init({
-            paymentMode: 'checkout',
-            paymentRequest: paymentRequest,
-            createRequest: function (request) {
+            var paymentRequest;
+            var cBURL = 'http://localhost/eimbox-dashboard/eimbox-materio/payment_confirm_check.php';
+            paymentRequest = { mode: '0011', payerReference: payerReference, callbackURL: cBURL, amount: amount, currency: 'BDT', intent: 'sale' };
 
-                $.ajax({
-                    url: paymentConfig.createCheckoutURL + "?amount=" + paymentRequest.amount + "&currency=" + paymentRequest.currency + "&intent=" + paymentRequest.intent + "&mode=" + paymentRequest.mode + "&payerReference=" + paymentRequest.payerReference + "&callbackURL=" + paymentRequest.callbackURL,
-                    type: 'GET',
-                    contentType: 'application/json',
-                    success: function (data) {
+            bKash.init({
+                paymentMode: 'checkout',
+                paymentRequest: paymentRequest,
+                createRequest: function (request) {
 
-                        var obj = JSON.parse(data);
+                    $.ajax({
+                        url: paymentConfig.createCheckoutURL + "?amount=" + paymentRequest.amount + "&currency=" + paymentRequest.currency + "&intent=" + paymentRequest.intent + "&mode=" + paymentRequest.mode + "&payerReference=" + paymentRequest.payerReference + "&callbackURL=" + paymentRequest.callbackURL,
+                        type: 'GET',
+                        contentType: 'application/json',
+                        success: function (data) {
 
-                        console.log(obj);
+                            var obj = JSON.parse(data);
 
-                        if (data && obj.paymentID != null) {
-                            paymentID = obj.paymentID;
-                            bkashURL = obj.bkashURL;
-                            window.location.href = bkashURL;
+                            console.log(obj);
 
-                        }
-                        else {
+                            if (data && obj.paymentID != null) {
+                                paymentID = obj.paymentID;
+                                bkashURL = obj.bkashURL;
+                                window.location.href = bkashURL;
+
+                            }
+                            else {
+                                console.log('error');
+                                bKash.create().onError();
+                            }
+                        },
+                        error: function () {
                             console.log('error');
                             bKash.create().onError();
                         }
-                    },
-                    error: function () {
-                        console.log('error');
-                        bKash.create().onError();
-                    }
-                });
-            }
+                    });
+                }
 
+            });
         });
-    });
 
-    function callReconfigure(val) {
-        bKash.reconfigure(val);
-    }
+        function callReconfigure(val) {
+            bKash.reconfigure(val);
+        }
 
-    function clickPayButton() {
-        $("#bKash_button").trigger('click');
-    }
+        function clickPayButton() {
+            $("#bKash_button").trigger('click');
+        }
 
 
-</script>
+    </script>
 
 </body>
 

@@ -1,7 +1,7 @@
 <?php
-$page_title = "User Profile";
-include 'header.php';
 
+include 'header.php';
+$page_title = "User Profile";
 if (!isset($_SESSION['user_email'])) {
     echo "<div class='alert alert-danger mt-4 text-center'>Please login first.</div>";
     include 'footer.php';
