@@ -356,7 +356,7 @@ $files = array_filter(scandir(__DIR__), function ($f) {
 
     //    $(this).attr('title', tooltipText).tooltip('dispose').tooltip();
 
-        $.post('core/update_permission.php', { page_name: page, userlevel: role, permission: perm, title: title, root_page: root_page }, function (res) {
+        $.post('core/update_permission.php', { page_name: page, userlevel: role, permission: perm, title: title }, function (res) {
             console.log(res);
         });
     });

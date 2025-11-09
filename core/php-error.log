@@ -413,3 +413,11 @@
 [10-Nov-2025 00:15:09 Asia/Dhaka] PHP ERROR [8192]: htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\student-payable.php on line 110
 [10-Nov-2025 00:15:09 Asia/Dhaka] PHP ERROR [2]: Trying to access array offset on value of type null in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\student-payable.php on line 129
 [10-Nov-2025 00:15:09 Asia/Dhaka] PHP ERROR [8192]: htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\student-payable.php on line 129
+[10-Nov-2025 00:59:37 Asia/Dhaka] PHP ERROR [8192]: htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\student-payable.php on line 109
+[10-Nov-2025 00:59:37 Asia/Dhaka] PHP ERROR [8192]: htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\student-payable.php on line 110
+[10-Nov-2025 00:59:37 Asia/Dhaka] PHP ERROR [2]: Trying to access array offset on value of type null in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\student-payable.php on line 129
+[10-Nov-2025 00:59:37 Asia/Dhaka] PHP ERROR [8192]: htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\student-payable.php on line 129
+[10-Nov-2025 01:04:20 Asia/Dhaka] PHP ERROR [2]: Undefined variable $selected in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\module-structure.php on line 163
+[10-Nov-2025 01:04:36 Asia/Dhaka] PHP ERROR [2]: Undefined variable $selected in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\module-structure.php on line 163
+[10-Nov-2025 01:05:07 Asia/Dhaka] PHP ERROR [2]: Undefined variable $selected in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\module-structure.php on line 163
+[10-Nov-2025 01:05:51 Asia/Dhaka] PHP ERROR [2]: Undefined variable $selected in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\module-structure.php on line 163
