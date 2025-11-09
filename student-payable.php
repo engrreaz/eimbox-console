@@ -42,11 +42,11 @@ file_put_contents('bkash/config.json', $newJsonString);
 
 
     echo "<br><br>";
-    echo `<pre>
+    echo '<pre>
  "bkash_app_key": "0vWQuCRGiUX7EPVjQDr0EUAYtc",
     "bkash_app_secret": "jcUNPBgbcqEDedNKdvE4G1cAK7D3hCjmJccNPZZBq96QIxxwAMEx",
     "bkash_username": "01770618567",
-    "bkash_password": "D7DaC<*E*eG",</pre>`;
+    "bkash_password": "D7DaC<*E*eG",</pre>';
     // ---------------------
 // Student ID নির্ধারণ
 // ---------------------
