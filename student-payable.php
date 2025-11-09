@@ -4,6 +4,8 @@
 <?php
 
 
+$strJsonFileContents = file_get_contents("bkash/config.json");
+$array = json_decode($strJsonFileContents, true);
 
 $gatewaylist = [];
 foreach ($admin_data['settings']['payment_gateway'] as $pg) {
