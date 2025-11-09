@@ -1,14 +1,26 @@
+# core files
 core/core-val.php
 core/config.php
-thrown/*.*
+core/php-error.log
+
+# logs
+php-error.log
+
+# thrown directory (সব কিছু)
+thrown/
+
+# nav file with space
 nav/nav copy.php
+
+# single files
 inc.php
-prototype/*.*
+sql-learn.txt
+eimbox-materio.zip
+bkash/config.json
+
+# prototype dir
+prototype/
+
+# firebase files
 firebase/firebase.js
 firebase-messaging-sw.js
-eimbox-materio.zip
-core/php-error.log
-php-error.log
-sql-learn.txt
-core/config.php
-bkash/config.json
