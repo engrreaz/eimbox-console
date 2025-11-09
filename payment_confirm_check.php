@@ -1,70 +1,107 @@
 <?php
+
+$strJsonFileContents = file_get_contents("bkash/config.json");
+$array = json_decode($strJsonFileContents, true);
+session_id($array['sid']);
 session_start();
-define('BASEURL','http://localhost/eimbox-dashboard/eimbox-materio/');
+
+if (isset($_COOKIE[session_name()])) {
+    $sid = $_COOKIE[session_name()]; // সাধারণত PHPSESSID
+    echo "Session ID: " . $sid;
+} else {
+    echo "No session cookie found!";
+}
+// jeql17a9hjnmkmjasmh78e7qkk -- 01770618575
+define('BASEURL', 'http://localhost/eimbox-dashboard/eimbox-materio/');
 
 
 $strJsonFileContents = file_get_contents("bkash/config.json");
-$array               = json_decode($strJsonFileContents, true);
+$array = json_decode($strJsonFileContents, true);
 
-    
+
 if (isset($_GET['paymentID']) && isset($_GET['status'])) {
-        $paymentID = $_GET['paymentID'];
-        $status    = $_GET['status'];
+    $paymentID = $_GET['paymentID'];
+    $status = $_GET['status'];
 
-        if ($status == 'success') {
+    if ($status == 'success') {
 
-            $clientToken = $_SESSION['token'];
+        $clientToken = $_SESSION['token'];
 
-            $post_token = [
-                'paymentID' => $paymentID,
-            ];
-            $url       = curl_init($array['executeURL']);
-            $posttoken = json_encode($post_token);
+        $post_token = [
+            'paymentID' => $paymentID,
+        ];
+        $url = curl_init($array['executeURL']);
+        $posttoken = json_encode($post_token);
 
-            $header = [
-                'Content-Type:application/json',
-                'Authorization:' . $clientToken,
-                'X-APP-Key:' . $array['app_key'],
-            ];
+        $header = [
+            'Content-Type:application/json',
+            'Authorization:' . $clientToken,
+            'X-APP-Key:' . $array['bkash_app_key'],
+        ];
 
-            curl_setopt($url, CURLOPT_HTTPHEADER, $header);
-            curl_setopt($url, CURLOPT_CUSTOMREQUEST, "POST");
-            curl_setopt($url, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($url, CURLOPT_POSTFIELDS, $posttoken);
-            curl_setopt($url, CURLOPT_FOLLOWLOCATION, 1);
-            curl_setopt($url, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
-            $resultdata = curl_exec($url);
-            curl_close($url);
+        curl_setopt($url, CURLOPT_HTTPHEADER, $header);
+        curl_setopt($url, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_setopt($url, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($url, CURLOPT_POSTFIELDS, $posttoken);
+        curl_setopt($url, CURLOPT_FOLLOWLOCATION, 1);
+        curl_setopt($url, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+        $resultdata = curl_exec($url);
+        curl_close($url);
+        $obj = json_decode($resultdata, true);
 
-            if (! empty($resultdata)) {
-                $obj = json_decode($resultdata);
+        $_SESSION['response_confirm'] = $obj;
 
-                echo '<pre>';
-                var_dump($resultdata);
-                echo '</pre>';
+        echo '---------------------<pre>';
+        var_dump($resultdata);
+        echo '</pre><hr><hr>';
 
-                $statusCode    = $obj->statusCode;
-                $statusMessage = $obj->statusMessage;
 
-                // if ($statusCode == '0000') {
+        if (!empty($resultdata)) {
 
-                //     // pgw return value
-                //     $paymentID             = $obj->paymentID;
-                //     $trxID                 = $obj->trxID;
-                //     $transactionStatus     = $obj->transactionStatus;
-                //     $amount                = round($obj->amount, 2);
-                //     $currency              = $obj->currency;
-                //     $intent                = $obj->intent;
-                //     $paymentExecuteTime    = $obj->paymentExecuteTime;
-                //     $merchantInvoiceNumber = $obj->merchantInvoiceNumber;
-                //     $payerType             = $obj->payerType;
-                //     $payerReference        = $obj->payerReference;
-                //     $customerMsisdn        = $obj->customerMsisdn;
-                //     $payerAccount          = $obj->payerAccount;
-                //     $maxRefundableAmount   = $obj->maxRefundableAmount;
-                //     $statusCode            = $obj->statusCode;
-                //     $statusMessage         = $obj->statusMessage;
-                // }
-            }
+
+
+
+            $statusCode = $obj['statusCode'];
+            $statusMessage = $obj['statusMessage'];
+
+            // if ($statusCode == '0000') {
+
+            //     // pgw return value
+            //     $paymentID             = $obj->paymentID;
+            //     $trxID                 = $obj->trxID;
+            //     $transactionStatus     = $obj->transactionStatus;
+            //     $amount                = round($obj->amount, 2);
+            //     $currency              = $obj->currency;
+            //     $intent                = $obj->intent;
+            //     $paymentExecuteTime    = $obj->paymentExecuteTime;
+            //     $merchantInvoiceNumber = $obj->merchantInvoiceNumber;
+            //     $payerType             = $obj->payerType;
+            //     $payerReference        = $obj->payerReference;
+            //     $customerMsisdn        = $obj->customerMsisdn;
+            //     $payerAccount          = $obj->payerAccount;
+            //     $maxRefundableAmount   = $obj->maxRefundableAmount;
+            //     $statusCode            = $obj->statusCode;
+            //     $statusMessage         = $obj->statusMessage;
+            // }
         }
     }
+}
+
+
+
+
+echo '<br><br><br><b>Token : <hr></b><pre>';
+print_r($_SESSION['response_token']);
+echo '</pre>';
+echo '<br></b><b>Create : <hr></b><pre>';
+print_r($_SESSION['response_create']);
+echo '</pre>';
+// echo '<br><b>Execute : <hr></b><pre>';
+// print_r($_SESSION['response_execute']);
+// echo '</pre>';
+echo '<br><b>confirm : <hr></b><pre>';
+print_r($_SESSION['response_confirm']);
+echo '</pre>';
+// echo '<hr><b>Full : <hr></b><pre>';
+// print_r($_SESSION);
+// echo '</pre>';

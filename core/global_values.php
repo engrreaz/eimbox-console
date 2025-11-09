@@ -160,8 +160,10 @@ $sccode_current_package = $admin_data['package']['id'] ?? 2;
 
 $cur = date('Y-m-d H:i:s');
 $td = date('Y-m-d');
+$y_v2 = date('y');
+$y_v4 = date('Y');
 
-// var_dump($_SESSION);
+
 // echo $usr;
 
 
@@ -173,3 +175,5 @@ $td = date('Y-m-d');
 // $_SESSION['phone'] . '/ ' .
 // $_SESSION['address'] . '/ ' .
 // $_SESSION['dob'];
+
+

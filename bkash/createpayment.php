@@ -12,7 +12,7 @@ $callbackURL = $_GET['callbackURL'];
 $amount = $_GET['amount'];
 $currency = $_GET['currency'];
 $intent = $_GET['intent'];
-$invoice = time(); // must be unique
+$invoice = $_SESSION['invoice'] ; // time(); // must be unique
 
 
 if ($amount > 0 && $mode=='0011') {
@@ -26,7 +26,7 @@ $proxy = $array["proxy"];
     $header=array(
         'Content-Type:application/json',
         'authorization:'.$token,
-        'x-app-key:'.$array["app_key"]
+        'x-app-key:'.$array["bkash_app_key"]
     );
 
     curl_setopt($url,CURLOPT_HTTPHEADER, $header);
@@ -44,5 +44,7 @@ $proxy = $array["proxy"];
 } else {
     return false;
 }    
+
+$_SESSION['response_create'] = json_decode($resultdata, true);
 
 ?>
