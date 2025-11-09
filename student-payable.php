@@ -3,9 +3,6 @@
 
 <?php
 
-$strJsonFileContents = file_get_contents("bkash/config.json");
-$array = json_decode($strJsonFileContents, true);
-
 
 
 $gatewaylist = [];
@@ -23,6 +20,8 @@ foreach ($admin_data['settings']['payment_gateway'] as $pg) {
     }
 }
 
+
+
 $newJsonString = json_encode($array);
 file_put_contents('bkash/config.json', $newJsonString);
 ?>
@@ -31,6 +30,21 @@ file_put_contents('bkash/config.json', $newJsonString);
 
 <div class="container-xxl flex-grow-1 container-p-y">
     <?php
+
+
+
+$strJsonFileContents = file_get_contents("bkash/config.json");
+$array = json_decode($strJsonFileContents, true);
+
+echo $array['bkash_app_key'] . '/' . $array['bkash_app_secret'] . '/' . $array['bkash_username'] . '/' . $array['bkash_password'];
+
+
+echo "<br><br>";
+echo `<pre>
+ "bkash_app_key": "0vWQuCRGiUX7EPVjQDr0EUAYtc",
+    "bkash_app_secret": "jcUNPBgbcqEDedNKdvE4G1cAK7D3hCjmJccNPZZBq96QIxxwAMEx",
+    "bkash_username": "01770618567",
+    "bkash_password": "D7DaC<*E*eG",</pre>`;
     // ---------------------
 // Student ID নির্ধারণ
 // ---------------------
