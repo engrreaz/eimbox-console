@@ -160,7 +160,7 @@ file_put_contents('bkash/config.json', $newJsonString);
                         echo '<div class="col-3">';
                         if ($gl == 'bkash') {
                             ?>
-                            <button class="btn btn-bkash d-flex align-items-center px-4 py-2" id="bKash_button">
+                            <button class="btn btn-bkash d-flex align-items-center px-4 py-2" id="bKash_button2">
                                 <img src="assets/images/bkash_payment_logo.png" alt="bKash" style="height:24px; margin-right:10px;">
                                 Pay with bKash
                             </button>
