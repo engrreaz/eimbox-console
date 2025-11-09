@@ -3,6 +3,10 @@ core/core-val.php
 core/config.php
 core/php-error.log
 
+
+# Gateway 
+bkash/config.json
+
 # logs
 php-error.log
 
