@@ -150,7 +150,12 @@ file_put_contents('bkash/config.json', $newJsonString);
                 <div class="mt-4">
                     <div class="row">
 
-                    
+                    <div class="col-3">
+                         <button class="btn btn-bkash d-flex align-items-center px-4 py-2" id="bKash_button">
+                                <img src="assets/images/bkash_payment_logo.png" alt="bKash" style="height:24px; margin-right:10px;">
+                                Pay with bKash
+                            </button>
+                    </div>
                     <?php foreach ($gatewaylist as $gl) {
                         echo '<div class="col-3">';
                         if ($gl == 'bkash') {
