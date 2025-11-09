@@ -35,14 +35,14 @@ file_put_contents('bkash/config.json', $newJsonString);
 
 
 
-$strJsonFileContents = file_get_contents("bkash/config.json");
-$array = json_decode($strJsonFileContents, true);
+    $strJsonFileContents = file_get_contents("bkash/config.json");
+    $array = json_decode($strJsonFileContents, true);
 
-echo $array['bkash_app_key'] . '/' . $array['bkash_app_secret'] . '/' . $array['bkash_username'] . '/' . $array['bkash_password'];
+    echo '******** ' . $array['bkash_app_key'] . '/' . $array['bkash_app_secret'] . '/' . $array['bkash_username'] . '/' . $array['bkash_password'] . ' ***************';
 
 
-echo "<br><br>";
-echo `<pre>
+    echo "<br><br>";
+    echo `<pre>
  "bkash_app_key": "0vWQuCRGiUX7EPVjQDr0EUAYtc",
     "bkash_app_secret": "jcUNPBgbcqEDedNKdvE4G1cAK7D3hCjmJccNPZZBq96QIxxwAMEx",
     "bkash_username": "01770618567",
@@ -166,47 +166,54 @@ echo `<pre>
                 <div class="mt-4">
                     <div class="row">
 
-                    <div class="col-3">
-                         <button class="btn btn-bkash d-flex align-items-center px-4 py-2" id="bKash_button">
-                                <img src="assets/images/bkash_payment_logo.png" alt="bKash" style="height:24px; margin-right:10px;">
+                        <div class="col-3">
+                            <button class="btn btn-bkash d-flex align-items-center px-4 py-2" id="bKash_button">
+                                <img src="assets/images/bkash_payment_logo.png" alt="bKash"
+                                    style="height:24px; margin-right:10px;">
                                 Pay with bKash
                             </button>
-                    </div>
-                    <?php foreach ($gatewaylist as $gl) {
-                        echo '<div class="col-3">';
-                        if ($gl == 'bkash') {
+                        </div>
+                        <?php foreach ($gatewaylist as $gl) {
+                            echo '<div class="col-3">';
+                            if ($gl == 'bkash') {
+                                ?>
+                                <button class="btn btn-bkash d-flex align-items-center px-4 py-2" id="bKash_button2">
+                                    <img src="assets/images/bkash_payment_logo.png" alt="bKash"
+                                        style="height:24px; margin-right:10px;">
+                                    Pay with bKash
+                                </button>
+                                <?php
+                            } else if ($gl == 'nagad') {
+                                ?>
+                                    <button class="btn btn-bkash d-flex align-items-center px-4 py-2 " style="color:orangered"
+                                        id="nagad_button">
+                                        <img src="assets/images/nagad_payment_logo.png" alt="bKash"
+                                            style="height:24px; margin-right:10px;">
+                                        নগদ পেমেন্ট
+                                    </button>
+                                <?php
+                            } else if ($gl == 'rocket') {
+                                ?>
+                                        <button class="btn btn-bkash d-flex align-items-center px-4 py-2" id="rocket_button">
+                                            <img src="assets/images/bkash_payment_logo.png" alt="bKash"
+                                                style="height:24px; margin-right:10px;">
+                                            Pay with Rocket
+                                        </button>
+                                <?php
+                            } else if ($gl == 'bank') {
+                                ?>
+                                            <button class="btn btn-bkash d-flex align-items-center px-4 py-2" id="bank_button">
+                                                <img src="assets/images/bkash_payment_logo.png" alt="bKash"
+                                                    style="height:24px; margin-right:10px;">
+                                                Pay through Bank
+                                            </button>
+                                <?php
+                            }
                             ?>
-                            <button class="btn btn-bkash d-flex align-items-center px-4 py-2" id="bKash_button2">
-                                <img src="assets/images/bkash_payment_logo.png" alt="bKash" style="height:24px; margin-right:10px;">
-                                Pay with bKash
-                            </button>
-                        <?php
-                        } else if ($gl == 'nagad') {
-                            ?>
-                            <button class="btn btn-bkash d-flex align-items-center px-4 py-2 " style="color:orangered" id="nagad_button">
-                                <img src="assets/images/nagad_payment_logo.png" alt="bKash" style="height:24px; margin-right:10px;">
-                                নগদ পেমেন্ট
-                            </button>
-                        <?php
-                        } else if ($gl == 'rocket') {
-                            ?>
-                            <button class="btn btn-bkash d-flex align-items-center px-4 py-2" id="rocket_button">
-                                <img src="assets/images/bkash_payment_logo.png" alt="bKash" style="height:24px; margin-right:10px;">
-                                Pay with Rocket
-                            </button>
-                        <?php
-                        } else if ($gl == 'bank') {
-                            ?>
-                            <button class="btn btn-bkash d-flex align-items-center px-4 py-2" id="bank_button">
-                                <img src="assets/images/bkash_payment_logo.png" alt="bKash" style="height:24px; margin-right:10px;">
-                                Pay through Bank
-                            </button>
-                        <?php
-                        }
-                        ?>
 
 
-                    <?php echo '</div>'; } ?>
+                            <?php echo '</div>';
+                        } ?>
                     </div>
                 </div>
 
