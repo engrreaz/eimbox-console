@@ -277,7 +277,7 @@ file_put_contents('bkash/config.json', $newJsonString);
 
         var paymentRequest;
         var cBURL = '<?= APP_PATH; ?>payment_confirm_check.php';
-        paymentRequest = { mode: '0011', payerReference: payerReference, callbackURL: cBURL, amount: amount, currency: 'BDT', intent: 'sale' };
+        paymentRequest = { mode: '0000', payerReference: payerReference, callbackURL: cBURL, amount: amount, currency: 'BDT', intent: 'sale' };
 
         bKash.init({
             paymentMode: 'checkout',
