@@ -44,8 +44,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
 require_once 'header-plain.php';
+echo '<div class="text-center">';
 include_once 'actions/get-sc-data.php';
-
+echo '</div>';
 ?>
 
 <div class="container">
