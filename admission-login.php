@@ -44,15 +44,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
 require_once 'header-plain.php';
-echo '<div class="text-center">';
 include_once 'actions/get-sc-data.php';
-echo '</div>';
+
 ?>
 
 <div class="container">
 
     <div class="row">
-        <div class="col-12  ">
+        <div class="col-12  text-center">
             <?php include_once('actions/sc-header.php'); ?>
         </div>
     </div>
