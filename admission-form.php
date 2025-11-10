@@ -60,7 +60,7 @@ include_once('actions/get-sc-data.php');
                 </div>
             </div>
 
-            <form id="myForm" action="register_process.php" method="POST" enctype="multipart/form-data">
+            <form id="myForm" action="core/register_process.php" method="POST" enctype="multipart/form-data">
 
                 <input type="hidden" value="<?= $sccode; ?>">
                 <!-- Card 1: Basic Information -->

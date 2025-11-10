@@ -1,6 +1,6 @@
 <?php
-include('core/config.php');
-include('core/db.php');
+include('config.php');
+include('db.php');
 
 // ফর্ম ডেটা
 $stnameeng = $_POST['stnameeng'] ?? '';
