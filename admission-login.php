@@ -3,7 +3,7 @@ session_start();
 require_once 'core/config.php';
 require_once 'core/db.php';
 require_once 'core/core-val.php';
-require_once 'header-plain.php';
+
 
 $sccode = 103187;
 
@@ -21,19 +21,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($row) {
         $_SESSION['student_reg'] = $row['reg_id'];
         $_SESSION['scode'] = $scode;
-        // echo $_SESSION['student_reg'];
         header("Location: admission-dashboard.php");
         exit;
     } else {
         $error = "Invalid credentials or not verified.";
     }
 }
-
-
+require_once 'header-plain.php';
 include_once 'actions/get-sc-data.php';
+
 ?>
-
-
 
 <div class="container">
 
