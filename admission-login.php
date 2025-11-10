@@ -2,8 +2,8 @@
 session_start();
 require_once 'core/config.php';
 require_once 'core/db.php';
-require_once 'header-plain.php';
 require_once 'core/core-val.php';
+require_once 'header-plain.php';
 
 $sccode = 103187;
 include_once 'actions/get-sc-data.php';
@@ -23,6 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($row) {
         $_SESSION['student_reg'] = $row['reg_id'];
         $_SESSION['scode'] = $scode;
+            echo $scode;
         header("Location: admission-dashboard.php");
         exit;
     } else {
