@@ -1,10 +1,16 @@
 <?php
+session_start();
 include_once('core/config.php');
 include_once('core/db.php');
 include_once('header-plain.php');
 include_once('core/core-val.php');
 
-
+$reg = $_SESSION['student_reg'] ?? null;
+$sccode = $_SESSION['scode'] ?? null;
+if ($reg) {
+  header("Location: admission-dashboard.php");
+  exit;
+}
 
 
 $sccode = 103187;
