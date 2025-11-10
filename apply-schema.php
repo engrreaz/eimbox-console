@@ -29,8 +29,8 @@ $host = DB_HOST;
 $user = DB_USER;
 $pass = DB_PASS;
 $port = 3306;
-if ($_SESSION['reverse' == 0]) {
-    $dbname = DB_SYNC ?? DB_NAME;
+if (isset($_SESSION['reverse']) && $_SESSION['reverse'] == 0) {
+    $dbname = defined('DB_SYNC') ? DB_SYNC : DB_NAME;
 } else {
     $dbname = DB_NAME;
 }
