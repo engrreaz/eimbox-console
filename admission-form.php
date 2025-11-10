@@ -5,15 +5,17 @@ include_once('core/db.php');
 include_once('header-plain.php');
 include_once('core/core-val.php');
 
+$sccode = 103187;
+
 $reg = $_SESSION['student_reg'] ?? null;
-$sccode = $_SESSION['scode'] ?? null;
+// $sccode = $_SESSION['scode'] ?? null;
 if ($reg) {
   header("Location: admission-dashboard.php");
   exit;
 }
 
 
-$sccode = 103187;
+
 include_once('actions/get-sc-data.php');
 
 ?>
