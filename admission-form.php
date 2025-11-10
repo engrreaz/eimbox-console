@@ -70,7 +70,7 @@ include_once('actions/get-sc-data.php');
 
             <form id="myForm" action="core/register_process.php" method="POST" enctype="multipart/form-data">
 
-                <input type="hidden" value="<?= $sccode; ?>">
+                <input type="hidden" name="sccode" value="<?= $sccode; ?>">
                 <!-- Card 1: Basic Information -->
                 <div class="card mb-3">
                     <div class="card-header d-flex justify-content-between align-items-center">
