@@ -8,7 +8,7 @@ require_once 'core/core-val.php';
 $reg = $_SESSION['student_reg'] ?? null;
 $scode = $_SESSION['scode'] ?? null;
 if (!$reg) {
-  header("Location: login.php");
+  header("Location: admission-login.php");
   exit;
 }
 $stmt = $conn->prepare("SELECT * FROM registrations WHERE reg_id = ? LIMIT 1");
