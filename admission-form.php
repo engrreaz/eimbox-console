@@ -2,7 +2,7 @@
 session_start();
 include_once('core/config.php');
 include_once('core/db.php');
-include_once('header-plain.php');
+
 include_once('core/core-val.php');
 
 $sccode = 103187;
@@ -14,7 +14,7 @@ if ($reg) {
   exit;
 }
 
-
+include_once('header-plain.php');
 
 include_once('actions/get-sc-data.php');
 
