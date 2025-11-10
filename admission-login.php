@@ -6,14 +6,13 @@ require_once 'core/core-val.php';
 require_once 'header-plain.php';
 
 $sccode = 103187;
-include_once 'actions/get-sc-data.php';
+
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $reg_id = $_POST['reg_id'] ?? '';
     $pin = $_POST['pin'] ?? '';
     $scode = $_POST['scode'] ?? '0';
-    echo $scode;
     $stmt = $conn->prepare("SELECT id, reg_id FROM registrations WHERE reg_id = ? AND pin = ? AND verified = 1 LIMIT 1");
     $stmt->bind_param("ss", $reg_id, $pin);
     $stmt->execute();
@@ -23,13 +22,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($row) {
         $_SESSION['student_reg'] = $row['reg_id'];
         $_SESSION['scode'] = $scode;
-            echo $scode;
         header("Location: admission-dashboard.php");
         exit;
     } else {
         $error = "Invalid credentials or not verified.";
     }
 }
+
+
+include_once 'actions/get-sc-data.php';
 ?>
 
 
