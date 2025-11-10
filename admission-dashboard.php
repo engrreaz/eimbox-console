@@ -6,6 +6,7 @@ require_once 'header-plain.php';
 require_once 'core/core-val.php';
 
 $reg = $_SESSION['student_reg'] ?? null;
+$scode = $_SESSION['scode'] ?? null;
 if (!$reg) {
   header("Location: login.php");
   exit;
