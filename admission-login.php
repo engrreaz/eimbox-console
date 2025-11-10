@@ -7,7 +7,6 @@ require_once 'header-plain.php';
 
 $sccode = 103187;
 
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $reg_id = $_POST['reg_id'] ?? '';
@@ -22,6 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($row) {
         $_SESSION['student_reg'] = $row['reg_id'];
         $_SESSION['scode'] = $scode;
+        echo $_SESSION['student_reg'];
         header("Location: admission-dashboard.php");
         exit;
     } else {
