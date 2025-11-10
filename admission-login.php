@@ -5,16 +5,18 @@ require_once 'core/db.php';
 require_once 'core/core-val.php';
 
 
-$sccode = 103187;
+
 
 $reg = $_SESSION['student_reg'] ?? null;
 $sccode = $_SESSION['scode'] ?? null;
 if ($reg) {
-  header("Location: admission-dashboard.php");
-  exit;
+    header("Location: admission-dashboard.php");
+    exit;
 }
 
-
+if ($sccode == null) {
+    $sccode = 103187;
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 

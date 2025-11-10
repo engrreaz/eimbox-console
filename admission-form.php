@@ -10,8 +10,8 @@ $sccode = 103187;
 $reg = $_SESSION['student_reg'] ?? null;
 // $sccode = $_SESSION['scode'] ?? null;
 if ($reg) {
-  header("Location: admission-dashboard.php");
-  exit;
+    header("Location: admission-dashboard.php");
+    exit;
 }
 
 include_once('header-plain.php');
