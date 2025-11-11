@@ -1,7 +1,7 @@
 <?php
 session_start();
-include('core/config.php');
-include('core/db.php');
+include('config.php');
+include('db.php');
 include('header-plain.php');
 
 $alert = '';
