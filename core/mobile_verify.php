@@ -126,6 +126,8 @@ if (isset($_POST['verify_otp'])) {
             </div>
         </div>
     </div>
+
+  <?php  include('../footer-plain.php'); ?>
 </body>
 
 </html>
