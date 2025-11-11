@@ -337,6 +337,7 @@ $release_colors = [
 <script src="assets/js/notifications.js"></script>
 <!-- <script src="assets/js/extended-ui-media-player.js"></script> -->
 <script src="assets/js/pages-auth-multisteps.js"></script>
+<script src="assets/js/extended-ui-treeview.js"></script>
 
 
 

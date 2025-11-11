@@ -109,6 +109,7 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
     <link rel="stylesheet" href="assets/vendor/libs/quill/editor.css" />
     <!-- <link rel="stylesheet" href="assets/vendor/libs/plyr/plyr.css" /> -->
     <link rel="stylesheet" href="assets/vendor/css/pages/page-auth.css" />
+    <link rel="stylesheet" href="assets/vendor/libs/jstree/jstree.css" />
 
 
 

@@ -125,7 +125,7 @@ include_once('header-plain.php');
 ?>
 <div class="position-relative">
     <div class="authentication-wrapper authentication-basic container-p-y">
-        <div class="authentication-inner py-2 mx-4">
+        <div class="authentication-inner py-0 mx-4">
             <!-- Login -->
             <div class="card p-sm-7 p-2">
                 <!-- Logo -->
@@ -177,7 +177,7 @@ include_once('header-plain.php');
                                 <span>Forgot Password?</span>
                             </a>
                         </div>
-                        <div class="mb-5">
+                        <div class="mb-4">
                             <button class="btn btn-primary d-grid w-100" type="submit">login</button>
                         </div>
                     </form>
@@ -189,8 +189,12 @@ include_once('header-plain.php');
                         </a>
                     </p>
 
-                    <div class="divider my-5">
+                    <div class="divider my-1">
                         <div class="divider-text">or</div>
+                    </div>
+
+                    <div class="mb-5">
+                        <a href="admission-login.php" class="btn btn-danger d-grid w-100" >Admission New Student</a>
                     </div>
 
                     <div class="d-flex justify-content-center gap-2">

@@ -53,9 +53,16 @@ include_once('actions/get-sc-data.php');
 
 <div class="col-xxl">
     <div class="row">
-        <div class="col-md-4">
-
+        <div class="col-md-4 " style="
+        background-image: url('assets/images/core/regd-form.jpg');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        height: 100vh;
+        border-radius: 5px;
+        ">
         </div>
+
 
         <div class="col-md-8">
 
