@@ -2,7 +2,7 @@
 session_start();
 include('config.php');
 include('db.php');
-include('header-plain.php');
+include('../header-plain.php');
 
 $alert = '';
 $alert_text = '';
