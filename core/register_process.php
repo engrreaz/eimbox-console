@@ -82,7 +82,7 @@ if ($stmt->execute()) {
     $stmt->close();
 
     // মোবাইল ভেরিফিকেশন পেজে পাঠানো
-    header("Location: mobile_verify.php?id=$insert_id");
+    header("Location: ../mobile_verify.php?id=$insert_id");
     exit;
 } else {
     echo "<div class='alert alert-danger'>Registration failed: " . $stmt->error . "</div>";

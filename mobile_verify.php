@@ -1,8 +1,8 @@
 <?php
 session_start();
-include('config.php');
-include('db.php');
-include('../header-plain.php');
+include('core/config.php');
+include('core/db.php');
+include('header-plain.php');
 
 $alert = '';
 $alert_text = '';
@@ -127,7 +127,7 @@ if (isset($_POST['verify_otp'])) {
         </div>
     </div>
 
-  <?php  include('../footer-plain.php'); ?>
+  <?php  include('footer-plain.php'); ?>
 </body>
 
 </html>
