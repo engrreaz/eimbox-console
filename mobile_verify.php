@@ -127,7 +127,7 @@ if (isset($_POST['verify_otp'])) {
         mysqli_query($conn, "UPDATE registrations SET verified=1, verifytime=NOW() WHERE id='$id'");
 
         $message = $_SESSION['stname'] . ',\n Your Regd. No. is ' . $_SESSION['regid'] . ' and login PIN is ' . $_SESSION['pin'] . '\nURL is https://console.eimbox.com/admisssion.login.php';
-        sms_send($mobile, $message);
+        // sms_send($mobile, $message);
 
         echo "<script>
 
