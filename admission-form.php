@@ -112,10 +112,7 @@ include_once('actions/get-sc-data.php');
                                     <label class="form-label">Mother's Name / মাতার নাম</label>
                                     <input name="mname" class="form-control">
                                 </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Mobile Number / মোবাইল নম্বর </label>
-                                    <input id="mnumber" name="mnumber" class="form-control" required>
-                                </div>
+                                
                             </div>
 
                             <!-- right: photo upload & crop (6 cols) -->
@@ -158,6 +155,32 @@ include_once('actions/get-sc-data.php');
                         </div>
                     </div>
                 </div>
+
+                    <div class="card mb-3">
+                    <div class="card-header">
+                        <!-- <h5 class="mb-0 text-info fw-bold">Address / ঠিকানা </h5> -->
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                         
+                                    <label class="form-label">Mobile Number / মোবাইল নম্বর </label>
+                                    <input id="mnumber" name="mnumber" class="form-control" required>
+                        
+                            </div>
+                            <div class="col-md-3">
+                                <label for="ps" class="form-label">Date of Birth / জন্ম তারিখ </label>
+                                                                    <input type="date" id="dob" name="dob" class="form-control" value="" required>
+
+                            </div>
+                            <div class="col-md-6">
+                                <label for="po" class="form-label">Birth Registration Number / জন্ম নিবন্ধন নম্বর</label>
+                                <input name="brnno" class="form-control" placeholder="Birth Registration Number">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
 
                 <!-- Card 2: Address -->
                 <div class="card mb-3">
@@ -459,7 +482,7 @@ include_once('footer-plain.php');
             districts.sort((a, b) => a.name.localeCompare(b.name));
 
             districts.forEach(d => {
-                const label = `(${d.bn_name}) ${d.name}`;
+                const label = ` ${d.name}(${d.bn_name})`;
                 $('#insdist').append($('<option>', { value: d.id, text: label, 'data-name': d.name }));
             });
 

@@ -61,6 +61,9 @@ $mpdf = new Mpdf([
 
 $mpdf->SetTitle('Entry Ticket - ' . $data['id']);
 
+$logo = dirname(__DIR__) . '/logo/' . $sccode . '.png';
+
+
 
 $html = '<table class="mt-4 mb-6 " style="margin:auto;">
                     <tr>
@@ -78,6 +81,16 @@ $html = '<table class="mt-4 mb-6 " style="margin:auto;">
 
                     </tr>
                 </table>';
+
+
+                $html .= '<div style="position: absolute; top: 80mm; left: 70mm; ; z-index: -1000; ">
+                    <img src="' . $logo . '" style=" opacity: 0.3; width:50mm; height:50mm;"  />
+                </div>';
+                
+                $html .= '<div style="position: absolute; top: 215mm; left: 60mm; ; z-index: -1000; ">
+                    <img src="' . $logo . '" style=" opacity: 0.3; width:50mm; height:50mm;"  />
+                </div>';
+
 
 // ✅ HTML content -------------------------------------------------------------------------------------------------------
 // ✅ HTML content -------------------------------------------------------------------------------------------------------
@@ -259,7 +272,7 @@ $html .= '<table class="mt-4 mb-6 " style="margin:auto;">
 
 $html .= '
 <div style="font-family:solaimanlipi; font-size:14px; line-height:1;">
-    <h2 style="text-align:center;">ভর্তির প্রবেশপত্র (Admit Card for Admission Test)</h2>
+    <h3 style="text-align:center;">ভর্তির প্রবেশপত্র (Admit Card for Admission Test)</h3>
                         <p style="text-align:center; margin:0; padding:0;">এই প্রবেশপত্রটি পরীক্ষা বা সাক্ষাৎকারে অংশগ্রহণের জন্য প্রযোজ্য।</p>
 
     <table width="100%" style="border-collapse:collapse;">
@@ -269,7 +282,7 @@ $html .= '
             </td>
 </tr>
 <tr>
-<td width="75%" colspan="4"></td>
+<td width="70%" colspan="4"></td>
 <td  align="center" rowspan="11" style="width:5px; border-right:1px dotted gray;"></td>
 <td  align="center" rowspan="11" style="width:5px;"></td>
 
@@ -278,20 +291,24 @@ $html .= '
 
 // ✅ Add image if available
 if (!empty($data['photo']) && file_exists(__DIR__ . '/uploads/photos/' . $data['photo'])) {
-    $html .= '<img src="' . htmlspecialchars('uploads/photos/' . $data['photo']) . '" width="100" height="127" style="border:1px solid #6e6a6aff;">';
+    $html .= '<img src="' . htmlspecialchars('uploads/photos/' . $data['photo']) . '" width="100" height="127" style="border:1px solid #6e6a6aff; margin-bottom:5px;">';
 } else {
     $html .= '<div style="width:150px;height:190px;border:1px solid #dd4b4bff;text-align:center;line-height:140px;">No Photo</div>';
 }
+$html .= '<br><span style="font-size:10px;">Student\'s Photo<br>শিক্ষার্থীর ছবি</span>';
 
 
 $html .= '
 
 
-<br><br><br><br>
-<img src="'. dirname(__DIR__) . '/sign/' . $sccode . '.png' .'" style="width:100px;"/>
-<div style="font-size: 11px;">
-প্রতিষ্ঠান প্রধান
-</div>
+<br><br>
+<img src="' . dirname(__DIR__) . '/sign/' . $sccode . '.png' . '" style="width:100px;"/>
+<div style="font-size: 11px;">(' .
+
+    $htname . ')<br>' . $httitle
+    . '</div>
+<div class="m-0 p-0 fw-bold" style="font-size:11px;">' . $scname . '</div>
+                            <div class="m-0 p-0" style="font-size:10px;">' . $address . '</div>
 
 
 
@@ -301,31 +318,31 @@ $html .= '
 
 
         <tr>
-            <td style="width:100px;"> Registration No. / রেজিস্ট্রেশন নম্বর :</td>
+            <td style="width:120px;"> Registration No. / রেজিস্ট্রেশন নম্বর :</td>
             <td style="border-bottom:1px dotted gray;">' . htmlspecialchars($data['reg_id']) . '</td>
-            <td> Roll No. / ক্রমিক নম্বর :</td>
-            <td style="border-bottom:1px dotted gray;">' . htmlspecialchars($data['roll_no']) . '</td>
+            <td > Roll No. / ক্রমিক নম্বর :</td>
+            <td style="border-bottom:1px dotted gray; width:100px; text-align:center;">' . htmlspecialchars($data['roll_no']) . '</td>
         </tr>
 
         <tr>
-            <td> Session. / শিক্ষাবর্ষ :</td>
+            <td> Session / শিক্ষাবর্ষ :</td>
             <td style="border-bottom:1px dotted gray;">' . htmlspecialchars($data['sessionyear']) . '</td>
             <td> Class / ভর্তিচ্ছু শ্রেণি :</td>
-            <td style="border-bottom:1px dotted gray; padding-left:10px;">' . htmlspecialchars($data['admit_class']) . '</td>
+            <td style="border-bottom:1px dotted gray; padding-left:10px; text-align:center;">' . htmlspecialchars($data['admit_class']) . '</td>
         </tr>
-        <tr><td style="height:35px;" colspan="4" ></td></tr>
+        <tr><td style="height:25px;" colspan="4" ></td></tr>
 
 
 
 
 <tr>
-<td>Name of Student :</td><td> (In English)  </td>
-<td colspan="2" style="border-bottom:1px dotted gray;">' . htmlspecialchars($data['stnameeng']) . '</td>
+<td style="width:120px;">Student\'s Name :</td><td> (In English)  </td>
+<td colspan="2" style="border-bottom:1px dotted gray;  font-weight:bold; font-size:16px;">' . htmlspecialchars($data['stnameeng']) . '</td>
 </tr>
 
 <tr>
     <td>শিক্ষার্থীর নাম</td><td> (বাংলায়)</td>
-    <td colspan="2"  style="border-bottom:1px dotted gray;">' . htmlspecialchars($data['stnameben']) . '</td>
+    <td colspan="2"  style="border-bottom:1px dotted gray; font-size:16px; font-weight:bold;">' . htmlspecialchars($data['stnameben']) . '</td>
 </tr>
 
 <tr>
@@ -338,20 +355,20 @@ $html .= '
 </tr>
 
 <tr>
-    <td colspan="4" >Address / ঠিকানা </td>
+    <td colspan="4"  >Address / ঠিকানা </td>
             
 
     
 </tr>
 <tr>
-    <td colspan="4"  style="border-bottom:1px dotted gray;" >' . 
-            htmlspecialchars($data['village']) . ', ' .
-            htmlspecialchars($data['po']) . ', ' .
-            htmlspecialchars($data['ps']) . ', ' .
-            htmlspecialchars($data['dist']) . '. ' .
-            
-            
-            '</td>
+    <td colspan="4"  style="border-bottom:1px dotted gray;" >' .
+    htmlspecialchars($data['village']) . ', ' .
+    htmlspecialchars($data['po']) . ', ' .
+    htmlspecialchars($data['ps']) . ', ' .
+    htmlspecialchars($data['dist']) . '. ' .
+
+
+    '</td>
 
     
 </tr>

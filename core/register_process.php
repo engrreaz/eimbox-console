@@ -1,4 +1,5 @@
 <?php
+session_start();
 include('config.php');
 include('db.php');
 
@@ -18,6 +19,9 @@ $insdist = $_POST['insdist'] ?? '';
 $insps = $_POST['insps'] ?? '';
 $inspo = $_POST['inspo'] ?? '';
 $insname = $_POST['insname'] ?? '';
+$dob = $_POST['dob'] ?? '';
+$brnno = $_POST['brnno'] ?? '';
+$cls = $_POST['admit_class'] ?? 'Six';
 // $photo_data = $_POST['photo_data'] ?? '';
 
 // Session Year ও SCCODE
@@ -66,10 +70,10 @@ $pin = rand(100000, 999999);
 
 // ডাটাবেজ ইনসার্ট
 $stmt = $conn->prepare("INSERT INTO registrations 
-(sessionyear, sccode, stnameeng, stnameben, fname, mname, mnumber, dist, ps, po, village, testno, insdist, insps, inspo, insname, photo, reg_id, pin, roll_no)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+(sessionyear, sccode, stnameeng, stnameben, fname, mname, mnumber, dist, ps, po, village, testno, insdist, insps, inspo, insname, photo, reg_id, pin, roll_no, admit_class, dob, brnno)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 $stmt->bind_param(
-    "sisssssssssssssssssi",
+    "sisssssssssssssssssisss",
     $sessionyear,
     $sccode,
     $stnameeng,
@@ -89,7 +93,10 @@ $stmt->bind_param(
     $photoPath,
     $regid,
     $pin,
-    $next_roll
+    $next_roll,
+    $cls,
+    $dob,
+    $brnno
 );
 
 if ($stmt->execute()) {
@@ -97,10 +104,17 @@ if ($stmt->execute()) {
     $stmt->close();
 
     // মোবাইল ভেরিফিকেশন পেজে পাঠানো
-     echo json_encode([
+    echo json_encode([
         'status' => 'success',
-        'redirect' => 'mobile_verify.php?id=' .$insert_id
+        'redirect' => 'mobile_verify.php?id=' . $insert_id
     ]);
+    $_SESSION['admission'] = true;
+    $_SESSION['stname'] = $stnameeng;
+    $_SESSION['regid'] = $regid;
+    $_SESSION['pin'] = $pin;
+    $_SESSION['step'] = 'otp';
+    $_SESSION['id'] = $insert_id;
+
     exit;
     // header("Location: ../mobile_verify.php?id=$insert_id");
     // exit;

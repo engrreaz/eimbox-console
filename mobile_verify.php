@@ -2,15 +2,64 @@
 session_start();
 include('core/config.php');
 include('core/db.php');
-include('header-plain.php');
+include('core/core-val.php');
 
-$alert = '';
-$alert_text = '';
+
+
+$sccode = $_COOKIE['sccode'];
+if ($sccode == '') {
+    header("Location: admission-login.php");
+    exit;
+}
+
+if (isset($_SESSION['admission']) !== true && isset($_SESSION['step']) !== 'otp') {
+    header("Location: admission-login.php");
+}
+
+$id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+
+// session id as integer (if set)
+$sess_id = isset($_SESSION['id']) ? (int) $_SESSION['id'] : 0;
+
+// validate: যদি সেশন id নির্ধারিত না থাকে বা GET id এর সঙ্গে মিল না করে
+if ($sess_id === 0 || $id === 0 || $sess_id !== $id) {
+    $alert = 'danger';
+    $alert_text = 'Invalid ID';
+} else {
+    // valid: clear alerts (optional)
+    $alert = '';
+    $alert_text = '';
+}
+
+
+include_once('header-plain.php');
+include_once('actions/get-sc-data.php');
+
+
+?>
+
+<div>
+    <table class="mt-4 mb-6 " style="margin:auto;">
+        <tr>
+            <td><img src="<?php echo BASE_PATH . 'logo/' . $sccode . '.png'; ?> "
+                    style="max-width:50px; max-height:50px;" />
+            </td>
+            <td style="width:15px; border-right:5px solid gray;"></td>
+            <td style="width:15px;"></td>
+            <td>
+                <h3 class="m-0 p-0 fw-bold"><?= $scname; ?></h3>
+                <h6 class="m-0 p-0"><?= $address; ?></h6>
+
+            </td>
+        </tr>
+    </table>
+</div>
+<?php
+
+
 // SMS Gateway Configuration (example)
 $sms_api_url = "http://bulksmsbd.net/api/smsapi?api_key=tNrdSSziORSgTc85sDxJ&type=text&number=Receiver&senderid=8809617618425&message=TestSMS";
 $sms_api_key = "tNrdSSziORSgTc85sDxJ"; // <-- এখানে তোমার gateway key দাও
-
-
 
 function sms_send($number, $message)
 {
@@ -36,7 +85,7 @@ function sms_send($number, $message)
     return $response;
 }
 // ডাটাবেজ থেকে রেজিস্ট্রেশন তথ্য রিট্রিভ
-$id = $_GET['id'] ?? 0;
+
 $query = mysqli_query($conn, "SELECT * FROM registrations WHERE id='$id' LIMIT 1");
 $reg = mysqli_fetch_assoc($query);
 
@@ -77,7 +126,13 @@ if (isset($_POST['verify_otp'])) {
     } elseif ($entered_otp == $stored_otp) {
         mysqli_query($conn, "UPDATE registrations SET verified=1, verifytime=NOW() WHERE id='$id'");
 
+        $message = $_SESSION['stname'] . ',\n Your Regd. No. is ' . $_SESSION['regid'] . ' and login PIN is ' . $_SESSION['pin'] . '\nURL is https://console.eimbox.com/admisssion.login.php';
+        sms_send($mobile, $message);
+
         echo "<script>
+
+
+
             alert('Verification successful!');
             window.location='admit_card.php?id=$id';
         </script>";
@@ -99,17 +154,18 @@ if (isset($_POST['verify_otp'])) {
 <body class="bg-light">
     <div class="container" style="max-width:500px;margin-top:70px;">
         <div class="card shadow">
+
+
+
+            <div class="card-header text-white text-center">
+                <h5 class="text-info fw-bold">Mobile Number Verification<br>মোবাইল নাম্বার যাচাই</h5>
+            </div>
             <?php if ($alert_text != '') {
                 ?>
                 <div class="alert alert-<?= $alert; ?>"><?= $alert_text; ?> </div>
                 <?php
             }
             ?>
-
-
-            <div class="card-header text-white text-center">
-                <h5 class="text-info fw-bold">Mobile Number Verification<br>মোবাইল নাম্বার যাচাই</h5>
-            </div>
             <div class="card-body text-center">
                 <p>Mobile Number / মোবাইল নাম্বার : <strong><?php echo htmlspecialchars($mobile); ?></strong></p>
                 <form method="post">
@@ -127,7 +183,25 @@ if (isset($_POST['verify_otp'])) {
         </div>
     </div>
 
-  <?php  include('footer-plain.php'); ?>
+    <?php include('footer-plain.php'); ?>
+
+
+    <?php if ($alert_text != ''): ?>
+        <script>
+            $(document).ready(function () {
+                // alert_text আছে মানে invalid অবস্থা
+                $('form').on('submit', function (e) {
+                    e.preventDefault(); // ফরম সাবমিট বন্ধ
+                    alert('⚠️ Invalid form. Please check and reload the page.');
+                });
+
+                // চাইলে বোতামও disable করতে পারো
+                $('form button[type="submit"]').prop('disabled', true);
+            });
+        </script>
+    <?php endif; ?>
+
+
 </body>
 
 </html>

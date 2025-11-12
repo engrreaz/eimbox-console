@@ -44,9 +44,10 @@ include_once('actions/get-sc-data.php');
 
 
 
-  <p><a class="btn btn-primary" href="admit_card.php?id=<?= urlencode($data['id']) ?>" target="_blank">Download Entry
-      Ticket</a></p>
-  <p><a href="logout.php?admission" class="btn btn-outline-secondary">Logout</a></p>
+  <p><a class="btn btn-primary" href="admit_card.php?id=<?= urlencode($data['id']) ?>" target="_blank">
+    Download Admit Card / প্রবেশপত্র ডাউনলোড করো
+    </a></p>
+  <p><a href="logout.php?admission" class="btn btn-outline-secondary">Logout / লগআউট</a></p>
 </div>
 
 

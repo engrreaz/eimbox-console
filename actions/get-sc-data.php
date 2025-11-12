@@ -30,5 +30,8 @@ $address = trim(
     ($datainfo['scadd1'] ?? '') .
     (!empty($datainfo['scadd2'] ?? '') ? ', ' . $datainfo['scadd2'] : '') .
     (!empty($datainfo['ps'] ?? '') ? ', ' . $datainfo['ps'] : '') .
-    (!empty($datainfo['dist'] ?? '') ? ', ' . $datainfo['dist'] : '')
+    (!empty($datainfo['dist'] ?? '') ? ', ' . $datainfo['dist'] : '') 
+
 );
+$htname = $datainfo['headname'] ?? '';
+$httitle = $datainfo['headtitle'] ?? '';
