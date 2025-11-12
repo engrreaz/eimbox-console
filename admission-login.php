@@ -7,6 +7,12 @@ require_once 'core/core-val.php';
 
 
 
+?>
+
+
+
+<?php
+
 $reg = $_SESSION['student_reg'] ?? null;
 $sccode = $_SESSION['scode'] ?? null;
 if ($reg) {
@@ -14,8 +20,8 @@ if ($reg) {
     exit;
 }
 
-if ($sccode == null) {
-    $sccode = 103187;
+if ($sccode == null || $sccode == '') {
+    $sccode = $_COOKIE['sccode'] ?? '';
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -39,39 +45,108 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// ALTER TABLE `registrations` ADD `admit_class` VARCHAR(20) NULL DEFAULT 'Six' AFTER `sccode`;
 
 
-
+include_once 'actions/get-sc-data.php';
 
 require_once 'header-plain.php';
-include_once 'actions/get-sc-data.php';
+
 
 ?>
 
+
+<style>
+    /* মডাল ব্যাকগ্রাউন্ড */
+    .modal {
+        display: none;
+        /* hide by default */
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(241, 5, 5, 0.5);
+        /* আংশিক কালো ব্যাকগ্রাউন্ড */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    /* মডাল কন্টেন্ট */
+    .modal-content {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        text-align: center;
+    }
+</style>
+<!-- EIIN Input Modal -->
+<div id="eiinModal" class="modal" style="display:none;">
+    <div class="modal-content"
+        style="max-width:400px;margin:auto;padding:20px;border-radius:10px;box-shadow:0 0 10px #888;background:#fff;">
+        <h5 class="text-center m-0 p-0 ">Enter Your EIIN Number</h5>
+        <h5 class="text-center m-0 p-0">প্রতিষ্ঠানের ইআইআইএন নম্বর দাও</h5>
+        <input type="text" id="eiinInput" maxlength="6" placeholder="Enter 6-digit EIIN"
+            style="width:100%;padding:8px;font-size:16px;margin-top:10px;text-align:center;">
+
+        <div class="row mt-4">
+            <div class="col">
+                <button id=""
+                    style="margin-top:10px;width:100%;padding:8px;background:black;color:white;border:none;border-radius:6px;"
+                    onclick="closemodal();">
+                    Cancel
+                </button>
+
+
+            </div>
+            <div class="col">
+                <button id="saveEiin"
+                    style="margin-top:10px;width:100%;padding:8px;background:red;color:white;border:none;border-radius:6px;">
+                    Submit EIIN
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+<button style="position:fixed; top:20px; right:20px;" class="btn btn-outline-warning" onclick="openmodal();">Change
+    EIIN</button>
+
+
 <div class="container">
 
-    <div class="row">
-        <div class="col-12  ">
-            <table class="mt-4 mb-6 " style="margin:auto;">
-                <tr>
-                    <td><img src="<?php echo BASE_PATH . 'logo/' . $sccode . '.png'; ?> "
-                            style="max-width:50px; max-height:50px;" />
-                    </td>
-                    <td style="width:15px; border-right:5px solid gray;"></td>
-                    <td style="width:15px;"></td>
-                    <td>
-                        <h3 class="m-0 p-0 fw-bold"><?= $scname; ?></h3>
-                        <h6 class="m-0 p-0"><?= $address; ?></h6>
+    <?php if ($sccode != '') { ?>
+        <div class="row">
+            <div class="col-12  ">
+                <table class="mt-4 mb-6 " style="margin:auto;">
+                    <tr>
+                        <td><img src="<?php echo BASE_PATH . 'logo/' . $sccode . '.png'; ?> "
+                                style="max-width:50px; max-height:50px;" />
+                        </td>
+                        <td style="width:15px; border-right:5px solid gray;"></td>
+                        <td style="width:15px;"></td>
+                        <td>
+                            <h3 class="m-0 p-0 fw-bold"><?= $scname; ?></h3>
+                            <h6 class="m-0 p-0"><?= $address; ?></h6>
 
-                    </td>
-                </tr>
-            </table>
+                        </td>
+
+                    </tr>
+                </table>
+            </div>
         </div>
-    </div>
 
+    <?php } ?>
 
-
-    <div class="card mx-auto" style="max-width:420px;">
+    <div class="card mx-auto" style="max-width:420px; top:25%;">
         <div class="card-body">
             <h5 class="p-0 m-0">Student Login (Admission Only)</h5>
 
@@ -94,6 +169,73 @@ include_once 'actions/get-sc-data.php';
 
 <?php include_once('footer-plain.php'); ?>
 
+<script>
+    // Set cookie
+    function setCookie(name, value, days) {
+        const d = new Date();
+        d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+        const expires = "expires=" + d.toUTCString();
+        document.cookie = name + "=" + value + ";" + expires + ";path=/";
+    }
+
+    // Get cookie
+    function getCookie(name) {
+        const cname = name + "=";
+        const decodedCookie = decodeURIComponent(document.cookie);
+        const ca = decodedCookie.split(';');
+        for (let i = 0; i < ca.length; i++) {
+            let c = ca[i].trim();
+            if (c.indexOf(cname) === 0) return c.substring(cname.length, c.length);
+        }
+        return "";
+    }
+
+</script>
+
+
+<script>
+    $(document).ready(function () {
+        // PHP থেকে পাওয়া sccode
+        const phpSccode = "<?php echo $sccode ?? ''; ?>";
+        const localSccode = getCookie("sccode");
+
+        if (!phpSccode) {
+            if (!localSccode) {
+                // মডাল দেখাও
+                $('#eiinModal').fadeIn(200);
+            } else {
+                console.log('Using local sccode:', localSccode);
+            }
+        }
+
+        // EIIN সংরক্ষণ বাটন
+        $('#saveEiin').on('click', function () {
+            const eiin = $('#eiinInput').val().trim();
+            if (!/^\d{6}$/.test(eiin)) {
+                alert('Please enter a valid 6-digit EIIN number.');
+                return;
+            }
+
+            // লোকাল স্টোরেজে সংরক্ষণ
+            setCookie("sccode", eiin, 30); // ৩০ দিন মেয়াদ
+
+            // মডাল বন্ধ ও পেজ রিফ্রেশ
+            $('#eiinModal').fadeOut(200, function () {
+                location.reload();
+            });
+        });
+    });
+
+    function openmodal() {
+        $('#eiinModal').fadeIn(500);
+    }
+
+    function closemodal() {
+        $('#eiinModal').fadeOut(200, function () {
+            location.reload();
+        });
+    }
+</script>
 </body>
 
 </html>

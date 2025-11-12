@@ -5,6 +5,14 @@ require_once 'core/db.php';
 require_once 'header-plain.php';
 require_once 'core/core-val.php';
 
+
+$sccode = $_COOKIE['sccode'];
+if ($sccode == '') {
+    header("Location: admission-login.php");
+    exit;
+}
+
+
 $reg = $_SESSION['student_reg'] ?? null;
 $scode = $_SESSION['scode'] ?? null;
 if (!$reg) {

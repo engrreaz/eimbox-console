@@ -6,9 +6,9 @@ require_once 'db.php';
 $data = json_decode(file_get_contents('php://input'), true);
 
 $stmt = $conn->prepare("INSERT INTO user_actions (sccode,email,url,page,action,timestamp,ip,browser, points) VALUES (?,?,?,?,?,?,?,?,?)");
-$sccode = $data['sccode'];
+$sccode = $data['sccode'] ?? $_SESSION['sccode'] ?? '101010';
 $email = $data['email'];
-$url = $data['url'];
+$url = $data['url'] ?? basename($_SERVER['PHP_SELF']);;
 $page = $data['page'];
 $action = $data['action'];
 $point = $data['point'] ?? 0;

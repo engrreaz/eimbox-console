@@ -2,10 +2,19 @@
 session_start();
 include_once('core/config.php');
 include_once('core/db.php');
-
 include_once('core/core-val.php');
+include_once('core/global_values.php');
 
-$sccode = 103187;
+// require_once 'core/init.php';
+session_destroy();
+setcookie('remember_me', '', time() - 3600, '/', '', true, true);
+
+
+$sccode = $_COOKIE['sccode'];
+if ($sccode == '') {
+    header("Location: admission-login.php");
+    exit;
+}
 
 $reg = $_SESSION['student_reg'] ?? null;
 // $sccode = $_SESSION['scode'] ?? null;
@@ -58,7 +67,7 @@ include_once('actions/get-sc-data.php');
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
-        height: 100vh;
+        height: 98vh;
         border-radius: 5px;
         ">
         </div>
@@ -105,11 +114,12 @@ include_once('actions/get-sc-data.php');
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Mobile Number / মোবাইল নম্বর </label>
-                                    <input name="mnumber" class="form-control" required>
+                                    <input id="mnumber" name="mnumber" class="form-control" required>
                                 </div>
                             </div>
 
                             <!-- right: photo upload & crop (6 cols) -->
+                            <!-- ✳️ Student Photo Section -->
                             <div class="col-md-6">
                                 <label class="form-label">Student Photo (150x190) / শিক্ষার্থীর ছবি</label>
                                 <div class="mb-2">
@@ -125,8 +135,7 @@ include_once('actions/get-sc-data.php');
                                         <button type="button" class="btn btn-sm btn-outline-secondary" id="zoom-in">Zoom
                                             +</button>
                                         <button type="button" class="btn btn-sm btn-outline-secondary"
-                                            id="zoom-out">Zoom
-                                            -</button>
+                                            id="zoom-out">Zoom -</button>
                                         <button type="button" class="btn btn-sm btn-outline-danger"
                                             id="reset-crop">Reset</button>
                                         <button type="button" class="btn btn-sm btn-primary" id="crop-save">Save
@@ -136,20 +145,16 @@ include_once('actions/get-sc-data.php');
 
                                 <div class="mt-3">
                                     <div class="photo-preview" id="photoPreview">
-                                        <!-- preview here -->
                                         <img id="previewImg" src="" alt="Preview"
                                             style="width:150px; height:190px; object-fit:cover; display:none;">
                                     </div>
                                 </div>
 
-                                <!-- hidden input to hold base64 cropped image -->
-                                <input type="hidden" name="photo_data" id="photo_data">
-                                <div class="form-text mt-2">
-                                    Allowed size: up to 2MB. Final size will be 150x190 px.
-                                    <br>
-                                    গ্রহণযোগ্য ফাইলের আকার : সর্বোচ্চ ২এমবি। চুড়ান্ত আকার হবে ১৫০x১৯০ পিক্সেল।
-                                </div>
+                                <!-- ❌ Hidden Base64 input বাদ -->
                             </div>
+
+
+
                         </div>
                     </div>
                 </div>
@@ -247,64 +252,8 @@ include_once('footer-plain.php');
 ?>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
-<script>
-    let cropper;
-    const outputW = 150;
-    const outputH = 190;
 
-    $('#photoInput').on('change', function (e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        if (!file.type.startsWith('image/')) { alert('Please choose an image.'); return; }
-        const url = URL.createObjectURL(file);
-        $('#image-to-crop').attr('src', url);
-        $('#crop-area').show();
-
-        // destroy old cropper
-        if (cropper) cropper.destroy();
-
-        cropper = new Cropper(document.getElementById('image-to-crop'), {
-            aspectRatio: outputW / outputH,
-            viewMode: 1,
-            autoCropArea: 1,
-            responsive: true,
-            background: false,
-        });
-    });
-
-    $('#zoom-in').on('click', function () { if (cropper) cropper.zoom(0.1); });
-    $('#zoom-out').on('click', function () { if (cropper) cropper.zoom(-0.1); });
-    $('#reset-crop').on('click', function () { if (cropper) cropper.reset(); });
-
-    $('#crop-save').on('click', function () {
-        if (!cropper) return alert('No image selected');
-        // get cropped canvas with exact size
-        const canvas = cropper.getCroppedCanvas({
-            width: outputW,
-            height: outputH,
-            imageSmoothingQuality: 'high'
-        });
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-        $('#previewImg').attr('src', dataUrl).show();
-        $('#photo_data').val(dataUrl);
-        // hide crop area if you want
-        // $('#crop-area').hide();
-    });
-
-    // handle form submit: simple client-side check to ensure photo exists
-    $('#myForm').on('submit', function (e) {
-        // require photo_data
-        if (!$('#photo_data').val()) {
-            if (!confirm('You have not saved a photo. Proceed without photo?')) {
-                e.preventDefault();
-                return false;
-            }
-        }
-        // allow normal submit to actions/register_submit.php
-    });
-</script>
-
-
+<!-- 
 
 <script>
     $(function () {
@@ -350,15 +299,7 @@ include_once('footer-plain.php');
         });
 
         // copy selected names to hidden inputs before submit (optional but recommended)
-        $('#myForm').on('submit', function () {
-            const distName = $('#dist option:selected').data('name') || '';
-            const psName = $('#ps option:selected').data('name') || '';
-            if (!$('#dist_name').length) $(this).append('<input type="hidden" name="dist_name" id="dist_name">');
-            if (!$('#ps_name').length) $(this).append('<input type="hidden" name="ps_name" id="ps_name">');
-            $('#dist_name').val(distName);
-            $('#ps_name').val(psName);
-            return true;
-        });
+       
 
     });
 </script>
@@ -429,25 +370,257 @@ include_once('footer-plain.php');
         });
 
         // copy selected names to hidden inputs before submit (optional)
-        $('#myForm').on('submit', function () {
-            const insDistName = $('#insdist option:selected').data('name') || '';
-            const insPSName = $('#insps option:selected').data('name') || '';
-            if (!$('#insdist_name').length) $(this).append('<input type="hidden" name="insdist_name" id="insdist_name">');
-            if (!$('#insps_name').length) $(this).append('<input type="hidden" name="insps_name" id="insps_name">');
-            $('#insdist_name').val(insDistName);
-            $('#insps_name').val(insPSName);
-            return true;
+        /*
+         $('#myForm').on('submit', function () {
+             const insDistName = $('#insdist option:selected').data('name') || '';
+             const insPSName = $('#insps option:selected').data('name') || '';
+             if (!$('#insdist_name').length) $(this).append('<input type="hidden" name="insdist_name" id="insdist_name">');
+             if (!$('#insps_name').length) $(this).append('<input type="hidden" name="insps_name" id="insps_name">');
+             $('#insdist_name').val(insDistName);
+             $('#insps_name').val(insPSName);
+             return true;
+         });
+         */
+
+    });
+</script>
+ -->
+
+<script>
+    $(function () {
+
+        const districtsUrl = 'assets/json/districts.json';
+        const upazilasUrl = 'assets/json/upazilas.json';
+
+        // --- Student District/PS ---
+        var preselectedDistrict = window.preselectedDistrict || '';
+        var preselectedPS = window.preselectedPS || '';
+
+        // Load Districts
+        $.getJSON(districtsUrl, function (data) {
+            let districts = [];
+            const tableObj = data.find(x => x.type === 'table' && x.name === 'districts');
+            if (tableObj && Array.isArray(tableObj.data)) districts = tableObj.data;
+
+            // Sort by English name
+            districts.sort((a, b) => a.name.localeCompare(b.name));
+
+            districts.forEach(d => {
+                const label = `(${d.bn_name}) ${d.name}`;
+                $('#dist').append($('<option>', { value: d.id, text: label, 'data-name': d.name }));
+            });
+
+            if (preselectedDistrict) $('#dist').val(preselectedDistrict).trigger('change');
         });
 
+        $('#dist').on('change', function () {
+            const districtId = $(this).val();
+            $('#ps').prop('disabled', true).html('<option>Loading...</option>');
+
+            if (!districtId) {
+                $('#ps').prop('disabled', true).html('<option value="">-- Select PS / Upazila --</option>');
+                return;
+            }
+
+            $.getJSON(upazilasUrl, function (data) {
+                let upazilas = [];
+                const tableObj = data.find(x => x.type === 'table' && x.name === 'upazilas');
+                if (tableObj && Array.isArray(tableObj.data)) upazilas = tableObj.data;
+
+                // Filter by district_id
+                const filtered = upazilas.filter(u => String(u.district_id) === String(districtId));
+
+                // Sort by English name
+                filtered.sort((a, b) => a.name.localeCompare(b.name));
+
+                let html = '<option value="">-- Select PS / Upazila --</option>';
+                filtered.forEach(u => {
+                    const label = `(${u.bn_name}) ${u.name}`;
+                    html += `<option value="${u.name}" data-name="${u.name}">${label}</option>`;
+                });
+
+                $('#ps').prop('disabled', false).html(html);
+                if (preselectedPS) $('#ps').val(preselectedPS);
+            }).fail(function () {
+                $('#ps').prop('disabled', true).html('<option value="">Failed to load</option>');
+            });
+        });
+
+
+        // --- Institute District/PS ---
+        var preselectedInsDistrict = window.preselectedInsDistrict || '';
+        var preselectedInsPS = window.preselectedInsPS || '';
+
+        $.getJSON(districtsUrl, function (data) {
+            let districts = [];
+            const tableObj = data.find(x => x.type === 'table' && x.name === 'districts');
+            if (tableObj && Array.isArray(tableObj.data)) districts = tableObj.data;
+
+            districts.sort((a, b) => a.name.localeCompare(b.name));
+
+            districts.forEach(d => {
+                const label = `(${d.bn_name}) ${d.name}`;
+                $('#insdist').append($('<option>', { value: d.id, text: label, 'data-name': d.name }));
+            });
+
+            if (preselectedInsDistrict) $('#insdist').val(preselectedInsDistrict).trigger('change');
+        });
+
+        $('#insdist').on('change', function () {
+            const districtId = $(this).val();
+            $('#insps').prop('disabled', true).html('<option>Loading...</option>');
+
+            if (!districtId) {
+                $('#insps').prop('disabled', true).html('<option value="">-- Select Institute PS / Upazila --</option>');
+                return;
+            }
+
+            $.getJSON(upazilasUrl, function (data) {
+                let upazilas = [];
+                const tableObj = data.find(x => x.type === 'table' && x.name === 'upazilas');
+                if (tableObj && Array.isArray(tableObj.data)) upazilas = tableObj.data;
+
+                const filtered = upazilas.filter(u => String(u.district_id) === String(districtId));
+                filtered.sort((a, b) => a.name.localeCompare(b.name));
+
+                let html = '<option value="">-- Select Institute PS / Upazila --</option>';
+                filtered.forEach(u => {
+                    const label = `(${u.bn_name}) ${u.name}`;
+                    html += `<option value="${u.name}" data-name="${u.name}">${label}</option>`;
+                });
+
+                $('#insps').prop('disabled', false).html(html);
+                if (preselectedInsPS) $('#insps').val(preselectedInsPS);
+            }).fail(function () {
+                $('#insps').prop('disabled', true).html('<option value="">Failed to load</option>');
+            });
+        });
+
+    });
+
+
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
+<script>
+    $(function () {
+        let cropper;
+        let croppedBlob = null;
+        const outputW = 150;
+        const outputH = 190;
+
+        $('#photoInput').on('change', function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (!file.type.startsWith('image/')) {
+                alert('Please choose a valid image file.');
+                return;
+            }
+
+            const url = URL.createObjectURL(file);
+            $('#image-to-crop').attr('src', url);
+            $('#crop-area').show();
+
+            if (cropper) cropper.destroy();
+
+            cropper = new Cropper(document.getElementById('image-to-crop'), {
+                aspectRatio: outputW / outputH,
+                viewMode: 1,
+                autoCropArea: 1,
+                responsive: true,
+                background: false
+            });
+        });
+
+        $('#zoom-in').on('click', () => cropper && cropper.zoom(0.1));
+        $('#zoom-out').on('click', () => cropper && cropper.zoom(-0.1));
+        $('#reset-crop').on('click', () => cropper && cropper.reset());
+
+        $('#crop-save').on('click', function () {
+            if (!cropper) return alert('No image selected.');
+
+            cropper.getCroppedCanvas({
+                width: outputW,
+                height: outputH,
+                imageSmoothingQuality: 'high'
+            }).toBlob(function (blob) {
+                croppedBlob = blob;
+                const previewURL = URL.createObjectURL(blob);
+                $('#previewImg').attr('src', previewURL).show();
+                $('#crop-area').hide();
+            }, 'image/jpeg', 0.95);
+        });
+
+        $('#myForm').on('submit', function (e) {
+            e.preventDefault(); // prevent normal form submission
+
+
+            const mobile = document.getElementById('mnumber').value.trim();
+
+            // RegEx: 0 দিয়ে শুরু, মোট 11 সংখ্যা
+            const regex = /^0\d{10}$/;
+
+            if (!regex.test(mobile)) {
+                alert('দয়া করে একটি সঠিক 11 ডিজিটের মোবাইল নম্বর লিখুন, যা 0 দিয়ে শুরু হবে।');
+                return false;
+            }
+
+
+            // Build FormData
+            const formData = new FormData(this);
+            // console.log(formData);
+            for (const [key, value] of formData.entries()) {
+                console.log(key, value);
+            }
+
+
+            if (croppedBlob) {
+                formData.append('photo', croppedBlob, 'photo.jpg');
+            }
+
+            $('#submitBtn').prop('disabled', true).text('Submitting...');
+
+            $.ajax({
+                url: 'core/register_process.php',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                dataType: 'json',
+                success: function (res) {
+                    $('#submitBtn').prop('disabled', false).text('Submit');
+                    console.log('Server Response:', res);
+                    alert('Raw response: ' + JSON.stringify(res.status));
+                    // ✅ যদি PHP থেকে JSON response আসে
+
+                    if (res.status === 'success') {
+                        // ফর্ম রিসেট
+                        $('#myForm')[0].reset();
+                        $('#previewImg').hide();
+                        croppedBlob = null;
+
+                        // ✅ Redirect
+                        if (res.redirect) {
+                            window.location.href = res.redirect;
+                        } else {
+                            alert('Registration successful!');
+                        }
+                    } else {
+                        alert('Registration failed! Please try again.');
+                    }
+                },
+                error: function (xhr, status, error) {
+                    $('#submitBtn').prop('disabled', false).text('Submit');
+                    alert('Upload failed: ' + error);
+                }
+            });
+        });
     });
 </script>
 
 
 
-
-<script>
-
-</script>
 
 </body>
 

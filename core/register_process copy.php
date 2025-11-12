@@ -2,7 +2,6 @@
 include('config.php');
 include('db.php');
 
-
 // ফর্ম ডেটা
 $stnameeng = $_POST['stnameeng'] ?? '';
 $stnameben = $_POST['stnameben'] ?? '';
@@ -18,7 +17,8 @@ $insdist = $_POST['insdist'] ?? '';
 $insps = $_POST['insps'] ?? '';
 $inspo = $_POST['inspo'] ?? '';
 $insname = $_POST['insname'] ?? '';
-// $photo_data = $_POST['photo_data'] ?? '';
+$photo_data = $_POST['photo_data'] ?? ''; 
+
 
 // Session Year ও SCCODE
 $sessionyear = $_POST['sessionyear'] ?? '2026';
@@ -37,8 +37,8 @@ $stmt->execute();
 $result = $stmt->get_result();
 
 $last_roll = 0;
-if ($row = $result->fetch_assoc()) {
-    $last_roll = (int) $row['roll_no']; // শেষ রোল নম্বর
+if($row = $result->fetch_assoc()){
+    $last_roll = (int)$row['roll_no']; // শেষ রোল নম্বর
 }
 $stmt->close();
 $next_roll = $last_roll + 1; // নতুন রোল
@@ -48,8 +48,7 @@ $photoPath = '';
 
 if (!empty($_FILES['photo']['tmp_name'])) {
     $uploadDir = '../uploads/photos/';
-    if (!is_dir($uploadDir))
-        mkdir($uploadDir, 0777, true);
+    if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
 
     $filename = 'photo_' . $sccode . '_' . time() . '.jpg';
     $filepath = $uploadDir . $filename;
@@ -68,28 +67,13 @@ $pin = rand(100000, 999999);
 $stmt = $conn->prepare("INSERT INTO registrations 
 (sessionyear, sccode, stnameeng, stnameben, fname, mname, mnumber, dist, ps, po, village, testno, insdist, insps, inspo, insname, photo, reg_id, pin, roll_no)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+// ✅ মোট 19টা ভ্যালু => টাইপ স্ট্রিং 19 অক্ষরের
 $stmt->bind_param(
     "sisssssssssssssssssi",
-    $sessionyear,
-    $sccode,
-    $stnameeng,
-    $stnameben,
-    $fname,
-    $mname,
-    $mnumber,
-    $dist,
-    $ps,
-    $po,
-    $village,
-    $testno,
-    $insdist,
-    $insps,
-    $inspo,
-    $insname,
-    $photoPath,
-    $regid,
-    $pin,
-    $next_roll
+    $sessionyear, $sccode, $stnameeng, $stnameben, $fname, $mname, $mnumber,
+    $dist, $ps, $po, $village, $testno, $insdist, $insps, $inspo, $insname,
+    $photo_path, $regid, $pin, $next_roll
 );
 
 if ($stmt->execute()) {
@@ -97,13 +81,8 @@ if ($stmt->execute()) {
     $stmt->close();
 
     // মোবাইল ভেরিফিকেশন পেজে পাঠানো
-     echo json_encode([
-        'status' => 'success',
-        'redirect' => 'mobile_verify.php?id=' .$insert_id
-    ]);
+    header("Location: ../mobile_verify.php?id=$insert_id");
     exit;
-    // header("Location: ../mobile_verify.php?id=$insert_id");
-    // exit;
 } else {
     echo "<div class='alert alert-danger'>Registration failed: " . $stmt->error . "</div>";
     $stmt->close();
