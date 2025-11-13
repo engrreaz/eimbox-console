@@ -112,7 +112,7 @@ include_once('actions/get-sc-data.php');
                                     <label class="form-label">Mother's Name / মাতার নাম</label>
                                     <input name="mname" class="form-control">
                                 </div>
-                                
+
                             </div>
 
                             <!-- right: photo upload & crop (6 cols) -->
@@ -156,25 +156,26 @@ include_once('actions/get-sc-data.php');
                     </div>
                 </div>
 
-                    <div class="card mb-3">
+                <div class="card mb-3">
                     <div class="card-header">
                         <!-- <h5 class="mb-0 text-info fw-bold">Address / ঠিকানা </h5> -->
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
                             <div class="col-md-3">
-                         
-                                    <label class="form-label">Mobile Number / মোবাইল নম্বর </label>
-                                    <input id="mnumber" name="mnumber" class="form-control" required>
-                        
+
+                                <label class="form-label">Mobile Number / মোবাইল নম্বর </label>
+                                <input id="mnumber" name="mnumber" class="form-control" required>
+
                             </div>
                             <div class="col-md-3">
                                 <label for="ps" class="form-label">Date of Birth / জন্ম তারিখ </label>
-                                                                    <input type="date" id="dob" name="dob" class="form-control" value="" required>
+                                <input type="date" id="dob" name="dob" class="form-control" value="" required>
 
                             </div>
                             <div class="col-md-6">
-                                <label for="po" class="form-label">Birth Registration Number / জন্ম নিবন্ধন নম্বর</label>
+                                <label for="po" class="form-label">Birth Registration Number / জন্ম নিবন্ধন
+                                    নম্বর</label>
                                 <input name="brnno" class="form-control" placeholder="Birth Registration Number">
                             </div>
                         </div>
@@ -430,7 +431,7 @@ include_once('footer-plain.php');
 
             districts.forEach(d => {
                 const label = `(${d.bn_name}) ${d.name}`;
-                $('#dist').append($('<option>', { value: d.id, text: label, 'data-name': d.name }));
+                $('#dist').append($('<option>', { value: d.id, text: label, 'data-name': d.name, 'data-address': d.name }));
             });
 
             if (preselectedDistrict) $('#dist').val(preselectedDistrict).trigger('change');
@@ -483,7 +484,7 @@ include_once('footer-plain.php');
 
             districts.forEach(d => {
                 const label = ` ${d.name}(${d.bn_name})`;
-                $('#insdist').append($('<option>', { value: d.id, text: label, 'data-name': d.name }));
+                $('#insdist').append($('<option>', { value: d.id, text: label, 'data-name': d.name, 'data-ins': d.name }));
             });
 
             if (preselectedInsDistrict) $('#insdist').val(preselectedInsDistrict).trigger('change');
@@ -602,6 +603,13 @@ include_once('footer-plain.php');
                 formData.append('photo', croppedBlob, 'photo.jpg');
             }
 
+            // formData.append('photo', croppedBlob, 'photo.jpg');
+
+            var dd = $('#dist option:selected').data('address');
+            var dd2 = $('#insdist option:selected').data('ins');
+            formData.set('dist', dd);
+            formData.set('insdist', dd2);
+
             $('#submitBtn').prop('disabled', true).text('Submitting...');
 
             $.ajax({
@@ -614,10 +622,14 @@ include_once('footer-plain.php');
                 success: function (res) {
                     $('#submitBtn').prop('disabled', false).text('Submit');
                     console.log('Server Response:', res);
+
                     alert('Raw response: ' + JSON.stringify(res.status));
                     // ✅ যদি PHP থেকে JSON response আসে
 
                     if (res.status === 'success') {
+
+                        // const p = new Notyf({ duration: 3000, position: { x: 'right', y: 'top' } }); p.success("Admission Form Submit Successfully.");
+
                         // ফর্ম রিসেট
                         $('#myForm')[0].reset();
                         $('#previewImg').hide();

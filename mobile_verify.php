@@ -4,7 +4,7 @@ include('core/config.php');
 include('core/db.php');
 include('core/core-val.php');
 
-
+// echo $_SESSION['otp'];
 
 $sccode = $_COOKIE['sccode'];
 if ($sccode == '') {
@@ -121,7 +121,7 @@ if (isset($_POST['verify_otp'])) {
 
     if ((time() - $otp_time) > 300) { // ৫ মিনিট পর মেয়াদ শেষ
         $alert = 'danger';
-        $alert_text = "'OTP expired. Please request a new one.";
+        $alert_text = "'OTP expired. Please Register Again.";
         unset($_SESSION['otp']);
     } elseif ($entered_otp == $stored_otp) {
         mysqli_query($conn, "UPDATE registrations SET verified=1, verifytime=NOW() WHERE id='$id'");
@@ -129,14 +129,16 @@ if (isset($_POST['verify_otp'])) {
         $message = $_SESSION['stname'] . ',\n Your Regd. No. is ' . $_SESSION['regid'] . ' and login PIN is ' . $_SESSION['pin'] . '\nURL is https://console.eimbox.com/admisssion.login.php';
         // sms_send($mobile, $message);
 
-        echo "<script>
-
-
-
+       echo "
+            <script>
             alert('Verification successful!');
-            window.location='admit_card.php?id=$id';
-        </script>";
+            if (confirm('Do you want to open Admit Card?')) {
+                window.open('admit_card.php?id=$id', '_blank');
+            }
+            </script>
+            ";
         exit;
+
     } else {
         echo "<script>alert('Incorrect OTP');</script>";
     }

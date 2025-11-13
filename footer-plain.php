@@ -39,6 +39,7 @@
 <script src="assets/js/pages-auth-two-steps.js"></script>
 <script src="assets/js/app-logistics-dashboard.js"></script>
 <script src="assets/js/pages-auth-multisteps.js"></script>
+<script src="assets/js/ui-toasts.js"></script>
 
 
 

@@ -92,6 +92,9 @@
     <link rel="stylesheet"
         href="https://demos.themeselection.com/materio-bootstrap-html-admin-template/assets/vendor/libs/bs-stepper/bs-stepper.css" />
 
+    <link rel="stylesheet" href="assets/vendor/libs/animate-css/animate.css" />
+    <link rel="stylesheet" href="assets/vendor/libs/notyf/notyf.css" />
+
     <!-- Helpers -->
     <script src="assets/vendor/js/helpers.js"></script>
     <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
