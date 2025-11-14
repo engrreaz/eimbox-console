@@ -13,6 +13,9 @@
 </button>
 
 
+<div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 2000"></div>
+
+
 <!-- Core JS -->
 <!-- build:js assets/vendor/js/theme.js  -->
 <script src="assets/vendor/libs/jquery/jquery.js"></script>
@@ -40,6 +43,11 @@
 <script src="assets/js/app-logistics-dashboard.js"></script>
 <script src="assets/js/pages-auth-multisteps.js"></script>
 <script src="assets/js/ui-toasts.js"></script>
+
+
+<script src="assets/js/eimbox.js"></script>
+
+
 
 
 

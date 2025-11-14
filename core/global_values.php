@@ -148,13 +148,17 @@ $sccode = $_SESSION['sccode'] ?? '';
 
 $sctype = $_SESSION['sccategory'] ?? '';
 $scname = $_SESSION['scname'] ?? '';
+$scaddress = $_SESSION['scaddress_top_full']  ?? '';
+$scmobile = $_SESSION['scmobile'] ?? '';
 
 
-
-
-
-$admin_data = json_decode($_SESSION['admin_data'] ?? '', true);
+$raw_json = $_SESSION['admin_data'] ?? '';
+$raw_json = trim($raw_json);
+$admin_data = json_decode($raw_json, true);
 $sccode_current_package = $admin_data['package']['id'] ?? 2;
+$rootuser =  $_SESSION['rootuser'] ;
+
+
 
 
 

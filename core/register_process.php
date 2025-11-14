@@ -10,13 +10,13 @@ $stnameben = $_POST['stnameben'] ?? '';
 $fname = $_POST['fname'] ?? '';
 $mname = $_POST['mname'] ?? '';
 $mnumber = $_POST['mnumber'] ?? '';
-$dist = $_POST['dist'] ?? '';
-$ps = $_POST['ps'] ?? '';
+$dist = htmlspecialchars($_POST['dist'] ?? '', ENT_QUOTES, 'UTF-8');
+$ps = htmlspecialchars($_POST['ps'] ?? '', ENT_QUOTES, 'UTF-8');
 $po = $_POST['po'] ?? '';
 $village = $_POST['village'] ?? '';
 $testno = $_POST['testno'] ?? '';
-$insdist = $_POST['insdist'] ?? '';
-$insps = $_POST['insps'] ?? '';
+$insdist = htmlspecialchars($_POST['insdist'] ?? '', ENT_QUOTES, 'UTF-8');
+$insps = htmlspecialchars($_POST['insps'] ?? '', ENT_QUOTES, 'UTF-8');
 $inspo = $_POST['inspo'] ?? '';
 $insname = $_POST['insname'] ?? '';
 $dob = $_POST['dob'] ?? '';
@@ -27,6 +27,16 @@ $cls = $_POST['admit_class'] ?? 'Six';
 // Session Year ও SCCODE
 $sessionyear = $_POST['sessionyear'] ?? '2026';
 $sccode = $_POST['sccode'] ?? NULL;
+
+$religion = $_POST['religion'] ?? NULL;
+$gender = $_POST['gender'] ?? NULL;
+$bgroup = htmlspecialchars($_POST['bgroup'] ?? NULL, ENT_QUOTES, 'UTF-8');
+$falive = $_POST['falive'] ?? NULL;
+$fmobile = $_POST['fmobile'] ?? NULL;
+$malive = $_POST['malive'] ?? NULL;
+$mmobile = $_POST['mmobile'] ?? NULL;
+$guar = $_POST['guar'] ?? NULL;
+$guarname = $_POST['guarname'] ?? NULL;
 
 
 $query = "SELECT roll_no 
@@ -70,10 +80,12 @@ $pin = rand(100000, 999999);
 
 // ডাটাবেজ ইনসার্ট
 $stmt = $conn->prepare("INSERT INTO registrations 
-(sessionyear, sccode, stnameeng, stnameben, fname, mname, mnumber, dist, ps, po, village, testno, insdist, insps, inspo, insname, photo, reg_id, pin, roll_no, admit_class, dob, brnno)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+(sessionyear, sccode, stnameeng, stnameben, fname, mname, mnumber, dist, ps, po, village, 
+    testno, insdist, insps, inspo, insname, photo, reg_id, pin, roll_no, admit_class, dob, brnno,
+    religion, gender, bgroup, falive, fmobile, malive, mmobile, guar, guarname)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 $stmt->bind_param(
-    "sisssssssssssssssssisss",
+    "sisssssssssssssssssissssssssssss",
     $sessionyear,
     $sccode,
     $stnameeng,
@@ -96,7 +108,16 @@ $stmt->bind_param(
     $next_roll,
     $cls,
     $dob,
-    $brnno
+    $brnno,
+    $religion,
+    $gender,
+    $bgroup,
+    $falive,
+    $fmobile,
+    $malive,
+    $mmobile,
+    $guar,
+    $guarmobile
 );
 
 if ($stmt->execute()) {
@@ -122,4 +143,3 @@ if ($stmt->execute()) {
     echo "<div class='alert alert-danger'>Registration failed: " . $stmt->error . "</div>";
     $stmt->close();
 }
-?>

@@ -40,6 +40,7 @@ include_once('actions/get-sc-data.php');
         overflow: hidden;
         display: inline-block;
         background: #f8f9fa;
+        border-radius: 5px;
     }
 
     .cropper-container img {
@@ -53,221 +54,356 @@ include_once('actions/get-sc-data.php');
 </style>
 
 
+
+
+
+
 <div class="row">
-    <div class="col-12 ">
+    <div class="col-md-4 " style="
+            background-image: url('assets/images/core/regd-form.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            height: 98vh;
+            border-radius: 5px;
+            text-align:center;
+            ">
 
-
+        <button class="btn btn-white top-50 text-center " style="position:relative;  " onclick="back();">
+            Back to Login</button>
     </div>
-</div>
 
-<div class="col-xxl">
-    <div class="row">
-        <div class="col-md-4 " style="
-        background-image: url('assets/images/core/regd-form.jpg');
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        height: 98vh;
-        border-radius: 5px;
-        ">
+
+    <div class="col-md-8">
+
+        <?php include_once('actions/sc-header.php'); ?>
+
+
+        <div class="row ps-3 pe-3 mb-1 ">
+            <div class="col-12 text-center  alert alert-primary m-0">
+                <h3 class="m-0 p-0 fw-bold text-primary "> Admission Form </h3>
+                <div class="m-0 p-0 text-danger">
+                    (All fields must be completed. | সব ফিল্ড সম্পূর্ণভাবে পূরণ করতে হবে।)
+                    <br>
+                    শুধুমাত্র বাংলায় শিক্ষার্থীর নাম বাংলায় পূরণ করবে। বাকী সকল তথ্য ইংরেজীতে হবে।
+                </div>
+            </div>
         </div>
 
+        <form id="myForm" action="core/register_process.php" method="POST" enctype="multipart/form-data">
 
-        <div class="col-md-8">
+            <input type="hidden" name="sccode" value="<?= $sccode; ?>">
+            <!-- Card 1: Basic Information -->
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-info fw-bold">Student's Information / শিক্ষার্থীর তথ্য</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- left: inputs (6 cols) -->
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Name (English) / নাম (ইংরেজীতে) <span
+                                        class="text-danger">*</span></label>
+                                <input name="stnameeng" class="form-control" placeholder="Name of Student in English">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Name (Bangla) / নাম (বাংলায়) <span
+                                        class="text-danger">*</span></label>
+                                <input name="stnameben" class="form-control" placeholder="বাংলায় শিক্ষার্থীর নাম">
+                            </div>
+                            <div class="mb-3">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <label class="form-label">Religion / ধর্ম <span
+                                                class="text-danger">*</span></label>
+                                        <select name="religion" class="form-select">
+                                            <option value=""> -- Choose One --</option>
+                                            <option value="Islam">Islam</option>
+                                            <option value="Hindu">Hindu</option>
+                                            <option value="Christian">Christian</option>
+                                            <option value="Buddist">Buddist</option>
+                                            <option value="Others">Others</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label">Gender / লিঙ্গ <span
+                                                class="text-danger">*</span></label>
+                                        <select name="gender" class="form-select">
+                                            <option value=""> -- Choose One --</option>
+                                            <option value="Boy">Boy</option>
+                                            <option value="Girl">Girl</option>
+                                        </select>
+                                    </div>
+                                </div>
 
-            <?php include_once('actions/sc-header.php'); ?>
 
 
-            <div class="row ps-3 pe-3 mb-3 p-0">
-                <div class="col-12 text-center  alert alert-primary m-0">
-                    <h3 class="m-0 p-0 fw-bold text-primary"> Admission Form </h3>
+                            </div>
+                        </div>
+                        <!-- right: photo upload & crop (6 cols) -->
+                        <!-- ✳️ Student Photo Section -->
+                        <div class="col-md-6">
+                            <label class="form-label">Student Photo (150x190) / শিক্ষার্থীর ছবি <span
+                                    class="text-danger">*</span></label>
+                            <div class="mb-2">
+                                <input id="photoInput" type="file" accept="image/*" class="form-control">
+                            </div>
+
+                            <div id="crop-area" style="display:none;">
+                                <div style="max-width:320px;">
+                                    <img id="image-to-crop" src="" style="max-width:100%; display:block;">
+                                </div>
+
+                                <div class="mt-2">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="zoom-in">Zoom
+                                        +</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="zoom-out">Zoom
+                                        -</button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                        id="reset-crop">Reset</button>
+                                    <button type="button" class="btn btn-sm btn-primary" id="crop-save">Save
+                                        Photo</button>
+                                </div>
+                            </div>
+
+                            <div class="mt-3">
+                                <div class="photo-preview" id="photoPreview">
+                                    <img id="previewImg" src="" alt="Preview"
+                                        style="width:150px; height:190px; object-fit:cover; display:none;">
+                                </div>
+                            </div>
+
+                        </div>
+
+
+
+                    </div>
                 </div>
             </div>
 
-            <form id="myForm" action="core/register_process.php" method="POST" enctype="multipart/form-data">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <!-- <h5 class="mb-0 text-info fw-bold">Address / ঠিকানা </h5> -->
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
 
-                <input type="hidden" name="sccode" value="<?= $sccode; ?>">
-                <!-- Card 1: Basic Information -->
-                <div class="card mb-3">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0 text-info fw-bold">Student's Information / শিক্ষার্থীর তথ্য</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <!-- left: inputs (6 cols) -->
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Name (English) / নাম (ইংরেজীতে)</label>
-                                    <input name="stnameeng" class="form-control" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Name (Bangla) / নাম (বাংলায়)</label>
-                                    <input name="stnameben" class="form-control">
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Father's Name / পিতার নাম</label>
-                                    <input name="fname" class="form-control">
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Mother's Name / মাতার নাম</label>
-                                    <input name="mname" class="form-control">
-                                </div>
+                            <label class="form-label">Blood Group/ রক্তের গ্রুপ</label>
+                            <select name="bgroup" class="form-select">
+                                <option value=""> -- Choose One --</option>
+                                <option value="A+">A+</option>
+                                <option value="A-">A-</option>
+                                <option value="B+">B+</option>
+                                <option value="B-">B-</option>
+                                <option value="AB+">AB+</option>
+                                <option value="AB-">AB-</option>
+                                <option value="O+">O+</option>
+                                <option value="O-">O-</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="ps" class="form-label">Date of Birth / জন্ম তারিখ <span
+                                    class="text-danger">*</span></label>
+                            <input type="date" id="dob" name="dob" class="form-control" value=""
+                                placeholder="Date of Birth">
 
-                            </div>
-
-                            <!-- right: photo upload & crop (6 cols) -->
-                            <!-- ✳️ Student Photo Section -->
-                            <div class="col-md-6">
-                                <label class="form-label">Student Photo (150x190) / শিক্ষার্থীর ছবি</label>
-                                <div class="mb-2">
-                                    <input id="photoInput" type="file" accept="image/*" class="form-control">
-                                </div>
-
-                                <div id="crop-area" style="display:none;">
-                                    <div style="max-width:320px;">
-                                        <img id="image-to-crop" src="" style="max-width:100%; display:block;">
-                                    </div>
-
-                                    <div class="mt-2">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary" id="zoom-in">Zoom
-                                            +</button>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary"
-                                            id="zoom-out">Zoom -</button>
-                                        <button type="button" class="btn btn-sm btn-outline-danger"
-                                            id="reset-crop">Reset</button>
-                                        <button type="button" class="btn btn-sm btn-primary" id="crop-save">Save
-                                            Photo</button>
-                                    </div>
-                                </div>
-
-                                <div class="mt-3">
-                                    <div class="photo-preview" id="photoPreview">
-                                        <img id="previewImg" src="" alt="Preview"
-                                            style="width:150px; height:190px; object-fit:cover; display:none;">
-                                    </div>
-                                </div>
-
-                                <!-- ❌ Hidden Base64 input বাদ -->
-                            </div>
-
-
-
+                        </div>
+                        <div class="col-md-6">
+                            <label for="po" class="form-label">Birth Registration Number / জন্ম নিবন্ধন
+                                নম্বর</label>
+                            <input name="brnno" class="form-control" placeholder="Birth Registration Number">
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="card mb-3">
-                    <div class="card-header">
-                        <!-- <h5 class="mb-0 text-info fw-bold">Address / ঠিকানা </h5> -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0 text-info fw-bold">Parents Information / পিতা/মাতার তথ্যাবলী </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+
+                            <label class="form-label">Father's Name / পিতার নাম <span
+                                    class="text-danger">*</span></label>
+                            <input name="fname" class="form-control" placeholder="Father's Name">
+
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Alive / জীবিত <span class="text-danger">*</span></label>
+                            <select name="falive" class="form-select">
+                                <option value=""> -- Choose One --</option>
+                                <option value="Yes">Alive / জীবিত</option>
+                                <option value="No">Died / মৃত</option>
+                            </select>
+
+                        </div>
+                        <div class="col-md-4">
+                            <label for="fmobile" class="form-label">Mobile Number / মোবাইল নম্বর
+                                নম্বর</label>
+                            <input name="fmobile" class="form-control" placeholder="Father's Mobile Number">
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-3">
+                    <div class="row g-3">
+                        <div class="col-md-6">
 
-                                <label class="form-label">Mobile Number / মোবাইল নম্বর </label>
-                                <input id="mnumber" name="mnumber" class="form-control" required>
+                            <label class="form-label">Mother's Name / মাতার নাম <span
+                                    class="text-danger">*</span></label>
+                            <input name="mname" class="form-control" placeholder="Mother's Name">
 
-                            </div>
-                            <div class="col-md-3">
-                                <label for="ps" class="form-label">Date of Birth / জন্ম তারিখ </label>
-                                <input type="date" id="dob" name="dob" class="form-control" value="" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Alive / জীবিত <span class="text-danger">*</span></label>
+                            <select name="malive" class="form-select">
+                                <option value=""> -- Choose One --</option>
+                                <option value="Yes">Alive / জীবিত</option>
+                                <option value="No">Died / মৃত</option>
+                            </select>
 
-                            </div>
-                            <div class="col-md-6">
-                                <label for="po" class="form-label">Birth Registration Number / জন্ম নিবন্ধন
-                                    নম্বর</label>
-                                <input name="brnno" class="form-control" placeholder="Birth Registration Number">
-                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="mmobile" class="form-label">Mobile Number / মোবাইল নম্বর
+                                নম্বর</label>
+                            <input name="mmobile" class="form-control" placeholder="Mother's Mobile Number">
                         </div>
                     </div>
                 </div>
+            </div>
 
 
-                <!-- Card 2: Address -->
-                <div class="card mb-3">
-                    <div class="card-header">
-                        <h5 class="mb-0 text-info fw-bold">Address / ঠিকানা </h5>
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0 text-info fw-bold"> Guardian's Information / অভিভাবকের তথ্যাবলী </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+
+                        <div class="col-md-3">
+                            <label class="form-label">Guardian / অভিভাবক <span class="text-danger">*</span></label>
+                            <select id="guar" name="guar" class="form-select">
+                                <option value=""> -- Choose One --</option>
+                                <option value="Father">Father</option>
+                                <option value="Mother">Mother</option>
+                                <option value="Other">Other</option>
+                            </select>
+
+                        </div>
+
+                        <div class="col-md-5">
+                            <label for="po" class="form-label">Guardian name / অভিভাবকের নাম
+                                <span class="text-danger">*</span> </label>
+                            <input name="guarname" class="form-control" placeholder="Guardian's Name">
+                        </div>
+
+                        <div class="col-md-4">
+
+                            <label class="form-label">Guardian Mobile Number / মোবাইল নম্বর <span
+                                    class="text-danger">*</span></label>
+                            <input id="mnumber" name="mnumber" class="form-control" placeholder="Mobile Number">
+
+                        </div>
+
+
                     </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-3">
-                                <label for="dist" class="form-label">District / জেলা</label>
-                                <select id="dist" name="dist" class="form-control" required>
-                                    <option value="">-- Select District --</option>
-                                    <!-- JS will populate -->
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label for="ps" class="form-label">Upzila / উপজেলা</label>
-                                <select id="ps" name="ps" class="form-control" disabled>
-                                    <option value="">-- Select PS / Upazila --</option>
-                                    <!-- JS will populate based on district -->
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label for="po" class="form-label">Post Office / ডাকঘর</label>
-                                <input name="po" class="form-control" placeholder="PO">
-                            </div>
-                            <div class="col-md-3">
-                                <label for="village" class="form-label">Village / গ্রাম</label>
-                                <input name="village" class="form-control" placeholder="Village">
-                            </div>
+                </div>
+            </div>
+
+
+            <!-- Card 2: Address -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0 text-info fw-bold">Address / ঠিকানা </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label for="dist" class="form-label">District / জেলা <span
+                                    class="text-danger">*</span></label>
+                            <select id="dist" name="dist" class="form-control">
+                                <option value="">-- Select District --</option>
+                                <!-- JS will populate -->
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="ps" class="form-label">Upzila / উপজেলা <span
+                                    class="text-danger">*</span></label>
+                            <select id="ps" name="ps" class="form-control" disabled>
+                                <option value="">-- Select PS / Upazila --</option>
+                                <!-- JS will populate based on district -->
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="po" class="form-label">Post Office / ডাকঘর <span
+                                    class="text-danger">*</span></label>
+                            <input name="po" class="form-control" placeholder="Post Office">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="village" class="form-label">Village | Area / গ্রাম | মহল্লা <span
+                                    class="text-danger">*</span></label>
+                            <input name="village" class="form-control" placeholder="Village">
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Card 3: Previous Institute -->
-                <div class="card mb-3">
-                    <div class="card-header">
-                        <h5 class="mb-0 text-info fw-bold">Previous Institute / পূর্বের প্রতিষ্ঠান</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-3">
-                                <label for="testno" class="form-label">TC. No. /<br> টিসি নম্বর</label>
-                                <input name="testno" class="form-control" placeholder="TC Number">
-                            </div>
-                            <div class="col-md-3">
-                                <label for="insdist" class="form-label"> Institute District /<br> প্রতিষ্ঠানের জেলা
-                                </label>
-                                <select id="insdist" name="insdist" class="form-control" required>
-                                    <option value="">-- Select Institute District --</option>
-                                    <!-- JS populate -->
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label for="insps" class="form-label"> Institute Upazila /<br> প্রতিষ্ঠানের উপজেলা
-                                </label>
-                                <select id="insps" name="insps" class="form-control" disabled>
-                                    <option value="">-- Select Institute PS / Upazila --</option>
-                                    <!-- JS populate based on insdist -->
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label for="inspo" class="form-label"> Institute Post Office /<br> প্রতিষ্ঠানের ডাকঘর
-                                </label>
-                                <input name="inspo" class="form-control" placeholder="Institute Post">
-                            </div>
-                            <div class="col-12 mt-4">
-                                <label for="insname" class="form-label"> Institute Name / প্রতিষ্ঠানের নাম </label>
-                                <input name="insname" class="form-control" placeholder="Institute Name">
-                            </div>
+            <!-- Card 3: Previous Institute -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0 text-info fw-bold">Previous Institute / পূর্বের প্রতিষ্ঠান</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label for="testno" class="form-label">Testimonial | TC. No. / প্রশংসা পত্র | টিসি
+                                নম্বর </label>
+                            <input name="testno" class="form-control" placeholder="Testimonial / TC Number">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="insdist" class="form-label"> Institute District /<br> প্রতিষ্ঠানের জেলা
+                            </label>
+                            <select id="insdist" name="insdist" class="form-control">
+                                <option value="">-- Select Institute District --</option>
+                                <!-- JS populate -->
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="insps" class="form-label"> Institute Upazila /<br> প্রতিষ্ঠানের উপজেলা
+                            </label>
+                            <select id="insps" name="insps" class="form-control" disabled>
+                                <option value="">-- Select Institute PS / Upazila --</option>
+                                <!-- JS populate based on insdist -->
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="inspo" class="form-label"> Institute Post Office /<br> প্রতিষ্ঠানের ডাকঘর
+                            </label>
+                            <input name="inspo" class="form-control" placeholder="Institute Post"
+                                aria-placeholder="Post Office">
+                        </div>
+                        <div class="col-12 mt-4">
+                            <label for="insname" class="form-label"> Institute Name / প্রতিষ্ঠানের নাম <span
+                                    class="text-danger">*</span></label>
+                            <input name="insname" class="form-control" placeholder="Institute Name">
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- submit/reset buttons -->
-                <div class="d-flex justify-content-start gap-2 mb-5">
-                    <button type="submit" id="submitBtn" class="btn btn-primary">Submit</button>
-                    <button type="reset" id="resetBtn" class="btn btn-outline-danger">Reset</button>
+            <!-- submit/reset buttons -->
+            <div class="d-flex justify-content-start gap-2 mb-5">
+                <button type="submit" id="submitBtn" class="btn btn-primary">Submit</button>
+                <button type="reset" id="resetBtn" class="btn btn-outline-danger">Reset</button>
 
-                </div>
-            </form>
-        </div>
+            </div>
+        </form>
     </div>
-
-
 </div>
+
+
+
 
 
 
@@ -413,6 +549,9 @@ include_once('footer-plain.php');
 <script>
     $(function () {
 
+
+
+
         const districtsUrl = 'assets/json/districts.json';
         const upazilasUrl = 'assets/json/upazilas.json';
 
@@ -436,6 +575,9 @@ include_once('footer-plain.php');
 
             if (preselectedDistrict) $('#dist').val(preselectedDistrict).trigger('change');
         });
+
+
+
 
         $('#dist').on('change', function () {
             const districtId = $(this).val();
@@ -520,12 +662,85 @@ include_once('footer-plain.php');
             });
         });
 
+
+
+        $('#guar').on('change', function () {
+            const guar = $(this).val();
+            const getVal = name => ($(`[name="${name}"]`).length ? $(`[name="${name}"]`).val() : '');
+            const setVal = (name, value) => {
+                const el = $(`[name="${name}"]`);
+                if (el.length) el.val(value);
+            };
+
+            if (guar === 'Father') {
+                setVal('guarname', getVal('fname'));
+                setVal('mnumber', getVal('fmobile')); // তুমি যদি mnumber বদলে guardian-mobile রাখতে চাও, এখানে ঠিক করে নাও
+            } else if (guar === 'Mother') {
+                setVal('guarname', getVal('mname'));
+                setVal('mnumber', getVal('mmobile'));
+            } else {
+                // অন্য কিছু হলে ক্লিয়ার করে দিতে চাইলে
+                setVal('guarname', '');
+                setVal('mnumber', '');
+            }
+        });
+
     });
 
 
 </script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
+<script>
+    function validateFormFields() {
+        const fields = [
+            { name: 'stnameeng', label: 'Student Name (English)' },
+            { name: 'stnameben', label: 'Student Name (Bangla)' },
+            { name: 'fname', label: "Father's Name" },
+            { name: 'mname', label: "Mother's Name" },
+            { name: 'mnumber', label: 'Mobile Number' },
+            { name: 'dob', label: 'Date of Birth' },
+            { name: 'brnno', label: 'Birth Reg. No.' },
+            { name: 'dist', label: 'District' },
+            { name: 'ps', label: 'Upazila / Thana' },
+            { name: 'po', label: 'Post Office' },
+            { name: 'village', label: 'Village' },
+            { name: 'testno', label: 'Test Number' },
+            { name: 'insdist', label: 'Institute District' },
+            { name: 'insps', label: 'Institute Upazila' },
+            { name: 'inspo', label: 'Institute Post Office' },
+            { name: 'insname', label: 'Institute Name' },
+
+            { name: 'religion', label: 'Religion' },
+            { name: 'gender', label: 'Gender' },
+
+            { name: 'falive', label: 'Father Alive / Died' },
+            { name: 'malive', label: 'Mother Alive / Died' },
+            { name: 'guar', label: 'Guardian' },
+            { name: 'guarname', label: 'Guardian Name' }
+        ]
+
+        const ignoreField = ['bgroup', 'brnno', 'fmobile', 'mmobile', 'testno', 'insdist', 'insps', 'inspo']
+
+        let hasEmpty = false;
+
+        fields.forEach(f => {
+            if (ignoreField.includes(f.name)) return;
+
+            const value = document.getElementsByName(f.name)[0]?.value.trim() || '';
+            if (!value) {
+                hasEmpty = true;
+                showToast("danger", `${f.label} is required!`);
+            }
+        });
+
+        if (hasEmpty) return false; // ❌ Stop form submit
+        return true; // ✅ All good
+    }
+</script>
+
+
 
 <script>
     $(function () {
@@ -580,13 +795,39 @@ include_once('footer-plain.php');
             e.preventDefault(); // prevent normal form submission
 
 
+
             const mobile = document.getElementById('mnumber').value.trim();
+
+            const stnameeng = document.getElementsByName('stnameeng')[0]?.value.trim() || '';
+            const stnameben = document.getElementsByName('stnameben')[0]?.value.trim() || '';
+            const fname = document.getElementsByName('fname')[0]?.value.trim() || '';
+            const mname = document.getElementsByName('mname')[0]?.value.trim() || '';
+            const mnumber = document.getElementsByName('mnumber')[0]?.value.trim() || '';
+            const dob = document.getElementsByName('dob')[0]?.value.trim() || '';
+            const brnno = document.getElementsByName('brnno')[0]?.value.trim() || '';
+
+            const dist = document.getElementsByName('dist')[0]?.value.trim() || '';
+            const ps = document.getElementsByName('ps')[0]?.value.trim() || '';
+            const po = document.getElementsByName('po')[0]?.value.trim() || '';
+            const village = document.getElementsByName('village')[0]?.value.trim() || '';
+
+            const testno = document.getElementsByName('testno')[0]?.value.trim() || '';
+            const insdist = document.getElementsByName('insdist')[0]?.value.trim() || '';
+            const insps = document.getElementsByName('insps')[0]?.value.trim() || '';
+            const inspo = document.getElementsByName('inspo')[0]?.value.trim() || '';
+            const insname = document.getElementsByName('insname')[0]?.value.trim() || '';
+
+
+            validateFormFields();
+
+
 
             // RegEx: 0 দিয়ে শুরু, মোট 11 সংখ্যা
             const regex = /^0\d{10}$/;
 
             if (!regex.test(mobile)) {
-                alert('দয়া করে একটি সঠিক 11 ডিজিটের মোবাইল নম্বর লিখুন, যা 0 দিয়ে শুরু হবে।');
+                showToast('danger', 'দয়া করে একটি সঠিক 11 ডিজিটের মোবাইল নম্বর লিখুন, যা 0 দিয়ে শুরু হবে।');
+                // showToast('info', 'Mobile Sample : 01919629672');
                 return false;
             }
 
@@ -601,6 +842,9 @@ include_once('footer-plain.php');
 
             if (croppedBlob) {
                 formData.append('photo', croppedBlob, 'photo.jpg');
+            } else {
+                showToast('danger', "No Photo Selected! Please Choose Your Photo.");
+                return;
             }
 
             // formData.append('photo', croppedBlob, 'photo.jpg');
@@ -623,7 +867,7 @@ include_once('footer-plain.php');
                     $('#submitBtn').prop('disabled', false).text('Submit');
                     console.log('Server Response:', res);
 
-                    alert('Raw response: ' + JSON.stringify(res.status));
+
                     // ✅ যদি PHP থেকে JSON response আসে
 
                     if (res.status === 'success') {
@@ -639,21 +883,27 @@ include_once('footer-plain.php');
                         if (res.redirect) {
                             window.location.href = res.redirect;
                         } else {
-                            alert('Registration successful!');
+                            showToast('success', 'Registration Form Submit successfully!');
                         }
                     } else {
-                        alert('Registration failed! Please try again.');
+                        showToast('danger', 'Registration failed! Please try again.');
                     }
                 },
                 error: function (xhr, status, error) {
                     $('#submitBtn').prop('disabled', false).text('Submit');
-                    alert('Upload failed: ' + error);
+                    showToast('danger', 'Upload failed: ' + error);
+                    // alert('Upload failed: ' + error);
                 }
             });
         });
     });
 </script>
 
+<script>
+    function back() {
+        document.location.href = 'admission-login.php';
+    }
+</script>
 
 
 

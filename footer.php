@@ -318,6 +318,11 @@ $release_colors = [
     </div>
 </footer>
 
+
+
+<div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 2000"></div>
+
+
 <!-- Core JS -->
 <script src="assets/vendor/libs/jquery/jquery.js"></script>
 <script src="assets/vendor/libs/popper/popper.js"></script>
@@ -342,12 +347,30 @@ $release_colors = [
 
 
 
+<script src="assets/js/eimbox.js"></script>
+
+
+
 
 <!-- Main JS -->
 <script src="assets/js/main.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
 <!-- Custom JS -->
+
+
+<script>
+    // ✅ Bootstrap Toast Notification Function
+    
+</script>
+
+
+
+
+
+
+
+
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {

@@ -43,14 +43,18 @@ file_put_contents('bkash/config.json', $newJsonString);
 
     echo "<br><br>";
     echo '<pre>
- "bkash_app_key": "0vWQuCRGiUX7EPVjQDr0EUAYtc",
+    "bkash_app_key": "0vWQuCRGiUX7EPVjQDr0EUAYtc",
     "bkash_app_secret": "jcUNPBgbcqEDedNKdvE4G1cAK7D3hCjmJccNPZZBq96QIxxwAMEx",
     "bkash_username": "01770618567",
     "bkash_password": "D7DaC<*E*eG",</pre>';
     // ---------------------
 // Student ID নির্ধারণ
 // ---------------------
-// var_dump($_SESSION);
+echo  '<hr>' . $_SESSION['token'] . '<hr>' . $_SESSION['refresh_token'] . '<hr>';
+
+echo strlen( $_SESSION['token'] ) . '/' . strlen( $_SESSION['refresh_token'] ) ;
+
+
     $sql = mysqli_query($conn, "SELECT stid FROM sessioninfo WHERE sccode = '$sccode' and sessionyear LIKE '%$y_v2%' ORDER BY RAND() LIMIT 1");
     $std = mysqli_fetch_assoc($sql);
     $stid = $std['stid'];

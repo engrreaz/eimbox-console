@@ -129,11 +129,11 @@ if (isset($_POST['verify_otp'])) {
         $message = $_SESSION['stname'] . ',\n Your Regd. No. is ' . $_SESSION['regid'] . ' and login PIN is ' . $_SESSION['pin'] . '\nURL is https://console.eimbox.com/admisssion.login.php';
         // sms_send($mobile, $message);
 
-       echo "
+        echo "
             <script>
             alert('Verification successful!');
             if (confirm('Do you want to open Admit Card?')) {
-                window.open('admit_card.php?id=$id', '_blank');
+                window.location.href = 'admit_card.php?id=$id';
             }
             </script>
             ";
@@ -156,6 +156,10 @@ if (isset($_POST['verify_otp'])) {
 <body class="bg-light">
     <div class="container" style="max-width:500px;margin-top:70px;">
         <div class="card shadow">
+
+        <div class="alert alert-info">
+            OTP is <?= $_SESSION['otp'] ?? 0 ?>
+        </div>
 
 
 

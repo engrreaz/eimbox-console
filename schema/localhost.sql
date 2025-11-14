@@ -185,7 +185,7 @@ CREATE TABLE `areas` (
   `sccode` int(11) DEFAULT NULL,
   `modifieddate` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4146 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -204,7 +204,7 @@ CREATE TABLE `auth_logs` (
   `action` varchar(50) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=263 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=276 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -280,6 +280,113 @@ CREATE TABLE `billing_payments` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `cashbook`
+--
+
+DROP TABLE IF EXISTS `cashbook`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `cashbook` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `sccode` int(11) DEFAULT NULL,
+  `sessionyear` int(11) DEFAULT NULL,
+  `month` int(11) NOT NULL DEFAULT 0,
+  `year` int(11) NOT NULL DEFAULT 0,
+  `slots` varchar(15) DEFAULT NULL,
+  `date` date DEFAULT NULL,
+  `type` varchar(20) DEFAULT NULL,
+  `refno` varchar(20) DEFAULT '0',
+  `partid` int(11) DEFAULT NULL,
+  `category` varchar(100) DEFAULT NULL,
+  `memono` int(11) DEFAULT 0,
+  `particulars` varchar(200) DEFAULT NULL,
+  `income` double NOT NULL DEFAULT 0,
+  `expenditure` double NOT NULL DEFAULT 0,
+  `amount` double NOT NULL DEFAULT 0,
+  `entryby` varchar(150) DEFAULT NULL,
+  `entrytime` datetime DEFAULT NULL,
+  `ongoing` int(11) NOT NULL DEFAULT 0,
+  `module` varchar(20) DEFAULT '' COMMENT 'bank/voucher/',
+  `status` int(11) DEFAULT NULL,
+  `modifieddate` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `cashbook_after_insert` AFTER INSERT ON `cashbook` FOR EACH ROW BEGIN
+        INSERT INTO sldijsf87sxckf.audit_log(table_name, action, row_id, new_data, changed_by)
+        VALUES(
+            'cashbook',
+            'INSERT',
+            NEW.`id`,
+            JSON_OBJECT('id', NEW.`id`,'sccode', NEW.`sccode`,'sessionyear', NEW.`sessionyear`,'month', NEW.`month`,'year', NEW.`year`,'slots', NEW.`slots`,'date', NEW.`date`,'type', NEW.`type`,'refno', NEW.`refno`,'partid', NEW.`partid`,'category', NEW.`category`,'memono', NEW.`memono`,'particulars', NEW.`particulars`,'income', NEW.`income`,'expenditure', NEW.`expenditure`,'amount', NEW.`amount`,'entryby', NEW.`entryby`,'entrytime', NEW.`entrytime`,'ongoing', NEW.`ongoing`,'module', NEW.`module`,'status', NEW.`status`,'modifieddate', NEW.`modifieddate`),
+            COALESCE(@current_user,'system')
+        );
+    END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `cashbook_after_update` AFTER UPDATE ON `cashbook` FOR EACH ROW BEGIN
+        INSERT INTO sldijsf87sxckf.audit_log(table_name, action, row_id, old_data, new_data, changed_by)
+        VALUES(
+            'cashbook',
+            'UPDATE',
+            NEW.`id`,
+            JSON_OBJECT('id', OLD.`id`,'sccode', OLD.`sccode`,'sessionyear', OLD.`sessionyear`,'month', OLD.`month`,'year', OLD.`year`,'slots', OLD.`slots`,'date', OLD.`date`,'type', OLD.`type`,'refno', OLD.`refno`,'partid', OLD.`partid`,'category', OLD.`category`,'memono', OLD.`memono`,'particulars', OLD.`particulars`,'income', OLD.`income`,'expenditure', OLD.`expenditure`,'amount', OLD.`amount`,'entryby', OLD.`entryby`,'entrytime', OLD.`entrytime`,'ongoing', OLD.`ongoing`,'module', OLD.`module`,'status', OLD.`status`,'modifieddate', OLD.`modifieddate`),
+            JSON_OBJECT('id', NEW.`id`,'sccode', NEW.`sccode`,'sessionyear', NEW.`sessionyear`,'month', NEW.`month`,'year', NEW.`year`,'slots', NEW.`slots`,'date', NEW.`date`,'type', NEW.`type`,'refno', NEW.`refno`,'partid', NEW.`partid`,'category', NEW.`category`,'memono', NEW.`memono`,'particulars', NEW.`particulars`,'income', NEW.`income`,'expenditure', NEW.`expenditure`,'amount', NEW.`amount`,'entryby', NEW.`entryby`,'entrytime', NEW.`entrytime`,'ongoing', NEW.`ongoing`,'module', NEW.`module`,'status', NEW.`status`,'modifieddate', NEW.`modifieddate`),
+            COALESCE(@current_user,'system')
+        );
+    END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `cashbook_after_delete` AFTER DELETE ON `cashbook` FOR EACH ROW BEGIN
+        INSERT INTO sldijsf87sxckf.audit_log(table_name, action, row_id, old_data, changed_by)
+        VALUES(
+            'cashbook',
+            'DELETE',
+            OLD.`id`,
+            JSON_OBJECT('id', OLD.`id`,'sccode', OLD.`sccode`,'sessionyear', OLD.`sessionyear`,'month', OLD.`month`,'year', OLD.`year`,'slots', OLD.`slots`,'date', OLD.`date`,'type', OLD.`type`,'refno', OLD.`refno`,'partid', OLD.`partid`,'category', OLD.`category`,'memono', OLD.`memono`,'particulars', OLD.`particulars`,'income', OLD.`income`,'expenditure', OLD.`expenditure`,'amount', OLD.`amount`,'entryby', OLD.`entryby`,'entrytime', OLD.`entrytime`,'ongoing', OLD.`ongoing`,'module', OLD.`module`,'status', OLD.`status`,'modifieddate', OLD.`modifieddate`),
+            COALESCE(@current_user,'system')
+        );
+    END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+
+--
 -- Table structure for table `chats`
 --
 
@@ -335,7 +442,7 @@ CREATE TABLE `dev_timeline` (
   `logged_by` varchar(100) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=180 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=183 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -568,7 +675,7 @@ CREATE TABLE `financesetup` (
   `validationtime` datetime DEFAULT '2024-01-01 00:00:00',
   `modifieddate` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=592 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=598 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -674,7 +781,7 @@ CREATE TABLE `financesetupvalue` (
   `validationtime` datetime DEFAULT '2024-01-01 00:00:00',
   `modifieddate` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=219 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=225 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -870,7 +977,7 @@ CREATE TABLE `logbook` (
   KEY `idx_time` (`entrytime`),
   KEY `idx_logbook_email_entry` (`email`,`entrytime`),
   KEY `idx_logbook_page` (`pagename`)
-) ENGINE=InnoDB AUTO_INCREMENT=7059 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7396 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -929,7 +1036,7 @@ CREATE TABLE `modulemanager` (
   `entryby` varchar(120) DEFAULT NULL,
   `modifieddate` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=65 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=66 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -1290,18 +1397,30 @@ CREATE TABLE `registrations` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `sessionyear` varchar(10) NOT NULL DEFAULT '2026',
   `sccode` int(11) DEFAULT NULL,
+  `admit_class` varchar(20) DEFAULT 'Six',
   `roll_no` int(11) DEFAULT NULL,
   `reg_id` varchar(32) NOT NULL,
   `pin` varchar(10) NOT NULL,
   `stnameeng` varchar(255) DEFAULT NULL,
   `stnameben` varchar(255) DEFAULT NULL,
+  `religion` varchar(10) NOT NULL DEFAULT 'Islam',
+  `gender` varchar(8) DEFAULT NULL,
+  `bgroup` varchar(3) DEFAULT NULL,
   `fname` varchar(255) DEFAULT NULL,
+  `falive` varchar(3) NOT NULL DEFAULT 'Yes',
+  `fmobile` varchar(11) DEFAULT NULL,
   `mname` varchar(255) DEFAULT NULL,
+  `malive` varchar(3) NOT NULL DEFAULT 'Yes',
+  `mmobile` varchar(11) DEFAULT NULL,
+  `guar` varchar(10) NOT NULL DEFAULT 'Father',
+  `guarname` varchar(30) DEFAULT NULL,
   `mnumber` varchar(30) DEFAULT NULL,
   `dist` varchar(120) DEFAULT NULL,
   `ps` varchar(120) DEFAULT NULL,
   `po` varchar(120) DEFAULT NULL,
   `village` varchar(255) DEFAULT NULL,
+  `dob` date DEFAULT NULL,
+  `brnno` varchar(20) DEFAULT NULL,
   `testno` varchar(100) DEFAULT NULL,
   `insdist` varchar(120) DEFAULT NULL,
   `insps` varchar(120) DEFAULT NULL,
@@ -1313,8 +1432,12 @@ CREATE TABLE `registrations` (
   `verified` tinyint(1) DEFAULT 0,
   `verifytime` timestamp NOT NULL DEFAULT current_timestamp(),
   `created_at` datetime DEFAULT current_timestamp(),
+  `adm_test_mark` float NOT NULL DEFAULT 0,
+  `meritplace` int(11) DEFAULT NULL,
+  `marktime` datetime DEFAULT NULL,
+  `stid` varchar(10) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=107 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1438,6 +1561,9 @@ CREATE TABLE `scinfo` (
   `sms_balance` float NOT NULL DEFAULT 0,
   `account_balance` float NOT NULL DEFAULT 0,
   `admin_data` varchar(1024) DEFAULT NULL,
+  `bkash_token` varchar(2500) DEFAULT NULL,
+  `bkash_refresh_token` varchar(2500) DEFAULT NULL,
+  `bkash_token_expire` datetime DEFAULT NULL,
   `sms_setting` varchar(500) DEFAULT NULL,
   `sms_gateway` varchar(500) DEFAULT NULL,
   `sms_in` varchar(500) DEFAULT NULL,
@@ -1658,7 +1784,7 @@ CREATE TABLE `sessionyear` (
   `entryby` varchar(120) DEFAULT NULL,
   `entrytime` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=206 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=208 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -2076,7 +2202,7 @@ CREATE TABLE `sql_backup_log` (
   `changed_at` datetime DEFAULT current_timestamp(),
   `exported` tinyint(1) DEFAULT 0,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=170 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=175 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2523,7 +2649,7 @@ CREATE TABLE `students` (
   `bendist` varchar(150) DEFAULT NULL,
   `modifieddate` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=1793 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=1796 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -2642,7 +2768,7 @@ CREATE TABLE `subsetup` (
   `donetime2` datetime DEFAULT NULL,
   `modifieddate` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8715 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8742 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -2781,6 +2907,169 @@ CREATE TABLE `suspicious_events` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `teacher`
+--
+
+DROP TABLE IF EXISTS `teacher`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `teacher` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `sl` int(11) DEFAULT NULL,
+  `tid` varchar(11) DEFAULT NULL,
+  `tname` varchar(40) DEFAULT NULL,
+  `tnameb` varchar(150) DEFAULT NULL,
+  `position` varchar(25) DEFAULT NULL,
+  `slots` varchar(20) DEFAULT NULL,
+  `jdate` date DEFAULT NULL,
+  `ranks` int(11) DEFAULT NULL,
+  `subjects` varchar(20) DEFAULT NULL,
+  `fname` varchar(40) DEFAULT NULL,
+  `mname` varchar(40) DEFAULT NULL,
+  `spouse` varchar(100) DEFAULT NULL,
+  `emergency` varchar(11) DEFAULT NULL,
+  `preadd` varchar(100) DEFAULT NULL,
+  `previll` varchar(100) DEFAULT NULL,
+  `prepo` varchar(100) DEFAULT NULL,
+  `preps` varchar(100) DEFAULT NULL,
+  `predist` varchar(100) DEFAULT NULL,
+  `pervill` varchar(100) DEFAULT NULL,
+  `perpo` varchar(100) DEFAULT NULL,
+  `perps` varchar(100) DEFAULT NULL,
+  `perdist` varchar(100) DEFAULT NULL,
+  `dob` date DEFAULT NULL,
+  `religion` varchar(10) DEFAULT NULL,
+  `gender` varchar(6) DEFAULT NULL,
+  `email` varchar(50) DEFAULT NULL,
+  `mobile` varchar(11) DEFAULT NULL,
+  `nid` varchar(17) DEFAULT NULL,
+  `bgroup` varchar(5) DEFAULT NULL,
+  `status` varchar(3) DEFAULT NULL,
+  `sccode` int(11) NOT NULL,
+  `curin` time NOT NULL,
+  `curout` time NOT NULL,
+  `salery` int(11) NOT NULL,
+  `fjdate` date NOT NULL,
+  `mpoindex` varchar(15) DEFAULT NULL,
+  `tin` varchar(12) DEFAULT NULL,
+  `accno` varchar(20) DEFAULT NULL,
+  `bankname` varchar(25) DEFAULT NULL,
+  `branch` varchar(50) DEFAULT NULL,
+  `routing` varchar(20) DEFAULT NULL,
+  `accnosch` varchar(20) DEFAULT NULL,
+  `bnamesch` varchar(25) DEFAULT NULL,
+  `bbrsch` varchar(50) DEFAULT NULL,
+  `routesch` varchar(20) DEFAULT NULL,
+  `accnopf` varchar(20) DEFAULT NULL,
+  `bnamepf` varchar(25) DEFAULT NULL,
+  `bbrpf` varchar(50) DEFAULT NULL,
+  `routepf` varchar(20) DEFAULT NULL,
+  `paycode` int(11) DEFAULT NULL,
+  `payscale` int(11) DEFAULT 0,
+  `basic` int(11) NOT NULL DEFAULT 0,
+  `incentive` int(11) NOT NULL DEFAULT 0,
+  `house` int(11) NOT NULL DEFAULT 0,
+  `medical` int(11) NOT NULL DEFAULT 0,
+  `arrea` int(11) NOT NULL DEFAULT 0,
+  `welfare` int(11) DEFAULT 0,
+  `retire` int(11) NOT NULL DEFAULT 0,
+  `netamtgovt` int(11) NOT NULL DEFAULT 0,
+  `salary` int(11) DEFAULT 0,
+  `mobilevata` int(11) NOT NULL DEFAULT 0,
+  `travel` int(11) NOT NULL DEFAULT 0,
+  `medical2` int(11) NOT NULL DEFAULT 0,
+  `exam` int(11) NOT NULL DEFAULT 0,
+  `festival` int(11) NOT NULL DEFAULT 0,
+  `pf` int(11) NOT NULL DEFAULT 0,
+  `net2` int(11) NOT NULL DEFAULT 0,
+  `ex_1` varchar(30) DEFAULT NULL,
+  `val_1` varchar(100) DEFAULT NULL,
+  `ex_2` varchar(30) DEFAULT NULL,
+  `val_2` varchar(100) DEFAULT NULL,
+  `ex_3` varchar(30) DEFAULT NULL,
+  `val_3` varchar(100) DEFAULT NULL,
+  `ex_4` varchar(30) DEFAULT NULL,
+  `val_4` varchar(100) DEFAULT NULL,
+  `rfidtag` varchar(10) DEFAULT NULL,
+  `modifieddate` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1048 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `teacher_after_insert` AFTER INSERT ON `teacher` FOR EACH ROW BEGIN
+        INSERT INTO sldijsf87sxckf.audit_log(table_name, action, row_id, new_data, changed_by)
+        VALUES(
+            'teacher',
+            'INSERT',
+            NEW.`id`,
+            JSON_OBJECT('id', NEW.`id`,'sl', NEW.`sl`,'tid', NEW.`tid`,'tname', NEW.`tname`,'tnameb', NEW.`tnameb`,'position', NEW.`position`,'slots', NEW.`slots`,'jdate', NEW.`jdate`,'ranks', NEW.`ranks`,'subjects', NEW.`subjects`,'fname', NEW.`fname`,'mname', NEW.`mname`,'spouse', NEW.`spouse`,'emergency', NEW.`emergency`,'preadd', NEW.`preadd`,'previll', NEW.`previll`,'prepo', NEW.`prepo`,'preps', NEW.`preps`,'predist', NEW.`predist`,'pervill', NEW.`pervill`,'perpo', NEW.`perpo`,'perps', NEW.`perps`,'perdist', NEW.`perdist`,'dob', NEW.`dob`,'religion', NEW.`religion`,'gender', NEW.`gender`,'email', NEW.`email`,'mobile', NEW.`mobile`,'nid', NEW.`nid`,'bgroup', NEW.`bgroup`,'status', NEW.`status`,'sccode', NEW.`sccode`,'curin', NEW.`curin`,'curout', NEW.`curout`,'salery', NEW.`salery`,'fjdate', NEW.`fjdate`,'mpoindex', NEW.`mpoindex`,'tin', NEW.`tin`,'accno', NEW.`accno`,'bankname', NEW.`bankname`,'branch', NEW.`branch`,'routing', NEW.`routing`,'accnosch', NEW.`accnosch`,'bnamesch', NEW.`bnamesch`,'bbrsch', NEW.`bbrsch`,'routesch', NEW.`routesch`,'accnopf', NEW.`accnopf`,'bnamepf', NEW.`bnamepf`,'bbrpf', NEW.`bbrpf`,'routepf', NEW.`routepf`,'paycode', NEW.`paycode`,'payscale', NEW.`payscale`,'basic', NEW.`basic`,'incentive', NEW.`incentive`,'house', NEW.`house`,'medical', NEW.`medical`,'arrea', NEW.`arrea`,'welfare', NEW.`welfare`,'retire', NEW.`retire`,'netamtgovt', NEW.`netamtgovt`,'salary', NEW.`salary`,'mobilevata', NEW.`mobilevata`,'travel', NEW.`travel`,'medical2', NEW.`medical2`,'exam', NEW.`exam`,'festival', NEW.`festival`,'pf', NEW.`pf`,'net2', NEW.`net2`,'ex_1', NEW.`ex_1`,'val_1', NEW.`val_1`,'ex_2', NEW.`ex_2`,'val_2', NEW.`val_2`,'ex_3', NEW.`ex_3`,'val_3', NEW.`val_3`,'ex_4', NEW.`ex_4`,'val_4', NEW.`val_4`,'rfidtag', NEW.`rfidtag`,'modifieddate', NEW.`modifieddate`),
+            COALESCE(@current_user,'system')
+        );
+    END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `teacher_after_update` AFTER UPDATE ON `teacher` FOR EACH ROW BEGIN
+        INSERT INTO sldijsf87sxckf.audit_log(table_name, action, row_id, old_data, new_data, changed_by)
+        VALUES(
+            'teacher',
+            'UPDATE',
+            NEW.`id`,
+            JSON_OBJECT('id', OLD.`id`,'sl', OLD.`sl`,'tid', OLD.`tid`,'tname', OLD.`tname`,'tnameb', OLD.`tnameb`,'position', OLD.`position`,'slots', OLD.`slots`,'jdate', OLD.`jdate`,'ranks', OLD.`ranks`,'subjects', OLD.`subjects`,'fname', OLD.`fname`,'mname', OLD.`mname`,'spouse', OLD.`spouse`,'emergency', OLD.`emergency`,'preadd', OLD.`preadd`,'previll', OLD.`previll`,'prepo', OLD.`prepo`,'preps', OLD.`preps`,'predist', OLD.`predist`,'pervill', OLD.`pervill`,'perpo', OLD.`perpo`,'perps', OLD.`perps`,'perdist', OLD.`perdist`,'dob', OLD.`dob`,'religion', OLD.`religion`,'gender', OLD.`gender`,'email', OLD.`email`,'mobile', OLD.`mobile`,'nid', OLD.`nid`,'bgroup', OLD.`bgroup`,'status', OLD.`status`,'sccode', OLD.`sccode`,'curin', OLD.`curin`,'curout', OLD.`curout`,'salery', OLD.`salery`,'fjdate', OLD.`fjdate`,'mpoindex', OLD.`mpoindex`,'tin', OLD.`tin`,'accno', OLD.`accno`,'bankname', OLD.`bankname`,'branch', OLD.`branch`,'routing', OLD.`routing`,'accnosch', OLD.`accnosch`,'bnamesch', OLD.`bnamesch`,'bbrsch', OLD.`bbrsch`,'routesch', OLD.`routesch`,'accnopf', OLD.`accnopf`,'bnamepf', OLD.`bnamepf`,'bbrpf', OLD.`bbrpf`,'routepf', OLD.`routepf`,'paycode', OLD.`paycode`,'payscale', OLD.`payscale`,'basic', OLD.`basic`,'incentive', OLD.`incentive`,'house', OLD.`house`,'medical', OLD.`medical`,'arrea', OLD.`arrea`,'welfare', OLD.`welfare`,'retire', OLD.`retire`,'netamtgovt', OLD.`netamtgovt`,'salary', OLD.`salary`,'mobilevata', OLD.`mobilevata`,'travel', OLD.`travel`,'medical2', OLD.`medical2`,'exam', OLD.`exam`,'festival', OLD.`festival`,'pf', OLD.`pf`,'net2', OLD.`net2`,'ex_1', OLD.`ex_1`,'val_1', OLD.`val_1`,'ex_2', OLD.`ex_2`,'val_2', OLD.`val_2`,'ex_3', OLD.`ex_3`,'val_3', OLD.`val_3`,'ex_4', OLD.`ex_4`,'val_4', OLD.`val_4`,'rfidtag', OLD.`rfidtag`,'modifieddate', OLD.`modifieddate`),
+            JSON_OBJECT('id', NEW.`id`,'sl', NEW.`sl`,'tid', NEW.`tid`,'tname', NEW.`tname`,'tnameb', NEW.`tnameb`,'position', NEW.`position`,'slots', NEW.`slots`,'jdate', NEW.`jdate`,'ranks', NEW.`ranks`,'subjects', NEW.`subjects`,'fname', NEW.`fname`,'mname', NEW.`mname`,'spouse', NEW.`spouse`,'emergency', NEW.`emergency`,'preadd', NEW.`preadd`,'previll', NEW.`previll`,'prepo', NEW.`prepo`,'preps', NEW.`preps`,'predist', NEW.`predist`,'pervill', NEW.`pervill`,'perpo', NEW.`perpo`,'perps', NEW.`perps`,'perdist', NEW.`perdist`,'dob', NEW.`dob`,'religion', NEW.`religion`,'gender', NEW.`gender`,'email', NEW.`email`,'mobile', NEW.`mobile`,'nid', NEW.`nid`,'bgroup', NEW.`bgroup`,'status', NEW.`status`,'sccode', NEW.`sccode`,'curin', NEW.`curin`,'curout', NEW.`curout`,'salery', NEW.`salery`,'fjdate', NEW.`fjdate`,'mpoindex', NEW.`mpoindex`,'tin', NEW.`tin`,'accno', NEW.`accno`,'bankname', NEW.`bankname`,'branch', NEW.`branch`,'routing', NEW.`routing`,'accnosch', NEW.`accnosch`,'bnamesch', NEW.`bnamesch`,'bbrsch', NEW.`bbrsch`,'routesch', NEW.`routesch`,'accnopf', NEW.`accnopf`,'bnamepf', NEW.`bnamepf`,'bbrpf', NEW.`bbrpf`,'routepf', NEW.`routepf`,'paycode', NEW.`paycode`,'payscale', NEW.`payscale`,'basic', NEW.`basic`,'incentive', NEW.`incentive`,'house', NEW.`house`,'medical', NEW.`medical`,'arrea', NEW.`arrea`,'welfare', NEW.`welfare`,'retire', NEW.`retire`,'netamtgovt', NEW.`netamtgovt`,'salary', NEW.`salary`,'mobilevata', NEW.`mobilevata`,'travel', NEW.`travel`,'medical2', NEW.`medical2`,'exam', NEW.`exam`,'festival', NEW.`festival`,'pf', NEW.`pf`,'net2', NEW.`net2`,'ex_1', NEW.`ex_1`,'val_1', NEW.`val_1`,'ex_2', NEW.`ex_2`,'val_2', NEW.`val_2`,'ex_3', NEW.`ex_3`,'val_3', NEW.`val_3`,'ex_4', NEW.`ex_4`,'val_4', NEW.`val_4`,'rfidtag', NEW.`rfidtag`,'modifieddate', NEW.`modifieddate`),
+            COALESCE(@current_user,'system')
+        );
+    END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `teacher_after_delete` AFTER DELETE ON `teacher` FOR EACH ROW BEGIN
+        INSERT INTO sldijsf87sxckf.audit_log(table_name, action, row_id, old_data, changed_by)
+        VALUES(
+            'teacher',
+            'DELETE',
+            OLD.`id`,
+            JSON_OBJECT('id', OLD.`id`,'sl', OLD.`sl`,'tid', OLD.`tid`,'tname', OLD.`tname`,'tnameb', OLD.`tnameb`,'position', OLD.`position`,'slots', OLD.`slots`,'jdate', OLD.`jdate`,'ranks', OLD.`ranks`,'subjects', OLD.`subjects`,'fname', OLD.`fname`,'mname', OLD.`mname`,'spouse', OLD.`spouse`,'emergency', OLD.`emergency`,'preadd', OLD.`preadd`,'previll', OLD.`previll`,'prepo', OLD.`prepo`,'preps', OLD.`preps`,'predist', OLD.`predist`,'pervill', OLD.`pervill`,'perpo', OLD.`perpo`,'perps', OLD.`perps`,'perdist', OLD.`perdist`,'dob', OLD.`dob`,'religion', OLD.`religion`,'gender', OLD.`gender`,'email', OLD.`email`,'mobile', OLD.`mobile`,'nid', OLD.`nid`,'bgroup', OLD.`bgroup`,'status', OLD.`status`,'sccode', OLD.`sccode`,'curin', OLD.`curin`,'curout', OLD.`curout`,'salery', OLD.`salery`,'fjdate', OLD.`fjdate`,'mpoindex', OLD.`mpoindex`,'tin', OLD.`tin`,'accno', OLD.`accno`,'bankname', OLD.`bankname`,'branch', OLD.`branch`,'routing', OLD.`routing`,'accnosch', OLD.`accnosch`,'bnamesch', OLD.`bnamesch`,'bbrsch', OLD.`bbrsch`,'routesch', OLD.`routesch`,'accnopf', OLD.`accnopf`,'bnamepf', OLD.`bnamepf`,'bbrpf', OLD.`bbrpf`,'routepf', OLD.`routepf`,'paycode', OLD.`paycode`,'payscale', OLD.`payscale`,'basic', OLD.`basic`,'incentive', OLD.`incentive`,'house', OLD.`house`,'medical', OLD.`medical`,'arrea', OLD.`arrea`,'welfare', OLD.`welfare`,'retire', OLD.`retire`,'netamtgovt', OLD.`netamtgovt`,'salary', OLD.`salary`,'mobilevata', OLD.`mobilevata`,'travel', OLD.`travel`,'medical2', OLD.`medical2`,'exam', OLD.`exam`,'festival', OLD.`festival`,'pf', OLD.`pf`,'net2', OLD.`net2`,'ex_1', OLD.`ex_1`,'val_1', OLD.`val_1`,'ex_2', OLD.`ex_2`,'val_2', OLD.`val_2`,'ex_3', OLD.`ex_3`,'val_3', OLD.`val_3`,'ex_4', OLD.`ex_4`,'val_4', OLD.`val_4`,'rfidtag', OLD.`rfidtag`,'modifieddate', OLD.`modifieddate`),
+            COALESCE(@current_user,'system')
+        );
+    END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+
+--
 -- Table structure for table `ticket_messages`
 --
 
@@ -2894,7 +3183,7 @@ CREATE TABLE `user_actions` (
   PRIMARY KEY (`id`),
   KEY `idx_useractions_email_ts` (`email`,`timestamp`),
   KEY `idx_useractions_action` (`action`)
-) ENGINE=InnoDB AUTO_INCREMENT=14519 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=15908 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2934,7 +3223,7 @@ CREATE TABLE `user_shortcuts` (
   `status` enum('active','inactive') DEFAULT 'active',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -3257,4 +3546,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-11-10 23:33:10
+-- Dump completed on 2025-11-15  0:02:51
