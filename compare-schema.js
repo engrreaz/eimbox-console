@@ -7,10 +7,10 @@ function reve() {
 }
 
 // 🔹 Notification helper
-function showMessage(text, type = 'info') {
+function showMessage(htmlContent) {
     const container = document.createElement('div');
-    container.className = `alert alert-${type}`;
-    container.innerText = text;
+    container.className = `alert`;
+    container.innerHTML = htmlContent;
     container.style.position = 'fixed';
     container.style.top = '20px';
     container.style.left = '50%';
@@ -31,16 +31,10 @@ async function postData(url, dataObj) {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: 'data=' + encodeURIComponent(JSON.stringify(dataObj))
         });
-
-        const text = await response.text();
-        try {
-            return JSON.parse(text);
-        } catch (e) {
-            showMessage('❌ JSON parse error:\n' + text, 'danger');
-            return null;
-        }
+        const html = await response.text();
+        return html; // সরাসরি HTML
     } catch (e) {
-        showMessage('❌ Network error: ' + e.message, 'danger');
+        showMessage('❌ Network error: ' + e.message);
         return null;
     }
 }
@@ -50,16 +44,12 @@ document.querySelectorAll('.sync-table').forEach(btn => {
     btn.addEventListener('click', async () => {
         const table = btn.dataset.table;
         const createSQL = btn.dataset.create;
-
-        console.log(createSQL);
-        const res = await postData('apply-schema.php', {
+        const html = await postData('apply-schema.php', {
             action: 'apply-table',
             table,
             sql: createSQL
         });
-
-        if (res && res.status === 'ok') showMessage('✅ Table applied: ' + table, 'success');
-        else if (res) showMessage('❌ Error: ' + res.msg, 'danger');
+        if (html) document.getElementById('syncResult').innerHTML = html;
     });
 });
 
@@ -68,17 +58,12 @@ document.querySelectorAll('.sync-column').forEach(btn => {
     btn.addEventListener('click', async () => {
         const table = btn.dataset.table;
         const column = btn.dataset.column;
-        const res = await postData('apply-schema.php', {
+        const html = await postData('apply-schema.php', {
             action: 'apply-column',
             table,
             column
         });
-
-        if (res && res.status === 'ok') {
-            const r = res.results[0];
-            showMessage(`✅ Column ${r.table}.${r.column} ${r.status}`, 'success');
-            location.reload();
-        } else if (res) showMessage('❌ Error: ' + res.msg, 'danger');
+        if (html) document.getElementById('syncResult').innerHTML = html;
     });
 });
 
@@ -98,21 +83,14 @@ document.getElementById('syncSelected').addEventListener('click', async () => {
     });
 
     if (selected.length === 0) {
-        showMessage('❌ No columns selected!', 'danger');
+        showMessage('<div class="alert alert-danger">❌ No columns selected!</div>');
         return;
     }
 
-    const res = await postData('apply-schema.php', {
+    const html = await postData('apply-schema.php', {
         action: 'apply-selected',
         items: selected
     });
 
-    if (res && res.status === 'ok') {
-        let msg = '✅ Sync completed:\n';
-        res.results.forEach(r => {
-            msg += `${r.table}.${r.column} → ${r.status}\n`;
-            if (r.error) msg += '⚠️ ' + r.error + '\n';
-        });
-        showMessage(msg, 'success');
-    } else if (res) showMessage('❌ Server error: ' + res.msg, 'danger');
+    if (html) document.getElementById('syncResult').innerHTML = html;
 });

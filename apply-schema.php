@@ -2,60 +2,50 @@
 /**
  * ============================================================
  * 🔧 apply-schema.php
- * Safe DB Schema Apply Script
+ * Safe DB Schema Apply Script (HTML response)
  * Compatible with: PHP + MySQLi (not PDO)
  * ============================================================
  */
 
 ob_start();
-header('Content-Type: application/json; charset=utf-8');
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 session_start();
 
-// ✅ শুধুমাত্র POST মেথড অনুমোদিত
+// ✅ শুধুমাত্র POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['status' => 'error', 'msg' => 'Only POST method allowed']);
+    echo '<div class="alert alert-danger">❌ Only POST method allowed</div>';
     exit;
 }
 
-// ✅ Reverse মোড (যদি sync/compare পরিবর্তিত হয়)
-$rev = isset($_SESSION['reverse']) ? $_SESSION['reverse'] : 0;
+// ✅ Reverse mode
+$rev = $_SESSION['reverse'] ?? 0;
 
-// ✅ ডাটাবেজ কানেকশন সেটআপ
+// ✅ DB connection
 require_once 'core/config.php';
 $host = DB_HOST;
 $user = DB_USER;
 $pass = DB_PASS;
 $port = 3306;
-if (isset($_SESSION['reverse']) && $_SESSION['reverse'] == 0) {
-    $dbname = defined('DB_SYNC') ? DB_SYNC : DB_NAME;
-} else {
-    $dbname = DB_NAME;
-}
-
+$dbname = ($rev == 0) ? (defined('DB_SYNC') ? DB_SYNC : DB_NAME) : DB_NAME;
 
 $conn_sync = new mysqli($host, $user, $pass, $dbname, $port);
 if ($conn_sync->connect_error) {
     ob_end_clean();
-    echo json_encode(['status' => 'error', 'msg' => 'Connection failed: ' . $conn_sync->connect_error]);
+    echo '<div class="alert alert-danger">❌ Connection failed: ' . $conn_sync->connect_error . '</div>';
     exit;
 }
-// $hh = $host . $user . '/' . $pass . '/' . $dbname;
-// echo json_encode(['status' => 'error', 'msg' => $hh]);
-// exit;
 
-// ✅ ইনপুট ডাটা পার্স
+// ✅ Parse input
 $data = $_POST['data'] ?? '';
 if (!$data) {
-    echo json_encode(['status' => 'error', 'msg' => 'No data received']);
+    echo '<div class="alert alert-danger">❌ No data received</div>';
     exit;
 }
 
 $data = json_decode($data, true);
 if (!$data || !isset($data['action'])) {
-    echo json_encode(['status' => 'error', 'msg' => 'Invalid JSON data']);
+    echo '<div class="alert alert-danger">❌ Invalid JSON data</div>';
     exit;
 }
 
@@ -63,53 +53,32 @@ $action = $data['action'];
 $results = [];
 
 /* ============================================================
- 🔹 1️⃣ APPLY NEW TABLE (Upgraded & Safe Version)
+ 🔹 1️⃣ APPLY TABLE
 ============================================================ */
 if ($action === 'apply-table') {
     $table = $conn_sync->real_escape_string($data['table'] ?? '');
     $createSQL = html_entity_decode(trim($data['sql'] ?? ''), ENT_QUOTES);
 
-    // 🧩 Debug লগ (চাইলে আনকমেন্ট করো)
-    // file_put_contents('debug_create_sql.log', $createSQL);
-
-    // ✅ Validation
     if (empty($table)) {
-        echo json_encode(['status' => 'error', 'msg' => 'Table name missing']);
+        echo '<div class="alert alert-danger">❌ Table name missing</div>';
         exit;
     }
-
     if (stripos($createSQL, 'CREATE TABLE') !== 0) {
-        echo json_encode(['status' => 'error', 'msg' => 'Invalid table SQL syntax']);
+        echo '<div class="alert alert-danger">❌ Invalid table SQL syntax</div>';
         exit;
     }
 
-    // ✅ Check if table already exists
     $checkTable = $conn_sync->query("SHOW TABLES LIKE '$table'");
     if ($checkTable && $checkTable->num_rows > 0) {
-        ob_end_clean();
-        echo json_encode([
-            'status' => 'error',
-            'msg' => "Table '$table' already exists."
-        ]);
+        echo "<div class='alert alert-warning'>⚠️ Table '$table' already exists</div>";
         $conn_sync->close();
         exit;
     }
 
-    // ✅ Create table
     if ($conn_sync->query($createSQL)) {
-        ob_end_clean();
-        echo json_encode([
-            'status' => 'ok',
-            'msg' => "✅ Table '$table' created successfully",
-            'results' => [['table' => $table, 'status' => 'table_created']]
-        ]);
+        echo "<div class='alert alert-success'>✅ Table '$table' created successfully</div>";
     } else {
-        ob_end_clean();
-        echo json_encode([
-            'status' => 'error',
-            'msg' => 'MySQL Error: ' . $conn_sync->error,
-            'sql' => $createSQL
-        ]);
+        echo "<div class='alert alert-danger'>❌ MySQL Error: " . $conn_sync->error . "</div>";
     }
 
     $conn_sync->close();
@@ -124,21 +93,20 @@ if ($action === 'apply-column') {
     $columnDef = html_entity_decode(trim($data['column'] ?? ''), ENT_QUOTES);
 
     if (!$table || !$columnDef) {
-        echo json_encode(['status' => 'error', 'msg' => 'Missing table or column']);
+        echo '<div class="alert alert-danger">❌ Missing table or column</div>';
         exit;
     }
 
     preg_match('/^`([^`]+)`/', $columnDef, $m);
     $colName = $m[1] ?? '';
-
     if (!$colName) {
-        echo json_encode(['status' => 'error', 'msg' => 'Invalid column definition']);
+        echo '<div class="alert alert-danger">❌ Invalid column definition</div>';
         exit;
     }
 
     $checkTable = $conn_sync->query("SHOW TABLES LIKE '$table'");
     if (!$checkTable || $checkTable->num_rows === 0) {
-        echo json_encode(['status' => 'error', 'msg' => "Table '$table' not found"]);
+        echo "<div class='alert alert-danger'>❌ Table '$table' not found</div>";
         exit;
     }
 
@@ -148,18 +116,9 @@ if ($action === 'apply-column') {
     }
 
     if ($conn_sync->query("ALTER TABLE `$table` ADD $columnDef")) {
-        ob_end_clean();
-        echo json_encode([
-            'status' => 'ok',
-            'msg' => "✅ Column '$colName' applied to '$table'",
-            'results' => [['table' => $table, 'column' => $colName, 'status' => 'applied']]
-        ]);
+        echo "<div class='alert alert-success'>✅ Column '$colName' applied to '$table'</div>";
     } else {
-        ob_end_clean();
-        echo json_encode([
-            'status' => 'error',
-            'msg' => 'MySQL Error: ' . $conn_sync->error
-        ]);
+        echo "<div class='alert alert-danger'>❌ MySQL Error: " . $conn_sync->error . "</div>";
     }
 
     $conn_sync->close();
@@ -170,9 +129,11 @@ if ($action === 'apply-column') {
  🔹 3️⃣ APPLY MULTIPLE SELECTED COLUMNS
 ============================================================ */
 if ($action === 'apply-selected') {
+    if (ob_get_level()) ob_end_clean();
+
     $items = $data['items'] ?? [];
     if (!is_array($items) || count($items) === 0) {
-        echo json_encode(['status' => 'error', 'msg' => 'No columns selected']);
+        echo '<div class="alert alert-danger">❌ No columns selected</div>';
         exit;
     }
 
@@ -185,7 +146,7 @@ if ($action === 'apply-selected') {
 
         $checkTable = $conn_sync->query("SHOW TABLES LIKE '$table'");
         if (!$checkTable || $checkTable->num_rows === 0) {
-            $results[] = ['table' => $table, 'column' => $colName, 'status' => 'skipped', 'error' => 'Table not found'];
+            echo "<div class='alert alert-warning'>⚠️ Table '$table' not found. Skipped '$colName'</div>";
             continue;
         }
 
@@ -195,22 +156,20 @@ if ($action === 'apply-selected') {
         }
 
         if ($conn_sync->query("ALTER TABLE `$table` ADD $columnDef")) {
-            $results[] = ['table' => $table, 'column' => $colName, 'status' => 'applied'];
+            echo "<div class='alert alert-success'>✅ Column '$table.$colName' applied</div>";
         } else {
-            $results[] = ['table' => $table, 'column' => $colName, 'status' => 'error', 'error' => $conn_sync->error];
+            echo "<div class='alert alert-danger'>❌ Error '$table.$colName': " . $conn_sync->error . "</div>";
         }
     }
 
-    ob_end_clean();
-    echo json_encode(['status' => 'ok', 'results' => $results]);
     $conn_sync->close();
     exit;
 }
 
 /* ============================================================
- ❌ INVALID REQUEST
+ ❌ INVALID ACTION
 ============================================================ */
 ob_end_clean();
-echo json_encode(['status' => 'error', 'msg' => 'Invalid action']);
+echo '<div class="alert alert-danger">❌ Invalid action</div>';
 $conn_sync->close();
 exit;

@@ -28,3 +28,7 @@ prototype/
 # firebase files
 firebase/firebase.js
 firebase-messaging-sw.js
+
+# Schema Files
+schema/localhost.sql
+schema/remote.sql
