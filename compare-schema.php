@@ -12,6 +12,8 @@ if (isLocalhost()) {
 
 <div class="container-xxl flex-grow-1 container-p-y">
 
+<div id="syncResult">.........</div>
+
   <?php
   $localFile = __DIR__ . '/schema/localhost.sql';
   $remoteFile = __DIR__ . '/schema/remote.sql';

@@ -44,6 +44,7 @@ document.querySelectorAll('.sync-table').forEach(btn => {
     btn.addEventListener('click', async () => {
         const table = btn.dataset.table;
         const createSQL = btn.dataset.create;
+        alert(table + '/' + createSQL);
         const html = await postData('apply-schema.php', {
             action: 'apply-table',
             table,
@@ -58,6 +59,7 @@ document.querySelectorAll('.sync-column').forEach(btn => {
     btn.addEventListener('click', async () => {
         const table = btn.dataset.table;
         const column = btn.dataset.column;
+        alert(table + column);
         const html = await postData('apply-schema.php', {
             action: 'apply-column',
             table,

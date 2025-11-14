@@ -59,6 +59,7 @@ if ($action === 'apply-table') {
     $table = $conn_sync->real_escape_string($data['table'] ?? '');
     $createSQL = html_entity_decode(trim($data['sql'] ?? ''), ENT_QUOTES);
 
+    echo  $createSQL;
     if (empty($table)) {
         echo '<div class="alert alert-danger">❌ Table name missing</div>';
         exit;
@@ -92,8 +93,9 @@ if ($action === 'apply-column') {
     $table = $conn_sync->real_escape_string($data['table'] ?? '');
     $columnDef = html_entity_decode(trim($data['column'] ?? ''), ENT_QUOTES);
 
+    echo $columnDef;
     if (!$table || !$columnDef) {
-        echo '<div class="alert alert-danger">❌ Missing table or column</div>';
+        echo '❌ Missing table or column';
         exit;
     }
 
