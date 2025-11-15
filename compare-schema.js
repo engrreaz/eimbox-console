@@ -52,6 +52,8 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', async () => {
             const table = btn.dataset.table;
             const createSQL = btn.dataset.create;
+
+            alert(table + ' | ' + createSQL);
             const html = await postData('apply-schema.php', {
                 action: 'apply-table',
                 table,
