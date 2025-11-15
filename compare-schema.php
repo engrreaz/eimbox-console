@@ -12,7 +12,7 @@ if (isLocalhost()) {
 
 <div class="container-xxl flex-grow-1 container-p-y">
 
-<div id="syncResult">.........</div>
+  <div id="syncResult">.........</div>
 
   <?php
   $localFile = __DIR__ . '/schema/localhost.sql';
@@ -72,17 +72,7 @@ if (isLocalhost()) {
   $total_table = count($localTables);
   ?>
 
-  <script>
-    function updatediffmiss(diff, miss, block) {
-      // alert(diff + miss + block);
-      if (diff + miss > 0) {
-        let blk = document.getElementById('diffmiss-' + block);
-        let a = "<span class='badge bg-warning'>" + diff + "</span>";
-        let b = "<span class='badge bg-danger'>" + miss + "</span>";
-        blk.innerHTML = a + " " + b;
-      }
-    }
-  </script>
+
 
   <button class="btn btn-primary float-end" onclick="reve();"> <i class="bi bi-arrow-repeat"></i> &nbsp;Switch</button>
   <h4 class="mb-4"> Schema Comparison <span class="text-warning fw-bold"><?php echo $ttl; ?></span></h4>
@@ -105,6 +95,19 @@ if (isLocalhost()) {
     </div>
   </div>
 
+
+
+  <script>
+    function updatediffmiss(diff, miss, block) {
+      // alert(diff + miss + block);
+      if (diff + miss > 0) {
+        let blk = document.getElementById('diffmiss-' + block);
+        let a = "<span class='badge bg-warning'>" + diff + "</span>";
+        let b = "<span class='badge bg-danger'>" + miss + "</span>";
+        blk.innerHTML = a + " " + b;
+      }
+    }
+  </script>
 
   <?php
   $index = 0;
