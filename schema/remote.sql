@@ -3053,6 +3053,47 @@ DELIMITER ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
+-- Table structure for table `dev_notes`
+--
+
+DROP TABLE IF EXISTS `dev_notes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `dev_notes` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `ref_id` int(11) DEFAULT NULL,
+  `sccode` int(11) DEFAULT NULL,
+  `ticket_id` int(11) NOT NULL,
+  `admin_id` int(11) NOT NULL,
+  `note_line` text NOT NULL,
+  `status` enum('New','Open','Waiting','Replied','Progress','Hold','Resolved','Closed') NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `ticket_id` (`ticket_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=67 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `dev_timeline`
+--
+
+DROP TABLE IF EXISTS `dev_timeline`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `dev_timeline` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `page_name` varchar(255) NOT NULL,
+  `feature_name` varchar(255) NOT NULL,
+  `action_type` enum('implement','update','bug_fix','remove','change','refactor','optimize','security_patch','deprecate','migrate','test_case','rollback','hotfix') NOT NULL,
+  `status` enum('draft','planning','in_progress','testing','alpha','beta','rc','staging','stable','lts','deprecated','archived') DEFAULT 'draft',
+  `description` text DEFAULT NULL,
+  `logged_by` varchar(100) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=183 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `diagnosis_results`
 --
 
@@ -3471,6 +3512,41 @@ DELIMITER ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
+-- Table structure for table `faqs`
+--
+
+DROP TABLE IF EXISTS `faqs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `faqs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `page_name` varchar(100) NOT NULL,
+  `question` text NOT NULL,
+  `answer` text NOT NULL,
+  `status` tinyint(1) DEFAULT 1,
+  `created_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `features`
+--
+
+DROP TABLE IF EXISTS `features`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `features` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `feature_name` varchar(100) NOT NULL,
+  `description` text DEFAULT NULL,
+  `module_name` varchar(100) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `feedback_logs`
 --
 
@@ -3572,6 +3648,46 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
+
+--
+-- Table structure for table `feedback_target`
+--
+
+DROP TABLE IF EXISTS `feedback_target`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `feedback_target` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `target_type` enum('module','user','system','other') NOT NULL DEFAULT 'module',
+  `target_id` int(11) DEFAULT NULL,
+  `target_name` varchar(150) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `feedbacks`
+--
+
+DROP TABLE IF EXISTS `feedbacks`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `feedbacks` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `sccode` int(11) DEFAULT NULL,
+  `email` varchar(120) DEFAULT NULL,
+  `rating` int(11) NOT NULL,
+  `feedback` text NOT NULL,
+  `target_id` int(11) DEFAULT NULL,
+  `target_type` varchar(20) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_feedbacks_email_created` (`email`,`created_at`),
+  KEY `idx_feedbacks_target` (`target_type`,`target_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Table structure for table `filelist`
@@ -6085,15 +6201,15 @@ CREATE TABLE `logbook` (
   `email` varchar(120) DEFAULT NULL,
   `sccode` int(11) DEFAULT NULL,
   `pagename` varchar(100) DEFAULT NULL,
-  `duration` int(11) DEFAULT NULL,
   `filesize` float NOT NULL DEFAULT 0,
-  `ipaddr` varchar(15) DEFAULT NULL,
   `platform` varchar(120) DEFAULT NULL,
   `browser` varchar(120) DEFAULT NULL,
-  `location` varchar(50) DEFAULT NULL,
   `entrytime` datetime DEFAULT NULL,
   `modifieddate` datetime DEFAULT NULL,
   `bandwidth` bigint(20) DEFAULT 0,
+  `ipaddr` varchar(45) DEFAULT NULL,
+  `duration` int(11) DEFAULT 0,
+  `location` varchar(100) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=10548 DEFAULT CHARSET=utf32 COLLATE=utf32_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -16948,4 +17064,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-11-15  1:26:45
+-- Dump completed on 2025-11-15 16:11:19

@@ -224,6 +224,8 @@ if (isLocalhost()) {
   updateSummaryCounts();
 
   // Update counts after Sync Table / Apply Column
+
+  /*
   document.addEventListener('click', async (e) => {
     if (e.target.matches('.sync-table, .sync-column')) {
       const btn = e.target;
@@ -258,6 +260,7 @@ if (isLocalhost()) {
       }
     }
   });
+  */
 
 </script>
 
