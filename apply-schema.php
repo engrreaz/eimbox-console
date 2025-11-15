@@ -175,3 +175,5 @@ ob_end_clean();
 echo '<div class="alert alert-danger">❌ Invalid action</div>';
 $conn_sync->close();
 exit;
+
+
