@@ -204,7 +204,7 @@ CREATE TABLE `auth_logs` (
   `action` varchar(50) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=276 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=277 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -271,7 +271,6 @@ CREATE TABLE `billing_payments` (
   `payment_method` enum('cash','bank','bkash','nagad','card','other') DEFAULT 'cash',
   `transaction_id` varchar(50) DEFAULT NULL,
   `amount` decimal(10,2) NOT NULL,
-  `remarks` varchar(255) DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   KEY `invoice_id` (`invoice_id`),
@@ -977,7 +976,7 @@ CREATE TABLE `logbook` (
   KEY `idx_time` (`entrytime`),
   KEY `idx_logbook_email_entry` (`email`,`entrytime`),
   KEY `idx_logbook_page` (`pagename`)
-) ENGINE=InnoDB AUTO_INCREMENT=7413 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7479 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -3183,7 +3182,7 @@ CREATE TABLE `user_actions` (
   PRIMARY KEY (`id`),
   KEY `idx_useractions_email_ts` (`email`,`timestamp`),
   KEY `idx_useractions_action` (`action`)
-) ENGINE=InnoDB AUTO_INCREMENT=15932 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16049 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -3375,10 +3374,10 @@ CREATE TABLE `usersapp` (
   `active` int(11) NOT NULL DEFAULT 0,
   `theme` varchar(20) NOT NULL DEFAULT 'dark',
   `customcss` int(11) NOT NULL DEFAULT 0,
-  `reset_otp` varchar(10) DEFAULT NULL,
-  `reset_hash` varchar(32) DEFAULT NULL,
-  `reset_link` varchar(150) DEFAULT NULL,
-  `st_entry_fld` varchar(1024) DEFAULT NULL,
+  `reset_otp` varchar(12) DEFAULT NULL,
+  `reset_hash` varchar(40) DEFAULT NULL,
+  `reset_link` varchar(160) DEFAULT NULL,
+  `st_entry_fld` varchar(1020) DEFAULT NULL,
   `page_status_grant` int(11) NOT NULL DEFAULT 6,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=978 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
@@ -3546,4 +3545,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-11-15  1:26:37
+-- Dump completed on 2025-11-16  0:44:56

@@ -6602,6 +6602,23 @@ DELIMITER ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
+-- Table structure for table `messages`
+--
+
+DROP TABLE IF EXISTS `messages`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `messages` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `sender_id` int(11) NOT NULL,
+  `receiver_id` int(11) NOT NULL,
+  `message` text NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `msgsupport`
 --
 
@@ -16581,15 +16598,12 @@ CREATE TABLE `usersapp` (
   `login_token` int(11) NOT NULL DEFAULT 1,
   `login_qrcode` int(11) NOT NULL DEFAULT 1,
   `setup_done` int(11) NOT NULL DEFAULT 0,
-  `whatsnew_last_id` int(11) NOT NULL DEFAULT 0,
   `reg_status` varchar(15) DEFAULT NULL,
   `reg_value` varchar(15) DEFAULT NULL,
   `active` int(11) NOT NULL DEFAULT 0,
   `theme` varchar(20) NOT NULL DEFAULT 'dark',
   `customcss` int(11) NOT NULL DEFAULT 0,
   `reset_otp` varchar(10) DEFAULT NULL,
-  `reset_hash` varchar(32) DEFAULT NULL,
-  `reset_link` varchar(150) DEFAULT NULL,
   `st_entry_fld` varchar(1024) DEFAULT NULL,
   `username` varchar(100) DEFAULT NULL,
   `failed_attempts` int(11) DEFAULT 0,
@@ -16607,6 +16621,10 @@ CREATE TABLE `usersapp` (
   `mfa_temp_expires` timestamp NULL DEFAULT NULL,
   `password_hash` varchar(255) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `page_status_grant` int(11) NOT NULL DEFAULT 6,
+  `reset_link` varchar(160) DEFAULT NULL,
+  `whatsnew_last_id` int(11) NOT NULL DEFAULT 0,
+  `reset_hash` varchar(40) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=951 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -17064,4 +17082,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-11-15 16:11:19
+-- Dump completed on 2025-11-16  0:45:05
