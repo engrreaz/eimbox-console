@@ -1,4 +1,4 @@
-// 🔹 Switch Button
+// 🔹 Switch Button (reverse mode toggle)
 function reve() {
     const url = new URL(window.location);
     if (url.searchParams.get('reverse') === '1') url.searchParams.delete('reverse');
@@ -23,18 +23,28 @@ function showMessage(htmlContent) {
     setTimeout(() => container.remove(), 5000);
 }
 
-// 🔹 Helper to POST safely
+// 🔹 Helper to POST safely using FormData
 async function postData(url, dataObj) {
     try {
+        const formData = new FormData();
+        for (const key in dataObj) {
+            if (Array.isArray(dataObj[key])) {
+                // For items array (apply-selected)
+                formData.append(key, JSON.stringify(dataObj[key]));
+            } else {
+                formData.append(key, dataObj[key]);
+            }
+        }
+
         const response = await fetch(url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: 'data=' + encodeURIComponent(JSON.stringify(dataObj))
+            body: formData
         });
+
         const html = await response.text();
         return html; // সরাসরি HTML
     } catch (e) {
-        showMessage('❌ Network error: ' + e.message);
+        showMessage('<div class="alert alert-danger">❌ Network error: ' + e.message + '</div>');
         return null;
     }
 }
@@ -44,12 +54,13 @@ document.querySelectorAll('.sync-table').forEach(btn => {
     btn.addEventListener('click', async () => {
         const table = btn.dataset.table;
         const createSQL = btn.dataset.create;
-        alert(table + '/' + createSQL);
+
         const html = await postData('apply-schema.php', {
             action: 'apply-table',
             table,
             sql: createSQL
         });
+
         if (html) document.getElementById('syncResult').innerHTML = html;
     });
 });
@@ -59,12 +70,13 @@ document.querySelectorAll('.sync-column').forEach(btn => {
     btn.addEventListener('click', async () => {
         const table = btn.dataset.table;
         const column = btn.dataset.column;
-        alert(table + column);
+
         const html = await postData('apply-schema.php', {
             action: 'apply-column',
             table,
             column
         });
+
         if (html) document.getElementById('syncResult').innerHTML = html;
     });
 });
