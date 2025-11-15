@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 🔹 Notification helper
     function showMessage(htmlContent) {
         const container = document.createElement('div');
-        container.className = `alert`;
+        container.className = 'alert';
         container.innerHTML = htmlContent;
         container.style.position = 'fixed';
         container.style.top = '20px';
@@ -25,59 +25,48 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => container.remove(), 5000);
     }
 
-    // 🔹 Helper to POST safely
+    // 🔹 Helper to POST JSON safely
     async function postData(url, dataObj) {
         try {
             const response = await fetch(url, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: 'data=' + encodeURIComponent(JSON.stringify(dataObj))
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dataObj)
             });
-            return await response.text(); // সরাসরি HTML রেসপন্স
+            return await response.text(); // HTML response
         } catch (e) {
             showMessage('❌ Network error: ' + e.message);
             return null;
         }
     }
 
-    // 🔹 Safe DOM injection
     function setSyncResult(html) {
         const target = document.getElementById('syncResult');
         if (target) target.innerHTML = html;
         else showMessage('<div class="alert alert-warning">⚠️ syncResult element not found</div>');
     }
 
-    // 🔹 Sync Table Button
+    // 🔹 Sync Table
     document.querySelectorAll('.sync-table').forEach(btn => {
         btn.addEventListener('click', async () => {
             const table = btn.dataset.table;
             const createSQL = btn.dataset.create;
-
-            alert(table + ' | ' + createSQL);
-            const html = await postData('apply-schema.php', {
-                action: 'apply-table',
-                table,
-                sql: createSQL
-            });
+            const html = await postData('apply-schema.php', { action: 'apply-table', table, sql: createSQL });
             if (html) setSyncResult(html);
         });
     });
 
-    // 🔹 Sync Column Button
+    // 🔹 Sync Column
     document.querySelectorAll('.sync-column').forEach(btn => {
         btn.addEventListener('click', async () => {
             const table = btn.dataset.table;
             const column = btn.dataset.column;
-            const html = await postData('apply-schema.php', {
-                action: 'apply-column',
-                table,
-                column
-            });
+            const html = await postData('apply-schema.php', { action: 'apply-column', table, column });
             if (html) setSyncResult(html);
         });
     });
 
-    // 🔹 Toggle Checkboxes per Table
+    // 🔹 Toggle Checkboxes
     document.querySelectorAll('.toggle-check').forEach(btn => {
         btn.addEventListener('click', () => {
             const table = btn.dataset.table;
@@ -90,20 +79,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (syncSelectedBtn) {
         syncSelectedBtn.addEventListener('click', async () => {
             const selected = [];
-            document.querySelectorAll('.check-column:checked').forEach(chk => {
-                selected.push({ table: chk.dataset.table, column: chk.dataset.column });
-            });
-
-            if (selected.length === 0) {
+            document.querySelectorAll('.check-column:checked').forEach(chk => selected.push({ table: chk.dataset.table, column: chk.dataset.column }));
+            if (!selected.length) {
                 showMessage('<div class="alert alert-danger">❌ No columns selected!</div>');
                 return;
             }
-
-            const html = await postData('apply-schema.php', {
-                action: 'apply-selected',
-                items: selected
-            });
-
+            const html = await postData('apply-schema.php', { action: 'apply-selected', items: selected });
             if (html) setSyncResult(html);
         });
     }
