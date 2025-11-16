@@ -287,8 +287,8 @@ file_put_contents('bkash/config.json', $newJsonString);
         // alert(payerReference);
 
         var paymentRequest;
-        // var cBURL = '<?= APP_PATH; ?>payment_confirm_check.php';
-        var cBURL = 'http://localhost/eimbox-dashboard/eimbox-materio/payment_confirm_check.php';
+        var cBURL = '<?= APP_PATH; ?>payment_confirm_check.php';
+        // var cBURL = 'http://localhost/eimbox-dashboard/eimbox-materio/payment_confirm_check.php';
         paymentRequest = { mode: '0011', payerReference: payerReference, callbackURL: cBURL, amount: amount, currency: 'BDT', intent: 'sale' };
 
         bKash.init({
