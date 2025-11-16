@@ -26,6 +26,7 @@ $host = DB_HOST;
 $user = DB_USER;
 $pass = DB_PASS;
 $port = 3306;
+
 $dbname = (isset($_SESSION['reverse']) && $_SESSION['reverse'] == 1) ? DB_NAME : (defined('DB_SYNC') ? DB_SYNC : DB_NAME);
 echo $dbname;
 $conn_sync = new mysqli($host, $user, $pass, $dbname, $port);
@@ -84,7 +85,7 @@ if ($action === 'apply-table') {
 
     $checkTable = $conn_sync->query("SHOW TABLES LIKE '{$table}'");
     if ($checkTable && $checkTable->num_rows > 0) {
-        echo "<div class='alert alert-warning'>⚠️ Table '" . $dbname . '/'  . h($table) . "' already exists</div>";
+        echo "<div class='alert alert-warning'>⚠️ Table '" . $dbname . '/'  . h($table) . ' / ' . $createSQL .  "' already exists</div>";
         $conn_sync->close();
         exit;
     }
