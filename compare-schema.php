@@ -111,43 +111,172 @@ if (isLocalhost()) {
 
   <?php
   $index = 0;
+  // foreach ($localTables as $tableName => $localCols) {
+  //   $index++;
+  //   $collapseId = "collapse_$index";
+  //   $remoteCols = $remoteTables[$tableName] ?? [];
+  //   $existsRemote = !empty($remoteCols);
+  //   $existsRemote ? $found_table++ : $missing_table++;
+  
+  //   echo "<div class='card mb-3'>";
+  //   echo "<div class='card-header d-flex align-items-center justify-content-between p-2'>";
+  //   echo "<div class='flex-fill d-flex align-items-center'><h6 class='mb-0 ms-2'>$tableName</h6></div>";
+  //   echo "<div class='d-flex justify-content-center align-items-center' style='min-width:180px;'>";
+  //   echo $existsRemote ? "<span class='badge bg-success'>Found in Remote</span>" : "<span class='badge bg-danger'>Missing in Remote</span>";
+  //   echo "</div>";
+  //   echo "<div class='d-flex align-items-center gap-2'>";
+  //   if (!$existsRemote) {
+  //     preg_match('/CREATE TABLE `' . preg_quote($tableName, '/') . '` \((.*?)\)[^\;]*;/si', $localContent, $m);
+  //     $createStmt = $m[0] ?? '';
+  //     echo "<button class='btn btn-sm btn-primary sync-table p-1' style='min-width: 100px;' 
+  //               data-table='$tableName' 
+  //               data-create='" . htmlspecialchars($createStmt, ENT_QUOTES) . "'>➕ Sync Table</button>";
+  //   } else {
+  //     echo "<span style='min-width:100px;' id='diffmiss-$tableName'></span>";
+  //   }
+  
+  //   // echo htmlspecialchars($createStmt, ENT_QUOTES);
+  //   echo "<button class='btn btn-sm' data-bs-toggle='collapse' data-bs-target='#$collapseId'><i class='bi bi-chevron-down'></i></button>";
+  //   echo "</div></div>";
+  
+  //   echo "<div id='$collapseId' class='collapse'><div class='card-body'>";
+  //   echo "<table class='table table-sm table-bordered align-middle'>";
+  //   echo "<thead><tr><th>Column / Definition</th><th>Status</th><th>Action</th><th class='text-center'><button class='btn btn-sm btn-outline-secondary toggle-check p-1' data-table='$tableName'>Toggle</button></th></tr></thead><tbody>";
+  //   $curdiff = $curmiss = 0;
+  //   foreach ($localCols as $colDef) {
+  //     $total_column++;
+  //     preg_match('/^`([^`]+)`/', $colDef, $cm);
+  //     $colName = $cm[1] ?? '';
+  //     $remoteColNames = array_map(fn($def) => preg_match('/^`([^`]+)`/', $def, $m) ? $m[1] : '', $remoteCols);
+  //     $existsByName = in_array($colName, $remoteColNames);
+  //     $isExactMatch = in_array($colDef, $remoteCols);
+  
+  //     if ($isExactMatch) {
+  //       $match_column++;
+  //     } elseif ($existsByName) {
+  //       $different_column++;
+  //       $curdiff++;
+  //     } else {
+  //       $missing_column++;
+  //       $curmiss++;
+  //     }
+  
+
+  //     $status = $isExactMatch ? "<span class='badge bg-success'>Matched</span>" :
+  //       ($existsByName ? "<span class='badge bg-warning'>Different</span>" : "<span class='badge bg-danger'>Missing</span>");
+  //     $actionBtn = $isExactMatch ? '' : "<button class='btn btn-sm btn-outline-primary sync-column' style='min-width:90px;' data-table='$tableName' data-column='" . htmlspecialchars($colDef, ENT_QUOTES) . "'>⚙️ Apply</button>";
+  //     $disabled = $isExactMatch ? 'disabled' : '';
+  //     echo '<script>updatediffmiss(' . $curdiff . ', ' . $curmiss . ', "' . $tableName . '");;</script>';
+  
+  //     echo "<tr>
+  //               <td><code>$colDef</code></td>
+  //               <td>$status</td>
+  //               <td>$actionBtn</td>
+  //               <td class='text-center'><input type='checkbox' class='check-column' data-table='$tableName' data-column='" . htmlspecialchars($colDef, ENT_QUOTES) . "' $disabled></td>
+  //             </tr>";
+  //   }
+  
+  //   echo "</tbody></table>";
+  //   echo "</div></div></div>";
+  // }
+  
+
+
   foreach ($localTables as $tableName => $localCols) {
     $index++;
     $collapseId = "collapse_$index";
+
+    // Remote table info
     $remoteCols = $remoteTables[$tableName] ?? [];
     $existsRemote = !empty($remoteCols);
+
+    // Count stats
     $existsRemote ? $found_table++ : $missing_table++;
 
+    // Remote column names only
+    $remoteColNames = array_map(function ($def) {
+      return preg_match('/^`([^`]+)`/', $def, $m) ? $m[1] : '';
+    }, $remoteCols);
+
     echo "<div class='card mb-3'>";
+
+    /* -------------------------
+       HEADER
+    -------------------------- */
     echo "<div class='card-header d-flex align-items-center justify-content-between p-2'>";
-    echo "<div class='flex-fill d-flex align-items-center'><h6 class='mb-0 ms-2'>$tableName</h6></div>";
-    echo "<div class='d-flex justify-content-center align-items-center' style='min-width:180px;'>";
-    echo $existsRemote ? "<span class='badge bg-success'>Found in Remote</span>" : "<span class='badge bg-danger'>Missing in Remote</span>";
-    echo "</div>";
+
+    echo "<div class='flex-fill d-flex align-items-center'>
+            <h6 class='mb-0 ms-2'>$tableName</h6>
+          </div>";
+
+    echo "<div class='d-flex justify-content-center align-items-center' style='min-width:180px;'>
+            " . ($existsRemote
+      ? "<span class='badge bg-success'>Found in Remote</span>"
+      : "<span class='badge bg-danger'>Missing in Remote</span>"
+    ) . "
+          </div>";
+
     echo "<div class='d-flex align-items-center gap-2'>";
+
+    /* If missing table */
     if (!$existsRemote) {
-      preg_match('/CREATE TABLE `' . preg_quote($tableName, '/') . '` \((.*?)\)[^\;]*;/si', $localContent, $m);
+
+      // Extract CREATE TABLE from local SQL
+      preg_match(
+        '/CREATE TABLE `' . preg_quote($tableName, '/') . '` \((.*?)\)[^\;]*;/si',
+        $localContent,
+        $m
+      );
+
       $createStmt = $m[0] ?? '';
-      echo "<button class='btn btn-sm btn-primary sync-table p-1' style='min-width: 100px;' 
-                data-table='$tableName' 
-                data-create='" . htmlspecialchars($createStmt, ENT_QUOTES) . "'>➕ Sync Table</button>";
+
+      echo "<button class='btn btn-sm btn-primary sync-table p-1' 
+                style='min-width:100px;'
+                data-table='$tableName'
+                data-create='" . htmlspecialchars($createStmt, ENT_QUOTES) . "'>
+                ➕ Sync Table
+              </button>";
     } else {
       echo "<span style='min-width:100px;' id='diffmiss-$tableName'></span>";
     }
 
-    // echo htmlspecialchars($createStmt, ENT_QUOTES);
-    echo "<button class='btn btn-sm' data-bs-toggle='collapse' data-bs-target='#$collapseId'><i class='bi bi-chevron-down'></i></button>";
+    echo "<button class='btn btn-sm' data-bs-toggle='collapse' data-bs-target='#$collapseId'>
+            <i class='bi bi-chevron-down'></i>
+          </button>";
+
     echo "</div></div>";
 
-    echo "<div id='$collapseId' class='collapse'><div class='card-body'>";
-    echo "<table class='table table-sm table-bordered align-middle'>";
-    echo "<thead><tr><th>Column / Definition</th><th>Status</th><th>Action</th><th class='text-center'><button class='btn btn-sm btn-outline-secondary toggle-check p-1' data-table='$tableName'>Toggle</button></th></tr></thead><tbody>";
-    $curdiff = $curmiss = 0;
+
+    /* -------------------------
+       BODY
+    -------------------------- */
+    echo "<div id='$collapseId' class='collapse'>
+            <div class='card-body'>
+            <table class='table table-sm table-bordered align-middle'>
+            <thead>
+                <tr>
+                    <th>Column / Definition</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                    <th class='text-center'>
+                        <button class='btn btn-sm btn-outline-secondary toggle-check p-1' data-table='$tableName'>Toggle</button>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>";
+
+
+    $curdiff = 0;
+    $curmiss = 0;
+
     foreach ($localCols as $colDef) {
+
       $total_column++;
+
+      // Extract column name
       preg_match('/^`([^`]+)`/', $colDef, $cm);
       $colName = $cm[1] ?? '';
-      $remoteColNames = array_map(fn($def) => preg_match('/^`([^`]+)`/', $def, $m) ? $m[1] : '', $remoteCols);
+
       $existsByName = in_array($colName, $remoteColNames);
       $isExactMatch = in_array($colDef, $remoteCols);
 
@@ -161,24 +290,50 @@ if (isLocalhost()) {
         $curmiss++;
       }
 
+      // Status badge
+      $status = $isExactMatch
+        ? "<span class='badge bg-success'>Matched</span>"
+        : ($existsByName
+          ? "<span class='badge bg-warning'>Different</span>"
+          : "<span class='badge bg-danger'>Missing</span>"
+        );
 
-      $status = $isExactMatch ? "<span class='badge bg-success'>Matched</span>" :
-        ($existsByName ? "<span class='badge bg-warning'>Different</span>" : "<span class='badge bg-danger'>Missing</span>");
-      $actionBtn = $isExactMatch ? '' : "<button class='btn btn-sm btn-outline-primary sync-column' style='min-width:90px;' data-table='$tableName' data-column='" . htmlspecialchars($colDef, ENT_QUOTES) . "'>⚙️ Apply</button>";
+      // Action button
+      $actionBtn = $isExactMatch
+        ? ''
+        : "<button class='btn btn-sm btn-outline-primary sync-column' 
+                    style='min-width:90px;'
+                    data-table='$tableName'
+                    data-column='" . htmlspecialchars($colDef, ENT_QUOTES) . "'>
+                    ⚙️ Apply
+              </button>";
+
+      // Checkbox disable
       $disabled = $isExactMatch ? 'disabled' : '';
-      echo '<script>updatediffmiss(' . $curdiff . ', ' . $curmiss . ', "' . $tableName . '");;</script>';
 
       echo "<tr>
                 <td><code>$colDef</code></td>
                 <td>$status</td>
                 <td>$actionBtn</td>
-                <td class='text-center'><input type='checkbox' class='check-column' data-table='$tableName' data-column='" . htmlspecialchars($colDef, ENT_QUOTES) . "' $disabled></td>
+                <td class='text-center'>
+                    <input type='checkbox' 
+                        class='check-column' 
+                        data-table='$tableName'
+                        data-column='" . htmlspecialchars($colDef, ENT_QUOTES) . "'
+                        $disabled>
+                </td>
               </tr>";
     }
 
-    echo "</tbody></table>";
-    echo "</div></div></div>";
+    // Update diff & miss count via JS (one call after table)
+    echo "<script>updatediffmiss($curdiff, $curmiss, '$tableName');</script>";
+
+    echo "</tbody></table></div></div></div>";
   }
+
+
+
+
   ?>
 
   <button class="btn btn-success mt-3" id="syncSelected">Sync Selected Columns/Tables</button>
