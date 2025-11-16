@@ -84,7 +84,7 @@ if ($action === 'apply-table') {
 
     $checkTable = $conn_sync->query("SHOW TABLES LIKE '{$table}'");
     if ($checkTable && $checkTable->num_rows > 0) {
-        echo "<div class='alert alert-warning'>⚠️ Table '" . h($table) . "' already exists</div>";
+        echo "<div class='alert alert-warning'>⚠️ Table '" . $dbname . '/'  . h($table) . "' already exists</div>";
         $conn_sync->close();
         exit;
     }
