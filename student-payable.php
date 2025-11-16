@@ -139,7 +139,7 @@ file_put_contents('bkash/config.json', $newJsonString);
                     <p><strong>Last Payment Reference No:</strong> <?= htmlspecialchars($stpr['prno'] ?? 'N/A') ?></p>
                     <p><strong>Total Dues (till <?= date('F') ?>):</strong>
                         <span class="text-danger fw-bold">
-                            <?php $payable = number_format($finance['totaldues'] ?? 15, 2);
+                            <?php $paya_2 = $finance['totaldues'] ?? 15;  $payable = number_format($paya_2, 2);
                             echo $payable; ?> ৳
                         </span>
                     </p>
