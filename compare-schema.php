@@ -169,7 +169,7 @@ if (isLocalhost()) {
       echo '<script>updatediffmiss(' . $curdiff . ', ' . $curmiss . ', "' . $tableName . '");;</script>';
 
       echo "<tr>
-                <td><code>$colDef</code></td>
+                <td><code>$colDef</code><code>$colName</code></td>
                 <td>$status</td>
                 <td>$actionBtn</td>
                 <td class='text-center'><input type='checkbox' class='check-column' data-table='$tableName' data-column='" . htmlspecialchars($colDef, ENT_QUOTES) . "' $disabled></td>
