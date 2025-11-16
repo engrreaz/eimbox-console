@@ -8,20 +8,43 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /* ---------------------------------------------------
-       🔹 Notification Helper
+       🔹 Notification Helper (Toast)
     --------------------------------------------------- */
-    function showMessage(content, type = 'info') {
-        const div = document.createElement('div');
-        div.className = `alert alert-${type}`;
-        div.innerHTML = content;
-        div.style.position = 'fixed';
-        div.style.top = '15px';
-        div.style.left = '50%';
-        div.style.transform = 'translateX(-50%)';
-        div.style.zIndex = '99999';
-        div.style.minWidth = '300px';
-        document.body.appendChild(div);
-        setTimeout(() => div.remove(), 4500);
+    function showToastx(type, message, title = '') {
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.innerHTML = title ? `<strong>${title}</strong><br>${message}` : message;
+
+        toast.style.position = 'fixed';
+        toast.style.top = '15px';
+        toast.style.right = '15px';
+        toast.style.minWidth = '250px';
+        toast.style.padding = '12px 16px';
+        toast.style.borderRadius = '6px';
+        toast.style.color = '#fff';
+        toast.style.zIndex = 99999;
+        toast.style.boxShadow = '0 3px 10px rgba(0,0,0,0.2)';
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s, transform 0.3s';
+
+        switch(type){
+            case 'success': toast.style.backgroundColor = '#28a745'; break;
+            case 'info': toast.style.backgroundColor = '#17a2b8'; break;
+            case 'warning': toast.style.backgroundColor = '#ffc107'; toast.style.color='#212529'; break;
+            case 'danger': toast.style.backgroundColor = '#dc3545'; break;
+            default: toast.style.backgroundColor = '#17a2b8';
+        }
+
+        document.body.appendChild(toast);
+
+        // fade-in
+        setTimeout(() => { toast.style.opacity = '1'; toast.style.transform = 'translateY(0)'; }, 50);
+        // fade-out
+        setTimeout(() => { 
+            toast.style.opacity = '0'; 
+            toast.style.transform = 'translateY(-20px)';
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
     }
 
     /* ---------------------------------------------------
@@ -38,14 +61,14 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (!response.ok) {
-                showMessage(`❌ HTTP Error (${response.status})`, 'danger');
+                showToast('danger', `HTTP Error (${response.status})`, 'Error');
                 return null;
             }
 
             return await response.text();
         }
         catch (err) {
-            showMessage(`❌ Network Error: ${err.message}`, 'danger');
+            showToast('danger', `Network Error: ${err.message}`, 'Error');
             return null;
         }
     }
@@ -56,7 +79,17 @@ document.addEventListener('DOMContentLoaded', () => {
     function setSyncResult(html) {
         const target = document.getElementById('syncResult');
         if (target) target.innerHTML = html;
-        else showMessage('⚠️ syncResult container missing!', 'warning');
+        else showToast('warning', 'syncResult container missing!', 'Warning');
+
+        // also show small toasts for each alert inside
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        tempDiv.querySelectorAll('.alert').forEach(alert => {
+            const cls = alert.className.includes('alert-success') ? 'success' :
+                        alert.className.includes('alert-danger') ? 'danger' :
+                        alert.className.includes('alert-warning') ? 'warning' : 'info';
+            showToast(cls, alert.innerHTML);
+        });
     }
 
     /* ---------------------------------------------------
@@ -82,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const html = await postData('apply-schema.php', {
                 action: 'apply-table',
                 table,
-                create: createSQL // Already Base64 encoded
+                create: createSQL
             });
 
             if (html) setSyncResult(html);
@@ -94,18 +127,16 @@ document.addEventListener('DOMContentLoaded', () => {
     --------------------------------------------------- */
     document.querySelectorAll('.sync-column').forEach(btn => {
         btn.addEventListener('click', async () => {
-
             const table = btn.dataset.table;
-            const columnDef = btn.dataset.column;  // raw SQL definition
+            const columnDef = btn.dataset.column;
 
             const html = await postData('apply-schema.php', {
                 action: 'apply-column',
                 table,
-                column: columnDef  // Safe after Base64
+                column: columnDef
             });
 
             if (html) setSyncResult(html);
-            showToast('success', html, 'Update Table/Column');
         });
     });
 
@@ -125,7 +156,6 @@ document.addEventListener('DOMContentLoaded', () => {
        🔹 Sync Selected Columns
     --------------------------------------------------- */
     const syncSelectedBtn = document.getElementById('syncSelected');
-
     if (syncSelectedBtn) {
         syncSelectedBtn.addEventListener('click', async () => {
 
@@ -138,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (items.length === 0) {
-                showMessage('❌ No columns selected!', 'danger');
+                showToast('danger', 'No columns selected!', 'Error');
                 return;
             }
 
