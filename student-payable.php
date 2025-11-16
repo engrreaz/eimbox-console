@@ -50,9 +50,9 @@ file_put_contents('bkash/config.json', $newJsonString);
     // ---------------------
 // Student ID নির্ধারণ
 // ---------------------
-echo  '<hr>' . $_SESSION['token'] . '<hr>' . $_SESSION['refresh_token'] . '<hr>';
+    echo '<hr>' . $_SESSION['token'] . '<hr>' . $_SESSION['refresh_token'] . '<hr>';
 
-echo strlen( $_SESSION['token'] ) . '/' . strlen( $_SESSION['refresh_token'] ) ;
+    echo strlen($_SESSION['token']) . '/' . strlen($_SESSION['refresh_token']);
 
 
     $sql = mysqli_query($conn, "SELECT stid FROM sessioninfo WHERE sccode = '$sccode' and sessionyear LIKE '%$y_v2%' ORDER BY RAND() LIMIT 1");
@@ -277,11 +277,19 @@ echo strlen( $_SESSION['token'] ) . '/' . strlen( $_SESSION['refresh_token'] ) ;
         var amount = $('#payamount').val();
         var payerReference = $('#reference').val();
 
+      
+
+        if (!amount || !payerReference) {
+            alert('Amount বা Reference খালি!');
+            return;
+        }
+
         // alert(payerReference);
 
         var paymentRequest;
-        var cBURL = '<?= APP_PATH; ?>payment_confirm_check.php';
-        paymentRequest = { mode: '0000', payerReference: payerReference, callbackURL: cBURL, amount: amount, currency: 'BDT', intent: 'sale' };
+        // var cBURL = '<?= APP_PATH; ?>payment_confirm_check.php';
+        var cBURL = 'http://localhost/eimbox-dashboard/eimbox-materio/payment_confirm_check.php';
+        paymentRequest = { mode: '0011', payerReference: payerReference, callbackURL: cBURL, amount: amount, currency: 'BDT', intent: 'sale' };
 
         bKash.init({
             paymentMode: 'checkout',
@@ -296,7 +304,7 @@ echo strlen( $_SESSION['token'] ) . '/' . strlen( $_SESSION['refresh_token'] ) ;
 
                         var obj = JSON.parse(data);
 
-                        console.log(obj);
+                        console.log('cox' + obj);
 
                         if (data && obj.paymentID != null) {
                             paymentID = obj.paymentID;
