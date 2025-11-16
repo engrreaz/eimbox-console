@@ -26,10 +26,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $password = $_POST['password'] ?? '';
         $remember = isset($_POST['remember']);
 
-        $data = find_user_by_email($conn, $email);
-        $user = $data['user'];
-        $school = $data['school'];
 
+        if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $data = find_user_by_email($conn, $email);
+            $user = $data['user'];
+            $school = $data['school'];
+        } else {
+            $data = find_user_by_stid($conn, $email, $password);
+            $user = $data['user'];
+            $school = $data['school'];
+
+            if (!$user) {
+                $errors[] = "Invalid Student";
+            } else {
+                store_student_session($user, $school);
+                header('Location: index.php');
+            }
+
+        }
+
+        // $data = find_user_by_email($conn, $email);
+        // $user = $data['user'];
+        // $school = $data['school'];
+
+        // var_dump($user);
 
         if (!$user) {
             // User not found
@@ -194,7 +214,7 @@ include_once('header-plain.php');
                     </div>
 
                     <div class="mb-5">
-                        <a href="admission-login.php" class="btn btn-danger d-grid w-100" >Admission New Student</a>
+                        <a href="admission-login.php" class="btn btn-danger d-grid w-100">Admission New Student</a>
                     </div>
 
                     <div class="d-flex justify-content-center gap-2">

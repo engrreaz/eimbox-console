@@ -112,6 +112,47 @@ function find_user_by_email($conn, $email)
     ];
 }
 
+
+function find_user_by_stid($conn, $stid, $pin)
+{
+    // ইউজার ডেটা বের করো
+    $stmt = $conn->prepare("SELECT * FROM students WHERE stid = ? and (guarmobile = ? OR dob = ?) LIMIT 1");
+    $stmt->bind_param('sss', $stid, $pin, $pin);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $user = $res->fetch_assoc();
+    $stmt->close();
+
+
+    if (!$user) {
+        $user = [];
+        $school = [];
+        return [
+            "user" => $user,
+            "school" => $school
+        ];
+    }
+
+    // স্কুল ডেটা বের করো
+    $stmt2 = $conn->prepare("SELECT * FROM scinfo WHERE sccode = ? LIMIT 1");
+
+    // 's' ব্যবহার করো, কারণ sccode string হতে পারে (leading zero থাকতে পারে)
+    $stmt2->bind_param('s', $user['sccode']);
+    $stmt2->execute();
+    $res2 = $stmt2->get_result();
+    $school = $res2->fetch_assoc();
+    $stmt2->close();
+
+
+    return [
+        "user" => $user,
+        "school" => $school ?? []
+    ];
+
+
+
+}
+
 // ========================
 // Store User Session
 // ========================
@@ -120,6 +161,7 @@ function store_user_session($user, $school = [])
     $_SESSION['user_id'] = $user['id'] ?? '';
     $_SESSION['user_email'] = $user['email'] ?? '';
     $_SESSION['user_name'] = $user['username'] ?? '';
+    $_SESSION['userid'] = '';
     $_SESSION['first_name'] = $user['first_name'] ?? '';
     $_SESSION['last_name'] = $user['last_name'] ?? '';
     $_SESSION['phone'] = $user['phone'] ?? '';
@@ -140,7 +182,40 @@ function store_user_session($user, $school = [])
     $_SESSION['sccategory'] = $school['sccategory'] ?? '';
     $_SESSION['admin_data'] = $school['admin_data'] ?? '';
     $_SESSION['scaddress_top'] = $school['ps'] . ', ' . $school['dist'];
-    $_SESSION['scaddress_top_full'] = $school['po'] .  $school['ps'] . ', ' . $school['dist'];
+    $_SESSION['scaddress_top_full'] = $school['po'] . $school['ps'] . ', ' . $school['dist'];
+
+    $_SESSION['rootuser'] = $school['rootuser'];
+    $_SESSION['scmobile'] = $school['mobile'];
+}
+
+
+function store_student_session($user, $school = [])
+{
+    $_SESSION['user_id'] = $user['id'] ?? '';
+    $_SESSION['user_email'] = $user['stid'] ?? '';
+    $_SESSION['user_name'] = $user['stid'] ?? '';
+    $_SESSION['userid'] = $user['stid'] ?? '';
+    $_SESSION['first_name'] = $user['stnameeng'] ?? '';
+    $_SESSION['last_name'] = $user['stnameben'] ?? '';
+    $_SESSION['phone'] = $user['guarmobile'] ?? '';
+    $_SESSION['address'] = $user['previll'] ?? '';
+    $_SESSION['dob'] = $user['dob'] ?? '';
+    $_SESSION['user_role'] = 'Student';
+    $_SESSION['userlevel'] = 'Student';
+    $_SESSION['sccode'] = $user['sccode'] ?? '';
+    $_SESSION['photourl'] = dirname(__DIR__) . '/students' . '/' . $user['stid'] . 'jpg';
+    $_SESSION['isadmin'] = 0;
+    $_SESSION['page_status_grant'] = 6;
+    $_SESSION['fullname'] = $user['stnameeng'];
+
+    $_SESSION['locktime'] = 10000; //$user['admin'] ?? 0;
+
+    // স্কুল ইনফো
+    $_SESSION['scname'] = $school['scname'] ?? '';
+    $_SESSION['sccategory'] = $school['sccategory'] ?? '';
+    $_SESSION['admin_data'] = $school['admin_data'] ?? '';
+    $_SESSION['scaddress_top'] = $school['ps'] . ', ' . $school['dist'];
+    $_SESSION['scaddress_top_full'] = $school['po'] . $school['ps'] . ', ' . $school['dist'];
 
     $_SESSION['rootuser'] = $school['rootuser'];
     $_SESSION['scmobile'] = $school['mobile'];

@@ -1,12 +1,8 @@
 <?php
-
 require_once 'core/init.php';
-
 require_once __DIR__ . '/vendor/autoload.php'; // HTMLPurifier autoload
 $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
 ?>
-
-
 
 <!doctype html>
 <html lang="en" class=" layout-navbar-fixed layout-menu-fixed layout-compact " dir="ltr" data-skin="default"
@@ -127,6 +123,7 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
     <!--? Config: Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file. -->
     <script src="assets/js/config.js"></script>
 
+
     <script>
 
     </script>
@@ -135,7 +132,7 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
 
 <body>
 
-   
+
     <noscript>
         <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5DDHKGP" height="0" width="0"
             style="display: none; visibility: hidden"></iframe>
@@ -143,7 +140,7 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
 
     <div class="layout-wrapper layout-content-navbar  ">
         <div class="layout-container">
-       
+
             <?php require_once 'nav/nav.php'; ?>
 
             <div class="layout-page">
@@ -218,7 +215,7 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
 
 
 
-                    <div class="row">
+                    <div class="container">
                         <div class="col-md-12">
                             <div class="nav-align-top">
                                 <ul class="nav nav-pills flex-column flex-sm-row mb-6 gap-sm-0 gap-2">
@@ -259,15 +256,15 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
                                             $pageURI = htmlspecialchars($row['related_pages']);
 
                                             $act = '';
-                                            if($currentFile == $pageURI) {
+                                            if ($currentFile == $pageURI) {
                                                 $act = ' active ';
                                             }
                                             ?>
 
                                             <li class="nav-item me-3">
-                                                <a class="nav-link waves-effect waves-light <?php echo $act;?> " href="<?php echo $pageURI; ?> "
-                                                    title="<?= $descrip; ?> "> <i class="bi bi-<?= $icon; ?> me-2"></i> <?= $title; ?>
-                                                </a>
+                                                <a class="nav-link waves-effect waves-light <?php echo $act; ?> "
+                                                    href="<?php echo $pageURI; ?> " title="<?= $descrip; ?> "> <i
+                                                        class="bi bi-<?= $icon; ?> me-2"></i> <?= $title; ?> </a>
                                             </li>
 
                                             <?php

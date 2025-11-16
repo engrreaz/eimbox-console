@@ -30,6 +30,8 @@ $pass = DB_PASS;
 $port = 3306;
 $dbname = ($rev == 0) ? (defined('DB_SYNC') ? DB_SYNC : DB_NAME) : DB_NAME;
 
+echo $dbname;
+
 $conn_sync = new mysqli($host, $user, $pass, $dbname, $port);
 if ($conn_sync->connect_error) {
     ob_end_clean();
@@ -108,6 +110,8 @@ if ($action === 'apply-table') {
 if ($action === 'apply-column') {
     $table = $conn_sync->real_escape_string($data['table'] ?? '');
     $columnDef = html_entity_decode(trim($data['column'] ?? ''), ENT_QUOTES);
+
+    echo $table . '/' . $columnDef;
 
     if (!$table || !$columnDef) {
         echo '<div class="alert alert-danger">❌ Missing table or column</div>';
