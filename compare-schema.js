@@ -105,6 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (html) setSyncResult(html);
+            showToast('success', html, 'Update Table/Column');
         });
     });
 
