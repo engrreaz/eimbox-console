@@ -206,6 +206,8 @@ if ($action === 'apply-column') {
         }
     }
 
+    
+
     $conn_sync->close();
     exit;
 }
