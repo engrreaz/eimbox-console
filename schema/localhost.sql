@@ -952,6 +952,24 @@ DELIMITER ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
+-- Table structure for table `inoutdata`
+--
+
+DROP TABLE IF EXISTS `inoutdata`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `inoutdata` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `sccode` int(11) NOT NULL,
+  `stid` varchar(20) NOT NULL,
+  `datetime` varchar(20) NOT NULL,
+  `chkdate` date NOT NULL,
+  `chktime` time NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=30058855 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `logbook`
 --
 
@@ -978,7 +996,7 @@ CREATE TABLE `logbook` (
   KEY `idx_time` (`entrytime`),
   KEY `idx_logbook_email_entry` (`email`,`entrytime`),
   KEY `idx_logbook_page` (`pagename`)
-) ENGINE=InnoDB AUTO_INCREMENT=7571 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7576 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -3184,7 +3202,7 @@ CREATE TABLE `user_actions` (
   PRIMARY KEY (`id`),
   KEY `idx_useractions_email_ts` (`email`,`timestamp`),
   KEY `idx_useractions_action` (`action`)
-) ENGINE=InnoDB AUTO_INCREMENT=16235 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16248 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -3547,4 +3565,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-11-17  2:06:00
+-- Dump completed on 2025-11-17  3:11:52
