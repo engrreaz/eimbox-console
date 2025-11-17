@@ -6,10 +6,9 @@ $res = $stmt->get_result();
 $datainfo = $res->fetch_assoc();
 $stmt->close();
 
-var_dump($datainfo);
 
 if (!$datainfo) {
-   
+
 
     // Force remove cookie
     setcookie("sccode", "", time() - 3600, "/");
@@ -18,7 +17,7 @@ if (!$datainfo) {
     // remove session
     unset($_SESSION['scode']);
     unset($_SESSION['student_reg']);
- echo 'NNN';
+    echo 'NNN';
     // Force clean output
     ob_clean();
     header("Location: admission-login.php");
