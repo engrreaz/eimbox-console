@@ -17,7 +17,6 @@ if (!$datainfo) {
     // remove session
     unset($_SESSION['scode']);
     unset($_SESSION['student_reg']);
-    echo 'NNN';
     // Force clean output
     ob_clean();
     header("Location: admission-login.php");
