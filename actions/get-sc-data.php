@@ -9,6 +9,7 @@ $stmt->close();
 var_dump($datainfo);
 
 if (!$datainfo) {
+    echo 'NNN';
 
     // Force remove cookie
     setcookie("sccode", "", time() - 3600, "/");
