@@ -8,7 +8,7 @@ require_once 'core/core-val.php';
 $reg = $_SESSION['student_reg'] ?? null;
 
 $sccode = $_SESSION['scode'] ?? null;
-echo '/' . $sccode . '/';
+
 if ($reg) {
     header("Location: admission-dashboard.php");
     exit;
@@ -17,7 +17,7 @@ if ($reg) {
 if ($sccode == null || $sccode == '') {
     $sccode = $_COOKIE['sccode'] ?? '';
 }
-
+echo '/' . $sccode . '/';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $reg_id = $_POST['reg_id'] ?? '';
