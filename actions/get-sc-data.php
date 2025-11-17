@@ -7,19 +7,14 @@ $datainfo = $res->fetch_assoc();
 $stmt->close();
 
 var_dump($datainfo);
-// যদি রেকর্ড না মেলে -> কুকি মুছে redirect
-if (!$datainfo) {
-    // কুকি মুছে ফেলা (path='/') — নিশ্চিতভাবে ব্রাউজার থেকে পোপ করবে
-    setcookie('sccode', '', time() - 3600, '/');
-    // অপশনালি সার্ভার সাইডে $_COOKIE থেকে আনসেট করাও
-    if (isset($_COOKIE['sccode'])) unset($_COOKIE['sccode']);
 
-    // যদি session-এ রাখে থাকো, তা ও আনসেট করো
+if (!$datainfo) {
+    setcookie('sccode', '', time() - 3600*24*30, '/');
+    if (isset($_COOKIE['sccode'])) unset($_COOKIE['sccode']);
     if (isset($_SESSION['scode'])) {
         unset($_SESSION['scode']);
     }
 
-    // Redirect to login page
     header('Location: admission-login.php');
     exit;
 }
