@@ -17,7 +17,8 @@ if ($reg) {
 if ($sccode == null || $sccode == '') {
     $sccode = $_COOKIE['sccode'] ?? '';
 }
-echo '/' . $sccode . '/';
+
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $reg_id = $_POST['reg_id'] ?? '';
@@ -40,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // ALTER TABLE `registrations` ADD `admit_class` VARCHAR(20) NULL DEFAULT 'Six' AFTER `sccode`;
-
+echo $sccode . '//';
 include_once 'actions/get-sc-data.php';
 require_once 'header-plain.php';
 ?>
@@ -227,12 +228,12 @@ require_once 'header-plain.php';
         // $('#eiinModal').fadeIn(500);
 
         document.getElementById('eiinModal').style.display = 'block';
-                document.getElementById('eiinModal').style.opacity = 0;
+        document.getElementById('eiinModal').style.opacity = 0;
 
-                setTimeout(() => {
-                    document.getElementById('eiinModal').style.transition = "opacity .3s";
-                    document.getElementById('eiinModal').style.opacity = 1;
-                }, 10);
+        setTimeout(() => {
+            document.getElementById('eiinModal').style.transition = "opacity .3s";
+            document.getElementById('eiinModal').style.opacity = 1;
+        }, 10);
     }
 
     function closemodal() {
