@@ -7,17 +7,7 @@ include_once 'core/global_values.php';
 
 $classname = $_GET['cls'] ?? '';
 $sectionname = $_GET['sec'] ?? '';
-// $exam = $_GET['exam'];
-// $sub = $_GET['sub'];
-// $assess = $_GET['assess'];
-// $tkn = $_GET['token'];
 
-// $rs = $_GET['rollst'];
-// $re = $_GET['rollto'];
-
-
-// $prdate = $re = $_GET['dt'];
-// ;
 $dtf = $_GET['dfrom'] ?? date('Y-m-d');
 $dtt = $_GET['dto'] ?? date('Y-m-d');
 
@@ -30,14 +20,26 @@ if ($result0x2->num_rows > 0) {
     }
 }
 
-$itemList = [];
-$sql0x2 = "SELECT * from stfinance where  sessionyear LIKE '%$y_v2%'  and pr1date between $dtf and $dtt ";
+
+$codeList = [];
+$sql0x2 = "SELECT itemcode, particulareng, particularben from financesetup where  sessionyear LIKE '%$y_v2%'  and sccode='$sccode' ";
 $result0x2 = $conn->query($sql0x2);
 if ($result0x2->num_rows > 0) {
     while ($row0x2 = $result0x2->fetch_assoc()) {
-        $classList = $row0x2;
+        $codeList = $row0x2;
     }
 }
+
+
+$itemList = [];
+$sql0x2 = "SELECT itemcode from stfinance where  sessionyear LIKE '%$y_v2%'  and pr1date between $dtf and $dtt group by itemcode and sccode='$sccode' ";
+$result0x2 = $conn->query($sql0x2);
+if ($result0x2->num_rows > 0) {
+    while ($row0x2 = $result0x2->fetch_assoc()) {
+        $itemList = $row0x2;
+    }
+}
+
 
 
 ?>
@@ -275,7 +277,7 @@ if ($result0x2->num_rows > 0) {
             <table style="margin:auto;">
                 <tr>
                     <td style="width:70px;">
-                        <img src="https://eimbox.com/logo/103187.png" width="60" />
+                        <img src="https://eimbox.com/logo/<?= $sccode;?> ?>.png" width="60" />
                     </td>
                     <td>
                         <div class="a"><?php echo $scname; ?></div>
@@ -283,7 +285,6 @@ if ($result0x2->num_rows > 0) {
                         <div class="b"><?php echo 'Mobile : ' . $scmobile; ?></div>
                     </td>
                 </tr>
-
             </table>
 
 
@@ -306,17 +307,8 @@ if ($result0x2->num_rows > 0) {
                 $mot = 0;
                 $mkoyta = 0;
                 $nidx = '';
-                $sql0 = "SELECT partid from cashbook where sessionyear='$sy' and  sccode = '$sccode' and type='Income' and date between '$dtf' and '$dtt' group by partid order by partid";
-                //echo $sql0; 
-                $result0qtf = $conn->query($sql0);
-                if ($result0qtf->num_rows > 0) {
-                    while ($row0 = $result0qtf->fetch_assoc()) {
-                        $nid = $row0['partid'] + 1000;
-                        $nidx = $nidx . $nid;
-                        $cnt++;
-                    }
-                }
-                //echo $nidx;
+
+                $cnt = count($itemList);
                 
                 echo '<thead style="border:1px solid gray;"><th>Class</th><th>Sec</th><th  style="text-align:center;">Count</th>';
                 for ($i = 0; $i < $cnt; $i++) {
@@ -324,7 +316,7 @@ if ($result0x2->num_rows > 0) {
                 }
                 echo '<th style="text-align:right;">Total</th></thead>';
 
-                $sql0 = "SELECT date, particulars from cashbook where sessionyear='$sy' and  sccode = '$sccode' and type='Income' and date between '$dtf' and '$dtt' group by date, particulars order by date, particulars ";  //ORDER BY , ID
+                $sql0 = "SELECT date, particulars from cashbook where sessionyear='$y_v2' and  sccode = '$sccode' and type='Income' and date between '$dtf' and '$dtt' group by date, particulars order by date, particulars ";  //ORDER BY , ID
                 $result0qt = $conn->query($sql0);
                 if ($result0qt->num_rows > 0) {
                     while ($row0 = $result0qt->fetch_assoc()) {
