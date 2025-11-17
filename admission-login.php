@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // ALTER TABLE `registrations` ADD `admit_class` VARCHAR(20) NULL DEFAULT 'Six' AFTER `sccode`;
-echo $sccode . '//';
+
 include_once 'actions/get-sc-data.php';
 require_once 'header-plain.php';
 ?>
