@@ -80,7 +80,6 @@ $release_colors = [
     }
 </style>
 
-</styl#idleProgressContainer>
 
 
 <!-- Modal -->
