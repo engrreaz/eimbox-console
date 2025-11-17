@@ -200,7 +200,14 @@ require_once 'header-plain.php';
         if (!phpSccode) {
             if (!localSccode) {
                 // মডাল দেখাও
-                $('#eiinModal').fadeIn(200);
+                // $('#eiinModal').fadeIn(200);
+                document.getElementById('eiinModal').style.display = 'block';
+                document.getElementById('eiinModal').style.opacity = 0;
+
+                setTimeout(() => {
+                    document.getElementById('eiinModal').style.transition = "opacity .3s";
+                    document.getElementById('eiinModal').style.opacity = 1;
+                }, 10);
             } else {
                 console.log('Using local sccode:', localSccode);
             }

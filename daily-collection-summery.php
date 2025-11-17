@@ -20,27 +20,25 @@ $sectionname = $_GET['sec'] ?? '';
 // ;
 $dtf = $_GET['dfrom'] ?? date('Y-m-d');
 $dtt = $_GET['dto'] ?? date('Y-m-d');
-$sy = 2025;
 
-
-
-$sql0x2 = "SELECT * from areas where areaname='$classname' and subarea = '$sectionname' and sessionyear = '$sy' and user='$rootuser'";
+$classList = [];
+$sql0x2 = "SELECT * from areas where  sessionyear LIKE '%$y_v2%' and user='$rootuser'";
 $result0x2 = $conn->query($sql0x2);
 if ($result0x2->num_rows > 0) {
     while ($row0x2 = $result0x2->fetch_assoc()) {
-        $ctid = $row0x2["classteacher"];
+        $classList = $row0x2;
     }
 }
 
-$sql0x2v = "SELECT * from teacher where sccode='$sccode' and (position='Head Teacher' or position='Principal')";
-$result0x2v = $conn->query($sql0x2v);
-if ($result0x2v->num_rows > 0) {
-    while ($row0x2v = $result0x2v->fetch_assoc()) {
-        $hname = $row0x2v["tname"];
-        $hpos = $row0x2v["position"];
-        $htid = $row0x2v["tid"];
+$itemList = [];
+$sql0x2 = "SELECT * from stfinance where  sessionyear LIKE '%$y_v2%'  and pr1date between $dtf and $dtt ";
+$result0x2 = $conn->query($sql0x2);
+if ($result0x2->num_rows > 0) {
+    while ($row0x2 = $result0x2->fetch_assoc()) {
+        $classList = $row0x2;
     }
 }
+
 
 ?>
 
@@ -357,17 +355,11 @@ if ($result0x2v->num_rows > 0) {
                                                 $csh = $row0["pr1"] + $row0["pr2"];
                                             }
                                         }
-
-
                                     }
                                 }
                                 echo '<td style="text-align:right;">' . $ttkk . '</td>';
                                 $linemot += $ttkk;
-
                             }
-
-
-
                             ?>
 
 

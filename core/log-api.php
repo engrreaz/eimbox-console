@@ -114,7 +114,7 @@ if ($action === 'stats'){
     $top_files = array_slice($files,0,8,true);
     // small html for UI
     $top_html = [];
-    foreach ($top_files as $fn=>$c) $top_html[] = "<span class='badge bg-light text-dark me-1'>{$fn} <small>({$c})</small></span>";
+    foreach ($top_files as $fn=>$c) $top_html[] = "<span class='badge bg-light text-dark me-1 mb-1 file-badge' data-file='{$fn}' style='cursor:pointer;'>{$fn} <small>({$c})</small></span>";
     echo json_encode(['ok'=>true, 'total'=>$total, 'counts'=>$counts, 'top_files_html'=>implode(' ',$top_html)]);
     exit;
 }
