@@ -5,20 +5,15 @@ require_once 'core/db.php';
 require_once 'core/core-val.php';
 
 
-?>
-
-dgdgdgdg
-
-<?php
-
 $reg = $_SESSION['student_reg'] ?? null;
-echo '///' . $reg . '///' ;
+
 $sccode = $_SESSION['scode'] ?? null;
+echo '/' . $sccode . '/';
 if ($reg) {
     header("Location: admission-dashboard.php");
     exit;
 }
-echo 'ddddd';
+
 if ($sccode == null || $sccode == '') {
     $sccode = $_COOKIE['sccode'] ?? '';
 }
@@ -46,12 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // ALTER TABLE `registrations` ADD `admit_class` VARCHAR(20) NULL DEFAULT 'Six' AFTER `sccode`;
 
-
 include_once 'actions/get-sc-data.php';
-
 require_once 'header-plain.php';
-
-
 ?>
 
 
