@@ -7,7 +7,7 @@ require_once 'core/core-val.php';
 
 ?>
 
-
+dgdgdgdg
 
 <?php
 
@@ -120,7 +120,7 @@ require_once 'header-plain.php';
 
 
 <div class="container">
-ািুাবাবা
+
     <?php if ($sccode != '') { ?>
         <div class="row">
             <div class="col-12  ">
