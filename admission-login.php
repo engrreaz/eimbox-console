@@ -224,7 +224,15 @@ require_once 'header-plain.php';
     });
 
     function openmodal() {
-        $('#eiinModal').fadeIn(500);
+        // $('#eiinModal').fadeIn(500);
+
+        document.getElementById('eiinModal').style.display = 'block';
+                document.getElementById('eiinModal').style.opacity = 0;
+
+                setTimeout(() => {
+                    document.getElementById('eiinModal').style.transition = "opacity .3s";
+                    document.getElementById('eiinModal').style.opacity = 1;
+                }, 10);
     }
 
     function closemodal() {
