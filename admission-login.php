@@ -17,7 +17,7 @@ if ($reg) {
     header("Location: admission-dashboard.php");
     exit;
 }
-
+echo 'ddddd';
 if ($sccode == null || $sccode == '') {
     $sccode = $_COOKIE['sccode'] ?? '';
 }
