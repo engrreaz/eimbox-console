@@ -6,6 +6,7 @@ $res = $stmt->get_result();
 $datainfo = $res->fetch_assoc();
 $stmt->close();
 
+var_dump($datainfo);
 // যদি রেকর্ড না মেলে -> কুকি মুছে redirect
 if (!$datainfo) {
     // কুকি মুছে ফেলা (path='/') — নিশ্চিতভাবে ব্রাউজার থেকে পোপ করবে
