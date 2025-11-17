@@ -12,6 +12,7 @@ dgdgdgdg
 <?php
 
 $reg = $_SESSION['student_reg'] ?? null;
+echo '///' . $reg . '///' ;
 $sccode = $_SESSION['scode'] ?? null;
 if ($reg) {
     header("Location: admission-dashboard.php");
