@@ -1,4 +1,4 @@
-<?php 
+<?php
 $stmt = $conn->prepare("SELECT * FROM scinfo WHERE sccode = ? LIMIT 1");
 $stmt->bind_param("i", $sccode);
 $stmt->execute();
@@ -9,13 +9,18 @@ $stmt->close();
 var_dump($datainfo);
 
 if (!$datainfo) {
-    setcookie('sccode', '', time() - 3600*24*30, '/');
-    if (isset($_COOKIE['sccode'])) unset($_COOKIE['sccode']);
-    if (isset($_SESSION['scode'])) {
-        unset($_SESSION['scode']);
-    }
 
-    header('Location: admission-login.php');
+    // Force remove cookie
+    setcookie("sccode", "", time() - 3600, "/");
+    unset($_COOKIE['sccode']);
+
+    // remove session
+    unset($_SESSION['scode']);
+    unset($_SESSION['student_reg']);
+
+    // Force clean output
+    ob_clean();
+    header("Location: admission-login.php");
     exit;
 }
 
@@ -26,7 +31,7 @@ $address = trim(
     ($datainfo['scadd1'] ?? '') .
     (!empty($datainfo['scadd2'] ?? '') ? ', ' . $datainfo['scadd2'] : '') .
     (!empty($datainfo['ps'] ?? '') ? ', ' . $datainfo['ps'] : '') .
-    (!empty($datainfo['dist'] ?? '') ? ', ' . $datainfo['dist'] : '') 
+    (!empty($datainfo['dist'] ?? '') ? ', ' . $datainfo['dist'] : '')
 
 );
 $htname = $datainfo['headname'] ?? '';
