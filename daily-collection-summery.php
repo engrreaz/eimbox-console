@@ -16,7 +16,7 @@ $sql0x2 = "SELECT * from areas where  sessionyear LIKE '%$y_v2%' and user='$root
 $result0x2 = $conn->query($sql0x2);
 if ($result0x2->num_rows > 0) {
     while ($row0x2 = $result0x2->fetch_assoc()) {
-        $classList = $row0x2;
+        $classList[] = $row0x2;
     }
 }
 
@@ -26,7 +26,7 @@ $sql0x2 = "SELECT itemcode, particulareng, particularben from financesetup where
 $result0x2 = $conn->query($sql0x2);
 if ($result0x2->num_rows > 0) {
     while ($row0x2 = $result0x2->fetch_assoc()) {
-        $codeList = $row0x2;
+        $codeList[] = $row0x2;
     }
 }
 
@@ -36,11 +36,9 @@ $sql0x2 = "SELECT itemcode from stfinance where  sessionyear LIKE '%$y_v2%'  and
 $result0x2 = $conn->query($sql0x2);
 if ($result0x2->num_rows > 0) {
     while ($row0x2 = $result0x2->fetch_assoc()) {
-        $itemList = $row0x2;
+        $itemList[] = $row0x2;
     }
 }
-
-
 
 ?>
 
