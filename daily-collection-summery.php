@@ -4,7 +4,9 @@ session_start();
 // include_once 'core/db.php';
 // include_once 'core/global_values.php';
 include_once 'header.php';
-
+ob_start();
+include "templete/letter-head-01.php";
+$letterHead = ob_get_clean();
 
 
 
@@ -64,10 +66,6 @@ if ($result0x2->num_rows > 0) {
 
 
 // classList তোমার দেওয়া অ্যারে (already loaded)
-
-// DB connection
-$conn = db_connect();
-
 
 // ======================
 // REPORT-1 DATA PROCESS
@@ -147,38 +145,55 @@ while ($row = $q2->fetch_assoc()) {
                 </div>
 
                 <div class="col-md-3 d-flex align-items-end">
-                    <button type="button" class="btn btn-primary" onclick="loadDailyReport()">Load Report</button>
+                    <button type="button" class="btn btn-primary p-2 w-100" onclick="loadDailyReport()">Load Report</button>
                 </div>
 
                 <div class="col-md-3 d-flex align-items-end">
-                    <button type="button" class="btn btn-dark me-2" onclick="printBlock()">Print</button>
-                    <a href="daily-collection-summery-pdf.php?dfrom=<?= $dtf ?>&dto=<?= $dtt ?>"
-                        class="btn btn-danger me-2" target="_blank">PDF</a>
-                    <button type="button" class="btn btn-secondary" onclick="sendEmail()">Email</button>
+
+                    <div class="btn-group w-100 " role="group">
+
+                        <button type="button" class="btn btn-dark" onclick="printBlock()">
+                            <i class="bi bi-printer-fill fs-large "></i>
+                        </button>
+
+                        <a href="pdf/daily-collection-summery-pdf.php?dfrom=<?= $dtf ?>&dto=<?= $dtt ?>"
+                            class="btn btn-danger" target="_blank" disabled>
+                            <i class="bi bi-file-earmark-pdf-fill  fs-large"> </i>
+                        </a>
+
+                        <button type="button" class="btn btn-secondary" onclick="sendEmail()" disabled>
+                            <i class="bi bi-envelope-fill fs-large"> </i>
+                        </button>
+
+                    </div>
+
                 </div>
+
+
+
             </div>
         </div>
     </div>
 
     <div id="print-block">
 
-        <h2>Class/Section Wise Item Collection</h2>
+        <div class="text-center fs-xlarge  fw-bold mt-4">Class/Section Wise Item Collection</d>
 
         <div class="table-responsive">
             <table class="table table-sm" cellspacing="0" cellpadding="5">
-                <tr>
-                    <th>Class</th>
-                    <th>Section</th>
+                <tr class="fw-bold  bg-primary">
+                    <td>Class</td>
+                    <td>Section</td>
                     <?php
                     $cnt = count($itemList);
                     for ($i = 0; $i < $cnt; $i++) {
-                        echo "<th>" . chr(65 + $i) . "</th>";
+                        echo "<td>" . chr(65 + $i) . "</td>";
                         $var = 'item' . ($i + 1);
                         $$var = 0;
                     }
                     ?>
 
-                    <th>Total Amount</th>
+                    <td class="text-end">Total Amount</td>
                 </tr>
 
                 <?php foreach ($classList as $cls): ?>
@@ -216,18 +231,20 @@ while ($row = $q2->fetch_assoc()) {
                 <?php endforeach; ?>
 
                 <tr>
-                    <th></th>
-                    <td></td>
+                    <td colspan="2" class="fw-bold text-primary">Total</td>
+
                     <?php
                     $gtotal = 0;
                     $cnt = count($itemList);
                     for ($i = 0; $i < $cnt; $i++) {
                         $var = 'item' . ($i + 1);
-                        echo "<th style='text-align:right;'>" . number_format($$var, 2) . "</th>";
+                        echo "<td class='text-primary' style='text-align:right; font-weight: bold;;'>" . number_format($$var, 2) . "</td>";
                         $gtotal += $$var;
                     }
                     ?>
-                    <th style='text-align:right;'><?= number_format($gtotal, 2) ?></th>
+                    <td class='text-primary' style='text-align:right; font-weight: bold;; '>
+                        <?= number_format($gtotal, 2) ?>
+                    </td>
                 </tr>
             </table>
 
@@ -236,39 +253,36 @@ while ($row = $q2->fetch_assoc()) {
 
         <h2>Item Wise Total Collection</h2>
 
-        <table border="1" cellspacing="0" cellpadding="5">
-            <tr>
-                <th>Item Code</th>
-                <th>Item Name (English)</th>
-                <th>Item Name (Bangla)</th>
-                <th>Total Amount</th>
-            </tr>
-
-            <?php $mot = 0;
-            foreach ($report2 as $r):
-                $mot += $r['total'];
-                ?>
-                <tr>
-                    <td><?= $r['itemcode'] ?></td>
-                    <td><?= $r['en'] ?></td>
-                    <td><?= $r['bn'] ?></td>
-                    <td style="text-align:right;"><?= number_format($r['total'], 2) ?></td>
+        <div class="table-responsive">
+            <table class="table table-sm" cellspacing="0" cellpadding="5">
+                <tr class="fw-bold bg-primary text-white">
+                    <td>Item Code</td>
+                    <td>Item Name (English)</td>
+                    <td>Item Name (Bangla)</td>
+                    <td class="text-end">Total Amount</td>
                 </tr>
-            <?php endforeach; ?>
-            <tr>
-                <th>d</th>
-                <th></th>
-                <th></th>
-                <th style='text-align:right;'> <?= number_format($mot, 2) ?></th>
-            </tr>
-        </table>
+
+                <?php $mot = 0;
+                foreach ($report2 as $r):
+                    $mot += $r['total'];
+                    $itemcode = chr(65 + array_search($r, $report2));
+                    ?>
+                    <tr>
+                        <td><?= $itemcode; ?></td>
+                        <td><?= $r['en'] ?></td>
+                        <td><?= $r['bn'] ?></td>
+                        <td style="text-align:right;"><?= number_format($r['total'], 2) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                <tr class="fw-bold text-primary">
+                    <td colspan="3">Total</td>
+                    <td style='text-align:right;'> <?= number_format($mot, 2) ?></td>
+                </tr>
+            </table>
+        </div>
+
     </div>
 </div>
-
-
-
-
-
 
 
 <?php include_once 'footer.php'; ?>
@@ -284,27 +298,65 @@ while ($row = $q2->fetch_assoc()) {
 </script>
 
 <script>
-function printBlock() {
-    var printContents = document.getElementById("print-block").innerHTML;
-    var newWindow = window.open('', '', 'width=900,height=650');
-    newWindow.document.write(`
+    function printBlock() {
+
+        var letterHead = <?= json_encode($letterHead); ?>;
+        var printContents = document.getElementById("print-block").innerHTML;
+
+        var newWindow = window.open('', '', 'width=900,height=650');
+
+        newWindow.document.write(`
         <html>
         <head>
             <title>Print</title>
+
             <style>
-                body { font-family: SutonnyOMJ, Arial; }
+                body { 
+                    font-family: SutonnyOMJ, Arial; 
+                    -webkit-print-color-adjust: exact;
+                    padding: 30px;
+                }
+
                 table { border-collapse: collapse; width: 100%; }
                 table, th, td { border: 1px solid #333; }
                 th, td { padding: 5px; }
+
+                /* ========= ONLY FIRST PAGE HEADER ========= */
+                @media print {
+                    #first-page-header {
+                        display: block;
+                        margin-bottom: 20px;
+                    }
+                }
             </style>
         </head>
-        <body>${printContents}</body>
+
+        <body>
+
+            <!-- FIRST PAGE HEADER -->
+            <div id="first-page-header">
+                ${letterHead}
+            </div>
+
+            <!-- REPORT CONTENT -->
+            ${printContents}
+
+        </body>
         </html>
     `);
-    newWindow.document.close();
-    newWindow.print();
-}
+
+        newWindow.document.close();
+        newWindow.focus();
+        newWindow.print();
+
+        // Auto close even if user presses Cancel
+        newWindow.onafterprint = function () {
+            newWindow.close();
+        };
+    }
 </script>
+
+
 
 
 </body>

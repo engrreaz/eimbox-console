@@ -2,7 +2,7 @@
 <?php
 
 $files = array_filter(scandir(__DIR__), function ($f) {
-    return is_file($f) && substr($f, -4) === '.php'; // শুধু php ফাইল ধরলাম
+    return is_file($f) && substr($f, -4) === '.php'; 
 });
 ?>
 
@@ -22,7 +22,7 @@ $files = array_filter(scandir(__DIR__), function ($f) {
                         <th>Page</th>
                         <th>Nav Title</th>
                         <?php
-                        // সব প্যাকেজ লোড করো
+               
                         $pkgQ = $conn->query("SELECT id, package_name FROM packages ORDER BY serial ASC");
                         $packages = [];
                         while ($p = $pkgQ->fetch_assoc()) {
@@ -37,7 +37,7 @@ $files = array_filter(scandir(__DIR__), function ($f) {
                     $i = 1;
                     $not_assign = 1;
                     foreach ($files as $page) {
-                        // modulemanager থেকে মিলে যাওয়ার চেষ্টা
+                
                         $modStmt = $conn->prepare("SELECT module_name, nav_title FROM modulemanager WHERE related_pages=?");
                         $modStmt->bind_param("s", $page);
                         $modStmt->execute();
@@ -70,29 +70,29 @@ $files = array_filter(scandir(__DIR__), function ($f) {
                             $print = $map['print'] ?? null;
                             $modified_time = $map['modified_time'] ?? null;
 
-                            // ডিফল্ট অবস্থা
-                            $btnClass = 'btn-outline-secondary';
+             
+                            $btnClass = 'btn-outline-dark';
                             $btnLabel = '—';
                             $disabled = '';
                             $disoff = '';
 
-                            // Access অনুযায়ী বাটন কালার/লেবেল
+                    
                             if ($access === "Yes") {
-                                $btnClass = 'btn-outline-success';
-                                $btnLabel = '✅';
+                                $btnClass = 'btn-success';
+                                $btnLabel = '<i class="bi bi-check2"></i>';
                             } elseif ($access === "No") {
-                                $btnClass = 'btn-outline-danger';
-                                $btnLabel = '❌';
+                                $btnClass = 'btn-danger';
+                                $btnLabel = '<i class="bi bi-x-lg"></i>';
                             } else {
                                 $not_assign++;
                             }
 
-                            // এই মডিউলগুলো disable থাকবে
+                     
                     
                             if (($mod['module_name'] == '') || (in_array($moduleName, ['Core', 'Backend', 'Orion', 'Seed', 'Authority', '']))) {
                                 $disoff = 'disabled';
                                 $disabled = 'disabled';
-                                $not_assign--; // Optional
+                                $not_assign--; 
                             }
                             ?>
                             <td class='text-center'>

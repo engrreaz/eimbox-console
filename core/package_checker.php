@@ -10,8 +10,6 @@ $mapR = $mapQ->get_result();
 $map = $mapR->fetch_assoc();
 
 
-
-
 $access = $map ? $map['access'] : 'No';
 $entry_limit = $map ? $map['entry_limit'] : '0';
 $view_limit = $map ? $map['view_limit'] : '0';

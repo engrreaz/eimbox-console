@@ -1,11 +1,11 @@
 <?php
 session_start();
-require_once __DIR__ . '/vendor/autoload.php'; // mpdf autoload
-include_once 'core/init.php'; 
-include_once 'format/letter-head.php'; // Letter Head include
+require_once dirname(__DIR__) . '/vendor/autoload.php'; // mpdf autoload
+include_once dirname(__DIR__) . '/core/init.php';
+include_once dirname(__DIR__) . '/format/letter-head.php'; // Letter Head include
 
 $dfrom = $_GET['dfrom'] ?? date('Y-m-d');
-$dto   = $_GET['dto'] ?? date('Y-m-d');
+$dto = $_GET['dto'] ?? date('Y-m-d');
 
 // Bangla Font (SutonnyOMJ)
 $mpdf = new \Mpdf\Mpdf([

@@ -146,7 +146,7 @@
     </div>
   </div>
 </div>
-<button onclick="$('#settingsModal').modal('show')" class="btn btn-success">Test Settings Modal</button>
+<!-- <button onclick="$('#settingsModal').modal('show')" class="btn btn-success">Test Settings Modal</button> -->
 
 
 <?php require_once 'footer.php'; ?>

@@ -79,6 +79,7 @@ function validate_password($pwd)
 // ========================
 function find_user_by_email($conn, $email)
 {
+    
     // ইউজার ডেটা বের করো
     $stmt = $conn->prepare("SELECT * FROM usersapp WHERE email = ? LIMIT 1");
     $stmt->bind_param('s', $email);
