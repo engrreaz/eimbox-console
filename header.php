@@ -221,7 +221,7 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
 
                                     <!-- ************************************************* -->
                                     <?php
-                                    echo $MUL_PATA;
+                                    echo '/' . $MUL_PATA . '/';
                                     $stmt = $conn->prepare("
                                         SELECT 
                                             id, module_name, nav_icon, descrip, root_page, nav_title, related_pages
