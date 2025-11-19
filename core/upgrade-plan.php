@@ -6,10 +6,13 @@ echo '<pre>';
 print_r($raw_json);
 echo '</pre>';
 echo 'XYZ';
-echo '<pre>';
-print_r($admin_data);
-echo '</pre>';
+// JSON থেকে PHP অ্যারেতে কনভার্ট
+$array = json_decode($row_json, true);
 
+// ফলাফল চেক
+echo '<pre>';
+print_r($array);
+echo '</pre>';
 echo $sccode_current_package;
 ?>
     Upgrade your plan .........
