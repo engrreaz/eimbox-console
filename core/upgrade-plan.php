@@ -2,7 +2,7 @@
 
 <?php 
 echo '<pre>';
-print_r($admin_data);
+print_r($_SESSION['admin_data']);
 echo '</pre>';
 ?>
     Upgrade your plan .........
