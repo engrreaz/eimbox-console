@@ -56,9 +56,9 @@ if ($result0x2->num_rows > 0) {
     }
 }
 
-echo '<pre>';
-print_r($dataList);
-echo '</pre>';
+// echo '<pre>';
+// print_r($dataList);
+// echo '</pre>';
 // input
 
 
