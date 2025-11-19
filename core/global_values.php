@@ -153,8 +153,8 @@ $scmobile = $_SESSION['scmobile'] ?? '';
 
 
 $raw_json = $_SESSION['admin_data'] ?? '';
-$raw_json = trim($raw_json);
-$admin_data = json_decode($raw_json, true);
+// $raw_json = trim($raw_json);
+// $admin_data = json_decode($raw_json, true);
 $sccode_current_package = $admin_data['package']['id'] ?? 2;
 
 $rootuser =  $_SESSION['rootuser'] ;
