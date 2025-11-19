@@ -199,7 +199,7 @@ while ($row = $q2->fetch_assoc()) {
 
                             $amount = 0;
                             foreach ($dataList as $data) {
-                                if (strtolower($data['itemcode']) == strtolower($itemcode) && strtolower($data['classname']) == strtolower($classname) && strtolower($data['sectionname']) == strtolower($sectionname)) {
+                                if (strtolower($data['itemcode']) == strtolower($itemcode) && strtolower($data['classname']) == strtolower($classname) && trim(strtolower($data['sectionname'])) == trim(strtolower($sectionname))) {
                                     $amount = $data['taka'];
                                     $$var += $amount;
                                     break;
