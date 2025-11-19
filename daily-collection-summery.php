@@ -56,9 +56,9 @@ if ($result0x2->num_rows > 0) {
     }
 }
 
-// echo '<pre>';
-// print_r($dataList);
-// echo '</pre>';
+echo '<pre>';
+print_r($dataList);
+echo '</pre>';
 // input
 
 
@@ -89,6 +89,7 @@ foreach ($classList as $cls) {
           AND classname = '$classname'
           AND sectionname = '$sectionname'
         GROUP BY itemcode
+        order by itemcode
     ";
 
     $q1 = $conn->query($sql1);
