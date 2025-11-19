@@ -150,8 +150,8 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
                 <div class="content-wrapper">
 
                     <?php
-echo 'xxxx';
-                    if ($cur_page_module !== 'Core' && $is_admin < 4) {
+                    $restrict = ["Seed", "Orion"];
+                    if ($is_admin < 4 && in_array($cur_page_module, $restrict)) {
 
                         // $admin_data = json_decode($admin_data, true);
                     
@@ -169,7 +169,7 @@ echo 'xxxx';
                         }
 
                     }
-echo 'yyyy';
+
                     if (isset($_GET['debug']) && $_GET['debug'] == 'session') {
                         echo '<pre>';
                         print_r($_SESSION);
