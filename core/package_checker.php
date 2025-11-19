@@ -2,7 +2,6 @@
 $package_check = true;
 
 
-
 $mapQ = $conn->prepare("SELECT * FROM package_map WHERE page_name=? AND package_id=?");
 $mapQ->bind_param("si", $currentFile, $sccode_current_package);
 $mapQ->execute();
