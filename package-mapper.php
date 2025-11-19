@@ -2,15 +2,12 @@
 <?php
 
 $files = array_filter(scandir(__DIR__), function ($f) {
-    return is_file($f) && substr($f, -4) === '.php'; 
+    return is_file($f) && substr($f, -4) === '.php';
 });
 ?>
 
-
 <div class="container-fluid py-4">
-    <h4 class="fw-bold mb-4"><i class="bi bi-diagram-3"></i> Page Access Map (Per Package)</h4>
-
-
+    <h4 class="fw-bold mb-4"><i class="bi bi-diagram-3"></i> Page Access Map (Page VS Package)</h4>
 
     <div class="card shadow-sm">
         <div class="card-body p-0 table-responsive">
@@ -22,7 +19,7 @@ $files = array_filter(scandir(__DIR__), function ($f) {
                         <th>Page</th>
                         <th>Nav Title</th>
                         <?php
-               
+
                         $pkgQ = $conn->query("SELECT id, package_name FROM packages ORDER BY serial ASC");
                         $packages = [];
                         while ($p = $pkgQ->fetch_assoc()) {
@@ -37,7 +34,7 @@ $files = array_filter(scandir(__DIR__), function ($f) {
                     $i = 1;
                     $not_assign = 1;
                     foreach ($files as $page) {
-                
+
                         $modStmt = $conn->prepare("SELECT module_name, nav_title FROM modulemanager WHERE related_pages=?");
                         $modStmt->bind_param("s", $page);
                         $modStmt->execute();
@@ -48,10 +45,10 @@ $files = array_filter(scandir(__DIR__), function ($f) {
                         $navTitle = $mod ? $mod['nav_title'] : '—';
 
                         echo "<tr>
-                <td>{$i}</td>
-                <td>{$moduleName}</td>
-                <td>{$page}</td>
-                <td>{$navTitle}</td>";
+                        <td>{$i}</td>
+                        <td>{$moduleName}</td>
+                        <td>{$page}</td>
+                        <td>{$navTitle}</td>";
 
 
                         foreach ($packages as $pkg) {
@@ -70,13 +67,13 @@ $files = array_filter(scandir(__DIR__), function ($f) {
                             $print = $map['print'] ?? null;
                             $modified_time = $map['modified_time'] ?? null;
 
-             
+
                             $btnClass = 'btn-outline-dark';
                             $btnLabel = '—';
                             $disabled = '';
                             $disoff = '';
 
-                    
+
                             if ($access === "Yes") {
                                 $btnClass = 'btn-success';
                                 $btnLabel = '<i class="bi bi-check2"></i>';
@@ -87,12 +84,12 @@ $files = array_filter(scandir(__DIR__), function ($f) {
                                 $not_assign++;
                             }
 
-                     
-                    
+
+
                             if (($mod['module_name'] == '') || (in_array($moduleName, ['Core', 'Backend', 'Orion', 'Seed', 'Authority', '']))) {
                                 $disoff = 'disabled';
                                 $disabled = 'disabled';
-                                $not_assign--; 
+                                $not_assign--;
                             }
                             ?>
                             <td class='text-center'>
@@ -110,7 +107,7 @@ $files = array_filter(scandir(__DIR__), function ($f) {
                                         '<b>Print:</b> ' . ($print ?: "N/A") . '<br>' .
                                         '<b>Modified:</b> ' . ($modified_time ?: "—")
                                         ?>" <?= $disabled ?>>
-                                    <?= $btnLabel  ?>
+                                    <?= $btnLabel ?>
                                 </button>
                             </td>
                             <?php
@@ -134,9 +131,9 @@ $files = array_filter(scandir(__DIR__), function ($f) {
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <form id="mapSettingsForm">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-gear"></i> Page Settings</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="modal-header border-bottom pb-3 fw-bold text-danger">
+                    <h5 class="modal-title"><i class="bi bi-marker-tip"></i> Permission Settings</h5>
+                    <button type="button" class="btn-close text-danger" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body row g-3">
                     <input type="hidden" name="page_name" id="page_name">
@@ -183,8 +180,8 @@ $files = array_filter(scandir(__DIR__), function ($f) {
                         </select>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-success"><i class="bi bi-save"></i> Save</button>
+                <div class="modal-footer pt-3 border-top mb-0 pb-0">
+                    <button type="submit" class="btn btn-success"><i class="bi bi-save"></i> &nbsp;&nbsp; Update Setting</button>
                 </div>
             </form>
         </div>
@@ -201,6 +198,7 @@ $files = array_filter(scandir(__DIR__), function ($f) {
         let page = $(this).data('page');
         let pkgId = $(this).data('pkg');
         let pkgName = $(this).data('name');
+        // alert(page + "/" + pkgName + "/" + pkgId);
 
         $('#page_name').val(page);
         $('#package_id').val(pkgId);
@@ -212,6 +210,8 @@ $files = array_filter(scandir(__DIR__), function ($f) {
         }, function (res) {
             if (res) {
                 let data = JSON.parse(res);
+                // $('[name=page_name]').val(data.page);
+                // $('[name=package_id]').val(data.pkgId);
                 $('[name=access]').val(data.access);
                 $('[name=entry_limit]').val(data.entry_limit);
                 $('[name=view_limit]').val(data.view_limit);
@@ -221,6 +221,8 @@ $files = array_filter(scandir(__DIR__), function ($f) {
                 $('[name=print]').val(data.print);
             } else {
                 $('#mapSettingsForm')[0].reset();
+                $('#page_name').val(page);
+                $('#package_id').val(pkgId);
             }
 
             const modalEl = document.getElementById('mapSettingsModal');
