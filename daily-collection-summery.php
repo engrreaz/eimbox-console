@@ -136,16 +136,16 @@ while ($row = $q2->fetch_assoc()) {
             <div class="row g-3">
                 <div class="col-md-3">
                     <label for="dfrom" class="form-label">From Date</label>
-                    <input type="date" id="dfrom" name="dfrom" class="form-control-sm " value="<?= $dtf ?>">
+                    <input type="date" id="dfrom" name="dfrom" class="form-control " value="<?= $dtf ?>">
                 </div>
 
                 <div class="col-md-3">
                     <label for="dto" class="form-label">To Date</label>
-                    <input type="date" id="dto" name="dto" class="form-control-sm" value="<?= $dtt ?>">
+                    <input type="date" id="dto" name="dto" class="form-control" value="<?= $dtt ?>">
                 </div>
 
                 <div class="col-md-3 d-flex align-items-end">
-                    <button type="button" class="btn btn-primary btn-sm p-2 w-100" onclick="loadDailyReport()">Load Report</button>
+                    <button type="button" class="btn btn-primary p-2 w-100" onclick="loadDailyReport()">Load Report</button>
                 </div>
 
                 <div class="col-md-3 d-flex align-items-end">
