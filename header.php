@@ -219,15 +219,9 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
                             <div class="nav-align-top">
                                 <ul class="nav nav-pills flex-column flex-sm-row mb-6 gap-sm-0 gap-2">
 
-
-
-
-
-
-
                                     <!-- ************************************************* -->
                                     <?php
-
+                                    echo $MUL_PATA;
                                     $stmt = $conn->prepare("
                                         SELECT 
                                             id, module_name, nav_icon, descrip, root_page, nav_title, related_pages
@@ -267,7 +261,6 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
                                             </li>
 
                                             <?php
-
                                         }
                                     }
                                     $stmt->close();
