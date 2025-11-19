@@ -37,7 +37,6 @@ if ($result0x2->num_rows > 0) {
 
 $itemList = [];
 $sql0x2 = "SELECT itemcode, particulareng, particularben, sum(pr1) as tk  from stfinance where  sessionyear LIKE '%$y_v2%'  and pr1date between '$dtf' and '$dtt' and sccode='$sccode'  group by itemcode ";
-echo $sql0x2;
 $result0x2 = $conn->query($sql0x2);
 if ($result0x2->num_rows > 0) {
     while ($row0x2 = $result0x2->fetch_assoc()) {
@@ -168,7 +167,7 @@ while ($row = $q2->fetch_assoc()) {
                 }
               
                 $clsAmount += $amount;
-                echo "<td style='text-align:right;'>" . $itemcode . "<br>" . number_format($amount, 2) . "</td>";
+                echo "<td style='text-align:right;'>" .  number_format($amount, 2) . "</td>";
             }
             ?>
             <td style="text-align:right;"><?= number_format($clsAmount, 2) ?></td>
