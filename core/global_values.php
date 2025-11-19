@@ -157,9 +157,6 @@ $raw_json = trim($raw_json);
 $admin_data = json_decode($raw_json, true);
 
 
-var_dump(json_last_error());
-var_dump(json_last_error_msg());
-
 
 $sccode_current_package = $admin_data['package']['id'] ?? 2;
 
