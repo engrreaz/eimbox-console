@@ -150,7 +150,7 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
                 <div class="content-wrapper">
 
                     <?php
-
+echo 'xxxx';
                     if ($cur_page_module !== 'Core' && $is_admin < 4) {
 
                         // $admin_data = json_decode($admin_data, true);
@@ -160,7 +160,7 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
                         if (!in_array($cur_page_module, $modules)) {
 
                             echo '<div class="container-xxl flex-grow-1 container-p-y">';
-                            echo '<div class="alert alert-danger">Module Not Accessable</div>';
+                            echo '<div class="alert alert-danger"></div>';
 
                             echo '</div>';
                             // header("Location: index.php");
@@ -169,8 +169,7 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
                         }
 
                     }
-
-
+echo 'yyyy';
                     if (isset($_GET['debug']) && $_GET['debug'] == 'session') {
                         echo '<pre>';
                         print_r($_SESSION);
