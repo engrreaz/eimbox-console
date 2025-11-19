@@ -13,6 +13,11 @@ $array = json_decode($row_json, true);
 echo '<pre>';
 print_r($array);
 echo '</pre>';
+
+if ($array === null) {
+    echo 'JSON Error: ' . json_last_error_msg();
+}
+
 echo $sccode_current_package;
 ?>
     Upgrade your plan .........
