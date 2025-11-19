@@ -36,7 +36,7 @@ if ($result0x2->num_rows > 0) {
 
 
 $itemList = [];
-$sql0x2 = "SELECT itemcode, particulareng, particularben, sum(pr1) as tk  from stfinance where  sessionyear LIKE '%$y_v2%'  and pr1date between '$dtf' and '$dtt' and sccode='$sccode'  group by itemcode ";
+$sql0x2 = "SELECT itemcode, particulareng, particularben, sum(pr1) as tk  from stfinance where  sessionyear LIKE '%$y_v2%'  and pr1date between '$dtf' and '$dtt' and sccode='$sccode'  group by itemcode order by itemcode ";
 $result0x2 = $conn->query($sql0x2);
 if ($result0x2->num_rows > 0) {
     while ($row0x2 = $result0x2->fetch_assoc()) {
@@ -113,7 +113,7 @@ $sql2 = "
     WHERE sessionyear LIKE '%$y_v2%'
       AND pr1date BETWEEN '$dtf' AND '$dtt'
       AND sccode = '$sccode'
-    GROUP BY itemcode, particulareng, particularben
+    GROUP BY itemcode
     ORDER BY itemcode
 ";
 
