@@ -2,7 +2,7 @@
 
 <?php 
 echo '<pre>';
-print_r($_SESSION['admin_data']);
+print_r($admin_data);
 echo '</pre>';
 
 echo $sccode_current_package;
