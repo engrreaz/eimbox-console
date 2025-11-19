@@ -11,8 +11,8 @@ include_once 'core/global_values.php';
 $dtf = $_GET['dfrom'] ?? date('Y-m-d');
 $dtt = $_GET['dto'] ?? date('Y-m-d');
 
-$dtf = "2025-11-01";
-$dtt = "2025-11-19";
+// $dtf = "2025-11-01";
+// $dtt = "2025-11-19";
 
 
 $classList = [];
@@ -140,6 +140,8 @@ while ($row = $q2->fetch_assoc()) {
         $cnt = count($itemList);
         for ($i = 0; $i < $cnt; $i++) {
             echo "<th>" . chr(65 + $i) . "</th>";
+            $var = 'item' . ($i + 1);
+            $$var = 0;
         }
         ?>
 
@@ -156,23 +158,41 @@ while ($row = $q2->fetch_assoc()) {
             <td><?= $sectionname ?></td>
             <?php
             $clsAmount = 0;
+            $x=1;
             foreach ($itemList as $item) {
                 $itemcode = $item['itemcode'];
+                $var = 'item' . ($x);
+         
+
                 $amount = 0;
                 foreach($dataList as $data){
                     if(strtolower($data['itemcode']) == strtolower($itemcode) && strtolower($data['classname']) == strtolower($classname) && strtolower($data['sectionname']) == strtolower($sectionname)   ){
-                        $amount = $data['taka'];
+                        $amount = $data['taka']; 
+                          $$var += $amount;
                         break;
                     }
                 }
               
                 $clsAmount += $amount;
                 echo "<td style='text-align:right;'>" .  number_format($amount, 2) . "</td>";
+          $x++;
             }
             ?>
             <td style="text-align:right;"><?= number_format($clsAmount, 2) ?></td>
         </tr>
     <?php endforeach; ?>
+
+    <tr>
+        <th></th><td></td>
+        <?php
+        $cnt = count($itemList);
+        for ($i = 0; $i < $cnt; $i++) {
+            $var = 'item' . ($i + 1);
+            echo "<th style='text-align:right;'>" . number_format($$var, 2) . "</th>";
+        }
+        ?>
+        <th></th>
+    </tr>
 </table>
 
 
