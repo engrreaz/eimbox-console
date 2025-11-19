@@ -1,7 +1,9 @@
 <div class="container-xxl flex-grow-1 container-p-y">
 
 <?php 
-var_dump($admin_data);
+echo '<pre>';
+print_r($_SESSION);
+echo '</pre>';
 ?>
     Upgrade your plan .........
 
