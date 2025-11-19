@@ -157,6 +157,12 @@ $raw_json = trim($raw_json);
 $admin_data = json_decode($raw_json, true);
 
 
+$json = $_SESSION['admin_data'] ?? '';
+$json = trim($raw_json, "\x00..\x1F");
+$json = mb_convert_encoding($json, 'UTF-8', 'UTF-8');
+$admin_data = json_decode($json, true);
+
+
 
 $sccode_current_package = $admin_data['package']['id'] ?? 2;
 
@@ -183,5 +189,4 @@ $y_v4 = date('Y');
 // $_SESSION['phone'] . '/ ' .
 // $_SESSION['address'] . '/ ' .
 // $_SESSION['dob'];
-
 

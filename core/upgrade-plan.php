@@ -7,15 +7,9 @@
     echo '</pre>';
     echo 'XYZ';
     // JSON থেকে PHP অ্যারেতে কনভার্ট
-    $array = json_decode($row_json, true);
-
-    if ($array === null) {
-        echo 'JSON Error: ' . json_last_error_msg();
-    } else {
-        echo '<pre>';
-        print_r($array);
-        echo '</pre>';
-    }
+    echo '<pre>';
+    print_r($admin_data);
+    echo '</pre>';
 
     echo $sccode_current_package;
     ?>
