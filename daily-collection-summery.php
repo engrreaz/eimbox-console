@@ -1,8 +1,9 @@
 <?php
 session_start();
-include_once 'core/config.php';
-include_once 'core/db.php';
-include_once 'core/global_values.php';
+// include_once 'core/config.php';
+// include_once 'core/db.php';
+// include_once 'core/global_values.php';
+include_once 'header.php';
 
 
 
@@ -158,24 +159,24 @@ while ($row = $q2->fetch_assoc()) {
             <td><?= $sectionname ?></td>
             <?php
             $clsAmount = 0;
-            $x=1;
+            $x = 1;
             foreach ($itemList as $item) {
                 $itemcode = $item['itemcode'];
                 $var = 'item' . ($x);
-         
+
 
                 $amount = 0;
-                foreach($dataList as $data){
-                    if(strtolower($data['itemcode']) == strtolower($itemcode) && strtolower($data['classname']) == strtolower($classname) && strtolower($data['sectionname']) == strtolower($sectionname)   ){
-                        $amount = $data['taka']; 
-                          $$var += $amount;
+                foreach ($dataList as $data) {
+                    if (strtolower($data['itemcode']) == strtolower($itemcode) && strtolower($data['classname']) == strtolower($classname) && strtolower($data['sectionname']) == strtolower($sectionname)) {
+                        $amount = $data['taka'];
+                        $$var += $amount;
                         break;
                     }
                 }
-              
+
                 $clsAmount += $amount;
-                echo "<td style='text-align:right;'>" .  number_format($amount, 2) . "</td>";
-          $x++;
+                echo "<td style='text-align:right;'>" . number_format($amount, 2) . "</td>";
+                $x++;
             }
             ?>
             <td style="text-align:right;"><?= number_format($clsAmount, 2) ?></td>
@@ -183,15 +184,18 @@ while ($row = $q2->fetch_assoc()) {
     <?php endforeach; ?>
 
     <tr>
-        <th></th><td></td>
+        <th></th>
+        <td></td>
         <?php
+        $gtotal = 0;
         $cnt = count($itemList);
         for ($i = 0; $i < $cnt; $i++) {
             $var = 'item' . ($i + 1);
             echo "<th style='text-align:right;'>" . number_format($$var, 2) . "</th>";
+            $gtotal += $$var;
         }
         ?>
-        <th></th>
+        <th style='text-align:right;'><?= number_format($gtotal, 2) ?></th>
     </tr>
 </table>
 
@@ -211,7 +215,10 @@ while ($row = $q2->fetch_assoc()) {
         <th>Total Amount</th>
     </tr>
 
-    <?php foreach ($report2 as $r): ?>
+    <?php $mot = 0;
+    foreach ($report2 as $r):
+        $mot += $r['total'];
+        ?>
         <tr>
             <td><?= $r['itemcode'] ?></td>
             <td><?= $r['en'] ?></td>
@@ -219,6 +226,12 @@ while ($row = $q2->fetch_assoc()) {
             <td style="text-align:right;"><?= number_format($r['total'], 2) ?></td>
         </tr>
     <?php endforeach; ?>
+    <tr>
+        <th>d</th>
+        <th></th>
+        <th></th>
+        <th style='text-align:right;'> <?= number_format($mot, 2) ?></th>
+    </tr>
 </table>
 
 
@@ -233,101 +246,9 @@ while ($row = $q2->fetch_assoc()) {
 
 
 
+<?php include_once 'footer.php'; ?>
 
 
-
-
-<!-- Bootstrap JavaScript Libraries -->
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
-    integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3" crossorigin="anonymous">
-    </script>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.min.js"
-    integrity="sha384-7VPbUDkoPSGFnVtYi0QogXtr74QeVeeIs99Qfg5YCF+TidwNdjvaKZX19NZ/e6oz" crossorigin="anonymous">
-    </script>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
-
-<script>
-    document.getElementById("cnt").innerHTML = "<?php echo $cnt; ?>";
-
-    function go() {
-        var cls = document.getElementById("classname").value;
-        var sec = document.getElementById("sectionname").value;
-        var sub = document.getElementById("subject").value;
-        var assess = document.getElementById("assessment").value;
-        var exam = document.getElementById("exam").value;
-        let tail = '?exam=' + exam + '&cls=' + cls + '&sec=' + sec + '&sub=' + sub + '&assess=' + assess;
-        if (cls == 'Six' || cls == 'Seven') {
-            window.location.href = "pibiprint.php" + tail;
-        } else {
-            alert("Select Class Six/Seven Only");
-        }
-    }  
-</script>
-
-<script>
-    function prnt(id) {
-        if (id == 0) {
-            $('.level').hide();
-            $('.topic').hide();
-        } else if (id == 1) {
-            $('.level').hide();
-            $('.topic').show();
-        } else if (id == 2) {
-            $('.level').show();
-            $('.topic').show();
-        }
-    }
-</script>
-
-<script>
-    function fetchsection() {
-        var cls = document.getElementById("classname").value;
-
-        var infor = "user=<?php echo $rootuser; ?>&cls=" + cls;
-        $("#sectionblock").html("");
-
-        $.ajax({
-            type: "POST",
-            url: "fetchsection.php",
-            data: infor,
-            cache: false,
-            beforeSend: function () {
-                $('#sectionblock').html('<span class=""><center>Fetching Section Name....</center></span>');
-            },
-            success: function (html) {
-                $("#sectionblock").html(html);
-            }
-        });
-    }
-</script>
-
-<script>
-    function fetchsubject() {
-        var cls = document.getElementById("classname").value;
-        var sec = document.getElementById("sectionname").value;
-
-        var infor = "sccode=<?php echo $sccode; ?>&cls=" + cls + "&sec=" + sec;
-        $("#subblock").html("");
-
-        $.ajax({
-            type: "POST",
-            url: "fetchsubject.php",
-            data: infor,
-            cache: false,
-            beforeSend: function () {
-                $('#subblock').html('<span class="">Retriving Subjects...</span>');
-            },
-            success: function (html) {
-                $("#subblock").html(html);
-            }
-        });
-    }
-
-    function print() {
-        window.print();
-    }
-</script>
 
 
 
