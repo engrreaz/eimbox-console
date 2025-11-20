@@ -264,7 +264,7 @@ while ($row = $q2->fetch_assoc()) {
                         }
                         ?>
                         <td class='text-primary' style='text-align:right; font-weight: bold;; '>
-                            <?= number_format($gtotal, 2) ?>
+                            <?= number_format($gtotal, 0) ?>
                         </td>
                     </tr>
                 </table>
