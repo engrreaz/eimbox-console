@@ -9,7 +9,7 @@ $letterHead = ob_get_clean();
 include "templete/letter-tail-01.php";
 $letterTail = ob_get_clean();
 
-
+echo '///' . $letterTail . '///' ;
 
 
 $dtf = $_GET['dfrom'] ?? date('Y-m-d');
