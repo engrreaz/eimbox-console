@@ -259,12 +259,12 @@ while ($row = $q2->fetch_assoc()) {
                         $cnt = count($itemList);
                         for ($i = 0; $i < $cnt; $i++) {
                             $var = 'item' . ($i + 1);
-                            echo "<td class='text-primary' style='text-align:right; font-weight: bold;;'>" . number_format($$var, 2) . "</td>";
+                            echo "<td class='text-primary' style='text-align:right; font-weight: bold;;'>" . number_format($$var, 0) . "</td>";
                             $gtotal += $$var;
                         }
                         ?>
                         <td class='text-primary' style='text-align:right; font-weight: bold;; '>
-                            <?= number_format($gtotal) ?>
+                            <?= number_format($gtotal, 2) ?>
                         </td>
                     </tr>
                 </table>
