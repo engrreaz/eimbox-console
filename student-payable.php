@@ -164,27 +164,32 @@ file_put_contents('bkash/config.json', $newJsonString);
 
     <!-- ================== VIEW ================== -->
     <div class="card mb-4">
-        <div class="card-header bg-primary text-white fw-bold">
+        <div class="card-header bg-gray text-primary fw-bold">
             <i class="bx bx-credit-card"></i> BKASH Payment Information
         </div>
-        <div class="card-body">
+        <div class="card-body pt-4">
             <?php echo $stid;
             if ($student): ?>
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <strong>Student Name (Eng):</strong> <?= htmlspecialchars($student['stnameeng']) ?><br>
                         <strong>Student Name (Ben):</strong> <?= htmlspecialchars($student['stnameben']) ?><br>
-                        <strong>Roll No:</strong> <?= htmlspecialchars($session['rollno'] ?? '') ?><br>
-                        <strong>Class:</strong> <?= htmlspecialchars($session['classname'] ?? '') ?><br>
-                        <strong>Section:</strong> <?= htmlspecialchars($session['sectionname'] ?? '') ?><br>
-                        <strong>Group:</strong> <?= htmlspecialchars($session['groupname'] ?? '') ?><br>
-                    </div>
-                    <div class="col-md-6">
                         <strong>Guardian Mobile:</strong> <?= htmlspecialchars($student['guarmobile']) ?><br>
                         <strong>Guardian Email:</strong> <?= htmlspecialchars($student['guaremail']) ?><br>
                         <strong>Present Address:</strong><br>
                         <?= htmlspecialchars($student['previll']) ?>, <?= htmlspecialchars($student['prepo']) ?>,
                         <?= htmlspecialchars($student['preps']) ?>, <?= htmlspecialchars($student['predist']) ?>
+
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Roll No:</strong> <?= htmlspecialchars($session['rollno'] ?? '') ?><br>
+                        <strong>Class:</strong> <?= htmlspecialchars($session['classname'] ?? '') ?><br>
+                        <strong>Section:</strong> <?= htmlspecialchars($session['sectionname'] ?? '') ?><br>
+                        <strong>Group:</strong> <?= htmlspecialchars($session['groupname'] ?? '') ?><br>
+                    </div>
+                    <div class="col-md-3 text-end">
+                        <img src="<?= APP_PATH . 'students/' . $stid . '.jpg'; ?>" alt="Student Avatar"
+                            style="height:80px; border-radius:5px; object-fit:cover;">
                     </div>
                 </div>
 
