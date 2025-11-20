@@ -8,6 +8,9 @@ ob_start();
 include "templete/letter-head-01.php";
 $letterHead = ob_get_clean();
 
+include "templete/letter-tail-01.php";
+$letterTail = ob_get_clean();
+
 
 
 
@@ -183,7 +186,7 @@ while ($row = $q2->fetch_assoc()) {
             <div class="table-responsive">
                 <table class="table table-sm" cellspacing="0" cellpadding="5">
                     <tr class="fw-bold  bg-primary">
-                        <td>Class</td>
+                        <td >Class</td>
                         <td>Section</td>
                         <?php
                         $cnt = count($itemList);
@@ -319,6 +322,7 @@ while ($row = $q2->fetch_assoc()) {
         function printBlock() {
 
             var letterHead = <?= json_encode($letterHead); ?>;
+            var letterTail = <?= json_encode($letterTail); ?>;
             var printContents = document.getElementById("print-block").innerHTML;
 
             var newWindow = window.open('', '', 'width=900,height=650');
@@ -339,6 +343,12 @@ while ($row = $q2->fetch_assoc()) {
                 table, th, td { border: 1px solid #333; }
                 th, td { padding: 5px; }
 
+                
+                @page {
+                    size: A4;
+                    margin: 20mm;
+                }
+
                 /* ========= ONLY FIRST PAGE HEADER ========= */
                 @media print {
                     #first-page-header {
@@ -358,6 +368,10 @@ while ($row = $q2->fetch_assoc()) {
 
             <!-- REPORT CONTENT -->
             ${printContents}
+
+            <div id="first-page-header">
+                ${letterTail}
+            </div>
 
         </body>
         </html>

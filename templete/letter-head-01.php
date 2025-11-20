@@ -1,15 +1,47 @@
-<?php
+<style>
+    #padbox{
+        margin:auto;
+    }
+    #padbox table, #padbox tr, #padbox td{
+        border:0;
+    }
 
-?>
-<table width="100%" style="border-bottom: 2px solid #000; margin-bottom: 20px;">
+    .a {
+        font-size: 20px;
+        font-weight: 700;
+        font-style: normal;
+        line-height: 24px;
+    }
+
+    .b {
+        font-size: 15px;
+        font-weight: 400;
+        font-style: normal;
+        line-height: 18px;
+      
+    }
+
+    .c {
+        font-size: 12px;
+        font-weight: 400;
+        font-style: italic;
+        line-height: 16px;
+    }
+
+
+    .code {text-align:center; font-size:11px; font-weight:700;}
+</style>
+
+<table id="padbox" style="border:0; margin-bottom:20px;">
     <tr>
-        <td align="left" style="width: 20%;">
-            <img src="path/to/logo.png" alt="Company Logo" style="height: 80px;">
+        <td style="text-align:center; padding-right:10px;">
+            <img src="https://eimbox.com/logo/<?php echo $sccode; ?>.png" width="80" />
         </td>
-        <td align="center" style="width: 60%;">
-            <h1 style="margin: 0; font-size: 24px;">Company Name</h1>
-            <p style="margin: 0; font-size: 14px;">Address Line 1, Address Line 2, City, Country</p>
-            <p style="margin: 0; font-size: 14px;">Phone: (123) 456-7890 | Email: info@company.com</p>
+        <td style="text-align:center;">
+            <div class="a"><?php echo $scname; ?></div>
+            <div class="b"><?php echo $scaddress; ?></div>
+            <div class="c"><br><?php echo 'Mobile : ' . $mobile . '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Email : ' . $scmail; ?></div>
+            <div class="c"><?php echo 'Web : ' . $scweb; ?></div>
         </td>
     </tr>
 </table>

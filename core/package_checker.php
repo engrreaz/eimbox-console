@@ -18,7 +18,8 @@ $max_stay_limit = $map ? $map['max_stay_limit'] : '0';
 $print = $map ? $map['print'] : 'No';
 $modified_time = $map ? $map['modified_time'] : '—';
 
-$module_name = $map ? $map['module_name'] : '—';
+// $module_name = $map ? $map['module_name'] : '—';
+$module_name = $cur_page_module;
 
 $_SESSION['max_limit'] = $max_stay_limit;
 
