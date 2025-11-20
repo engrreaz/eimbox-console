@@ -308,7 +308,7 @@ while ($row = $q2->fetch_assoc()) {
     <?php include_once 'footer.php'; ?>
 
     <?php
-    ob_get_clean();
+    // ob_get_clean();
     include "templete/letter-tail-01.php";
     $letterTail = ob_get_clean();
 
