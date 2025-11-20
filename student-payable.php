@@ -189,7 +189,7 @@ file_put_contents('bkash/config.json', $newJsonString);
                     </div>
                     <div class="col-md-3 text-end">
                         <img src="<?= BASE_PATH . 'students/' . $stid . '.jpg'; ?>" alt="Student Avatar"
-                            style="height:80px; border-radius:5px; object-fit:cover;">
+                            style="height:120px; border-radius:5px; object-fit:cover;">
                     </div>
                 </div>
 
