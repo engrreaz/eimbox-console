@@ -1,8 +1,5 @@
 <?php
 session_start();
-// include_once 'core/config.php';
-// include_once 'core/db.php';
-// include_once 'core/global_values.php';
 include_once 'header.php';
 
 ob_start();
@@ -140,7 +137,8 @@ while ($row = $q2->fetch_assoc()) {
             <div class="row g-3">
                 <div class="col-md-3">
                     <label for="dfrom" class="form-label">From Date</label>
-                    <input type="date" id="dfrom" name="dfrom" class="form-control  form-control-sm" value="<?= $dtf ?>">
+                    <input type="date" id="dfrom" name="dfrom" class="form-control  form-control-sm"
+                        value="<?= $dtf ?>">
                 </div>
 
                 <div class="col-md-3">
@@ -187,7 +185,7 @@ while ($row = $q2->fetch_assoc()) {
             <div class="table-responsive">
                 <table class="table table-sm" cellspacing="0" cellpadding="5">
                     <tr class="fw-bold  bg-gray">
-                        <td >Class</td>
+                        <td>Class</td>
                         <td>Section</td>
                         <?php
                         $cnt = count($itemList);
@@ -273,7 +271,7 @@ while ($row = $q2->fetch_assoc()) {
             </div>
 
 
-            <div  class="text-center fs-4  fw-bold mt-4">Item Wise Total Collection</div>
+            <div class="text-center fs-4  fw-bold mt-4">Item Wise Total Collection</div>
 
             <div class="table-responsive">
                 <table class="table table-sm" cellspacing="0" cellpadding="5">
@@ -319,16 +317,18 @@ while ($row = $q2->fetch_assoc()) {
         }
     </script>
 
+
+
     <script>
         function printBlock() {
-
             var letterHead = <?= json_encode($letterHead); ?>;
             var letterTail = <?= json_encode($letterTail); ?>;
 
             var printTopData = `
-            <div class="text-center fs-xlarge  fw-bold mt-4">Daily Collection Report</d>
-            <div>Date from ${document.getElementById('dfrom').value} to ${document.getElementById('dto').value}</div>
-            `;
+        <div class="text-center fs-xlarge fw-bold mt-4">Daily Collection Report</div>
+        <div>Date from ${document.getElementById('dfrom').value} to ${document.getElementById('dto').value}</div>
+    `;
+
             var printContents = document.getElementById("print-block").innerHTML;
 
             var newWindow = window.open('', '', 'width=900,height=650');
@@ -349,35 +349,24 @@ while ($row = $q2->fetch_assoc()) {
                 table, th, td { border: 1px solid #333; }
                 th, td { padding: 5px; }
 
-                
                 @page {
-                    size: A4;
+                    size: A4 portrait;
                     margin: 20mm;
-                }
-
-                /* ========= ONLY FIRST PAGE HEADER ========= */
-                @media print {
-                    #first-page-header {
-                        display: block;
-                        margin-bottom: 20px;
-                    }
                 }
             </style>
         </head>
 
         <body>
 
-            <!-- FIRST PAGE HEADER -->
             <div id="first-page-header">
                 ${letterHead}
             </div>
 
-            <!-- REPORT TOP DATA -->
             ${printTopData}
-            <!-- REPORT CONTENT -->
+
             ${printContents}
 
-            <div id="first-page-footer">
+            <div id="first-page-footer" style="margin-top:50px;">
                 ${letterTail}
             </div>
 
@@ -386,12 +375,14 @@ while ($row = $q2->fetch_assoc()) {
     `);
 
             newWindow.document.close();
-            newWindow.focus();
-            newWindow.print();
 
-            // Auto close even if user presses Cancel
-            newWindow.onafterprint = function () {
-                newWindow.close();
+            // 👉 প্রিন্ট চালানোর জন্য DOM পুরো লোড হওয়া পর্যন্ত অপেক্ষা
+            newWindow.onload = function () {
+                newWindow.focus();
+                newWindow.print();
+                newWindow.onafterprint = function () {
+                    newWindow.close();
+                };
             };
         }
     </script>
