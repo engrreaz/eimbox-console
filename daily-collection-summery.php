@@ -350,7 +350,7 @@ while ($row = $q2->fetch_assoc()) {
 
                 
                 @page {
-                    size: A4;
+                    size: A4 LANDSCAPE;
                     margin: 20mm;
                 }
 
