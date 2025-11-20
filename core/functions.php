@@ -176,7 +176,7 @@ function store_user_session($user, $school = [])
     $_SESSION['page_status_grant'] = $user['page_status_grant'] ?? 6;
     $_SESSION['fullname'] = $user['profilename'] ?? $user['email'] ?? '';
 
-    $_SESSION['locktime'] = 100; //$user['admin'] ?? 0;
+    $_SESSION['locktime'] = 10000; //$user['admin'] ?? 0;
 
     // স্কুল ইনফো
     $_SESSION['scname'] = $school['scname'] ?? '';
@@ -209,7 +209,7 @@ function store_student_session($user, $school = [])
     $_SESSION['page_status_grant'] = 6;
     $_SESSION['fullname'] = $user['stnameeng'];
 
-    $_SESSION['locktime'] = 100; //$user['admin'] ?? 0;
+    $_SESSION['locktime'] = 10000; //$user['admin'] ?? 0;
 
     // স্কুল ইনফো
     $_SESSION['scname'] = $school['scname'] ?? '';

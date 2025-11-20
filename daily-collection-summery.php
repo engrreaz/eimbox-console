@@ -325,38 +325,38 @@ while ($row = $q2->fetch_assoc()) {
             var letterHead = <?= json_encode($letterHead, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE); ?>;
 
             var printTopData = `
-        <div class="text-center fs-xlarge fw-bold mt-4">Daily Collection Report</div>
-        <div>Date from ${document.getElementById('dfrom').value} to ${document.getElementById('dto').value}</div>
-    `;
+                <div class="text-center fs-xlarge fw-bold mt-4">Daily Collection Report</div>
+                <div>Date from ${document.getElementById('dfrom').value} to ${document.getElementById('dto').value}</div>
+            `;
 
             var printContents = document.getElementById("print-block").innerHTML;
 
             var newWindow = window.open('', '', 'width=900,height=650');
 
             newWindow.document.write(`
-        <html>
-        <head>
-            <title>Print</title>
+                <html>
+                <head>
+                    <title>Print</title>
 
-            <style>
-                body { 
-                    font-family: SutonnyOMJ, Arial; 
-                    -webkit-print-color-adjust: exact;
-                    padding: 30px;
-                }
+                    <style>
+                        body { 
+                            font-family: SutonnyOMJ, Arial; 
+                            -webkit-print-color-adjust: exact;
+                            padding: 30px;
+                        }
 
-                table { border-collapse: collapse; width: 100%; }
-                table, th, td { border: 1px solid #333; }
-                th, td { padding: 5px; }
+                        table { border-collapse: collapse; width: 100%; }
+                        table, th, td { border: 1px solid #333; }
+                        th, td { padding: 5px; }
 
-                @page {
-                    size: A4 portrait;
-                    margin: 20mm;
-                }
-            </style>
-        </head>
+                        @page {
+                            size: A4 portrait;
+                            margin: 20mm;
+                        }
+                    </style>
+                </head>
 
-        <body>
+                <body>
 
             <div id="first-page-header">
                 ${letterHead}
