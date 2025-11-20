@@ -139,12 +139,12 @@ while ($row = $q2->fetch_assoc()) {
             <div class="row g-3">
                 <div class="col-md-3">
                     <label for="dfrom" class="form-label">From Date</label>
-                    <input type="date" id="dfrom" name="dfrom" class="form-control " value="<?= $dtf ?>">
+                    <input type="date" id="dfrom" name="dfrom" class="form-control  form-control-sm" value="<?= $dtf ?>">
                 </div>
 
                 <div class="col-md-3">
                     <label for="dto" class="form-label">To Date</label>
-                    <input type="date" id="dto" name="dto" class="form-control" value="<?= $dtt ?>">
+                    <input type="date" id="dto" name="dto" class="form-control form-control-sm" value="<?= $dtt ?>">
                 </div>
 
                 <div class="col-md-3 d-flex align-items-end">
@@ -156,16 +156,16 @@ while ($row = $q2->fetch_assoc()) {
 
                     <div class="btn-group w-100 " role="group">
 
-                        <button type="button" class="btn btn-dark" onclick="printBlock()">
+                        <button type="button" class="btn btn-dark btn-sm p-2" onclick="printBlock()">
                             <i class="bi bi-printer-fill fs-large "></i>
                         </button>
 
                         <a href="pdf/daily-collection-summery-pdf.php?dfrom=<?= $dtf ?>&dto=<?= $dtt ?>"
-                            class="btn btn-danger" target="_blank" disabled>
+                            class="btn btn-danger btn-sm" target="_blank" disabled>
                             <i class="bi bi-file-earmark-pdf-fill  fs-large"> </i>
                         </a>
 
-                        <button type="button" class="btn btn-secondary" onclick="sendEmail()" disabled>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="sendEmail()" disabled>
                             <i class="bi bi-envelope-fill fs-large"> </i>
                         </button>
 
@@ -272,7 +272,7 @@ while ($row = $q2->fetch_assoc()) {
             </div>
 
 
-            <h2>Item Wise Total Collection</h2>
+            <div  class="text-center fs-3  fw-bold mt-4">Item Wise Total Collection</div>
 
             <div class="table-responsive">
                 <table class="table table-sm" cellspacing="0" cellpadding="5">
@@ -323,6 +323,11 @@ while ($row = $q2->fetch_assoc()) {
 
             var letterHead = <?= json_encode($letterHead); ?>;
             var letterTail = <?= json_encode($letterTail); ?>;
+
+            var printTopData = `
+            <div class="text-center fs-xlarge  fw-bold mt-4">Daily Collection Report</d>
+            <div>Date from ${document.getElementById('dfrom').value} to ${document.getElementById('dto').value}</div>
+            `;
             var printContents = document.getElementById("print-block").innerHTML;
 
             var newWindow = window.open('', '', 'width=900,height=650');
@@ -366,6 +371,8 @@ while ($row = $q2->fetch_assoc()) {
                 ${letterHead}
             </div>
 
+            <!-- REPORT TOP DATA -->
+            ${printTopData}
             <!-- REPORT CONTENT -->
             ${printContents}
 
