@@ -242,7 +242,7 @@ while ($row = $q2->fetch_assoc()) {
                             $x = 1;
                             foreach ($itemList as $item) {
                                 $var = 'item' . ($x);
-                                echo "<td style='text-align:right;'>" . number_format($$var, 2) . "</td>";
+                                echo "<td style='text-align:right;'>" . number_format($$var, 0) . "</td>";
                                 $x++;
                             }
                             ?>
@@ -350,7 +350,7 @@ while ($row = $q2->fetch_assoc()) {
 
                 
                 @page {
-                    size: A4 LANDSCAPE;
+                    size: A4;
                     margin: 20mm;
                 }
 
