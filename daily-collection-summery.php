@@ -6,10 +6,6 @@ ob_start();
 include "templete/letter-head-01.php";
 $letterHead = ob_get_clean();
 
-include "templete/letter-tail-01.php";
-$letterTail = ob_get_clean();
-
-echo '///' . $letterTail . '///' ;
 
 
 $dtf = $_GET['dfrom'] ?? date('Y-m-d');
@@ -304,6 +300,15 @@ while ($row = $q2->fetch_assoc()) {
         </div>
     </div>
 
+
+
+    <div id="footer-block" hidden>
+        <?php
+        ob_start();
+        include "templete/letter-tail-01.php";
+        $letterTail = ob_get_clean();
+        ?>
+    </div>
 
     <?php include_once 'footer.php'; ?>
 
