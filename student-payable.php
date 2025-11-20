@@ -188,7 +188,7 @@ file_put_contents('bkash/config.json', $newJsonString);
                         <strong>Group:</strong> <?= htmlspecialchars($session['groupname'] ?? '') ?><br>
                     </div>
                     <div class="col-md-3 text-end">
-                        <img src="<?= APP_PATH . 'students/' . $stid . '.jpg'; ?>" alt="Student Avatar"
+                        <img src="<?= BASE_PATH . 'students/' . $stid . '.jpg'; ?>" alt="Student Avatar"
                             style="height:80px; border-radius:5px; object-fit:cover;">
                     </div>
                 </div>
