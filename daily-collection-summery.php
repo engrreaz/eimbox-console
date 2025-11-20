@@ -377,7 +377,7 @@ while ($row = $q2->fetch_assoc()) {
             <!-- REPORT CONTENT -->
             ${printContents}
 
-            <div id="first-page-header">
+            <div id="first-page-footer">
                 ${letterTail}
             </div>
 
