@@ -9,6 +9,9 @@ ob_start();
 include "templete/letter-head-01.php";
 $letterHead = ob_get_clean();
 
+include "templete/letter-tail-01.php";
+$letterTail = ob_get_clean();
+
 
 
 
@@ -137,8 +140,7 @@ while ($row = $q2->fetch_assoc()) {
             <div class="row g-3">
                 <div class="col-md-3">
                     <label for="dfrom" class="form-label">From Date</label>
-                    <input type="date" id="dfrom" name="dfrom" class="form-control  form-control-sm"
-                        value="<?= $dtf ?>">
+                    <input type="date" id="dfrom" name="dfrom" class="form-control  form-control-sm" value="<?= $dtf ?>">
                 </div>
 
                 <div class="col-md-3">
@@ -185,7 +187,7 @@ while ($row = $q2->fetch_assoc()) {
             <div class="table-responsive">
                 <table class="table table-sm" cellspacing="0" cellpadding="5">
                     <tr class="fw-bold  bg-gray">
-                        <td>Class</td>
+                        <td >Class</td>
                         <td>Section</td>
                         <?php
                         $cnt = count($itemList);
@@ -271,7 +273,7 @@ while ($row = $q2->fetch_assoc()) {
             </div>
 
 
-            <div class="text-center fs-4  fw-bold mt-4">Item Wise Total Collection</div>
+            <div  class="text-center fs-4  fw-bold mt-4">Item Wise Total Collection</div>
 
             <div class="table-responsive">
                 <table class="table table-sm" cellspacing="0" cellpadding="5">
@@ -307,12 +309,6 @@ while ($row = $q2->fetch_assoc()) {
 
     <?php include_once 'footer.php'; ?>
 
-    <?php
-    // ob_get_clean();
-    include "templete/letter-tail-01.php";
-    $letterTail = ob_get_clean();
-
-    ?>
 
 
     <script>
