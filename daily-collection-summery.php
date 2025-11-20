@@ -321,8 +321,8 @@ while ($row = $q2->fetch_assoc()) {
 
     <script>
         function printBlock() {
-            var letterHead = <?= json_encode($letterHead); ?>;
-            var letterTail = <?= json_encode($letterTail); ?>;
+            var letterTail = <?= json_encode($letterTail, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE); ?>;
+            var letterHead = <?= json_encode($letterHead, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE); ?>;
 
             var printTopData = `
         <div class="text-center fs-xlarge fw-bold mt-4">Daily Collection Report</div>
