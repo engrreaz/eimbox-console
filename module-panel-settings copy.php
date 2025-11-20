@@ -62,6 +62,9 @@ if (isset($_POST['save_settings'])) {
 }
 ?>
 
+
+{"module":["Attendance","Orion","Payment","Seed","Student", "Finance"],"active_module":["Attendance","Seed","Student","Finance"], "package":{"id":5} ,"settings":{"theme":"dark","payment_gateway":[{"gateway":"bkash","active":"1","type":"1","app_key":"0vWQuCRGiUX7EPVjQDr0EUAYtc","app_secret":"jcUNPBgbcqEDedNKdvE4G1cAK7D3hCjmJccNPZZBq96QIxxwAMEx","username":"01770618567","password":"D7DaC<*E*eG"},{"gateway":"nagad","active":"0","type":"1","app_key":"11111111111111ddd","app_secret":"222222222222222222","username":"3333333333333","password":"444444444"},{"gateway":"rocket","active":"0","type":"1","app_key":"","app_secret":"","username":"","password":""},{"gateway":"bank","active":"1","type":"1","app_key":"","app_secret":"","username":"","password":""}],"sms":{"api":{"api_key":"sf;sfskldfjs","api_secret":"123456000"},"in_time":{"active":"1","time":"11:00"},"gateway":{"sms_api":1,"api_key":"sfsdfs","secret_key":"teertre","username":"aaa","password":"bbb","uri":"sfsfdsfsdffsfs"}}}}
+
 <?php
 // --- scinfo থেকে তথ্য আনা ---
 $query = "SELECT * FROM scinfo WHERE sccode = '$sccode' LIMIT 1";

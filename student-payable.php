@@ -2,27 +2,42 @@
 
 
 <?php
+$sql = "SELECT * FROM scinfo WHERE sccode='$sccode' LIMIT 1";
+$res = $conn->query($sql);
+$scinfo = $res->fetch_assoc();
 
 
 $strJsonFileContents = file_get_contents("bkash/config.json");
 $array = json_decode($strJsonFileContents, true);
 
 $gatewaylist = [];
-foreach ($admin_data['settings']['payment_gateway'] as $pg) {
-    $act_pg = $pg['gateway'];
-    $act_act = $pg['active'] ?? 0;
+$gwList = ['bkash', 'nagad', 'rocket', 'bank'];
+
+foreach ($gwList as $gw) {
+
+    $act_pg = $gw;
+    $gw_data = trim($scinfo[$gw] ?? "");
+    $p = explode(" | ", $gw_data);
+    // var_dump($p);
+
+    $act_act = $p[1] ?? 0;
     if ($act_act == 1) {
         $gatewaylist[] = $act_pg;
 
-        $array[$act_pg . '_app_key'] = $pg['app_key'];
-        $array[$act_pg . '_app_secret'] = $pg['app_secret'];
-        $array[$act_pg . '_username'] = $pg['username'];
-        $array[$act_pg . '_password'] = $pg['password'];
+        $array[$act_pg . '_app_key'] = $p[3];
+        $array[$act_pg . '_app_secret'] = $p[4];
+        $array[$act_pg . '_username'] = $p[5];
+        $array[$act_pg . '_password'] = $p[6];
 
     }
 }
 
 
+// echo '<hr><b>GET DATA</b><hr>';
+// echo '<pre>';
+// print_r($array);
+// echo '</pre>';
+// echo '<hr><br>';
 
 $newJsonString = json_encode($array);
 file_put_contents('bkash/config.json', $newJsonString);
@@ -38,28 +53,31 @@ file_put_contents('bkash/config.json', $newJsonString);
     $strJsonFileContents = file_get_contents("bkash/config.json");
     $array = json_decode($strJsonFileContents, true);
 
-    echo '******** ' . $array['bkash_app_key'] . '/' . $array['bkash_app_secret'] . '/' . $array['bkash_username'] . '/' . $array['bkash_password'] . ' ***************';
+    // echo '******** ' . $array['bkash_app_key'] . '/' . $array['bkash_app_secret'] . '/' . $array['bkash_username'] . '/' . $array['bkash_password'] . ' ***************';
+    
 
-
-    echo "<br><br>";
-    echo '<pre>
-    "bkash_app_key": "0vWQuCRGiUX7EPVjQDr0EUAYtc",
-    "bkash_app_secret": "jcUNPBgbcqEDedNKdvE4G1cAK7D3hCjmJccNPZZBq96QIxxwAMEx",
-    "bkash_username": "01770618567",
-    "bkash_password": "D7DaC<*E*eG",</pre>';
+    // echo "<br><br>";
+    // echo '<pre>
+    // "bkash_app_key": "0vWQuCRGiUX7EPVjQDr0EUAYtc",
+    // "bkash_app_secret": "jcUNPBgbcqEDedNKdvE4G1cAK7D3hCjmJccNPZZBq96QIxxwAMEx",
+    // "bkash_username": "01770618567",
+    // "bkash_password": "D7DaC<*E*eG",</pre>';
     // ---------------------
 // Student ID নির্ধারণ
 // ---------------------
-    echo '<hr>' . $_SESSION['token'] . '<hr>' . $_SESSION['refresh_token'] . '<hr>';
+    // echo '<hr>' . $_SESSION['token'] . '<hr>' . $_SESSION['refresh_token'] . '<hr>';
+    
+    // echo strlen($_SESSION['token']) . '/' . strlen($_SESSION['refresh_token']);
+    
+    if (isset($_SESSION['current_student_id']) && !empty($_SESSION['current_student_id'])) {
+        $stid = $_SESSION['current_student_id'];
+    } else {
 
-    echo strlen($_SESSION['token']) . '/' . strlen($_SESSION['refresh_token']);
-
-
-    $sql = mysqli_query($conn, "SELECT stid FROM sessioninfo WHERE sccode = '$sccode' and sessionyear LIKE '%$y_v2%' ORDER BY RAND() LIMIT 1");
-    $std = mysqli_fetch_assoc($sql);
-    $stid = $std['stid'];
-
-
+        $sql = mysqli_query($conn, "SELECT stid FROM sessioninfo WHERE sccode = '$sccode' and sessionyear LIKE '%$y_v2%' ORDER BY RAND() LIMIT 1");
+        $std = mysqli_fetch_assoc($sql);
+        $stid = $std['stid'];
+        $_SESSION['current_student_id'] = $stid;
+    }
 
     // ---------------------
 // sessioninfo টেবিল
@@ -108,6 +126,42 @@ file_put_contents('bkash/config.json', $newJsonString);
     $finance = mysqli_fetch_assoc($q4);
     ?>
 
+    <style>
+        .bkash-btn {
+            background: linear-gradient(135deg, #E3106E, #FF4EA0);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            font-size: 14px;
+            font-weight: 400;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 4px 10px rgba(227, 16, 110, 0.4);
+        }
+
+        .bkash-btn img {
+            height: 28px;
+            transition: 0.25s;
+        }
+
+        .bkash-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(227, 16, 110, 0.6);
+        }
+
+        .bkash-btn:hover img {
+            transform: scale(1.15) rotate(-3deg);
+        }
+
+        .bkash-btn:active {
+            transform: scale(0.96);
+        }
+    </style>
+
     <!-- ================== VIEW ================== -->
     <div class="card mb-4">
         <div class="card-header bg-primary text-white fw-bold">
@@ -139,7 +193,8 @@ file_put_contents('bkash/config.json', $newJsonString);
                     <p><strong>Last Payment Reference No:</strong> <?= htmlspecialchars($stpr['prno'] ?? 'N/A') ?></p>
                     <p><strong>Total Dues (till <?= date('F') ?>):</strong>
                         <span class="text-danger fw-bold">
-                            <?php $paya_2 = $finance['totaldues'] ?? 15;  $payable = number_format($paya_2, 2);
+                            <?php $paya_2 = $finance['totaldues'] ?? 15;
+                            $payable = number_format($paya_2, 2);
                             echo $payable; ?> ৳
                         </span>
                     </p>
@@ -170,8 +225,8 @@ file_put_contents('bkash/config.json', $newJsonString);
                 <div class="mt-4">
                     <div class="row">
 
-                        <div class="col-3">
-                            <button class="btn btn-bkash d-flex align-items-center px-4 py-2" id="bKash_button">
+                        <div class="col-3" hidden>
+                            <button class="btn btn-bkash d-flex align-items-center px-4 py-2" id="bKash_button2">
                                 <img src="assets/images/bkash_payment_logo.png" alt="bKash"
                                     style="height:24px; margin-right:10px;">
                                 Pay with bKash
@@ -181,10 +236,9 @@ file_put_contents('bkash/config.json', $newJsonString);
                             echo '<div class="col-3">';
                             if ($gl == 'bkash') {
                                 ?>
-                                <button class="btn btn-bkash d-flex align-items-center px-4 py-2" id="bKash_button2">
-                                    <img src="assets/images/bkash_payment_logo.png" alt="bKash"
-                                        style="height:24px; margin-right:10px;">
-                                    Pay with bKash
+                                <button class="bkash-btn" id="bKash_button">
+                                    <img src="assets/images/bkash_payment_logo.png" alt="bKash">
+                                    <span>Pay with bKash</span>
                                 </button>
                                 <?php
                             } else if ($gl == 'nagad') {
@@ -277,7 +331,7 @@ file_put_contents('bkash/config.json', $newJsonString);
         var amount = $('#payamount').val();
         var payerReference = $('#reference').val();
 
-      
+
 
         if (!amount || !payerReference) {
             alert('Amount বা Reference খালি!');
