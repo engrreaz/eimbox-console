@@ -133,6 +133,12 @@ $syear = htmlspecialchars($session['sessionyear'] ?? $sessionyear);
             padding: 6px;
         }
 
+        .modal-body {
+    max-height: 65vh;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
         .bkash-btn {
             background: linear-gradient(135deg, #E3106E, #FF4EA0);
             color: white;
@@ -329,7 +335,7 @@ $syear = htmlspecialchars($session['sessionyear'] ?? $sessionyear);
                                 $result = $conn->query($query);
                                 ?>
 
-                                <table class="table table-bordered table-striped">
+                                <table class="table table-bordered table-striped table-sm">
                                     <thead>
                                         <tr>
                                             <th style="width:70%">Particular</th>
