@@ -53,7 +53,7 @@ file_put_contents('bkash/config.json', $newJsonString);
     $strJsonFileContents = file_get_contents("bkash/config.json");
     $array = json_decode($strJsonFileContents, true);
 
-    // echo '******** ' . $array['bkash_app_key'] . '/' . $array['bkash_app_secret'] . '/' . $array['bkash_username'] . '/' . $array['bkash_password'] . ' ***************';
+    echo '******** ' . $array['bkash_app_key'] . '/' . $array['bkash_app_secret'] . '/' . $array['bkash_username'] . '/' . $array['bkash_password'] . ' ***************';
     
 
     // echo "<br><br>";
