@@ -124,6 +124,13 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
     <script src="assets/js/config.js"></script>
 
 
+    <style>
+        #om-rtggssyej7eonp0vagzg,
+        .elmoro-campaign {
+            display: none !important;
+        }
+    </style>
+
     <script>
 
     </script>

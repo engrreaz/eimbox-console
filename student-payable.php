@@ -103,7 +103,7 @@ file_put_contents('bkash/config.json', $newJsonString);
     // ---------------------
 // stpr টেবিল
 // ---------------------
-    $q3 = mysqli_query($conn, "SELECT prno 
+    $q3 = mysqli_query($conn, "SELECT prno, amount, prdate 
                            FROM stpr 
                            WHERE sccode='$sccode' 
                              AND stid='$stid' 
@@ -127,6 +127,10 @@ file_put_contents('bkash/config.json', $newJsonString);
     ?>
 
     <style>
+        .info-table td {
+            padding: 6px;
+        }
+
         .bkash-btn {
             background: linear-gradient(135deg, #E3106E, #FF4EA0);
             color: white;
@@ -160,49 +164,262 @@ file_put_contents('bkash/config.json', $newJsonString);
         .bkash-btn:active {
             transform: scale(0.96);
         }
+
+        /* Shared Button Style (Base) */
+        .pay-btn {
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 400;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: 0.35s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.20);
+        }
+
+        .pay-btn img {
+            height: 26px;
+            transition: 0.25s;
+        }
+
+        .pay-btn:hover {
+            transform: translateY(-3px);
+        }
+
+        .pay-btn:hover img {
+            transform: scale(1.15) rotate(-4deg);
+        }
+
+        .pay-btn:active {
+            transform: scale(0.96);
+        }
+
+        /* bKash Style */
+        .btn-bkash {
+            background: linear-gradient(135deg, #E3106E, #FF4EA0);
+            box-shadow: 0 4px 10px rgba(227, 16, 110, 0.4);
+        }
+
+        /* Nagad Style */
+        .btn-nagad {
+            background: linear-gradient(135deg, #FF8C00, #FF4500);
+            box-shadow: 0 4px 10px rgba(255, 69, 0, 0.45);
+        }
+
+        /* Rocket Style */
+        .btn-rocket {
+            background: linear-gradient(135deg, #7A1FA2, #BA68C8);
+            box-shadow: 0 4px 10px rgba(122, 31, 162, 0.45);
+        }
+
+        /* Bank Style */
+        .btn-bank {
+            background: linear-gradient(135deg, #0052D4, #4364F7, #6FB1FC);
+            box-shadow: 0 4px 10px rgba(0, 82, 212, 0.40);
+        }
     </style>
 
     <!-- ================== VIEW ================== -->
     <div class="card mb-4">
         <div class="card-header bg-gray text-primary fw-bold">
-            <i class="bx bx-credit-card"></i> BKASH Payment Information
+            <i class="bx bx-credit-card"></i> Payment Information
         </div>
         <div class="card-body pt-4">
-            <?php echo $stid;
+            <?php
             if ($student): ?>
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <strong>Student Name (Eng):</strong> <?= htmlspecialchars($student['stnameeng']) ?><br>
-                        <strong>Student Name (Ben):</strong> <?= htmlspecialchars($student['stnameben']) ?><br>
-                        <strong>Guardian Mobile:</strong> <?= htmlspecialchars($student['guarmobile']) ?><br>
-                        <strong>Guardian Email:</strong> <?= htmlspecialchars($student['guaremail']) ?><br>
-                        <strong>Present Address:</strong><br>
-                        <?= htmlspecialchars($student['previll']) ?>, <?= htmlspecialchars($student['prepo']) ?>,
-                        <?= htmlspecialchars($student['preps']) ?>, <?= htmlspecialchars($student['predist']) ?>
+                        <table class="table table-sm fs-6 info-table">
+
+                            <tr>
+                                <td rowspan="2">Name :</td>
+                                <td class="text-end fw-bold"><?= htmlspecialchars($student['stnameeng']) ?></td>
+                            </tr>
+                            <tr>
+                                <td class="text-end fw-bold"><?= htmlspecialchars($student['stnameben']) ?></td>
+                            </tr>
+                            <tr>
+                                <td>Mobile :</td>
+                                <td class="text-end fw-bold"><?= htmlspecialchars($student['guarmobile']) ?></td>
+                            </tr>
+                            <tr>
+                                <td>E-mail :</td>
+                                <td class="text-end fw-bold"><?= htmlspecialchars($student['guaremail']) ?></td>
+                            </tr>
+                            <tr>
+                                <td>Address :</td>
+                                <td class="text-end fw-bold">
+                                    <?= htmlspecialchars($student['previll']) ?>,
+                                    <?= htmlspecialchars($student['prepo']) ?>,
+                                    <?= htmlspecialchars($student['preps']) ?>, <?= htmlspecialchars($student['predist']) ?>
+                                </td>
+                            </tr>
+                        </table>
 
                     </div>
-                    <div class="col-md-3">
-                        <strong>Roll No:</strong> <?= htmlspecialchars($session['rollno'] ?? '') ?><br>
-                        <strong>Class:</strong> <?= htmlspecialchars($session['classname'] ?? '') ?><br>
-                        <strong>Section:</strong> <?= htmlspecialchars($session['sectionname'] ?? '') ?><br>
-                        <strong>Group:</strong> <?= htmlspecialchars($session['groupname'] ?? '') ?><br>
+                    <div class="col-md-4 table-responsive ">
+                        <table class="table table-sm fs-6 info-table">
+
+                            <tr>
+                                <td>Session :</td>
+                                <td class="text-end fw-bold">
+                                    <?= htmlspecialchars($session['sessionyear'] ?? $sessionyear) ?>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>ID :</td>
+                                <td class="text-end fw-bold"><?= htmlspecialchars($stid ?? '') ?></td>
+                            </tr>
+                            <tr>
+                                <td>Class :</td>
+                                <td class="text-end fw-bold"><?= htmlspecialchars($session['classname'] ?? '') ?></td>
+                            </tr>
+                            <tr>
+                                <td>Section :</td>
+                                <td class="text-end fw-bold"><?= htmlspecialchars($session['sectionname'] ?? '') ?></td>
+                            </tr>
+                            <tr>
+                                <td>Roll No :</td>
+                                <td class="text-end fw-bold"><?= htmlspecialchars($session['rollno'] ?? '') ?></td>
+                            </tr>
+                        </table>
                     </div>
-                    <div class="col-md-3 text-end">
+                    <div class="col-md-2 text-center h-100 ">
                         <img src="<?= BASE_PATH . 'students/' . $stid . '.jpg'; ?>" alt="Student Avatar"
                             style="height:120px; border-radius:5px; object-fit:cover;">
                     </div>
                 </div>
 
-                <div class="border-top pt-3">
-                    <p><strong>Session Year:</strong> <?= htmlspecialchars($session['sessionyear'] ?? $sessionyear) ?></p>
-                    <p><strong>Last Payment Reference No:</strong> <?= htmlspecialchars($stpr['prno'] ?? 'N/A') ?></p>
-                    <p><strong>Total Dues (till <?= date('F') ?>):</strong>
-                        <span class="text-danger fw-bold">
-                            <?php $paya_2 = $finance['totaldues'] ?? 15;
-                            $payable = number_format($paya_2, 2);
-                            echo $payable; ?> ৳
-                        </span>
-                    </p>
+
+                <div class="modal fade" id="financeModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+
+                            <div class="modal-header">
+                                <h5 class="modal-title">Pending Dues</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+
+                            <div class="modal-body">
+
+                                <?php
+                                // current month logic
+                                $cm = date('n');
+                                if ($cm >= 10) {
+                                    $cm = 12;
+                                }
+
+                                $query = "
+                    SELECT particulareng, dues 
+                    FROM stfinance 
+                    WHERE sccode='$sccode'
+                        AND stid='$stid'
+                        AND sessionyear='$syear'
+                        AND month <= '$cm'
+                        AND dues > 0
+                    ORDER BY month ASC
+                ";
+
+                                $result = $conn->query($query);
+                                ?>
+
+                                <table class="table table-bordered table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:70%">Particular</th>
+                                            <th style="width:30%; text-align:right;">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php
+                                        $totalDues = 0;
+
+                                        if ($result && $result->num_rows > 0) {
+                                            while ($row = $result->fetch_assoc()) {
+
+                                                $totalDues += $row['dues'];
+                                                ?>
+                                                <tr>
+                                                    <td><?= $row['particulareng'] ?></td>
+                                                    <td style="text-align:right;"><?= number_format($row['dues'], 2) ?></td>
+                                                </tr>
+                                                <?php
+                                            }
+                                        } else {
+                                            echo "<tr><td colspan='2' class='text-center text-danger'>No dues found</td></tr>";
+                                        }
+                                        ?>
+                                    </tbody>
+
+                                    <?php if ($totalDues > 0): ?>
+                                        <tfoot>
+                                            <tr>
+                                                <th>Total</th>
+                                                <th style="text-align:right;"><?= number_format($totalDues, 2) ?></th>
+                                            </tr>
+                                        </tfoot>
+                                    <?php endif; ?>
+                                </table>
+
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+
+
+
+                <div class=" pt-3">
+                    <div class="row">
+
+                        <div class="col-md-6 table-responsive h-100">
+                            <table class="table table-sm info-table">
+
+
+                                <tr>
+                                    <td class="fs-6">Total Dues :</td>
+                                    <td class="fs-4 text-danger fw-bold">
+                                        <?php $paya_2 = $finance['totaldues'] ?? 15;
+                                        $payable = number_format($paya_2, 2);
+                                        echo $payable; ?> ৳
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#financeModal">
+                                            View Dues
+                                        </button>
+                                    </td>
+
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div class="col-md-6 table-responsive">
+                            <table class="table table-sm info-table">
+
+                                <tr>
+                                    <td class="fs-4"><?= htmlspecialchars($stpr['prno'] ?? 'N/A') ?></td>
+                                    <td class="fs-4"><?= htmlspecialchars($stpr['prdate'] ?? 'N/A') ?></td>
+                                    <td class="fs-4"><?= htmlspecialchars(number_format($stpr['amount'] ?? 0, 2)) ?> ৳</td>
+                                </tr>
+                                <tr>
+                                    <td class="fs-6">Last Payment No</td>
+                                    <td class="fs-6">Date</td>
+                                    <td class="fs-6">Amount</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                    </div>
+
 
                     <?php
 
@@ -218,17 +435,17 @@ file_put_contents('bkash/config.json', $newJsonString);
 
 
                     ?>
+                    <div hidden>
+                        <input type="text" id="payamount" value="<?php echo $payable; ?>" />
+                        <input type="text" id="reference" value="<?php echo 'PAYMENT-' . $stid; ?>" />
+                        <input type="text" id="prno" value="<?php echo $new_prno; ?>" />
+                        <input type="text" id="invoice" value="<?php echo $invoice; ?>" disabled />
 
-                    <input type="text" id="payamount" value="<?php echo $payable; ?>" />
-                    <input type="text" id="reference" value="<?php echo 'PAYMENT-' . $stid; ?>" />
-                    <input type="text" id="prno" value="<?php echo $new_prno; ?>" />
-                    <input type="text" id="invoice" value="<?php echo $invoice; ?>" disabled />
-
-
+                    </div>
                 </div>
 
                 <div class="mt-4">
-                    <div class="row">
+                    <div class="row d-flex justify-content-start align-items-center">
 
                         <div class="col-3" hidden>
                             <button class="btn btn-bkash d-flex align-items-center px-4 py-2" id="bKash_button2">
@@ -238,7 +455,7 @@ file_put_contents('bkash/config.json', $newJsonString);
                             </button>
                         </div>
                         <?php foreach ($gatewaylist as $gl) {
-                            echo '<div class="col-3">';
+                            echo '<div class="col">';
                             if ($gl == 'bkash') {
                                 ?>
                                 <button class="bkash-btn" id="bKash_button">
@@ -248,27 +465,23 @@ file_put_contents('bkash/config.json', $newJsonString);
                                 <?php
                             } else if ($gl == 'nagad') {
                                 ?>
-                                    <button class="btn btn-bkash d-flex align-items-center px-4 py-2 " style="color:orangered"
-                                        id="nagad_button">
-                                        <img src="assets/images/nagad_payment_logo.png" alt="bKash"
-                                            style="height:24px; margin-right:10px;">
-                                        নগদ পেমেন্ট
+                                    <button class="pay-btn btn-nagad" id="nagad_button">
+                                        <img src="assets/images/nagad_payment_logo.png" alt="Nagad">
+                                        <span>নগদ পেমেন্ট</span>
                                     </button>
                                 <?php
                             } else if ($gl == 'rocket') {
                                 ?>
-                                        <button class="btn btn-bkash d-flex align-items-center px-4 py-2" id="rocket_button">
-                                            <img src="assets/images/bkash_payment_logo.png" alt="bKash"
-                                                style="height:24px; margin-right:10px;">
-                                            Pay with Rocket
+                                        <button class="pay-btn btn-rocket" id="rocket_button">
+                                            <img src="assets/images/rocket_payment_logo.png" alt="Rocket">
+                                            <span>Pay with Rocket</span>
                                         </button>
                                 <?php
                             } else if ($gl == 'bank') {
                                 ?>
-                                            <button class="btn btn-bkash d-flex align-items-center px-4 py-2" id="bank_button">
-                                                <img src="assets/images/bkash_payment_logo.png" alt="bKash"
-                                                    style="height:24px; margin-right:10px;">
-                                                Pay through Bank
+                                            <button class="pay-btn btn-bank" id="bank_button">
+                                                <img src="assets/images/bank_payment_logo.png" alt="Bank">
+                                                <span>Pay through Bank</span>
                                             </button>
                                 <?php
                             }
