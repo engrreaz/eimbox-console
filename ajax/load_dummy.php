@@ -136,6 +136,11 @@ if ($result && $result->num_rows > 0) {
                     $sql_insert = "INSERT INTO subsetup (" . implode(",", $cols) . ") VALUES (" . implode(",", $vals) . ")";
                     $conn->query($sql_insert);
                 }
+
+
+
+
+
                 ?>
                 Default Subjects Inserted
                 <div class="float-end"><i class="bi bi-floppy-fill text-success"></i></div>
@@ -165,6 +170,91 @@ if ($result && $result->num_rows > 0) {
     $conn->query($qu);
     echo 'New Exam Inserrted';
 }
+
+
+// ***********************************************************************************
+// ***********************************************************************************
+
+$classname = "Ten";
+$sectionname = "Science";
+$exam = "Model Test";
+
+// --------------------------------
+// 1️⃣ প্রথমে চেক করা হচ্ছে রেকর্ড আছে কিনা
+// --------------------------------
+
+$checkSql = "SELECT id FROM examroutine 
+             WHERE sccode='$sccode' 
+             AND examname='$exam'
+             AND sessionyear='$sy'
+             AND clsname='$classname'
+             AND secname='$sectionname'
+             LIMIT 1";
+
+$checkResult = $conn->query($checkSql);
+
+if ($checkResult && $checkResult->num_rows > 0) {
+    echo "<p class='text-danger'>⚠ Exam Routine Already Exists for <b>Ten | Science</b></p>";
+} else {
+
+
+    // --------------------------------
+// 2️⃣ যেহেতু নেই → এখন পুরোনো রুটিন থেকে ডেটা নিয়ে নতুন রুটিন তৈরি করবো
+// --------------------------------
+
+    $srcSccode = 103187;
+    $srcExamname = "half yearly";
+    $srcSessionyear = 2025;
+
+    $fetchSql = "SELECT * FROM examroutine
+             WHERE sccode='$srcSccode'
+             AND examname='$srcExamname'
+             AND sessionyear='$srcSessionyear'
+             AND clsname='$classname'
+             AND secname='$sectionname'
+             ORDER BY date, time";
+
+    $rows = $conn->query($fetchSql);
+
+    if (!$rows || $rows->num_rows == 0) {
+        echo "<p class='text-warning'>⚠ Sample Routine Not found</p>";
+        return;
+    }
+
+
+    // --------------------------------
+// 3️⃣ এখন প্রতিটি রো নতুন করে ইনসার্ট করবো
+// --------------------------------
+
+    $insertCount = 0;
+
+    while ($r = $rows->fetch_assoc()) {
+
+        // নতুন ডেটা তৈরি
+        $date = $r['date'];
+        $time = $r['time'];
+        $subcode = $r['subcode'];
+        $subj = $r['subj'];
+
+        $insertSql = "INSERT INTO examroutine
+                  (sessionyear, examname,  sccode, date, time, clsname, secname, subcode, subj, progress)
+                  VALUES
+                  ('$sy', '$exam',  '$sccode', '$date', '$time', '$classname', '$sectionname', '$subcode', '$subj', '0')";
+
+        if ($conn->query($insertSql)) {
+            $insertCount++;
+        }
+    }
+
+    // --------------------------------
+// 4️⃣ স্ট্যাটাস দেখানো হচ্ছে
+// --------------------------------
+
+    echo "<p class='text-success'>✔ Total $insertCount Rows Insert Successfully</p>";
+
+}
+
+
 
 
 
