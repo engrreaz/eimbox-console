@@ -221,14 +221,10 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
 
 
 
-                    <div class="container">
-                        <div class="col-md-12">
-                            <div class="nav-align-top">
-                                <ul class="nav nav-pills flex-column flex-sm-row mb-6 gap-sm-0 gap-2">
 
-                                    <!-- ************************************************* -->
-                                    <?php
-                                    $stmt = $conn->prepare("
+                    <!-- ************************************************* -->
+                    <?php
+                    $stmt = $conn->prepare("
                                         SELECT 
                                             id, module_name, nav_icon, descrip, root_page, nav_title, related_pages
                                         FROM 
@@ -240,11 +236,18 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
                                             OR root_page = ?
                                         ORDER BY root_page, related_pages
                                     ");
-                                    $stmt->bind_param("ssss", $currentFile, $MUL_PATA, $currentFile, $MUL_PATA);
-                                    $stmt->execute();
-                                    $result = $stmt->get_result();
+                    $stmt->bind_param("ssss", $currentFile, $MUL_PATA, $currentFile, $MUL_PATA);
+                    $stmt->execute();
+                    $result = $stmt->get_result();
 
-                                    if ($result->num_rows > 1) {
+                    if ($result->num_rows > 1) {
+                        ?>
+                        <div class="container">
+                            <div class="col-md-12">
+                                <div class="nav-align-top">
+                                    <ul class="nav nav-pills flex-column flex-sm-row mb-6 gap-sm-0 gap-2">
+
+                                        <?php
 
                                         while ($row = $result->fetch_assoc()) {
                                             $icon = htmlspecialchars($row['nav_icon']);
@@ -268,14 +271,19 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
 
                                             <?php
                                         }
-                                    }
-                                    $stmt->close();
-                                    ?>
-
-                                </ul>
+                                        ?>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    <?php
+
+
+                    }
+                    $stmt->close();
+                    ?>
+
+
 
                     <!-- ************************************************* -->
 

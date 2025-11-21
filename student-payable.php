@@ -312,7 +312,7 @@ $syear = htmlspecialchars($session['sessionyear'] ?? $sessionyear);
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
 
-                            <div class="modal-body">
+                            <div class="modal-body px-10">
 
                                 <?php
                                 // current month logic
@@ -395,13 +395,13 @@ $syear = htmlspecialchars($session['sessionyear'] ?? $sessionyear);
 
                                 <tr>
                                     <td class="fs-6">Total Dues :</td>
-                                    <td class="fs-4 text-danger fw-bold">
+                                    <td class="fs-4 text-danger fw-bold text-end">
                                         <?php $paya_2 = $totalDues ?? 0;
                                         $payable = number_format($paya_2, 2);
                                         echo $payable; ?> ৳
                                     </td>
-                                    <td>
-                                        <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#financeModal">
+                                    <td class="text-end">
+                                        <button class="btn btn-info " data-bs-toggle="modal" data-bs-target="#financeModal">
                                             View Dues
                                         </button>
                                     </td>
@@ -412,7 +412,6 @@ $syear = htmlspecialchars($session['sessionyear'] ?? $sessionyear);
 
                         <div class="col-md-6 table-responsive">
                             <table class="table table-sm info-table">
-
                                 <tr>
                                     <td class="fs-4"><?= htmlspecialchars($stpr['prno'] ?? 'N/A') ?></td>
                                     <td class="fs-4"><?= htmlspecialchars($stpr['prdate'] ?? 'N/A') ?></td>
@@ -425,7 +424,6 @@ $syear = htmlspecialchars($session['sessionyear'] ?? $sessionyear);
                                 </tr>
                             </table>
                         </div>
-
                     </div>
 
 
