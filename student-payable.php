@@ -114,13 +114,15 @@ file_put_contents('bkash/config.json', $newJsonString);
 
     // ---------------------
 // stfinance টেবিল
-// ---------------------
+// ---------------------++
+$syear = htmlspecialchars($session['sessionyear'] ?? $sessionyear);
+
     $currentMonth = date('n');
     $q4 = mysqli_query($conn, "SELECT SUM(dues) AS totaldues 
                            FROM stfinance 
                            WHERE sccode='$sccode' 
                              AND stid='$stid' 
-                             AND sessionyear='$sessionyear' 
+                             AND sessionyear='$syear' 
                              AND month <= $currentMonth");
 
     $finance = mysqli_fetch_assoc($q4);
