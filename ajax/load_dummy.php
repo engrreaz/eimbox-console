@@ -257,7 +257,7 @@ if ($result && $result->num_rows > 0) {
 
                 // 🔹 প্রতিবার নতুন র‍্যান্ডম student বাছাই
                 $sql_rand_stu = "SELECT stnameeng, stnameben, fname, mname, previll, prepo, preps, predist 
-                     FROM students ORDER BY RAND() LIMIT 1";
+                     FROM students where stnameeng != '' and stnameben != '' ORDER BY RAND() LIMIT 1";
                 $rand_res = $conn->query($sql_rand_stu);
                 $template_stu = ($rand_res && $rand_res->num_rows > 0) ? $rand_res->fetch_assoc() : [];
 
