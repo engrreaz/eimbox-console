@@ -255,6 +255,109 @@ if ($checkResult && $checkResult->num_rows > 0) {
 }
 
 
+$checkSql = "SELECT id FROM stattnd
+            WHERE sccode='$sccode'
+            AND sessionyear='$sy'
+            AND classname='$classname'
+            AND sectionname='$sectionname'
+            LIMIT 1";
+
+$checkResult = $conn->query($checkSql);
+
+// যদি রেজাল্ট পাওয়া যায় → ডেটা আগেই আছে
+if ($checkResult && $checkResult->num_rows > 0) {
+    echo "<p class='text-danger'>⚠ এই ক্লাসের এই সেশনের attendance আগেই দেওয়া আছে!</p>";
+
+} else {
+
+
+    $sql = "SELECT stid, rollno FROM sessioninfo
+        WHERE sccode='$sccode'
+        AND sessionyear='$sy'
+        AND classname='$classname'
+        AND sectionname='$sectionname'
+        ORDER BY rollno";
+
+    $result = $conn->query($sql);
+    $students = [];
+
+    if ($result && $result->num_rows > 0) {
+        while ($r = $result->fetch_assoc()) {
+            $students[] = $r;
+        }
+    } else {
+        echo "<p class='text-danger'>⚠ কোন স্টুডেন্ট পাওয়া যায়নি।</p>";
+        return;
+    }
+
+    $totalStudents = count($students);
+
+
+    // ===============================
+// 2️⃣ অক্টোবর মাসের তারিখ লুপ
+// ===============================
+    $start = strtotime("$sy-10-01");
+    $end = strtotime("$sy-10-31");
+
+    $minPercent = 50;
+    $maxPercent = 90;
+
+    $insertCount = 0;
+
+
+    for ($d = $start; $d <= $end; $d += 86400) {
+
+        $dayName = date("l", $d);
+
+        // Friday এবং Saturday বাদ
+        if ($dayName == "Friday" || $dayName == "Saturday") {
+            continue;
+        }
+
+        $adate = date("Y-m-d", $d);
+
+        // ===============================
+        // 3️⃣ আজকের জন্য random attendance %
+        // ===============================
+        $attendancePercent = rand($minPercent, $maxPercent);
+
+        // কতজন উপস্থিত হবে?
+        $presentCount = intval(($totalStudents * $attendancePercent) / 100);
+
+        // Shuffle students array to pick random present students
+        $temp = $students;
+        shuffle($temp);
+
+        // প্রথম X জনকে উপস্থিত ধরা
+        $presentStudents = array_slice($temp, 0, $presentCount);
+
+        // ===============================
+        // 4️⃣ উপস্থিত ছাত্রদের attendance insert
+        // ===============================
+        foreach ($presentStudents as $st) {
+
+            $stid = $st['stid'];
+            $rollno = $st['rollno'];
+
+            $ins = "INSERT INTO stattnd 
+                (sccode, sessionyear, stid, rollno, adate, yn, classname, sectionname)
+                VALUES
+                ('$sccode', '$sy', '$stid', '$rollno', '$adate', '1', '$classname', '$sectionname')";
+
+            if ($conn->query($ins)) {
+                $insertCount++;
+            }
+        }
+    }
+
+
+    // ===============================
+// ⭐ Final Message
+// ===============================
+    echo "<p class='text-success'>✔ মোট $insertCount টি হাজিরা ইনসার্ট হয়েছে।</p>";
+
+}
+
 
 
 
