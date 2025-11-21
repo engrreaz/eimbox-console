@@ -396,7 +396,7 @@ $syear = htmlspecialchars($session['sessionyear'] ?? $sessionyear);
                                 <tr>
                                     <td class="fs-6">Total Dues :</td>
                                     <td class="fs-4 text-danger fw-bold">
-                                        <?php $paya_2 = $totalDues ?? 15;
+                                        <?php $paya_2 = $totalDues ?? 0;
                                         $payable = number_format($paya_2, 2);
                                         echo $payable; ?> ৳
                                     </td>
