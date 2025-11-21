@@ -335,7 +335,7 @@ $syear = htmlspecialchars($session['sessionyear'] ?? $sessionyear);
                                 $result = $conn->query($query);
                                 ?>
 
-                                <table class="table table-bordered table-striped table-sm">
+                                <table class="table table-bordered table-striped table-sm info-table">
                                     <thead>
                                         <tr>
                                             <th style="width:70%">Particular</th>
@@ -367,7 +367,7 @@ $syear = htmlspecialchars($session['sessionyear'] ?? $sessionyear);
                                         <tfoot>
                                             <tr>
                                                 <th>Total</th>
-                                                <th style="text-align:right;"><?= number_format($totalDues, 2) ?></th>
+                                                <th style="text-align:right; font-size: 18px; color:red;;"><?= number_format($totalDues, 2) ?></th>
                                             </tr>
                                         </tfoot>
                                     <?php endif; ?>
