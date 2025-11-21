@@ -9,34 +9,34 @@
 
 
     <div class="navbar-nav-right d-flex align-items-center justify-content-end" id="navbar-collapse">
-        <div class="me-3">
+
+
+        <div class="me-3  ">
             <img src="<?php echo BASE_PATH . '/logo/' . $sccode; ?>.png"
                 style="height:30px; width:30px; border-radius:50%;" />
         </div>
-        <div class="me-8">
+        <div class="me-8  text-start">
             <div class="m-0 p-0  fw-bold btn"><a href="index.php"><?php echo $_SESSION['scname']; ?></a></div>
             <div class="p-0 m-0 pt-1 text-muted fs-tiny "><?php echo $_SESSION['scaddress_top']; ?></div>
 
         </div>
 
-        <!-- Search -->
-        <div class="navbar-nav align-items-center">
-            <div class="nav-item navbar-search-wrapper mb-0">
-                <a class="nav-item nav-link search-toggler px-0" href="javascript:void(0);">
-                    <span class="d-inline-block text-body-secondary fw-normal" id="autocomplete"></span>
-                </a>
-            </div>
-        </div>
-
-        <!-- /Search -->
 
 
 
 
 
-        <ul class="navbar-nav flex-row align-items-center ms-md-auto">
+        <ul class=" navbar-nav flex-row align-items-center ms-md-auto">
 
-
+            <li>
+                <div class="navbar-nav align-items-right me-4">
+                    <div class="nav-item navbar-search-wrapper mb-0">
+                        <a class="nav-item nav-link search-toggler px-0" href="javascript:void(0);">
+                            <span class="d-inline-block text-body-secondary fw-normal" id="autocomplete"></span>
+                        </a>
+                    </div>
+                </div>
+            </li>
 
 
             <li class="nav-item dropdown-language dropdown me-2 me-xl-0">
@@ -289,9 +289,21 @@
             <!--/ User -->
 
         </ul>
+
+
+        <br><br><br>
+<hr>
+        <div class="row">
+            <div class="col-12">
+                ddddd <hr>
+            </div>
+        </div>
+
     </div>
 
+
 </nav>
+
 
 
 

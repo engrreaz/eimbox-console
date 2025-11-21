@@ -59,7 +59,8 @@ while ($rg = $res->fetch_assoc()) {
 
     $data_exist = 0;
     $sql_rand = "SELECT id   FROM stmark WHERE classname='$cc' and sectionname = '$ss' and exam='$exam' ";
-    $res_rand = $conn->query($sql_rand);
+   echo  $sql_rand ;
+     $res_rand = $conn->query($sql_rand);
     if ($res_rand && $res_rand->num_rows > 0) {
         $data_exist = 1;
     }

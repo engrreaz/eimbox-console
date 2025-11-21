@@ -41,7 +41,7 @@
     <!-- Active Session Year -->
     <div class="col-md-6">
         <label class="form-label">Active Session Year</label>
-        <input type="text" class="form-control" name="active_syear" value="<?= $activeSession['syear'] ?? '' ?>"
+        <input type="text" class="form-control" name="active_syear" value="<?= $activeSession['syear'] ?? date('Y') ?>"
             placeholder="e.g. 25">
     </div>
 
@@ -81,7 +81,7 @@
 
             foreach ($setting_titles as $i => $title):
                 $value = !empty($settingsArr[$title]) ? $settingsArr[$title] : ($setting_def[$i] ?? '');
-                $disabled = empty($settingsArr[$title]) ? 'readonly' : '';
+                $disabled = empty($settingsArr[$title]) ? 'readonlyx' : '';
                 ?>
                 <div class="col-md-3 mb-2">
                     <label class="form-level"><?= htmlspecialchars($title) ?></label>
