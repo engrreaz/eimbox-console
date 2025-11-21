@@ -65,9 +65,9 @@ file_put_contents('bkash/config.json', $newJsonString);
     // ---------------------
 // Student ID নির্ধারণ
 // ---------------------
-    // echo '<hr>' . $_SESSION['token'] . '<hr>' . $_SESSION['refresh_token'] . '<hr>';
+    echo '<hr>' . $_SESSION['token'] . '<hr>' . $_SESSION['refresh_token'] . '<hr>';
     
-    // echo strlen($_SESSION['token']) . '/' . strlen($_SESSION['refresh_token']);
+    echo strlen($_SESSION['token']) . '/' . strlen($_SESSION['refresh_token']);
     
     if (isset($_SESSION['current_student_id']) && !empty($_SESSION['current_student_id'])) {
         $stid = $_SESSION['current_student_id'];
