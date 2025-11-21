@@ -58,7 +58,7 @@ while ($rg = $res->fetch_assoc()) {
     $ss = $rg['subarea'];
 
     $data_exist = 0;
-    $sql_rand = "SELECT id   FROM stmark WHERE classname='$cc' and sectionname = '$ss' and exam='$exam' ";
+    $sql_rand = "SELECT id   FROM stmark WHERE classname='$cc' and sectionname = '$ss' and exam='$exam' and sccode='$sccode' and sessionyear='$sy'";
    echo  $sql_rand ;
      $res_rand = $conn->query($sql_rand);
     if ($res_rand && $res_rand->num_rows > 0) {
