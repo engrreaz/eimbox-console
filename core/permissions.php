@@ -97,8 +97,8 @@ if ($usr == 'engrreaz@gmail.com') {
     $permission = 3;
 }
 
-echo "%%" . $userlevel;
-echo ".........." . $permission;
+// echo "%%" . $userlevel;
+// echo ".........." . $permission;
 
 include_once('page_load_query.php');
 

@@ -2,7 +2,12 @@
 require_once 'header.php';
 // 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
 
+// array(6) { [0]=> string(1) "1" [1]=> string(20) "tNrdSSziORSgTc85sDxJ" [2]=> string(16) "bc82b09ea156c49a" [3]=> string(13) "8809617618425" [4]=> string(8) "a0d66743" [5]=> string(31) "http://bulksmsbd.net/api/smsapi" }
+
+
 // echo '<pre>' . print_r($_SESSION) . '</pre>';
+
+
 ?>
 
 <!-- Content -->
@@ -11,9 +16,14 @@ require_once 'header.php';
     <!-- Card Border Shadow -->
     <div class="row g-6">
 
-        <!-- <?= $sccode_current_package ?>
 
-        <?php echo '<pre>' . print_r($_SESSION, true) . '</pre>'; ?> -->
+
+
+        <?php
+
+        // global_send_sms('01919629672', 'Test message from Eimbox SMS Gateway Integration. This is a test message to verify the SMS sending functionality. Please ignore this message. Thank you!', 'Regular', 'Test', '0');
+        ?>
+
 
         <!-- Students Attendance -->
         <div class="col-12 col-sm-6 col-lg-3">

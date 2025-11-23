@@ -148,8 +148,10 @@ $sccode = $_SESSION['sccode'] ?? '';
 
 $sctype = $_SESSION['sccategory'] ?? '';
 $scname = $_SESSION['scname'] ?? '';
-$scaddress = $_SESSION['scaddress_top_full']  ?? '';
+$scaddress = $_SESSION['scaddress_top_full'] ?? '';
 $scmobile = $_SESSION['scmobile'] ?? '';
+$scmail = $_SESSION['scmail'] ?? '';
+$scweb = $_SESSION['scweb'] ?? '';
 
 
 $raw_json = $_SESSION['admin_data'] ?? '';
@@ -164,11 +166,21 @@ $admin_data = json_decode($json, true);
 
 
 
-$sccode_current_package = $admin_data['package']['id'] ?? 2;
+$sccode_current_package = $_SESSION['package_id'] ?? 2;
 
-$rootuser =  $_SESSION['rootuser'] ;
+$rootuser = $_SESSION['rootuser'] ?? '';
 
+$sms_gateway = isset($_SESSION['sms_gateway']) ? explode(' | ', $_SESSION['sms_gateway']) : [];
 
+// active check: যদি 0 index খালি না থাকে
+$sms_active = !empty($sms_gateway[0]) ? 1 : 0;
+
+// array index defaults
+$sms_api_key = $sms_gateway[1] ?? '';
+$sms_secret_key = $sms_gateway[2] ?? '';
+$sms_username = $sms_gateway[3] ?? '';
+$sms_password = $sms_gateway[4] ?? '';
+$sms_url = $sms_gateway[5] ?? '';
 
 
 

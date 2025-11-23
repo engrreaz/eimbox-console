@@ -1,6 +1,7 @@
 <?php
 require_once 'db.php';
 require_once 'core-val.php';
+require_once 'global_values.php';
 
 // ========================
 // XSS Safe Output
@@ -79,7 +80,7 @@ function validate_password($pwd)
 // ========================
 function find_user_by_email($conn, $email)
 {
-    
+
     // ইউজার ডেটা বের করো
     $stmt = $conn->prepare("SELECT * FROM usersapp WHERE email = ? LIMIT 1");
     $stmt->bind_param('s', $email);
@@ -182,11 +183,14 @@ function store_user_session($user, $school = [])
     $_SESSION['scname'] = $school['scname'] ?? '';
     $_SESSION['sccategory'] = $school['sccategory'] ?? '';
     $_SESSION['admin_data'] = $school['admin_data'] ?? '';
+    $_SESSION['package_id'] = $school['package_id'] ?? 2;
     $_SESSION['scaddress_top'] = $school['ps'] . ', ' . $school['dist'];
-    $_SESSION['scaddress_top_full'] = $school['po'] . $school['ps'] . ', ' . $school['dist'];
+    $_SESSION['scaddress_top_full'] = str_replace(', ,', ', ', $school['scadd1'] . ', ' . $school['scadd2'] . ', ' . $school['ps'] . ', ' . $school['dist']);
 
     $_SESSION['rootuser'] = $school['rootuser'];
     $_SESSION['scmobile'] = $school['mobile'];
+    $_SESSION['sms_gateway'] = $school['sms_gateway'] ?? '';
+
 }
 
 
@@ -215,11 +219,13 @@ function store_student_session($user, $school = [])
     $_SESSION['scname'] = $school['scname'] ?? '';
     $_SESSION['sccategory'] = $school['sccategory'] ?? '';
     $_SESSION['admin_data'] = $school['admin_data'] ?? '';
+    $_SESSION['package_id'] = $school['package_id'] ?? 2;
     $_SESSION['scaddress_top'] = $school['ps'] . ', ' . $school['dist'];
     $_SESSION['scaddress_top_full'] = $school['po'] . $school['ps'] . ', ' . $school['dist'];
 
     $_SESSION['rootuser'] = $school['rootuser'];
     $_SESSION['scmobile'] = $school['mobile'];
+    $_SESSION['sms_gateway'] = $school['sms_gateway'] ?? '';
 }
 
 
@@ -666,7 +672,148 @@ function taka($number)
     $str = array_reverse($str);
     $result = implode('', $str); //Join array elements with a string
 //echo "Given number is: ".$number1."</br>";
-    echo $result;
+    return $result;
     // return 0;
 
+}
+
+
+
+function global_send_sms($mobile, $message, $campaign = 'Regular', $type = '', $stid = 0)
+{
+    global $sms_api_key, $sms_secret_key, $sms_username, $sms_password, $sms_url;
+    global $sccode, $y_v2, $conn, $usr, $cur;
+
+    // -----------------------------------------
+    // 1. Sanitize Inputs
+    // -----------------------------------------
+    $mobile = mysqli_real_escape_string($conn, $mobile);
+    $message_original = $message;              // real message for length
+    $message = urlencode($message);            // encoded for API
+
+    // -----------------------------------------
+    // 2. Default response values
+    // -----------------------------------------
+    $response_code = '';
+    $message_id = '';
+    $success_message = '';
+    $error_message = '';
+    $status = '';
+
+    echo 'ABC';
+    echo $sms_url;
+    // -----------------------------------------
+    // 3. SMS Gateway: bulksmsbd.net
+    // -----------------------------------------
+    if (str_contains($sms_url, 'bulksmsbd.net')) {
+
+        $data = [
+            "api_key" => $sms_api_key,
+            "senderid" => $sms_username,
+            "number" => $mobile,
+            "message" => $message_original
+        ];
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $sms_url);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+        $response_raw = curl_exec($ch);
+        curl_close($ch);
+
+        // JSON → associative array
+        $response = json_decode($response_raw, true);
+
+        $response_code = $response['response_code'] ?? '';
+        $message_id = $response['message_id'] ?? '';
+        $success_message = $response['success_message'] ?? '';
+        $error_message = $response['error_message'] ?? '';
+        $status = $response['status'] ?? '';
+
+    }
+
+    // -----------------------------------------
+    // 4. SMS Gateway: smsvaults.work
+    // -----------------------------------------
+    else if (str_contains($sms_url, 'cpanel.smsvaults.work')) {
+
+        $url = "http://cpanel.smsvaults.work/sendtext?apikey={$sms_api_key}&secretkey={$sms_secret_key}&callerID=01234567890&toUser={$mobile}&messageContent={$message}";
+        // $url = $sms_url;
+
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        $response_raw = curl_exec($ch);
+        $ch = null;
+
+        $response = json_decode($response_raw, true);
+
+        $response_code = 0;
+        $status = $response['Status'] ?? '';
+        $message_id = $response['Message_ID'] ?? '';
+        $success_message = $response['Text'] ?? '';
+        $error_message = '';
+
+    }
+
+    // -----------------------------------------
+    // 5. Unknown gateway
+    // -----------------------------------------
+    else {
+        $response_code = '';
+        $message_id = '';
+        $success_message = '';
+        $error_message = '';
+        $status = '';
+    }
+
+    // -----------------------------------------
+    // 6. SMS Count (real message)
+    // -----------------------------------------
+    $msg_length = strlen($message_original);
+    $count = ceil($msg_length / 160);
+
+    // -----------------------------------------
+    // 7. Get session info for this student
+    // -----------------------------------------
+    $sql = "SELECT sessionyear, classname, sectionname, rollno 
+            FROM sessioninfo 
+            WHERE stid = '$stid' AND sessionyear LIKE '%$y_v2%' 
+            ORDER BY id DESC LIMIT 1";
+
+    $result = $conn->query($sql);
+
+    if ($result && $result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $sessionyear = $row['sessionyear'];
+        $classname = $row['classname'];
+        $sectionname = $row['sectionname'];
+        $rollno = $row['rollno'];
+    } else {
+        $sessionyear = date('Y');
+        $classname = '';
+        $sectionname = '';
+        $rollno = 0;
+    }
+
+    // -----------------------------------------
+    // 8. Cost calculation
+    // -----------------------------------------
+    $cost = 0.45 * $count;
+    $td = date('Y-m-d');
+
+    // -----------------------------------------
+    // 9. Insert log into `sms` table
+    // -----------------------------------------
+    $sqls = "INSERT INTO sms
+        (sccode, sessionyear, stid, date, campaign, sms_type, mobile_number, sms_text, sms_len, count, send_by, send_time, cost,
+        response_code, message_id, success_message, error_message, status, modifieddate)
+        VALUES
+        ('$sccode', '$sessionyear', '$stid',  '$td', '$campaign', '$type', '$mobile', '$message_original', '$msg_length', '$count',
+         '$usr', '$cur', '$cost', '$response_code', '$message_id', '$success_message', '$error_message', '$status', '$cur')";
+
+    $conn->query($sqls);
 }

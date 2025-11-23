@@ -1,7 +1,7 @@
 <?php
 require_once 'config.php';
 require_once 'db.php';
-require_once 'functions.php';
+
 require_once 'functions-achievements.php';
 require_once __DIR__ . '/../achievements_engine.php';
 require_once 'core-val.php';
@@ -19,6 +19,8 @@ session_set_cookie_params([
     'httponly' => true,
     'samesite' => 'Strict'
 ]);
+
+require_once 'functions.php';
 
 if (session_status() === PHP_SESSION_NONE)
     session_start();

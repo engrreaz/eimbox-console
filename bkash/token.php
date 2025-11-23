@@ -92,7 +92,8 @@ function bkash_Get_Token()
 	//curl_setopt($url, CURLOPT_PROXY, $proxy);
 	curl_setopt($url, CURLOPT_TIMEOUT, 30);
 	$resultdata = curl_exec($url);
-	curl_close($url);
+	// curl_close($url);
+	$url = null;
 	$_SESSION['response_token'] = json_decode($resultdata, true);
 
 	return json_decode($resultdata, true);

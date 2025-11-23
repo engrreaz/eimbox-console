@@ -1,7 +1,11 @@
 <?php require_once 'header.php'; ?>
 
 
+
 <?php
+// 01770618575
+setcookie("selected_items", "", time() + (600), "/");
+
 $sql = "SELECT * FROM scinfo WHERE sccode='$sccode' LIMIT 1";
 $res = $conn->query($sql);
 $scinfo = $res->fetch_assoc();
@@ -53,7 +57,7 @@ file_put_contents('bkash/config.json', $newJsonString);
     $strJsonFileContents = file_get_contents("bkash/config.json");
     $array = json_decode($strJsonFileContents, true);
 
-    echo '******** ' . $array['bkash_app_key'] . '/' . $array['bkash_app_secret'] . '/' . $array['bkash_username'] . '/' . $array['bkash_password'] . ' ***************';
+    // echo '******** ' . $array['bkash_app_key'] . '/' . $array['bkash_app_secret'] . '/' . $array['bkash_username'] . '/' . $array['bkash_password'] . ' ***************';
     
 
     // echo "<br><br>";
@@ -65,10 +69,15 @@ file_put_contents('bkash/config.json', $newJsonString);
     // ---------------------
 // Student ID নির্ধারণ
 // ---------------------
-    echo '<hr>' . $_SESSION['token'] . '<hr>' . $_SESSION['refresh_token'] . '<hr>';
     
-    echo strlen($_SESSION['token']) . '/' . strlen($_SESSION['refresh_token']);
+
+    $token_length = strlen($_SESSION['token']) + strlen($_SESSION['refresh_token']);
+
+    // echo '<hr>' . $_SESSION['token'] . '<hr>' . $_SESSION['refresh_token'] . '<hr>';
     
+    // echo strlen($_SESSION['token']) . '/' . strlen($_SESSION['refresh_token']);
+    
+
     if (isset($_SESSION['current_student_id']) && !empty($_SESSION['current_student_id'])) {
         $stid = $_SESSION['current_student_id'];
     } else {
@@ -115,7 +124,7 @@ file_put_contents('bkash/config.json', $newJsonString);
     // ---------------------
 // stfinance টেবিল
 // ---------------------++
-$syear = htmlspecialchars($session['sessionyear'] ?? $sessionyear);
+    $syear = htmlspecialchars($session['sessionyear'] ?? $sessionyear);
 
     $currentMonth = date('n');
     $q4 = mysqli_query($conn, "SELECT SUM(dues) AS totaldues 
@@ -134,10 +143,10 @@ $syear = htmlspecialchars($session['sessionyear'] ?? $sessionyear);
         }
 
         .modal-body {
-    max-height: 65vh;
-    overflow-y: auto;
-    padding-right: 10px;
-}
+            max-height: 65vh;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
 
         .bkash-btn {
             background: linear-gradient(135deg, #E3106E, #FF4EA0);
@@ -226,8 +235,12 @@ $syear = htmlspecialchars($session['sessionyear'] ?? $sessionyear);
 
         /* Bank Style */
         .btn-bank {
-            background: linear-gradient(135deg, #0052D4, #4364F7, #6FB1FC);
+            background: linear-gradient(135deg, #01112bff, #03197aff, #023979ff);
             box-shadow: 0 4px 10px rgba(0, 82, 212, 0.40);
+        }
+
+        .button-block button {
+            margin-right: 15px;
         }
     </style>
 
@@ -316,13 +329,13 @@ $syear = htmlspecialchars($session['sessionyear'] ?? $sessionyear);
 
                                 <?php
                                 // current month logic
-                                $cm = date('n');
+                                $cm = date('m');
                                 if ($cm >= 10) {
                                     $cm = 12;
                                 }
 
                                 $query = "
-                    SELECT particulareng, dues 
+                    SELECT id, particulareng, particularben, dues 
                     FROM stfinance 
                     WHERE sccode='$sccode'
                         AND stid='$stid'
@@ -338,7 +351,8 @@ $syear = htmlspecialchars($session['sessionyear'] ?? $sessionyear);
                                 <table class="table table-bordered table-striped table-sm info-table">
                                     <thead>
                                         <tr>
-                                            <th style="width:70%">Particular</th>
+                                            <th>#</th>
+                                            <th colspan="2">Particular</th>
                                             <th style="width:30%; text-align:right;">Amount</th>
                                         </tr>
                                     </thead>
@@ -352,7 +366,13 @@ $syear = htmlspecialchars($session['sessionyear'] ?? $sessionyear);
                                                 $totalDues += $row['dues'];
                                                 ?>
                                                 <tr>
+                                                    <td><?= $row['id'] ?> #
+
+                                                        <input type="checkbox" class="selItem" id="sel<?= $row['id'] ?>"
+                                                            data-id="<?= $row['id'] ?>" data-dues="<?= $row['dues'] ?>" checked hidden>
+                                                    </td>
                                                     <td><?= $row['particulareng'] ?></td>
+                                                    <td><?= $row['particularben'] ?></td>
                                                     <td style="text-align:right;"><?= number_format($row['dues'], 2) ?></td>
                                                 </tr>
                                                 <?php
@@ -366,8 +386,12 @@ $syear = htmlspecialchars($session['sessionyear'] ?? $sessionyear);
                                     <?php if ($totalDues > 0): ?>
                                         <tfoot>
                                             <tr>
-                                                <th>Total</th>
-                                                <th style="text-align:right; font-size: 18px; color:red;;"><?= number_format($totalDues, 2) ?></th>
+                                                <th colspan="4" style="text-align:right; font-size: 18px; ;">
+                                                    <span id="select_amount"
+                                                        style="colro:seagreen;"><?= number_format($totalDues, 2) ?></span> out
+                                                    of total dues <span style="color:red;">
+                                                        <?= number_format($totalDues, 2) ?></span>
+                                                </th>
                                             </tr>
                                         </tfoot>
                                     <?php endif; ?>
@@ -376,6 +400,7 @@ $syear = htmlspecialchars($session['sessionyear'] ?? $sessionyear);
                             </div>
 
                             <div class="modal-footer">
+                                <button type="button" class="btn btn-primary">Pay Selected Items</button>
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                             </div>
 
@@ -398,11 +423,12 @@ $syear = htmlspecialchars($session['sessionyear'] ?? $sessionyear);
                                     <td class="fs-4 text-danger fw-bold text-end">
                                         <?php $paya_2 = $totalDues ?? 0;
                                         $payable = number_format($paya_2, 2);
-                                        echo $payable; ?> ৳
+                                        echo '<span id="payable_amount">' . $payable . '</span>'; ?> ৳
                                     </td>
                                     <td class="text-end">
-                                        <button class="btn btn-info " data-bs-toggle="modal" data-bs-target="#financeModal">
-                                            View Dues
+                                        <button class="btn btn-info btn-sm " data-bs-toggle="modal"
+                                            data-bs-target="#financeModal">
+                                            View Details
                                         </button>
                                     </td>
 
@@ -450,18 +476,13 @@ $syear = htmlspecialchars($session['sessionyear'] ?? $sessionyear);
                     </div>
                 </div>
 
-                <div class="mt-4">
-                    <div class="row d-flex justify-content-start align-items-center">
 
-                        <div class="col-3" hidden>
-                            <button class="btn btn-bkash d-flex align-items-center px-4 py-2" id="bKash_button2">
-                                <img src="assets/images/bkash_payment_logo.png" alt="bKash"
-                                    style="height:24px; margin-right:10px;">
-                                Pay with bKash
-                            </button>
-                        </div>
+                <div class="mt-4">
+                    <div class="button-block d-flex ">
+
+
                         <?php foreach ($gatewaylist as $gl) {
-                            echo '<div class="col">';
+
                             if ($gl == 'bkash') {
                                 ?>
                                 <button class="bkash-btn" id="bKash_button">
@@ -494,7 +515,7 @@ $syear = htmlspecialchars($session['sessionyear'] ?? $sessionyear);
                             ?>
 
 
-                            <?php echo '</div>';
+                            <?php
                         } ?>
                     </div>
                 </div>
@@ -556,8 +577,7 @@ $syear = htmlspecialchars($session['sessionyear'] ?? $sessionyear);
         var payerReference = $('#reference').val();
 
 
-
-        if (!amount || !payerReference) {
+        if (!amount || !payerReference || amount < 10) {
             alert('Amount বা Reference খালি!');
             return;
         }
@@ -615,6 +635,47 @@ $syear = htmlspecialchars($session['sessionyear'] ?? $sessionyear);
 
 </script>
 
+<script>
+    function recalcSelected() {
+        let total = 0;
+        let ids = [];
+
+        document.querySelectorAll('.selItem:checked').forEach(cb => {
+            total += parseFloat(cb.dataset.dues);
+            ids.push(cb.dataset.id);
+        });
+
+        // Update UI
+        document.getElementById('select_amount').textContent = total.toFixed(2);
+        document.getElementById('payamount').value = total.toFixed(2);
+        document.getElementById('payable_amount').textContent = "Payable: " + total.toFixed(2);
+
+        // Save to cookie
+        document.cookie = "selected_items=" + ids.join('|') + "; path=/";
+
+        return total;
+    }
+
+    // When any checkbox changes
+    document.addEventListener('change', function (e) {
+        if (e.target.classList.contains('selItem')) {
+            recalcSelected();
+        }
+    });
+
+    // Pay Selected Items button
+    document.querySelector('.btn-pay-selected').addEventListener('click', function () {
+        let amount = recalcSelected();
+        alert("Selected items saved. Payable amount: " + amount);
+    });
+</script>
+
+
+<script>
+    if (<?= $token_length ?> < 100) {
+        // window.location.href = 'student-payable.php';
+    }
+</script>
 <!-- ----------------------------------- -->
 </body>
 

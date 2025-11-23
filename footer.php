@@ -117,7 +117,7 @@ $release_colors = [
 
         <div id="idleProgressContainer">
             <div id="idleProgressBar"></div>
-            <span id="idleTimeText" >ffffff</span>
+            <span id="idleTimeText">ffffff</span>
         </div>
 
         <div class="container-fluid container-p-x pt-3 pb-3">
@@ -356,12 +356,28 @@ $release_colors = [
 
 <script>
     // ✅ Bootstrap Toast Notification Function
-    
+
 </script>
 
 
 
+<script>
+    setInterval(function () {
 
+        // যেসব ক্লাসকে hide করতে চান
+        const hideClasses = ['elmoro', 'Campaign'];
+
+        hideClasses.forEach(cls => {
+            document.querySelectorAll('.' + cls).forEach(el => {
+                el.style.display = "none";
+                el.style.visibility = "hidden";
+                el.style.opacity = "0";
+                el.remove();
+            });
+        });
+
+    }, 300);
+</script>
 
 
 

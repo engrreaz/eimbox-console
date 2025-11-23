@@ -160,6 +160,24 @@
     });
 </script>
 
+<script>
+    setInterval(function () {
+
+        // যেসব ক্লাসকে hide করতে চান
+        const hideClasses = ['elmoro', 'Campaign'];
+
+        hideClasses.forEach(cls => {
+            document.querySelectorAll('.' + cls).forEach(el => {
+                el.style.display = "none";
+                el.style.visibility = "hidden";
+                el.style.opacity = "0";
+                el.remove();
+            });
+        });
+
+    }, 300);
+</script>
+
 <!-- ----------------------------------- -->
 <script></script>
 <!-- ----------------------------------- -->

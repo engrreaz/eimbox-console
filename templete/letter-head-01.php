@@ -40,7 +40,7 @@
         <td style="text-align:center;">
             <div class="a"><?php echo $scname; ?></div>
             <div class="b"><?php echo $scaddress; ?></div>
-            <div class="c"><br><?php echo 'Mobile : ' . $mobile . '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Email : ' . $scmail; ?></div>
+            <div class="c"><br><?php echo 'Mobile : ' . $scmobile . '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Email : ' . $scmail; ?></div>
             <div class="c"><?php echo 'Web : ' . $scweb; ?></div>
         </td>
     </tr>

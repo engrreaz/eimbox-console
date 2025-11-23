@@ -11,11 +11,12 @@
     <div class="navbar-nav-right d-flex align-items-center justify-content-end" id="navbar-collapse">
 
 
-        <div class="me-3  ">
+        <div class="me-auto ">
             <img src="<?php echo BASE_PATH . '/logo/' . $sccode; ?>.png"
                 style="height:30px; width:30px; border-radius:50%;" />
         </div>
-        <div class="me-8  text-start">
+
+        <div class="me-auto text-start  d-none d-md-block">
             <div class="m-0 p-0  fw-bold btn"><a href="index.php"><?php echo $_SESSION['scname']; ?></a></div>
             <div class="p-0 m-0 pt-1 text-muted fs-tiny "><?php echo $_SESSION['scaddress_top']; ?></div>
 
@@ -291,15 +292,10 @@
         </ul>
 
 
-        <br><br><br>
-<hr>
-        <div class="row">
-            <div class="col-12">
-                ddddd <hr>
-            </div>
-        </div>
-
     </div>
+
+
+
 
 
 </nav>
