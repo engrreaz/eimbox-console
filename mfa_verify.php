@@ -84,7 +84,7 @@ include_once('header-plain.php');
                 <div class="card-body mt-1">
                     <h4 class="mb-1">Two Step Verification 💬</h4>
                     <p class="text-start mb-4">
-                        We sent a 6-digit verification code to your mobile.<br>
+                        We sent a 6-digit verification code to your email.<br>
                         <span class="d-block mt-1 h6">******1234</span>
                     </p>
 
