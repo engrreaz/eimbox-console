@@ -30,9 +30,9 @@ $prno = $_POST['prno'] ?? '';
 $trxID = $_POST['trx'] ?? '';
 $verify_url = $_POST['verify_url'] ?? '';
 
-$prno = 25000601;
-$stid = 1031870006;
-$syear = 2025;
+// $prno = 25000601;
+// $stid = 1031870006;
+// $syear = 2025;
 
 $stid = htmlspecialchars($stid, ENT_QUOTES, 'UTF-8');
 $stnameeng = htmlspecialchars($stnameeng, ENT_QUOTES, 'UTF-8');
