@@ -26,7 +26,13 @@ if (empty($dbExpire) || $currentTime >= strtotime($dbExpire)) {
 	$request_token = bkash_Get_Token();
 	$idtoken = $request_token['id_token'];
 	$refreshToken = $request_token['refresh_token'];
-	$expireTime = date("Y-m-d H:i:s", $currentTime + 3600); // ধরুন ১ ঘন্টা এক্সপায়ার
+	if (strlen($idtoken) == 0 || strlen($refreshToken) == 0) {
+		$expireTime = date("Y-m-d H:i:s", $currentTime - 5); // ধরুন ১ ঘন্টা এক্সপায়ার
+
+	} else {
+		$expireTime = date("Y-m-d H:i:s", $currentTime + 3600); // ধরুন ১ ঘন্টা এক্সপায়ার
+
+	}
 
 
 
