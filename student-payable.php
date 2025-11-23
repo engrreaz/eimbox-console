@@ -3,6 +3,15 @@
 
 
 <?php
+
+// Parameter	Detail
+// Payment Gateway Production API context root	https://tokenized.pay.bka.sh/v1.2.0-beta
+// Username (PGW)	01309138207
+// Password (PGW)	g}:XJQ[a1l&
+// app_key (PGW)	K5hm0ixUdTcuKBsGPHzijKVTtc
+// app_secret (PGW)	UghhGYKKSWAsRXqSBPUQC4Y1hGT6A04WD7jgTfodcreN9BJSR75Z
+
+
 // 01770618575
 setcookie("selected_items", "", time() + (600), "/");
 
@@ -28,6 +37,7 @@ foreach ($gwList as $gw) {
     if ($act_act == 1) {
         $gatewaylist[] = $act_pg;
 
+        $array[$act_pg . '_type'] = $p[2];
         $array[$act_pg . '_app_key'] = $p[3];
         $array[$act_pg . '_app_secret'] = $p[4];
         $array[$act_pg . '_username'] = $p[5];
@@ -45,17 +55,28 @@ foreach ($gwList as $gw) {
 
 $newJsonString = json_encode($array);
 file_put_contents('bkash/config.json', $newJsonString);
+
+
+$strJsonFileContents = file_get_contents("bkash/config.json");
+$array = json_decode($strJsonFileContents, true);
+
+$bkash_type = trim($array['bkash_type']);
+if ($bkash_type == 'sandbox') {
+    ?>
+    <script src="https://scripts.sandbox.bka.sh/versions/1.2.0-beta/checkout/bKash-checkout-sandbox.js"></script>
+<?php
+} else {
+    ?>
+    <script id="myScript" src="https://scripts.pay.bka.sh/versions/1.2.0-beta/checkout/bKash-checkout.js"></script>
+<?php
+}
 ?>
-<!-- <script id="myScript" src="https://scripts.pay.bka.sh/versions/1.2.0-beta/checkout/bKash-checkout.js"></script> -->
-<script src="https://scripts.sandbox.bka.sh/versions/1.2.0-beta/checkout/bKash-checkout-sandbox.js"></script>
 
 <div class="container-xxl flex-grow-1 container-p-y">
     <?php
 
 
 
-    $strJsonFileContents = file_get_contents("bkash/config.json");
-    $array = json_decode($strJsonFileContents, true);
 
     // echo '******** ' . $array['bkash_app_key'] . '/' . $array['bkash_app_secret'] . '/' . $array['bkash_username'] . '/' . $array['bkash_password'] . ' ***************';
     
@@ -369,7 +390,8 @@ file_put_contents('bkash/config.json', $newJsonString);
                                                     <td><?= $row['id'] ?> #
 
                                                         <input type="checkbox" class="selItem" id="sel<?= $row['id'] ?>"
-                                                            data-id="<?= $row['id'] ?>" data-dues="<?= $row['dues'] ?>" checked hidden>
+                                                            data-id="<?= $row['id'] ?>" data-dues="<?= $row['dues'] ?>" checked
+                                                            hidden>
                                                     </td>
                                                     <td><?= $row['particulareng'] ?></td>
                                                     <td><?= $row['particularben'] ?></td>

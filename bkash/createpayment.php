@@ -38,7 +38,8 @@ $proxy = $array["proxy"];
     //curl_setopt($url, CURLOPT_PROXY, $proxy);
     
     $resultdata = curl_exec($url);
-    curl_close($url);
+    // curl_close($url);
+    $url = null;
     
     echo $resultdata;
 } else {
