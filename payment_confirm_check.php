@@ -398,7 +398,7 @@ $qrApiUrl = "https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=" . urlen
 ?>
 
 
-<div class="container-xxl flex-grow-1 container-p-y px-12 py-6" >
+<div class="container-xxl flex-grow-1 container-p-y px-12 py-6" hidden>
     <div class="card mt-4">
         <div class="card-header pb-0 text-center text-dark fw-bold"> Payment Details </div>
         <hr class="pb-0 mb-0">
