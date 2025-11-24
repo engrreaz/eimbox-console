@@ -1,4 +1,5 @@
 <?php
+// ALTER TABLE `stpr` ADD `collection_media` VARCHAR(15) NOT NULL DEFAULT 'Cash' AFTER `cashbook`;
 
 $strJsonFileContents = file_get_contents("bkash/config.json");
 $array = json_decode($strJsonFileContents, true);
@@ -230,9 +231,9 @@ if (isset($_GET['paymentID']) && isset($_GET['status'])) {
 
 
 
-        $stprx = "INSERT INTO stpr (sccode, stid, sessionyear, classname, sectionname, rollno, prdate, prno, amount, entryby, entrytime, smstxt, smscnt, mobileno, smsstatus, statusvalue) 
+        $stprx = "INSERT INTO stpr (sccode, stid, sessionyear, classname, sectionname, rollno, prdate, prno, amount, entryby, entrytime, smstxt, smscnt, mobileno, smsstatus, statusvalue, collection_media) 
                             VALUES
-                            ('$sccode', '$stid', '$sessionyear', '$classname', '$sectionname', '$rollno', '$td', '$stpr', '$amount',  'SELF', NOW(), '', 0, '', '', '0');";
+                            ('$sccode', '$stid', '$sessionyear', '$classname', '$sectionname', '$rollno', '$td', '$stpr', '$amount',  'SELF', NOW(), '', 0, '', '', '0', 'bKash');";
         // echo $stprx;
         $conn->query($stprx);
 
