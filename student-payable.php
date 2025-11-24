@@ -61,7 +61,7 @@ $strJsonFileContents = file_get_contents("bkash/config.json");
 $array = json_decode($strJsonFileContents, true);
 
 $bkash_type = trim($array['bkash_type']);
-echo $bkash_type;
+// echo $bkash_type;
 if ($bkash_type == 'sandbox') {
     ?>
     <script src="https://scripts.sandbox.bka.sh/versions/1.2.0-beta/checkout/bKash-checkout-sandbox.js"></script>
@@ -83,7 +83,7 @@ if ($bkash_type == 'sandbox') {
 
 
 
-    echo '******** ' . $array['bkash_app_key'] . '/' . $array['bkash_app_secret'] . '/' . $array['bkash_username'] . '/' . $array['bkash_password'] . ' ***************';
+    // echo '******** ' . $array['bkash_app_key'] . '/' . $array['bkash_app_secret'] . '/' . $array['bkash_username'] . '/' . $array['bkash_password'] . ' ***************';
     
 
     // echo "<br><br>";
