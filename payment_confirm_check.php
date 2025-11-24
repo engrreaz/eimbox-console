@@ -1,5 +1,4 @@
 <?php
-// ALTER TABLE `stpr` ADD `collection_media` VARCHAR(15) NOT NULL DEFAULT 'Cash' AFTER `cashbook`;
 
 $strJsonFileContents = file_get_contents("bkash/config.json");
 $array = json_decode($strJsonFileContents, true);
