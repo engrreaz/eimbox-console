@@ -556,9 +556,9 @@ if (isset($_GET['paymentID']) && isset($_GET['status'])) {
                         <hr class="pb-0 mb-0">
 
                         <div class="card-body">
-                            <div class="alert alert-danger text-center fs-5 fw-bold">Payment Error</div>
+                            <div class="alert alert-danger text-center fs-5 fw-bold"><?= $error ?></div>
 
-                            <p class="text-center text-dark">Something went wrong. Try again.</p>
+                            <p class="text-center text-dark"><?= $statusMessage ?></p>
 
                             <div class="text-center">
                                 <button class="btn btn-sm btn-dark mt-3 px-5"
@@ -588,43 +588,45 @@ if (isset($_GET['paymentID']) && isset($_GET['status'])) {
 
 
     ?>
-    <div class="payment-wrapper">
-        <div class="card payment-card p-3">
+<div class="payment-wrapper">
+            <div class="card payment-card p-3">
 
-            <div class="row">
-                <div class="col-md-4 d-flex h-100 justify-content-center align-items-center">
-                    <?php
+                <div class="row">
+                    <div class="col-md-4 d-flex h-100 justify-content-center align-items-center">
+                        <?php
+                       
 
+                        $image = 'error.png';
+                     
 
-                    $image = 'error.png';
-                    echo '<img class="status-img img-fluid" src="assets/images/pgw/' . $image . '" onclick="showhide();"/>';
-                    ?>
-                </div>
-
-                <div class="col-md-8 h-100">
-                    <div class="card-header pb-0 text-center text-dark fw-bold">
-                        Transaction Info
+                        echo '<img class="status-img img-fluid" src="assets/images/pgw/' . $image . '" onclick="showhide();"/>';
+                        ?>
                     </div>
-                    <hr class="pb-0 mb-0">
 
-                    <div class="card-body">
-                        <div class="alert alert-danger text-center fs-5 fw-bold"><?= $error ?></div>
+                    <div class="col-md-8 h-100">
+                        <div class="card-header pb-0 text-center text-dark fw-bold">
+                            Transaction Info
+                        </div>
+                        <hr class="pb-0 mb-0">
 
-                        <p class="text-center text-dark"><?= $statusMessage ?></p>
+                        <div class="card-body">
+                            <div class="alert alert-danger text-center fs-5 fw-bold">Failure Transaction</div>
 
-                        <div class="text-center">
-                            <button class="btn btn-sm btn-dark mt-3 px-5"
-                                onclick="window.location.href='student-payable.php';">
-                                Go Back
-                            </button>
+                            <p class="text-center text-dark">Something went wrong. Try again.</p>
+
+                            <div class="text-center">
+                                <button class="btn btn-sm btn-dark mt-3 px-5"
+                                    onclick="window.location.href='student-payable.php';">
+                                    Go Back
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
+            </div>
         </div>
-    </div>
-<?php
+    <?php 
 }
 
 
