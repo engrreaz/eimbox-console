@@ -46,8 +46,8 @@ $array = json_decode($strJsonFileContents, true);
         width: 150px;
         height: 150px;
         border-radius: 8px;
-        margin-top:50px;
-z-index:9999;
+        margin-top: 50px;
+        z-index: 9999;
     }
 
     @media(max-width: 768px) {
@@ -260,136 +260,170 @@ if (isset($_GET['paymentID']) && isset($_GET['status'])) {
 
 
         ?>
-        <div class="container-xxl flex-grow-1 container-p-y px-12 py-6">
-            <div class="card mt-4">
-                <div class="card-header pb-0 text-center text-dark fw-bold"> Payment Details </div>
-                <hr class="pb-0 mb-0">
-                <div class="card-body">
-                    <div class="alert alert-success">BDT <?= number_format($amount, 2, '.', ',') ?> has been received from
-                        <?= htmlspecialchars($stnameeng) ?> successfully.
+
+        <div class="payment-wrapper">
+            <div class="card payment-card p-3">
+
+                <div class="row">
+                    <div class="col-md-4 d-flex h-100 justify-content-center align-items-center">
+                        <?php
+
+                        $image = 'success.png';
+                        echo '<img class="status-img img-fluid" src="assets/images/pgw/' . $image . '" onclick="showhide();"/>';
+                        ?>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="row">
-                                <div class="col">Student's ID</div>
-                                <div class="col text-end fw-bold"><?= htmlspecialchars($stid) ?></div>
-                            </div>
-                            <div class="row">
-                                <div class="col">Student's Name</div>
-                                <div class="col text-end fw-bold"><?= htmlspecialchars($stnameeng) ?></div>
-                            </div>
-                            <div class="row">
-                                <div class="col">Class</div>
-                                <div class="col text-end fw-bold"><?= htmlspecialchars($classname) ?></div>
-                            </div>
-                            <div class="row">
-                                <div class="col">Section</div>
-                                <div class="col text-end fw-bold"><?= htmlspecialchars($sectionname) ?></div>
-                            </div>
-                            <div class="row">
-                                <div class="col">Rollno</div>
-                                <div class="col text-end fw-bold"><?= htmlspecialchars($rollno) ?></div>
-                            </div>
-                        </div>
+                    <div class="col-md-8 h-100">
 
-                        <div class="col-md-6">
+                        <div class="card-header pb-0 text-center text-dark fw-bold"> Transaction Details </div>
+                        <hr class="pb-0 mb-0">
+                        <div class="card-body">
+                            <div class="alert alert-success">BDT <?= number_format($amount, 2, '.', ',') ?> has been received
+                                from
+                                <?= htmlspecialchars($stnameeng) ?> successfully.
+                            </div>
+
                             <div class="row">
-                                <div class="col">Paid Amount</div>
-                                <div class="col text-end text-success fs-4 fw-bold"><?= number_format($amount, 2, '.', ',') ?>
+                                <div class="col-md-6">
+                                    <div class="row">
+                                        <div class="col">Student's ID</div>
+                                        <div class="col text-end fw-bold"><?= htmlspecialchars($stid) ?></div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col">Student's Name</div>
+                                        <div class="col text-end fw-bold"><?= htmlspecialchars($stnameeng) ?></div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col">Class</div>
+                                        <div class="col text-end fw-bold"><?= htmlspecialchars($classname) ?></div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col">Section</div>
+                                        <div class="col text-end fw-bold"><?= htmlspecialchars($sectionname) ?></div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col">Rollno</div>
+                                        <div class="col text-end fw-bold"><?= htmlspecialchars($rollno) ?></div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="row">
+                                        <div class="col">Paid Amount</div>
+                                        <div class="col text-end text-success fs-4 fw-bold">
+                                            <?= number_format($amount, 2, '.', ',') ?>
+                                        </div>
+                                    </div>
+                                    <hr>
+
+                                    <div class="row">
+                                        <div class="col-12 d-flex">
+                                            <button class="btn btn-sm btn-primary me-3" id="printReceiptBtn">Print
+                                                Receipt</button>
+
+                                            <!-- Download form posts to PDF generator and opens in new tab -->
+                                            <form id="pdfForm" method="post" action="pdf/generate_receipt_pdf.php"
+                                                target="_blank" style="display:inline;">
+                                                <input type="hidden" name="stid" value="<?= htmlspecialchars($stid) ?>">
+                                                <input type="hidden" name="syear" value="<?= htmlspecialchars($sessionyear) ?>">
+                                                <input type="hidden" name="trx" value="<?= htmlspecialchars($trxID) ?>">
+                                                <input type="hidden" name="stnameeng"
+                                                    value="<?= htmlspecialchars($stnameeng) ?>">
+                                                <input type="hidden" name="classname"
+                                                    value="<?= htmlspecialchars($classname) ?>">
+                                                <input type="hidden" name="sectionname"
+                                                    value="<?= htmlspecialchars($sectionname) ?>">
+                                                <input type="hidden" name="rollno" value="<?= htmlspecialchars($rollno) ?>">
+                                                <input type="hidden" name="amount" value="<?= htmlspecialchars($amount) ?>">
+                                                <input type="hidden" name="td"
+                                                    value="<?= htmlspecialchars($td ?? date('Y-m-d')) ?>">
+                                                <input type="hidden" name="prno"
+                                                    value="<?= htmlspecialchars($merchantInvoiceNumber ?? '') ?>">
+                                                <input type="hidden" name="verify_url"
+                                                    value="<?= htmlspecialchars($verifyUrl) ?>">
+                                                <button class="btn btn-sm btn-info me-3" id="downloadReceiptBtn"
+                                                    type="submit">Download
+                                                    Receipt</button>
+                                            </form>
+
+                                            <button class="btn btn-sm btn-dark" id="gohomeBtn">Back To Home</button>
+                                        </div>
+                                    </div>
+
                                 </div>
                             </div>
-                            <hr>
 
-                            <div class="row">
-                                <div class="col-12 d-flex">
-                                    <button class="btn btn-sm btn-primary me-3" id="printReceiptBtn">Print Receipt</button>
-
-                                    <!-- Download form posts to PDF generator and opens in new tab -->
-                                    <form id="pdfForm" method="post" action="pdf/generate_receipt_pdf.php" target="_blank"
-                                        style="display:inline;">
-                                        <input type="hidden" name="stid" value="<?= htmlspecialchars($stid) ?>">
-                                        <input type="hidden" name="syear" value="<?= htmlspecialchars($sessionyear) ?>">
-                                        <input type="hidden" name="trx" value="<?= htmlspecialchars($trxID) ?>">
-                                        <input type="hidden" name="stnameeng" value="<?= htmlspecialchars($stnameeng) ?>">
-                                        <input type="hidden" name="classname" value="<?= htmlspecialchars($classname) ?>">
-                                        <input type="hidden" name="sectionname" value="<?= htmlspecialchars($sectionname) ?>">
-                                        <input type="hidden" name="rollno" value="<?= htmlspecialchars($rollno) ?>">
-                                        <input type="hidden" name="amount" value="<?= htmlspecialchars($amount) ?>">
-                                        <input type="hidden" name="td" value="<?= htmlspecialchars($td ?? date('Y-m-d')) ?>">
-                                        <input type="hidden" name="prno"
-                                            value="<?= htmlspecialchars($merchantInvoiceNumber ?? '') ?>">
-                                        <input type="hidden" name="verify_url" value="<?= htmlspecialchars($verifyUrl) ?>">
-                                        <button class="btn btn-sm btn-info me-3" id="downloadReceiptBtn" type="submit">Download
-                                            Receipt</button>
-                                    </form>
-
-                                    <button class="btn btn-sm btn-dark" id="gohomeBtn">Back To Home</button>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-
-                    <!-- Hidden printable receipt HTML (used for print & pdf) -->
-                    <div id="receiptContent" style="display:none;">
-                        <div style="width:800px; padding:24px; font-family: Arial, Helvetica, sans-serif; color:#222;">
-                            <h2 style="text-align:center; margin-bottom:8px;">Payment Receipt</h2>
-                            <p style="text-align:center; margin-top:0; margin-bottom:16px;">Receipt generated on
-                                <?= date('Y-m-d H:i:s') ?>
-                            </p>
-
-                            <table style="width:100%; border-collapse:collapse; font-size:14px;">
-                                <tr>
-                                    <td style="padding:6px; width:50%;"><strong>Student ID:</strong>
-                                        <?= htmlspecialchars($stid) ?></td>
-                                    <td style="padding:6px;"><strong>Paid:</strong> BDT
-                                        <?= number_format($amount, 2, '.', ',') ?>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="padding:6px;"><strong>Name:</strong> <?= htmlspecialchars($stnameeng) ?></td>
-                                    <td style="padding:6px;"><strong>Date:</strong>
-                                        <?= htmlspecialchars($td ?? date('Y-m-d')) ?></td>
-                                </tr>
-                                <tr>
-                                    <td style="padding:6px;"><strong>Class/Section:</strong> <?= htmlspecialchars($classname) ?>
-                                        / <?= htmlspecialchars($sectionname) ?></td>
-                                    <td style="padding:6px;"><strong>Roll:</strong> <?= htmlspecialchars($rollno) ?></td>
-                                </tr>
-                                <tr>
-                                    <td style="padding:6px;"><strong>PR No:</strong>
-                                        <?= htmlspecialchars($merchantInvoiceNumber ?? '') ?></td>
-                                    <td style="padding:6px;"><strong>Amount:</strong> BDT
-                                        <?= number_format($amount, 2, '.', ',') ?>
-                                    </td>
-                                </tr>
-                            </table>
-
-                            <hr>
-
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <div style="max-width:60%;">
-                                    <p style="font-size:12px; margin:0;">This is a computer generated receipt. Visit the
-                                        verification link or scan the QR code to verify.</p>
-                                    <p style="font-size:12px; margin:2px 0 0 0; word-break:break-all;"><a
-                                            href="<?= htmlspecialchars($verifyUrl) ?>"><?= htmlspecialchars($verifyUrl) ?></a>
+                            <!-- Hidden printable receipt HTML (used for print & pdf) -->
+                            <div id="receiptContent" style="display:none;">
+                                <div style="width:800px; padding:24px; font-family: Arial, Helvetica, sans-serif; color:#222;">
+                                    <h2 style="text-align:center; margin-bottom:8px;">Payment Receipt</h2>
+                                    <p style="text-align:center; margin-top:0; margin-bottom:16px;">Receipt generated on
+                                        <?= date('Y-m-d H:i:s') ?>
                                     </p>
-                                </div>
 
-                                <div>
-                                    <!-- QR code will be embedded as base64 in the PDF page -->
-                                    <img id="receiptQR" src="<?= $qrApiUrl ?>" alt="QR"
-                                        style="width:140px; height:140px; border:1px solid #ddd; padding:6px; background:#fff;">
+                                    <table style="width:100%; border-collapse:collapse; font-size:14px;">
+                                        <tr>
+                                            <td style="padding:6px; width:50%;"><strong>Student ID:</strong>
+                                                <?= htmlspecialchars($stid) ?></td>
+                                            <td style="padding:6px;"><strong>Paid:</strong> BDT
+                                                <?= number_format($amount, 2, '.', ',') ?>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding:6px;"><strong>Name:</strong> <?= htmlspecialchars($stnameeng) ?>
+                                            </td>
+                                            <td style="padding:6px;"><strong>Date:</strong>
+                                                <?= htmlspecialchars($td ?? date('Y-m-d')) ?></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding:6px;"><strong>Class/Section:</strong>
+                                                <?= htmlspecialchars($classname) ?>
+                                                / <?= htmlspecialchars($sectionname) ?></td>
+                                            <td style="padding:6px;"><strong>Roll:</strong> <?= htmlspecialchars($rollno) ?>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding:6px;"><strong>PR No:</strong>
+                                                <?= htmlspecialchars($merchantInvoiceNumber ?? '') ?></td>
+                                            <td style="padding:6px;"><strong>Amount:</strong> BDT
+                                                <?= number_format($amount, 2, '.', ',') ?>
+                                            </td>
+                                        </tr>
+                                    </table>
+
+                                    <hr>
+
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <div style="max-width:60%;">
+                                            <p style="font-size:12px; margin:0;">This is a computer generated receipt. Visit the
+                                                verification link or scan the QR code to verify.</p>
+                                            <p style="font-size:12px; margin:2px 0 0 0; word-break:break-all;"><a
+                                                    href="<?= htmlspecialchars($verifyUrl) ?>"><?= htmlspecialchars($verifyUrl) ?></a>
+                                            </p>
+                                        </div>
+
+                                        <div>
+                                            <!-- QR code will be embedded as base64 in the PDF page -->
+                                            <img id="receiptQR" src="<?= $qrApiUrl ?>" alt="QR"
+                                                style="width:140px; height:140px; border:1px solid #ddd; padding:6px; background:#fff;">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    <!-- /receiptContent -->
+                            <!-- /receiptContent -->
 
+                        </div>
+
+
+                    </div>
                 </div>
+
             </div>
         </div>
+
+
+
+
 
         <?php
 
@@ -509,7 +543,7 @@ if (isset($_GET['paymentID']) && isset($_GET['status'])) {
                             $image = 'duplicate.png';
                         } else if ($statusCode == 2062) {
                             $image = 'cancel.png';
-                        } 
+                        }
 
                         echo '<img class="status-img img-fluid" src="assets/images/pgw/' . $image . '" onclick="showhide();"/>';
                         ?>
@@ -551,6 +585,46 @@ if (isset($_GET['paymentID']) && isset($_GET['status'])) {
 
 } else {
 
+
+
+    ?>
+    <div class="payment-wrapper">
+        <div class="card payment-card p-3">
+
+            <div class="row">
+                <div class="col-md-4 d-flex h-100 justify-content-center align-items-center">
+                    <?php
+
+
+                    $image = 'error.png';
+                    echo '<img class="status-img img-fluid" src="assets/images/pgw/' . $image . '" onclick="showhide();"/>';
+                    ?>
+                </div>
+
+                <div class="col-md-8 h-100">
+                    <div class="card-header pb-0 text-center text-dark fw-bold">
+                        Transaction Info
+                    </div>
+                    <hr class="pb-0 mb-0">
+
+                    <div class="card-body">
+                        <div class="alert alert-danger text-center fs-5 fw-bold"><?= $error ?></div>
+
+                        <p class="text-center text-dark"><?= $statusMessage ?></p>
+
+                        <div class="text-center">
+                            <button class="btn btn-sm btn-dark mt-3 px-5"
+                                onclick="window.location.href='student-payable.php';">
+                                Go Back
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+<?php
 }
 
 
