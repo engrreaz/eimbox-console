@@ -28,10 +28,8 @@ if (empty($dbExpire) || $currentTime >= strtotime($dbExpire)) {
 	$refreshToken = $request_token['refresh_token'];
 	if (strlen($idtoken) == 0 || strlen($refreshToken) == 0) {
 		$expireTime = date("Y-m-d H:i:s", $currentTime - 5); // ধরুন ১ ঘন্টা এক্সপায়ার
-
 	} else {
 		$expireTime = date("Y-m-d H:i:s", $currentTime + 3600); // ধরুন ১ ঘন্টা এক্সপায়ার
-
 	}
 
 
@@ -42,6 +40,9 @@ if (empty($dbExpire) || $currentTime >= strtotime($dbExpire)) {
 	$update_stmt->execute();
 	$update_stmt->close();
 
+	$store_token = "INSERT INTO bkash_token_list(sccode, date, token, refresh_token, generate_time, expire_time) VALUES ('$sccode', '$td', '$idtoken', '$refreshToken', '$cur', '$expireTime' );";
+	$conn->query($store_token);
+
 	return [
 		"id_token" => $idtoken,
 		"refresh_token" => $refreshToken,
@@ -51,8 +52,6 @@ if (empty($dbExpire) || $currentTime >= strtotime($dbExpire)) {
 	$idtoken = $dbToken;
 	$refreshToken = $dbRefresh;
 }
-
-
 
 
 $sid = $_COOKIE[session_name()];

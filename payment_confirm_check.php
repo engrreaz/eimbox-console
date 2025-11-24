@@ -22,41 +22,91 @@ define('BASEURL', 'http://localhost/eimbox-dashboard/eimbox-materio/');
 $strJsonFileContents = file_get_contents("bkash/config.json");
 $array = json_decode($strJsonFileContents, true);
 
+?>
+<style>
+    .payment-wrapper {
+        min-height: 80vh;
+        /* পুরো স্ক্রিন */
+        display: flex;
+        align-items: center;
+        /* উলম্বভাবে কেন্দ্র */
+        justify-content: center;
+        /* আড়াআড়িভাবে কেন্দ্র */
+        padding: 20px;
+    }
+
+    .payment-card {
+        width: 75%;
+        /* বড় স্ক্রিনে 75% */
+        max-width: 900px;
+        /* সর্বোচ্চ আকার */
+    }
+
+    .status-img {
+        width: 150px;
+        height: 150px;
+        border-radius: 8px;
+        margin-top:50px;
+z-index:9999;
+    }
+
+    @media(max-width: 768px) {
+        .payment-card {
+            width: 100%;
+            /* মোবাইলে ফুল-উইডথ */
+        }
+    }
+</style>
+
+<?php
+
 
 if (isset($_GET['paymentID']) && isset($_GET['status'])) {
     $paymentID = $_GET['paymentID'];
     $status = $_GET['status'];
 
-    // echo $status;
+    $clientToken = $_SESSION['token'];
 
-    if ($status == 'success') {
+    $post_token = [
+        'paymentID' => $paymentID,
+    ];
+    $url = curl_init($array['executeURL']);
+    $posttoken = json_encode($post_token);
 
-        $clientToken = $_SESSION['token'];
+    $header = [
+        'Content-Type:application/json',
+        'Authorization:' . $clientToken,
+        'X-APP-Key:' . $array['bkash_app_key'],
+    ];
 
-        $post_token = [
-            'paymentID' => $paymentID,
-        ];
-        $url = curl_init($array['executeURL']);
-        $posttoken = json_encode($post_token);
+    curl_setopt($url, CURLOPT_HTTPHEADER, $header);
+    curl_setopt($url, CURLOPT_CUSTOMREQUEST, "POST");
+    curl_setopt($url, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($url, CURLOPT_POSTFIELDS, $posttoken);
+    curl_setopt($url, CURLOPT_FOLLOWLOCATION, 1);
+    curl_setopt($url, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+    $resultdata = curl_exec($url);
+    // curl_close($url);
+    $url = null;
+    $obj = json_decode($resultdata, true);
 
-        $header = [
-            'Content-Type:application/json',
-            'Authorization:' . $clientToken,
-            'X-APP-Key:' . $array['bkash_app_key'],
-        ];
 
-        curl_setopt($url, CURLOPT_HTTPHEADER, $header);
-        curl_setopt($url, CURLOPT_CUSTOMREQUEST, "POST");
-        curl_setopt($url, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($url, CURLOPT_POSTFIELDS, $posttoken);
-        curl_setopt($url, CURLOPT_FOLLOWLOCATION, 1);
-        curl_setopt($url, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
-        $resultdata = curl_exec($url);
-        // curl_close($url);
-        $url = null;
-        $obj = json_decode($resultdata, true);
 
-        $_SESSION['response_confirm'] = $obj;
+    $_SESSION['response_confirm'] = $obj;
+
+    if (!empty($resultdata)) {
+        $statusCode = $obj['statusCode'];
+        $statusMessage = $obj['statusMessage'];
+    } else {
+        $statusCode = 0;
+        $statusMessage = 'Undefined Error';
+    }
+
+    // echo $statusCode . '/' . $statusMessage;
+
+    if ($status == 'success' && $statusCode == '0000') {
+
+
 
         // echo '-----------------------------------------------------------------------<pre>';
         // var_dump($resultdata);
@@ -67,75 +117,80 @@ if (isset($_GET['paymentID']) && isset($_GET['status'])) {
         // echo '</pre><hr><hr>';
 
 
-        if (!empty($resultdata)) {
 
 
 
-
-            $statusCode = $obj['statusCode'];
-            $statusMessage = $obj['statusMessage'];
-
-            // echo $statusCode . ' | ' . $statusMessage;
-
-            if ($statusCode == '0000') {
-
-                //     // pgw return value
-                $paymentID = $obj['paymentID'];
-                $trxID = $obj['trxID'];
-                $transactionStatus = $obj['transactionStatus'];
-                $amount = round($obj['amount'], 2);
-                $currency = $obj['currency'];
-                $intent = $obj['intent'];
-                $paymentExecuteTime = $obj['paymentExecuteTime'];
-                $merchantInvoiceNumber = $obj['merchantInvoiceNumber'];
-                $payerType = $obj['payerType'];
-                $payerReference = $obj['payerReference'];
-                $customerMsisdn = $obj['customerMsisdn'];
-                $payerAccount = $obj['payerAccount'];
-                $maxRefundableAmount = $obj['maxRefundableAmount'];
-                $statusCode = $obj['statusCode'];
-                $statusMessage = $obj['statusMessage'];
+        // echo $statusCode . ' | ' . $statusMessage;
 
 
-                $stpr = substr($merchantInvoiceNumber, -8);
 
-                $stid = $_SESSION['current_student_id'];
-                $sql = "SELECT sessionyear, classname, sectionname, rollno FROM sessioninfo WHERE stid = '$stid' AND sessionyear LIKE '%$y_v2%'  order by id DESC LIMIT 1";
-                $result = mysqli_query($conn, $sql);
-                if ($result && mysqli_num_rows($result) > 0) {
-                    $row = mysqli_fetch_assoc($result);
+        //     // pgw return value
+        $paymentID = $obj['paymentID'];
+        $trxID = $obj['trxID'];
+        $transactionStatus = $obj['transactionStatus'];
+        $amount = round($obj['amount'], 2);
+        $currency = $obj['currency'];
+        $intent = $obj['intent'];
+        $paymentExecuteTime = $obj['paymentExecuteTime'];
+        $merchantInvoiceNumber = $obj['merchantInvoiceNumber'];
+        $payerType = $obj['payerType'];
+        $payerReference = $obj['payerReference'];
+        $customerMsisdn = $obj['customerMsisdn'];
+        $payerAccount = $obj['payerAccount'];
+        $maxRefundableAmount = $obj['maxRefundableAmount'];
+        $statusCode = $obj['statusCode'];
+        $statusMessage = $obj['statusMessage'];
 
-                    $sessionyear = $row['sessionyear'];
-                    $classname = $row['classname'];
-                    $sectionname = $row['sectionname'];
-                    $rollno = $row['rollno'];
 
-                } else {
-                    $sessionyear = date('Y');
-                    $classname = '';
-                    $sectionname = '';
-                    $rollno = 0;
+        $stpr = substr($merchantInvoiceNumber, -8);
 
-                }
+        $stid = $_SESSION['current_student_id'];
+        $sql = "SELECT sessionyear, classname, sectionname, rollno FROM sessioninfo WHERE stid = '$stid' AND sessionyear LIKE '%$y_v2%'  order by id DESC LIMIT 1";
+        $result = mysqli_query($conn, $sql);
+        if ($result && mysqli_num_rows($result) > 0) {
+            $row = mysqli_fetch_assoc($result);
 
-                $trans = "INSERT INTO `payment_pgw` 
-                    (sccode, sessionyear, stid, paydate, partial, paymentID, trxID, transactionStatus, amount, currency, intent, paymentExecuteTime, merchantInvoiceNumber, payerType, payerReference, customerMsisdn, payerAccount, maxRefundableAmount, statusCode, statusMessage, gateway, entrytime) 
+            $sessionyear = $row['sessionyear'];
+            $classname = $row['classname'];
+            $sectionname = $row['sectionname'];
+            $rollno = $row['rollno'];
+
+        } else {
+            $sessionyear = date('Y');
+            $classname = '';
+            $sectionname = '';
+            $rollno = 0;
+
+        }
+
+
+        $tkn = $_SESSION['token'];
+        $stmt = $conn->prepare("SELECT id FROM bkash_token_list WHERE token=? AND sccode=? ORDER BY id DESC LIMIT 1");
+        $stmt->bind_param("ss", $tkn, $sccode);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        $store_token_id = $row['id'];
+
+
+        $trans = "INSERT INTO `payment_pgw` 
+                    (sccode, sessionyear, stid, paydate, partial, paymentID, trxID, transactionStatus, amount, currency, intent, paymentExecuteTime, merchantInvoiceNumber, payerType, payerReference, customerMsisdn, payerAccount, maxRefundableAmount, statusCode, statusMessage, gateway, token_id, entrytime) 
                     VALUES
-                    ('$sccode', '$sessionyear', '$stid', '$td', 'Full', '$paymentID', '$trxID', '$transactionStatus', '$amount', '$currency', '$intent', '$paymentExecuteTime', '$merchantInvoiceNumber', '$payerType', '$payerReference', '$customerMsisdn', '$payerAccount', '$maxRefundableAmount', '$statusCode', '$statusMessage', 'bkash', NOW()); ";
-                // echo $trans;
-                $conn->query($trans);
+                    ('$sccode', '$sessionyear', '$stid', '$td', 'Full', '$paymentID', '$trxID', '$transactionStatus', '$amount', '$currency', '$intent', '$paymentExecuteTime', '$merchantInvoiceNumber', '$payerType', '$payerReference', '$customerMsisdn', '$payerAccount', '$maxRefundableAmount', '$statusCode', '$statusMessage', 'bkash', '$store_token_id', NOW()); ";
+        // echo $trans;
+        $conn->query($trans);
 
 
-                $items = isset($_COOKIE['selected_items']) ? $_COOKIE['selected_items'] : 'Full';
-                if ($items != 'Full') {
-                    $ids = explode('|', $items);
-                } else {
-                    $ids = [];
-                    $cm = date('m');
-                    if ($cm >= 10) {
-                        $cm = 12;
-                    }
-                    $query = "
+        $items = isset($_COOKIE['selected_items']) ? $_COOKIE['selected_items'] : 'Full';
+        if ($items != 'Full') {
+            $ids = explode('|', $items);
+        } else {
+            $ids = [];
+            $cm = date('m');
+            if ($cm >= 10) {
+                $cm = 12;
+            }
+            $query = "
                     SELECT id 
                     FROM stfinance 
                     WHERE sccode='$sccode'
@@ -146,18 +201,18 @@ if (isset($_GET['paymentID']) && isset($_GET['status'])) {
                     ORDER BY month ASC
                 ";
 
-                    $result = $conn->query($query);
-                    if ($result && $result->num_rows > 0) {
-                        while ($row = $result->fetch_assoc()) {
-                            $ids[] = $row['id'];
-                        }
-                    }
-
+            $result = $conn->query($query);
+            if ($result && $result->num_rows > 0) {
+                while ($row = $result->fetch_assoc()) {
+                    $ids[] = $row['id'];
                 }
+            }
 
-                foreach ($ids as $finance_id) {
-                    // update stfinance
-                    $update_sql = "
+        }
+
+        foreach ($ids as $finance_id) {
+            // update stfinance
+            $update_sql = "
                     UPDATE stfinance 
                     SET 
                        pr1 = dues,
@@ -167,39 +222,42 @@ if (isset($_GET['paymentID']) && isset($_GET['status'])) {
                         pr1no = $stpr, pr1date = '$td'
 
                     WHERE id = '$finance_id' AND stid = '$stid' AND sccode='$sccode'";
-                    // echo $update_sql;
-                    $conn->query($update_sql);
+            // echo $update_sql;
+            $conn->query($update_sql);
 
-                }
-
-
+        }
 
 
-                $stprx = "INSERT INTO stpr (sccode, stid, sessionyear, classname, sectionname, rollno, prdate, prno, amount, entryby, entrytime, smstxt, smscnt, mobileno, smsstatus, statusvalue) 
+
+
+        $stprx = "INSERT INTO stpr (sccode, stid, sessionyear, classname, sectionname, rollno, prdate, prno, amount, entryby, entrytime, smstxt, smscnt, mobileno, smsstatus, statusvalue) 
                             VALUES
                             ('$sccode', '$stid', '$sessionyear', '$classname', '$sectionname', '$rollno', '$td', '$stpr', '$amount',  'SELF', NOW(), '', 0, '', '', '0');";
-                // echo $stprx;
-                $conn->query($stprx);
+        // echo $stprx;
+        $conn->query($stprx);
 
-                // INSERT Payment gatewary
-                // insert stpr
-                // update stfinance
+        // INSERT Payment gatewary
+        // insert stpr
+        // update stfinance
 
-                $sqlb = "SELECT stnameeng, guarmobile FROM students WHERE stid = '$stid' AND sccode = '$sccode'  order by id DESC LIMIT 1";
-                // echo $sqlb;
-                $result = mysqli_query($conn, $sqlb);
-                if ($result && mysqli_num_rows($result) > 0) {
-                    $row = mysqli_fetch_assoc($result);
-                    $guarmobile = $row['guarmobile'];
-                    $stnameeng = $row['stnameeng'];
-                } else {
-                    $guarmobile = $stnameeng = '';
-                }
-
-                $msg = 'Payment of Taka ' . $amount . ' has been received from ' . $stnameeng . ' at ' . $cur;
-                global_send_sms($guarmobile, $msg, 'bKash Payment', 'Payment', $stid);
-            }
+        $sqlb = "SELECT stnameeng, guarmobile FROM students WHERE stid = '$stid' AND sccode = '$sccode'  order by id DESC LIMIT 1";
+        // echo $sqlb;
+        $result = mysqli_query($conn, $sqlb);
+        if ($result && mysqli_num_rows($result) > 0) {
+            $row = mysqli_fetch_assoc($result);
+            $guarmobile = $row['guarmobile'];
+            $stnameeng = $row['stnameeng'];
+        } else {
+            $guarmobile = $stnameeng = '';
         }
+
+
+
+
+        $msg = 'Payment of Taka ' . $amount . ' has been received from ' . $stnameeng . ' at ' . $cur;
+        global_send_sms($guarmobile, $msg, 'bKash Payment', 'Payment', $stid);
+
+
 
         ?>
         <div class="container-xxl flex-grow-1 container-p-y px-12 py-6">
@@ -342,38 +400,8 @@ if (isset($_GET['paymentID']) && isset($_GET['status'])) {
     } else {
 
         // ********************************************************************
-        $clientToken = $_SESSION['token'];
 
-        $post_token = [
-            'paymentID' => $paymentID,
-        ];
-        $url = curl_init($array['executeURL']);
-        $posttoken = json_encode($post_token);
 
-        $header = [
-            'Content-Type:application/json',
-            'Authorization:' . $clientToken,
-            'X-APP-Key:' . $array['bkash_app_key'],
-        ];
-
-        curl_setopt($url, CURLOPT_HTTPHEADER, $header);
-        curl_setopt($url, CURLOPT_CUSTOMREQUEST, "POST");
-        curl_setopt($url, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($url, CURLOPT_POSTFIELDS, $posttoken);
-        curl_setopt($url, CURLOPT_FOLLOWLOCATION, 1);
-        curl_setopt($url, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
-        $resultdata = curl_exec($url);
-        // curl_close($url);
-        $url = null;
-        $obj = json_decode($resultdata, true);
-
-        $_SESSION['response_confirm'] = $obj;
-
-        if (!empty($resultdata)) {
-            $statusCode = $obj['statusCode'];
-            $statusMessage = $obj['statusMessage'];
-        }
-        // ********************************************************************
 
         $errorMessages = [
             2001 => "Invalid App Key",
@@ -462,20 +490,52 @@ if (isset($_GET['paymentID']) && isset($_GET['status'])) {
 
         ?>
 
-        <div class="container-xxl flex-grow-1 container-p-y px-12 py-6">
-            <div class="card mt-4">
-                <div class="card-header pb-0 text-center text-dark fw-bold"> Payment Details </div>
-                <hr class="pb-0 mb-0">
-                <div class="card-body">
 
-                    <div class="alert alert-danger text-center text-center fs-5 fw-bold"><?= $error ?></div>
-                    <div class="row">
-                        <div class="col-12 text-center">
-                            <button class="btn btn-sm btn-dark " onclick="window.location.href = 'student-payable.php';">Go
-                                Back</button>
+        <div class="payment-wrapper">
+            <div class="card payment-card p-3">
+
+                <div class="row">
+                    <div class="col-md-4 d-flex h-100 justify-content-center align-items-center">
+                        <?php
+                        echo '<div id="showhide" style="display:none;">';
+                        echo '<pre>';
+                        print_r($obj);
+                        echo '</pre>' . '</div>';
+
+                        $image = 'error.png';
+                        if ($statusCode == 2056) {
+                            $image = 'cancel.png';
+                        } else if ($statusCode == 2029) {
+                            $image = 'duplicate.png';
+                        } else if ($statusCode == 2062) {
+                            $image = 'cancel.png';
+                        } 
+
+                        echo '<img class="status-img img-fluid" src="assets/images/pgw/' . $image . '" onclick="showhide();"/>';
+                        ?>
+                    </div>
+
+                    <div class="col-md-8 h-100">
+                        <div class="card-header pb-0 text-center text-dark fw-bold">
+                            Transaction Info
+                        </div>
+                        <hr class="pb-0 mb-0">
+
+                        <div class="card-body">
+                            <div class="alert alert-danger text-center fs-5 fw-bold"><?= $error ?></div>
+
+                            <p class="text-center text-dark"><?= $statusMessage ?></p>
+
+                            <div class="text-center">
+                                <button class="btn btn-sm btn-dark mt-3 px-5"
+                                    onclick="window.location.href='student-payable.php';">
+                                    Go Back
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
 
@@ -488,6 +548,8 @@ if (isset($_GET['paymentID']) && isset($_GET['status'])) {
 
 
 
+
+} else {
 
 }
 
@@ -675,6 +737,22 @@ echo '</pre>';
     // Download button uses the form submit to generate_receipt_pdf.php (target _blank)
 </script>
 
+
+<script>
+    function showhide() {
+        var blk = document.getElementById('showhide');
+
+        // বর্তমান display ভ্যালু নাও
+        var current = window.getComputedStyle(blk).display;
+
+        if (current === "none") {
+            blk.style.display = "flex";   // তুমি flex চাও তাই flex রাখা হলো
+        } else {
+            blk.style.display = "none";
+        }
+    }
+
+</script>
 
 
 

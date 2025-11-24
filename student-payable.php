@@ -13,6 +13,11 @@
 
 
 // 01770618575
+
+// cancel 2056
+// wrong otp 2056
+// wrong pin 2056
+
 setcookie("selected_items", "", time() + (600), "/");
 
 $sql = "SELECT * FROM scinfo WHERE sccode='$sccode' LIMIT 1";
@@ -46,6 +51,21 @@ foreach ($gwList as $gw) {
     }
 }
 
+$sandlive = $array['bkash_type'];
+if ($sandlive == 'sandbox') {
+    $array['createURL'] = "https://tokenized.sandbox.bka.sh/v1.2.0-beta/tokenized/checkout/create";
+    $array['executeURL'] = "https://tokenized.sandbox.bka.sh/v1.2.0-beta/tokenized/checkout/execute/";
+    $array['tokenURL'] = "https://tokenized.sandbox.bka.sh/v1.2.0-beta/tokenized/checkout/token/grant";
+    $array['script'] = "https://scripts.pay.sandbox.sh/versions/1.2.0-beta/checkout/bKash-checkout.js";
+} else {
+    $array['createURL'] = "https://tokenized.pay.bka.sh/v1.2.0-beta/tokenized/checkout/create";
+    $array['executeURL'] = "https://tokenized.pay.bka.sh/v1.2.0-beta/tokenized/checkout/execute/";
+    $array['tokenURL'] = "https://tokenized.pay.bka.sh/v1.2.0-beta/tokenized/checkout/token/grant";
+    $array['script'] = "https://scripts.pay.bka.sh/versions/1.2.0-beta/checkout/bKash-checkout.js";
+}
+
+
+
 
 // echo '<hr><b>GET DATA</b><hr>';
 // echo '<pre>';
@@ -65,16 +85,16 @@ $bkash_type = trim($array['bkash_type']);
 if ($bkash_type == 'sandbox') {
     ?>
     <script src="https://scripts.sandbox.bka.sh/versions/1.2.0-beta/checkout/bKash-checkout-sandbox.js"></script>
-<?php
+    <?php
 } else {
     ?>
     <script id="myScript" src="https://scripts.pay.bka.sh/versions/1.2.0-beta/checkout/bKash-checkout.js"></script>
-<?php
+    <?php
 }
 ?>
 
 
-    <!-- <script id="myScript" src="https://scripts.pay.bka.sh/versions/1.2.0-beta/checkout/bKash-checkout.js"></script> -->
+<!-- <script id="myScript" src="https://scripts.pay.bka.sh/versions/1.2.0-beta/checkout/bKash-checkout.js"></script> -->
 
 
 <div class="container-xxl flex-grow-1 container-p-y">
@@ -629,7 +649,7 @@ if ($bkash_type == 'sandbox') {
 
                         var obj = JSON.parse(data);
 
-                      
+
 
                         if (data && obj.paymentID != null) {
                             paymentID = obj.paymentID;
