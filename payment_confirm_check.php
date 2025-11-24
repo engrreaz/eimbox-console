@@ -558,7 +558,7 @@ if (isset($_GET['paymentID']) && isset($_GET['status'])) {
                         <div class="card-body">
                             <div class="alert alert-danger text-center fs-5 fw-bold"><?= $error ?></div>
 
-                            <p class="text-center text-dark"><?= $statusMessage ?></p>
+                           
 
                             <div class="text-center">
                                 <button class="btn btn-sm btn-dark mt-3 px-5"
