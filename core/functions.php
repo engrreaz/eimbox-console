@@ -671,7 +671,7 @@ function taka($number)
 
     $str = array_reverse($str);
     $result = implode('', $str); //Join array elements with a string
-//echo "Given number is: ".$number1."</br>";
+    //echo "Given number is: ".$number1."</br>";
     return $result;
     // return 0;
 
@@ -700,8 +700,8 @@ function global_send_sms($mobile, $message, $campaign = 'Regular', $type = '', $
     $error_message = '';
     $status = '';
 
-    echo 'ABC';
-    echo $sms_url;
+    // echo 'ABC';
+    // echo $sms_url;
     // -----------------------------------------
     // 3. SMS Gateway: bulksmsbd.net
     // -----------------------------------------

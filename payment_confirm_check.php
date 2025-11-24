@@ -266,7 +266,7 @@ if (isset($_GET['paymentID']) && isset($_GET['status'])) {
             <div class="card payment-card p-3">
 
                 <div class="row">
-                    <div class="col-md-4 d-flex h-100 justify-content-center align-items-center">
+                    <div class="col-md-3 d-flex h-100 justify-content-center align-items-center">
                         <?php
 
                         $image = 'success.png';
@@ -274,7 +274,7 @@ if (isset($_GET['paymentID']) && isset($_GET['status'])) {
                         ?>
                     </div>
 
-                    <div class="col-md-8 h-100">
+                    <div class="col-md-9 h-100">
 
                         <div class="card-header pb-0 text-center text-dark fw-bold"> Transaction Details </div>
                         <hr class="pb-0 mb-0">
