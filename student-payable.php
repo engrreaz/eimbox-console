@@ -18,7 +18,7 @@
 // wrong otp 2056
 // wrong pin 2056
 
-setcookie("selected_items", "", time() + (600), "/");
+// setcookie(name: "selected_items", "", time() + (600), "/");
 
 $sql = "SELECT * FROM scinfo WHERE sccode='$sccode' LIMIT 1";
 $res = $conn->query($sql);
@@ -121,7 +121,7 @@ if ($bkash_type == 'sandbox') {
 
     // echo '<hr>' . $_SESSION['token'] . '<hr>' . $_SESSION['refresh_token'] . '<hr>';
     
-    // echo strlen($_SESSION['token']) . '/' . strlen($_SESSION['refresh_token']);
+    echo strlen($_SESSION['token']) . '/' . strlen($_SESSION['refresh_token']);
     
 
     if (isset($_SESSION['current_student_id']) && !empty($_SESSION['current_student_id'])) {
@@ -404,19 +404,44 @@ if ($bkash_type == 'sandbox') {
                                     </thead>
                                     <tbody>
                                         <?php
-                                        $totalDues = 0;
+                                        $totalDues = $chdues = 0;
+
+                                        if (isset($_COOKIE['selected_items']) && !empty($_COOKIE['selected_items'])) {
+                                            $items = $_COOKIE['selected_items'];
+                                            $ids = explode('|', $items);
+                                            $ids = array_map('trim', $ids);
+                                            $ids = array_filter($ids, function ($v) {
+                                                return $v !== '';
+                                            });
+                                        } else {
+                                            $ids = [];
+                                        }
+
+
+
 
                                         if ($result && $result->num_rows > 0) {
                                             while ($row = $result->fetch_assoc()) {
+                                                if (empty($ids)) {
+                                                    $isChecked = 'checked';
 
+                                                } else {
+                                                    $isChecked = in_array($row['id'], $ids) ? 'checked' : '';
+                                                }
                                                 $totalDues += $row['dues'];
+                                                if ($isChecked == 'checked') {
+                                                    $chdues += $row['dues'];
+                                                }
+
+
+
                                                 ?>
                                                 <tr>
                                                     <td><?= $row['id'] ?> #
 
                                                         <input type="checkbox" class="selItem" id="sel<?= $row['id'] ?>"
-                                                            data-id="<?= $row['id'] ?>" data-dues="<?= $row['dues'] ?>" checked
-                                                            hidden>
+                                                            data-id="<?= $row['id'] ?>" data-dues="<?= $row['dues'] ?>"
+                                                            <?= $isChecked ?>>
                                                     </td>
                                                     <td><?= $row['particulareng'] ?></td>
                                                     <td><?= $row['particularben'] ?></td>
@@ -435,7 +460,7 @@ if ($bkash_type == 'sandbox') {
                                             <tr>
                                                 <th colspan="4" style="text-align:right; font-size: 18px; ;">
                                                     <span id="select_amount"
-                                                        style="colro:seagreen;"><?= number_format($totalDues, 2) ?></span> out
+                                                        style="colro:seagreen;"><?= number_format($chdues, 2) ?></span> out
                                                     of total dues <span style="color:red;">
                                                         <?= number_format($totalDues, 2) ?></span>
                                                 </th>
@@ -447,7 +472,8 @@ if ($bkash_type == 'sandbox') {
                             </div>
 
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-primary">Pay Selected Items</button>
+                                <button type="button" onclick="saveselect();" class="btn btn-primary">Pay Selected
+                                    Items</button>
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                             </div>
 
@@ -468,7 +494,7 @@ if ($bkash_type == 'sandbox') {
                                 <tr>
                                     <td class="fs-6">Total Dues :</td>
                                     <td class="fs-4 text-danger fw-bold text-end">
-                                        <?php $paya_2 = $totalDues ?? 0;
+                                        <?php $paya_2 = $chdues ?? 0;
                                         $payable = number_format($paya_2, 2);
                                         echo '<span id="payable_amount">' . $payable . '</span>'; ?> ৳
                                     </td>
@@ -684,6 +710,7 @@ if ($bkash_type == 'sandbox') {
 
 <script>
     function recalcSelected() {
+        document.cookie = "selected_items=; path=/";
         let total = 0;
         let ids = [];
 
@@ -721,6 +748,9 @@ if ($bkash_type == 'sandbox') {
 <script>
     if (<?= $token_length ?> < 100) {
         // window.location.href = 'student-payable.php';
+    }
+    function saveselect() {
+        window.location.href = 'student-payable.php';
     }
 </script>
 <!-- ----------------------------------- -->

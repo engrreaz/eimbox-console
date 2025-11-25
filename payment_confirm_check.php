@@ -167,16 +167,21 @@ if (isset($_GET['paymentID']) && isset($_GET['status'])) {
             $row = $result->fetch_assoc();
             $store_token_id = $row['id'];
 
+            $items = isset($_COOKIE['selected_items']) ? $_COOKIE['selected_items'] : 'Full';
+            if ($items == 'Full') {
+                $part = 'Full';
+            } else {
+                $part = 'Partial';
+            }
 
             $trans = "INSERT INTO `payment_pgw` 
                     (sccode, sessionyear, stid, paydate, partial, paymentID, trxID, transactionStatus, amount, currency, intent, paymentExecuteTime, merchantInvoiceNumber, payerType, payerReference, customerMsisdn, payerAccount, maxRefundableAmount, statusCode, statusMessage, gateway, token_id, entrytime) 
                     VALUES
-                    ('$sccode', '$sessionyear', '$stid', '$td', 'Full', '$paymentID', '$trxID', '$transactionStatus', '$amount', '$currency', '$intent', '$paymentExecuteTime', '$merchantInvoiceNumber', '$payerType', '$payerReference', '$customerMsisdn', '$payerAccount', '$maxRefundableAmount', '$statusCode', '$statusMessage', 'bkash', '$store_token_id', NOW()); ";
+                    ('$sccode', '$sessionyear', '$stid', '$td', '$part', '$paymentID', '$trxID', '$transactionStatus', '$amount', '$currency', '$intent', '$paymentExecuteTime', '$merchantInvoiceNumber', '$payerType', '$payerReference', '$customerMsisdn', '$payerAccount', '$maxRefundableAmount', '$statusCode', '$statusMessage', 'bkash', '$store_token_id', NOW()); ";
             // echo $trans;
             $conn->query($trans);
 
 
-            $items = isset($_COOKIE['selected_items']) ? $_COOKIE['selected_items'] : 'Full';
             if ($items != 'Full') {
                 $ids = explode('|', $items);
             } else {

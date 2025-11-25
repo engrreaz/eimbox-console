@@ -42,7 +42,8 @@ curl_setopt($url, CURLOPT_FOLLOWLOCATION, 1);
 curl_setopt($url, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
 $resultdata = curl_exec($url);
 
-curl_close($url);
+// curl_close($url);
+$url = null;
 
 $obj = json_decode($resultdata);
 
