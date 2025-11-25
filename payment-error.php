@@ -1,5 +1,6 @@
 <?php 
 
+
         $errorMessages = [
             2001 => "Invalid App Key",
             2002 => "Invalid Payment ID",
@@ -119,7 +120,7 @@
                         <hr class="pb-0 mb-0">
 
                         <div class="card-body">
-                            <div class="alert alert-danger text-center fs-5 fw-bold"><?= $error ?></div>
+                            <div class="alert alert-danger text-center fs-5 fw-bold">Payment <?= $status ?></div>
 
 
 
