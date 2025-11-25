@@ -122,7 +122,7 @@ if ($bkash_type == 'sandbox') {
     // echo '<hr>' . $_SESSION['token'] . '<hr>' . $_SESSION['refresh_token'] . '<hr>';
     
     echo strlen($_SESSION['token']) . '/' . strlen($_SESSION['refresh_token']);
-    
+
 
     if (isset($_SESSION['current_student_id']) && !empty($_SESSION['current_student_id'])) {
         $stid = $_SESSION['current_student_id'];
@@ -406,7 +406,7 @@ if ($bkash_type == 'sandbox') {
                                         <?php
                                         $totalDues = $chdues = 0;
 
-                                        if (isset($_COOKIE['selected_items']) && !empty($_COOKIE['selected_items'])) {
+                                        if (isset($_COOKIE['selected_items']) && !empty($_COOKIE['selected_items']) && isset($_COOKIE['items_for']) && ($_COOKIE['items_for'] == $stid)) {
                                             $items = $_COOKIE['selected_items'];
                                             $ids = explode('|', $items);
                                             $ids = array_map('trim', $ids);
@@ -726,6 +726,7 @@ if ($bkash_type == 'sandbox') {
 
         // Save to cookie
         document.cookie = "selected_items=" + ids.join('|') + "; path=/";
+        document.cookie = "item_for=" + <?= $stid ?> + "; path=/";
 
         return total;
     }
