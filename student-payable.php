@@ -356,7 +356,7 @@ if ($bkash_type == 'sandbox') {
                         </table>
                     </div>
                     <div class="col-md-2 text-center h-100 ">
-                        <img src="<?= BASE_PATH . 'students/' . $stid . '.jpg'; ?>" alt="Student Avatar"
+                        <img src="<?= BASE_PATH . 'students/' . $stid . '.jpg'; ?>" alt="Student Avatar"  loading="lazy" 
                             style="height:120px; border-radius:5px; object-fit:cover;">
                     </div>
                 </div>
@@ -726,9 +726,9 @@ if ($bkash_type == 'sandbox') {
 
         // Save to cookie
         document.cookie = "selected_items=" + ids.join('|') +
-            "; path=/; max-age=" + (30);
+            "; path=/; max-age=" + (300);
 
-        document.cookie = "items_for=<?= $stid ?>; path=/; max-age=" + (30);
+        document.cookie = "items_for=<?= $stid ?>; path=/; max-age=" + (300);
 
         return total;
     }
