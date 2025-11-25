@@ -725,10 +725,10 @@ if ($bkash_type == 'sandbox') {
         document.getElementById('payable_amount').textContent = "Payable: " + total.toFixed(2);
 
         // Save to cookie
-     document.cookie = "selected_items=" + ids.join('|') +
-                  "; path=/; max-age=" + (30);
+        document.cookie = "selected_items=" + ids.join('|') +
+            "; path=/; max-age=" + (30);
 
-document.cookie = "items_for=<?= $stid ?>; path=/; max-age=" + (30);
+        document.cookie = "items_for=<?= $stid ?>; path=/; max-age=" + (30);
 
         return total;
     }
