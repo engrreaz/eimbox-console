@@ -11,11 +11,11 @@ $ARCHIVE_DIR = __DIR__ . "/logs";
 $TRUNCATE_KEEP_LINES = 500;         // when archiving keep last N lines
 $MAX_SIZE_BYTES = 5 * 1024 * 1024;  // 5MB trigger auto-archive
 // Set clear password: replace 'change_me' with secure password OR integrate with your auth system
-define('LOG_CLEAR_PASSWORD', 'change_me');
+define('LOG_CLEAR_PASSWORD', 'CLRPSW');
 
 // CSRF check helper
 function csrf_ok($val){
-    return isset($_SESSION['log_csrf']) && $val === $_SESSION['log_csrf'];
+    return isset($_SESSION['csrf_token']) && $val === $_SESSION['csrf_token'];
 }
 
 // helper to read file lines (returns array of lines)

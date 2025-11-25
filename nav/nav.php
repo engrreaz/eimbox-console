@@ -152,7 +152,7 @@ $stmt->close();
         </div>
     </div>
 
-    <ul class="menu-inner py-1">
+    <ul class="menu-inner py-1  " style="height:90vh; overflow-y: auto;">
         <li class="menu-item">
             <a href="index.php" class="menu-link">
                 <i class="menu-icon icon-base bi bi-house"></i>

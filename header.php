@@ -265,13 +265,13 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
                                             // $act = ($currentPage == $pageURI) ? "active" : "";
                                             ?>
 
-                                            <li class="nav-item me-3 d-sm-inline">
+                                            <li class="nav-item me-3  d-sm-inline  d-flex">
                                                 <a class="nav-link waves-effect waves-light <?= $act; ?>"
                                                     href="<?= $pageURI; ?>" title="<?= $descrip; ?>">
 
                                                     <i class="bi bi-<?= $icon; ?> me-2"></i>
 
-                                                    <span class="d-none d-sm-inline">
+                                                    <span class="d-none d-md-inline">
                                                         <?= $title; ?>
                                                     </span>
                                                 </a>
