@@ -26,7 +26,7 @@ $auth = $_SESSION['token'];
 $post_token = array(
     'paymentID' => $paymentID
 );
-$url = curl_init('https://tokenized.sandbox.bka.sh/v1.2.0-beta/tokenized/checkout/execute');
+$url = curl_init('https://tokenized.pay.bka.sh/v1.2.0-beta/tokenized/checkout/execute');
 $posttoken = json_encode($post_token);
 
 $header = array(

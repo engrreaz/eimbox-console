@@ -7,12 +7,8 @@ $LOG_FILE = __DIR__ . "/core/php-error.log";
 $ARCHIVE_DIR = __DIR__ . "/core/logs";
 $API = 'core/log-api.php';
 
-// CSRF token for forms / AJAX
-if (session_status() !== PHP_SESSION_ACTIVE)
-    session_start();
-if (empty($_SESSION['log_csrf']))
-    $_SESSION['log_csrf'] = bin2hex(random_bytes(16));
-$CSRF = $_SESSION['log_csrf'];
+
+$CSRF = $_SESSION['csrf_token'];
 
 // default per-page
 $per_page_default = 20;
