@@ -43,9 +43,18 @@
 
  .dt-info, .dt-length {
 
-    padding-left: 30px;
-}
-.dt-paging, .dt-search {
+     padding-left: 30px;
+ }
 
-    padding-right: 30px;
-}
+ .dt-paging, .dt-search {
+
+     padding-right: 30px;
+ }
+
+ .data-table-stripe tbody tr:nth-child(odd) {
+     background: #e5e5e6ff !important;
+ }
+
+ .data-table-stripe tbody tr:nth-child(even) {
+     background: #ffffff !important;
+ }

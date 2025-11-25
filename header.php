@@ -262,12 +262,19 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
                                             if ($currentFile == $pageURI) {
                                                 $act = ' active ';
                                             }
+                                            // $act = ($currentPage == $pageURI) ? "active" : "";
                                             ?>
 
-                                            <li class="nav-item me-3">
-                                                <a class="nav-link waves-effect waves-light <?php echo $act; ?> "
-                                                    href="<?php echo $pageURI; ?> " title="<?= $descrip; ?> "> <i
-                                                        class="bi bi-<?= $icon; ?> me-2"></i> <?= $title; ?> </a>
+                                            <li class="nav-item me-3 d-sm-inline">
+                                                <a class="nav-link waves-effect waves-light <?= $act; ?>"
+                                                    href="<?= $pageURI; ?>" title="<?= $descrip; ?>">
+
+                                                    <i class="bi bi-<?= $icon; ?> me-2"></i>
+
+                                                    <span class="d-none d-sm-inline">
+                                                        <?= $title; ?>
+                                                    </span>
+                                                </a>
                                             </li>
 
                                             <?php
@@ -277,7 +284,7 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
                                 </div>
                             </div>
                         </div>
-                    <?php
+                        <?php
 
 
                     }

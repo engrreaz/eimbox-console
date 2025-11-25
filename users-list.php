@@ -21,6 +21,9 @@ $users = $stmt->get_result();
 $stmt->close();
 ?>
 
+<style>
+
+</style>
 <div class="container-xxl flex-grow-1 container-p-y">
 
     <?php if ($is_admin >= 4) { ?>
@@ -28,10 +31,10 @@ $stmt->close();
             <div class="card-body">
                 <form method="get" class="row g-3 align-items-center">
                     <div class="col-auto">
-                        <label for="sccode" class="col-form-label fw-bold">প্রতিষ্ঠান নির্বাচন:</label>
+                        <label for="sccode" class="col-form-label fw-bold">Choose Institution :</label>
                     </div>
                     <div class="col-auto">
-                        <select name="sccode" id="sccode" class="form-select" onchange="this.form.submit()">
+                        <select name="sccode" id="sccode" class="form-select form-select-sm" onchange="this.form.submit()">
                             <?php foreach ($schools as $school): ?>
                                 <option value="<?= htmlspecialchars($school['sccode']) ?>"
                                     <?= ($school['sccode'] === $selected_sccode) ? 'selected' : '' ?>>
@@ -46,11 +49,8 @@ $stmt->close();
     <?php } ?>
 
     <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">ইউজার তালিকা</h5>
-        </div>
-        <div class="card-body table-responsive">
-            <table id="userTable" class="table table-bordered table-striped align-middle">
+        <div class=" table-responsive">
+            <table id="userTable" class="data-table-stripe table table-bordered table-striped table-sm align-middle">
                 <thead>
                     <tr class="table-light">
                         <th>#</th>
@@ -82,15 +82,15 @@ $stmt->close();
     document.addEventListener('DOMContentLoaded', function () {
         new DataTable('#userTable', {
             pageLength: 10,
-            language: {
-                search: "অনুসন্ধান:",
-                lengthMenu: "প্রতি পৃষ্ঠায় _MENU_ টি রেকর্ড",
-                info: "মোট _TOTAL_ রেকর্ডের মধ্যে _START_ থেকে _END_ পর্যন্ত",
-                paginate: {
-                    previous: "পেছনে",
-                    next: "আগে"
-                }
-            }
+            // language: {
+            //     search: "অনুসন্ধান:",
+            //     lengthMenu: "প্রতি পৃষ্ঠায় _MENU_ টি রেকর্ড",
+            //     info: "মোট _TOTAL_ রেকর্ডের মধ্যে _START_ থেকে _END_ পর্যন্ত",
+            //     paginate: {
+            //         previous: "পেছনে",
+            //         next: "আগে"
+            //     }
+            // }
         });
     });
 </script>
