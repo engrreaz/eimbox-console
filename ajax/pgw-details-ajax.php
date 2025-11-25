@@ -10,7 +10,6 @@ $sccode     = $_POST['sccode'];
 $session    = $_POST['sessionyear'];
 $tokenid    = $_POST['tokenid'];
 
-echo $tokenid;
 /* ----------------------------
    1. stpr টেবিল থেকে রশিদ ডিটেইলস
    ---------------------------- */

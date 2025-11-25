@@ -10,15 +10,21 @@
         max-height: 70vh;
         overflow-y: auto;
     }
+
+    /* Info টেক্সটের স্পেস বাড়ানো */
+    #pgwTable td, #pgwTable th{
+text-align:center;
+    }
+
 </style>
 
 <div class="container-xxl flex-grow-1 container-p-y">
 
-    <h4 class="mb-4">PGW Collection List</h4>
+    <h4 class="mb-4"> Collection Through Payment Gateways</h4>
 
     <!-- Table -->
     <div class="card">
-        <div class="card-body">
+
             <table id="pgwTable" class="table table-bordered table-striped">
                 <thead>
                     <tr>
@@ -35,7 +41,7 @@
                 </thead>
                 <tbody>
                     <?php
-                    $sql = "SELECT * FROM payment_pgw ORDER BY id DESC";
+                    $sql = "SELECT * FROM payment_pgw where sccode='$sccode' ORDER BY id DESC";
                     $q = $conn->query($sql);
                     while ($row = $q->fetch_assoc()):
                         ?>
@@ -44,7 +50,7 @@
                             <td><?= $row['sccode'] ?></td>
                             <td><?= $row['sessionyear'] ?></td>
                             <td><?= $row['stid'] ?></td>
-                            <td><?= $row['paydate'] ?></td>
+                            <td><?= date('d/m/Y', strtotime($row['paydate'])) ?></td>
                             <td><?= $row['amount'] ?></td>
                             <td><?= $row['gateway'] ?></td>
                             <td><?= $row['trxID'] ?></td>
@@ -58,7 +64,7 @@
                     <?php endwhile; ?>
                 </tbody>
             </table>
-        </div>
+
     </div>
 
 
@@ -66,7 +72,7 @@
     <div class="modal fade" id="detailsModal_pgw" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
+                <div class="modal-header bg-primary  text-white pb-3">
                     <h5 class="modal-title">Payment Details</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>

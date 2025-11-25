@@ -41,4 +41,11 @@
      display: none !important;
  }
 
- 
+ .dt-info, .dt-length {
+
+    padding-left: 30px;
+}
+.dt-paging, .dt-search {
+
+    padding-right: 30px;
+}
