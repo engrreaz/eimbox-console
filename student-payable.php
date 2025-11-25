@@ -726,7 +726,7 @@ if ($bkash_type == 'sandbox') {
 
         // Save to cookie
         document.cookie = "selected_items=" + ids.join('|') + "; path=/";
-        document.cookie = "item_for=" + <?= $stid ?> + "; path=/";
+        document.cookie = "items_for=" + <?= $stid ?> + "; path=/";
 
         return total;
     }
