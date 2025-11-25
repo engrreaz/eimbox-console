@@ -1,21 +1,16 @@
 <?php require_once 'header.php'; ?>
 <?php
-// -------------------------------------------------
-// Error Log Viewer (UI)
-// Path config
 $LOG_FILE = __DIR__ . "/core/php-error.log";
 $ARCHIVE_DIR = __DIR__ . "/core/logs";
 $API = 'core/log-api.php';
 
-
 $CSRF = $_SESSION['csrf_token'];
-
-// default per-page
 $per_page_default = 20;
 ?>
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="mb-3">📄 Error Log Viewer — EIMBox</h4>
 
+    <!-- Filters -->
     <div class="row mb-3">
         <div class="col-md-9">
             <form id="searchForm" class="row g-2">
@@ -31,14 +26,14 @@ $per_page_default = 20;
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <input type="text" name="file" id="filterFile" class="form-control"
-                        placeholder="Filename (e.g. student-payable.php)">
+                    <input type="text" name="file" id="filterFile" class="form-control" placeholder="Filename">
                 </div>
                 <div class="col-md-3">
                     <input type="text" name="text" id="filterText" class="form-control" placeholder="Search text...">
                 </div>
                 <div class="col-md-1">
-                    <button id="btnSearch" class="btn btn-primary p-3 mt-1 w-100" type="button"><i class="bi bi-search"></i></button>
+                    <button id="btnSearch" class="btn btn-primary p-3 mt-1 w-100" type="button"><i
+                            class="bi bi-search"></i></button>
                 </div>
             </form>
         </div>
@@ -56,13 +51,30 @@ $per_page_default = 20;
     <!-- Stats -->
     <div id="statsArea" class="mb-3"></div>
 
+    <!-- Delete All (per file) -->
+
     <!-- Live Tail Toggle -->
     <div class="form-check form-switch mb-3">
-        <input class="form-check-input" type="checkbox" id="liveToggle">
-        <label class="form-check-label" for="liveToggle">Live Tail (auto-refresh)</label>
+        <div class="row">
+            <div class="col-6">
+                <input class="form-check-input" type="checkbox" id="liveToggle">
+                <label class="form-check-label" for="liveToggle">Live Tail (auto-refresh)</label>
+            </div>
+
+            <div class="col-6 text-end">
+                <button id="btnRemoveAll" class="btn btn-danger btn-sm mb-3 ">Delete All for Selected File</button>
+
+            </div>
+        </div>
+
+
+
+
+
     </div>
 
-    <!-- List area -->
+
+    <!-- Logs List -->
     <div id="logList"></div>
 
     <!-- Pagination -->
@@ -98,26 +110,23 @@ $per_page_default = 20;
             <div class="modal-content" id="archiveResultContent"></div>
         </div>
     </div>
-
-    <!-- Hidden form for non-AJAX remove fallback -->
-    <form id="fallbackRemoveForm" method="POST" action="<?php echo $API; ?>" style="display:none;">
-        <input type="hidden" name="action" value="remove">
-        <input type="hidden" name="line" id="fallbackLine">
-        <input type="hidden" name="csrf" value="<?php echo $CSRF; ?>">
-    </form>
-
 </div>
 
 <?php require_once 'footer.php'; ?>
 
 <script>
-    /* global bootstrap */
     const API = '<?php echo $API; ?>';
     const CSRF = '<?php echo $CSRF; ?>';
     let currentPage = 1;
     let perPage = <?php echo $per_page_default; ?>;
     let liveEnabled = false;
     let liveInterval = null;
+
+    // ================= Helpers =================
+    function escapeHtml(s) {
+        if (!s) return '';
+        return s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+    }
 
     function renderBadge(type) {
         let cls = 'bg-secondary text-light';
@@ -148,22 +157,11 @@ $per_page_default = 20;
         });
     }
 
-    document.getElementById('statsArea').addEventListener('click', function (e) {
-        if (e.target.classList.contains('file-badge')) {
-            const file = e.target.getAttribute('data-file');
-
-            // search Filter-এ filename বসিয়ে দাও
-            document.getElementById('filterFile').value = file;
-
-            // FIRST PAGE থেকে fetch করো
-            fetchPage(1);
-        }
-    });
-
+    // ================= Fetch Logs =================
     function fetchPage(page = 1) {
         const params = {
             action: 'fetch',
-            page: page,
+            page,
             per_page: perPage,
             date: document.getElementById('filterDate').value || '',
             type: document.getElementById('filterType').value || '',
@@ -183,48 +181,41 @@ $per_page_default = 20;
                 return;
             }
 
-            // render logs
-            const list = data.items.map((it, idx) => {
+            const list = data.items.map(it => {
                 const time = it.time || 'Unknown';
                 const type = it.type || 'UNKNOWN';
                 const file = it.file || 'Unknown';
                 const msg = it.msg || '';
-                // each item has 'raw' for removal
                 const cardColor = (type === 'ERROR') ? 'border-danger' : (type === 'WARNING' ? 'border-warning' : (type === 'NOTICE' ? 'border-info' : 'border-secondary'));
                 return `
-            <div class="card mb-2 ${cardColor}">
-              <div class="card-header d-flex justify-content-between align-items-start p-2">
-                <div>
-                  <strong style="font-size:13px">${time}</strong>
-                  <div class="mt-1"><small>${renderBadge(type)} <span class="badge bg-light text-dark">${file}</span></small></div>
+                <div class="card mb-2 ${cardColor}">
+                    <div class="card-header d-flex justify-content-between align-items-start p-2">
+                        <div>
+                            <strong style="font-size:13px">${time}</strong>
+                            <div class="mt-1"><small>${renderBadge(type)} <span class="badge bg-light text-dark">${file}</span></small></div>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-outline-danger del-one" data-idx="${it.global_index}">❌</button>
+                            <button class="btn btn-sm btn-outline-secondary copy-one" data-idx="${it.global_index}">Copy</button>
+                        </div>
+                    </div>
+                    <div class="card-body"><pre style="white-space:pre-wrap;font-size:13px;margin:0;">${escapeHtml(msg)}</pre></div>
                 </div>
-                <div>
-                  <button class="btn btn-sm btn-outline-danger me-1" onclick="removeLineAjax(${idx}, ${data.page_start_index + idx})">❌</button>
-                  <button class="btn btn-sm btn-outline-secondary" onclick="copyLine(${data.page_start_index + idx})">Copy</button>
-                </div>
-              </div>
-              <div class="card-body"><pre style="white-space:pre-wrap;font-size:13px;margin:0;">${escapeHtml(msg)}</pre></div>
-            </div>`;
+            `;
             }).join('');
 
             document.getElementById('logList').innerHTML = list || '<div class="alert alert-info">No logs matched.</div>';
-
-            // pagination
-            const total = data.total;
-            const totalPages = Math.ceil(total / perPage);
             currentPage = data.page;
-            renderPagination(totalPages);
-        }).catch(e => {
-            document.getElementById('logList').innerHTML = `<div class="alert alert-danger">Request failed</div>`;
+
+            // attach dynamic buttons
+            document.querySelectorAll('.del-one').forEach(btn => btn.addEventListener('click', () => removeLineAjax(btn.dataset.idx)));
+            document.querySelectorAll('.copy-one').forEach(btn => btn.addEventListener('click', () => copyLine(btn.dataset.idx)));
+
+            renderPagination(Math.ceil(data.total / perPage));
         });
     }
 
-    // helpers
-    function escapeHtml(s) {
-        if (!s) return '';
-        return s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-    }
-
+    // ================= Pagination =================
     function renderPagination(totalPages) {
         let html = '';
         const range = 3;
@@ -242,104 +233,76 @@ $per_page_default = 20;
 
     function gotoPage(p) { fetchPage(p); }
 
-    // Remove (AJAX) uses index position in current full-file indexing to ensure uniqueness
-    function removeLineAjax(idxOnPage, globalIndex) {
+    // ================= Actions =================
+    function removeLineAjax(globalIndex) {
         if (!confirm('Confirm remove this log line?')) return;
-        fetch(API, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'remove_by_index', index: globalIndex, csrf: CSRF })
-        }).then(r => r.json()).then(res => {
-            if (res.ok) {
-                fetchStats();
-                fetchPage(currentPage);
-            } else {
-                alert(res.msg || 'Remove failed');
-            }
-        });
+        fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'remove_by_index', index: parseInt(globalIndex), csrf: CSRF }) })
+            .then(r => r.json()).then(res => {
+                if (res.ok) { fetchStats(); fetchPage(currentPage); } else alert(res.msg || 'Remove failed');
+            });
     }
 
-    // Copy raw line (helper)
     function copyLine(globalIndex) {
-        fetch(API, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'get_raw_by_index', index: globalIndex, csrf: CSRF })
-        }).then(r => r.json()).then(res => {
-            if (res.ok) {
-                navigator.clipboard.writeText(res.raw).then(() => alert('Copied'));
-            } else alert(res.msg || 'Failed');
-        });
+        fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'get_raw_by_index', index: parseInt(globalIndex), csrf: CSRF }) })
+            .then(r => r.json()).then(res => {
+                if (res.ok) { navigator.clipboard.writeText(res.raw).then(() => alert('Copied')); } else alert(res.msg || 'Failed');
+            });
     }
 
-    // Download
+    // ================= Event Listeners =================
+    document.getElementById('btnSearch').addEventListener('click', () => fetchPage(1));
+
     document.getElementById('btnDownload').addEventListener('click', () => {
-        // use direct link
         window.location.href = API + '?action=download&csrf=' + CSRF;
     });
 
-    // Archive now
     document.getElementById('btnArchive').addEventListener('click', () => {
-        fetch(API, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'archive', csrf: CSRF })
-        }).then(r => r.json()).then(res => {
-            const modalContent = document.getElementById('archiveResultContent');
-            if (res.ok) {
-                modalContent.innerHTML = `<div class="modal-header"><h5 class="modal-title">Archive Done</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-            <div class="modal-body"><p>Archived to: <strong>${res.archive}</strong></p></div>
-            <div class="modal-footer"><button class="btn btn-primary" data-bs-dismiss="modal">OK</button></div>`;
-            } else {
-                modalContent.innerHTML = `<div class="modal-body"><div class="alert alert-danger">${res.msg || 'Failed'}</div></div>`;
-            }
-            var m = new bootstrap.Modal(document.getElementById('archiveModal'));
-            m.show();
-            fetchStats();
-            fetchPage(currentPage);
-        });
+        fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'archive', csrf: CSRF }) })
+            .then(r => r.json()).then(res => {
+                const modalContent = document.getElementById('archiveResultContent');
+                modalContent.innerHTML = res.ok ?
+                    `<div class="modal-header"><h5 class="modal-title">Archive Done</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body"><p>Archived to: <strong>${res.archive}</strong></p></div>
+                <div class="modal-footer"><button class="btn btn-primary" data-bs-dismiss="modal">OK</button></div>` :
+                    `<div class="modal-body"><div class="alert alert-danger">${res.msg || 'Failed'}</div></div>`;
+                new bootstrap.Modal(document.getElementById('archiveModal')).show();
+                fetchStats(); fetchPage(currentPage);
+            });
     });
 
-    // Clear modal
-    document.getElementById('btnClear').addEventListener('click', () => {
-        var m = new bootstrap.Modal(document.getElementById('clearModal'));
-        m.show();
-    });
+    document.getElementById('btnClear').addEventListener('click', () => new bootstrap.Modal(document.getElementById('clearModal')).show());
 
     document.getElementById('clearForm').addEventListener('submit', function (e) {
         e.preventDefault();
-        const fd = new FormData(this);
-        fetch(API, { method: 'POST', body: fd }).then(r => r.json()).then(res => {
-            if (res.ok) {
-                alert('Log cleared');
-                var m = bootstrap.Modal.getInstance(document.getElementById('clearModal'));
-                m.hide();
-                fetchStats();
-                fetchPage(1);
-            } else {
-                alert(res.msg || 'Clear failed');
-            }
+        fetch(API, { method: 'POST', body: new FormData(this) }).then(r => r.json()).then(res => {
+            if (res.ok) { alert('Log cleared'); bootstrap.Modal.getInstance(document.getElementById('clearModal')).hide(); fetchStats(); fetchPage(1); }
+            else alert(res.msg || 'Clear failed');
         });
     });
 
-    // Search button
-    document.getElementById('btnSearch').addEventListener('click', () => fetchPage(1));
-
-    // Live tail toggle
+    // Live tail
     document.getElementById('liveToggle').addEventListener('change', function () {
         liveEnabled = this.checked;
-        if (liveEnabled) {
-            liveInterval = setInterval(() => {
-                // always fetch page 1 latest in live mode
-                fetchPage(1);
-                fetchStats();
-            }, 3000);
-        } else {
-            clearInterval(liveInterval);
-        }
+        if (liveEnabled) { liveInterval = setInterval(() => { fetchPage(1); fetchStats(); }, 3000); }
+        else clearInterval(liveInterval);
     });
 
-    // initial load
+    // Delete all for selected file
+    document.getElementById('btnRemoveAll').addEventListener('click', function () {
+        const file = document.getElementById('filterFile').value;
+        if (!file) { alert('Select a file first'); return; }
+        if (!confirm('Delete all errors for "' + file + '" ?')) return;
+        fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'remove_all_by_file', file: file, csrf: CSRF }) })
+            .then(r => r.json()).then(d => { if (d.ok) { alert('All errors removed'); fetchStats(); fetchPage(1); } else alert('Failed: ' + d.msg); });
+    });
+    document.addEventListener('click', function (e) {
+        if (e.target.classList.contains('file-badge')) {
+            const file = e.target.dataset.file;
+            document.getElementById('filterFile').value = file;
+            fetchPage(1); // page 1 থেকে লোড হবে
+        }
+    });
+    // ================= Initial Load =================
     fetchStats();
     fetchPage(1);
 </script>

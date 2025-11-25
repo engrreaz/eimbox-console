@@ -156,10 +156,8 @@ function statusBadge($status)
 
     <div class="tab-content p-0">
 
-        <?php if ($is_admin >= 4) { ?>
-
+        <?php  if ($is_admin >= 4) { ?>
             <div class="tab-pane fade active show" id="navs-justified-dev-note" role="tabpanel">
-
                 <div class="col-lg-12 p-0">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <h6 class="fw-bold mb-0">Developer Notes</h6>

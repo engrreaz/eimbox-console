@@ -191,6 +191,9 @@ function store_user_session($user, $school = [])
     $_SESSION['scmobile'] = $school['mobile'];
     $_SESSION['sms_gateway'] = $school['sms_gateway'] ?? '';
 
+    $_SESSION['valid_module'] = $school['valid_module'] ?? '';
+    $_SESSION['active_module'] = $school['active_module'] ?? '';
+
 }
 
 

@@ -126,6 +126,7 @@ $release_colors = [
                 <div class="col-12">
                     <?php
                     if ($is_admin >= 0) {
+             
                         include_once('logbook.php');
                     }
                     ?>

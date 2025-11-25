@@ -1,8 +1,8 @@
 <?php
 require_once 'header.php';
 
-$subscribe_module_list = $admin_data['module'];
-$active_module_list = $admin_data['active_module'];
+$subscribe_module_list = $valid_module;
+$active_module_list = $active_module;
 
 $perm_color = [0 => 'red', 1 => 'orange', 2 => 'blue', 3 => 'seagreen'];
 

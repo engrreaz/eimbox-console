@@ -172,6 +172,9 @@ $rootuser = $_SESSION['rootuser'] ?? '';
 
 $sms_gateway = isset($_SESSION['sms_gateway']) ? explode(' | ', $_SESSION['sms_gateway']) : [];
 
+$valid_module = isset($_SESSION['valid_module']) ? explode(' | ', $_SESSION['valid_module']) : [];
+$active_module = isset($_SESSION['active_module']) ? explode(' | ', $_SESSION['active_module']) : [];
+
 // active check: যদি 0 index খালি না থাকে
 $sms_active = !empty($sms_gateway[0]) ? 1 : 0;
 

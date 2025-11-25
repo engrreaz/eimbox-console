@@ -86,7 +86,12 @@ $files = array_filter(scandir(__DIR__), function ($f) {
 
 
 
-                            if (($mod['module_name'] == '') || (in_array($moduleName, ['Core', 'Backend', 'Orion', 'Seed', 'Authority', '']))) {
+                            if (
+                                !is_array($mod) ||
+                                !isset($mod['module_name']) ||
+                                $mod['module_name'] == '' ||
+                                in_array($moduleName, ['Core', 'Backend', 'Orion', 'Seed', 'Authority', 'Developer', ''])
+                            ) {
                                 $disoff = 'disabled';
                                 $disabled = 'disabled';
                                 $not_assign--;
@@ -181,7 +186,8 @@ $files = array_filter(scandir(__DIR__), function ($f) {
                     </div>
                 </div>
                 <div class="modal-footer pt-3 border-top mb-0 pb-0">
-                    <button type="submit" class="btn btn-success"><i class="bi bi-save"></i> &nbsp;&nbsp; Update Setting</button>
+                    <button type="submit" class="btn btn-success"><i class="bi bi-save"></i> &nbsp;&nbsp; Update
+                        Setting</button>
                 </div>
             </form>
         </div>
