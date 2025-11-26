@@ -110,7 +110,7 @@
                     if (cropper) cropper.destroy();
 
                     cropper = new Cropper(cropImageEl, {
-                        aspectRatio: 150 / 190,
+                        aspectRatio: 300 / 380,
                         viewMode: 1,
                         autoCropArea: 1,
                         responsive: true,
@@ -126,7 +126,7 @@
         if (!cropper) return;
 
         // get cropped canvas with proper size
-        cropper.getCroppedCanvas({ width: 150, height: 190 }).toBlob(function (blob) {
+        cropper.getCroppedCanvas({ width: 300, height: 380 }).toBlob(function (blob) {
             let fd = new FormData();
             fd.append("file", blob, currentFile);
 
