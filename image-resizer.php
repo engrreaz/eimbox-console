@@ -117,7 +117,9 @@ function bindEditButtons() {
 
 // Save cropped image
 document.getElementById("saveCropBtn").addEventListener("click", function(){
+    alert('a');
     if(!cropper) return;
+    alert('b');
     cropper.getCroppedCanvas({ width: 150, height: 10 }).toBlob(function(blob){
         let fd = new FormData();
         fd.append("file", blob, currentFile);
