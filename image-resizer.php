@@ -4,7 +4,7 @@
     <h4 class="fw-bold mb-3">Students Images Manager</h4>
 
     <!-- Search -->
-    <form class="d-flex gap-2 mb-3">
+    <form class="d-flex gap-2 mb-3" onsubmit="return false;">
         <input type="text" id="searchName" class="form-control" placeholder="Search filename">
         <input type="number" id="searchSize" class="form-control" placeholder="Min Size KB">
         <button type="button" id="searchBtn" class="btn btn-primary">Search</button>
@@ -48,103 +48,105 @@
 
 <?php require_once 'footer.php'; ?>
 
-<!-- Cropper.js -->
-<link href="https://cdn.jsdelivr.net/npm/cropperjs/dist/cropper.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/cropperjs/dist/cropper.min.js"></script>
-
 <script>
 let page = 0;
-let cropper;
+let cropper = null;
 let currentFile = "";
 let currentSearchName = "";
 let currentSearchSize = 0;
 
+// Load images from server
 function loadImages(reset = false) {
-
-    fetch("core/load-images.php?page=" + page +
-          "&name=" + encodeURIComponent(currentSearchName) +
-          "&size=" + currentSearchSize)
+    fetch(`core/load-images.php?page=${page}&name=${encodeURIComponent(currentSearchName)}&size=${currentSearchSize}`)
     .then(res => res.text())
     .then(html => {
-
+        const tbody = document.querySelector("#imagesTable tbody");
         if(reset) {
-            document.querySelector("#imagesTable tbody").innerHTML = html;
+            tbody.innerHTML = html;
         } else {
-            document.querySelector("#imagesTable tbody").insertAdjacentHTML("beforeend", html);
+            tbody.insertAdjacentHTML("beforeend", html);
         }
-
         lazyLoadInit();
         bindEditButtons();
-    });
+    })
+    .catch(err => console.error(err));
 }
 
-document.getElementById("loadMoreBtn").addEventListener("click", function(){
-    page++;
-    loadImages();
-});
-
-document.getElementById("searchBtn").addEventListener("click", function(){
-    page = 0;
-    currentSearchName = document.getElementById("searchName").value;
-    currentSearchSize = document.getElementById("searchSize").value;
-
-    loadImages(true);
-});
-
-// Lazy Load
+// Lazy load images
 function lazyLoadInit() {
     const imgs = document.querySelectorAll("img.lazy");
-    const obs = new IntersectionObserver(entries => {
-        entries.forEach(e => {
-            if(e.isIntersecting){
-                let img = e.target;
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if(entry.isIntersecting) {
+                let img = entry.target;
                 img.src = img.dataset.src;
                 img.classList.remove("lazy");
-                obs.unobserve(img);
+                observer.unobserve(img);
             }
         });
     });
-    imgs.forEach(i => obs.observe(i));
+    imgs.forEach(img => observer.observe(img));
 }
 
-// Bind edit buttons
+// Bind edit buttons for crop
 function bindEditButtons() {
     document.querySelectorAll(".editBtn").forEach(btn => {
         btn.onclick = () => {
             let tr = btn.closest("tr");
             currentFile = tr.dataset.filename;
-            let img = tr.querySelector("img").dataset.src || tr.querySelector("img").src;
+            let imgSrc = tr.querySelector("img").dataset.src || tr.querySelector("img").src;
 
-            document.getElementById("cropImage").src = img;
+            const cropImageEl = document.getElementById("cropImage");
+            cropImageEl.src = imgSrc;
 
             let modal = new bootstrap.Modal(document.getElementById("cropModal"));
             modal.show();
 
+            // Destroy previous cropper instance if exists
             if(cropper) cropper.destroy();
-            cropper = new Cropper(document.getElementById("cropImage"), {
-                aspectRatio: 190/150,
-                viewMode: 1
+
+            cropper = new Cropper(cropImageEl, {
+                aspectRatio: 150/190,
+                viewMode: 1,
+                autoCropArea: 1,
+                responsive: true
             });
         };
     });
 }
 
+// Save cropped image
 document.getElementById("saveCropBtn").addEventListener("click", function(){
-    let canvas = cropper.getCroppedCanvas({ width:190, height:150 });
-
-    canvas.toBlob(function(blob){
+    if(!cropper) return;
+    cropper.getCroppedCanvas({ width: 150, height: 10 }).toBlob(function(blob){
         let fd = new FormData();
         fd.append("file", blob, currentFile);
 
-        fetch("core/save-image.php", { method:"POST", body:fd })
-        .then(r => r.text())
-        .then(t => {
-            alert(t);
+        fetch("core/save-image.php", { method: "POST", body: fd })
+        .then(res => res.text())
+        .then(resp => {
+            // alert(resp);
+            showToast('success', resp, 'Success');
             location.reload();
-        });
-    });
+        })
+        .catch(err => console.error(err));
+    }, "image/jpeg", 1.0);
 });
 
-// Load first batch
+// Load more button
+document.getElementById("loadMoreBtn").addEventListener("click", () => {
+    page++;
+    loadImages();
+});
+
+// Search button
+document.getElementById("searchBtn").addEventListener("click", () => {
+    page = 0;
+    currentSearchName = document.getElementById("searchName").value.trim();
+    currentSearchSize = document.getElementById("searchSize").value || 0;
+    loadImages(true);
+});
+
+// Initial load
 loadImages();
 </script>
