@@ -55,7 +55,7 @@
                     $url = $baseURL . $filename;
 
                     echo "<tr data-filename='$filename' data-size='$sizeKB'>
-                        <td><img src='$url' style='height:50px; border:1px solid #ccc;'></td>
+                        <td><img src='$url'  loading='lazy' style='height:50px; border:1px solid #ccc;'></td>
                         <td>$filename</td>
                         <td>$sizeKB</td>
                         <td><button class='btn btn-sm btn-success editBtn'>Edit</button></td>
