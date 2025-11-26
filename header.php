@@ -68,7 +68,7 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
 
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet" />
+    <link href="ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet" />
 
     <link rel="stylesheet" href="assets/vendor/fonts/iconify-icons.css" />
     <!-- Core CSS -->

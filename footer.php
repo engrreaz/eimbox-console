@@ -341,7 +341,7 @@ $release_colors = [
 <script src="assets/js/extended-ui-treeview.js"></script>
 <script src="assets/js/ui-toasts.js"></script>
 <script src="https://cdn.datatables.net/2.3.5/js/dataTables.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+<script src="ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
 
 
