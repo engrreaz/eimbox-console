@@ -6,7 +6,11 @@
     <!-- Search -->
     <form class="d-flex gap-2 mb-3" onsubmit="return false;">
         <input type="text" id="searchName" class="form-control" placeholder="Search filename">
-        <input type="number" id="searchSize" class="form-control" placeholder="Min Size KB">
+      
+    <input type="number" id="searchMinWidth" class="form-control" placeholder="Min Width px">
+    <input type="number" id="searchMinHeight" class="form-control" placeholder="Min Height px">
+
+    <input type="number" id="searchSize" class="form-control" placeholder="Min Size KB">
         <button type="button" id="searchBtn" class="btn btn-primary">Search</button>
     </form>
 
@@ -57,10 +61,12 @@
     let currentFile = "";
     let currentSearchName = "";
     let currentSearchSize = 0;
+    let currentMinWidth = 0;
+let currentMinHeight = 0;
 
     // Load images from server
     function loadImages(reset = false) {
-        fetch(`core/load-images.php?page=${page}&name=${encodeURIComponent(currentSearchName)}&size=${currentSearchSize}`)
+fetch(`core/load-images.php?page=${page}&name=${encodeURIComponent(currentSearchName)}&size=${currentSearchSize}&w=${currentMinWidth}&h=${currentMinHeight}`)
             .then(res => res.text())
             .then(html => {
                 const tbody = document.querySelector("#imagesTable tbody");
@@ -151,12 +157,16 @@
     });
 
     // Search button
-    document.getElementById("searchBtn").addEventListener("click", () => {
-        page = 0;
-        currentSearchName = document.getElementById("searchName").value.trim();
-        currentSearchSize = document.getElementById("searchSize").value || 0;
-        loadImages(true);
-    });
+  document.getElementById("searchBtn").addEventListener("click", () => {
+    page = 0;
+    currentSearchName = document.getElementById("searchName").value.trim();
+    currentSearchSize = document.getElementById("searchSize").value || 0;
+
+    currentMinWidth = document.getElementById("searchMinWidth").value || 0;
+    currentMinHeight = document.getElementById("searchMinHeight").value || 0;
+
+    loadImages(true);
+});
 
     // Initial load
     loadImages();
