@@ -23,24 +23,42 @@
             </thead>
             <tbody>
                 <?php
-                $folder = dirname(__DIR__) . '/students';
-                // $folder = BASE_PATH . '/students';
-                
-                $images = glob($folder . '/*.{jpg,jpeg,png,gif}', GLOB_BRACE);
-                foreach ($images as $img) {
-                 
-                    $sizeKB = round(filesize($img) / 1024, 2);
-                    $filename = basename($img);
-            
-                    $url = str_replace($_SERVER['DOCUMENT_ROOT'], '', $img); // Web URL
+$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
+$host = $_SERVER['HTTP_HOST'];
+$projectFolder = basename(dirname(__DIR__)); 
 
-                    echo "<tr data-filename='$filename' data-size='$sizeKB'>
-                        <td><img src='$img' style='height:50px'></td>
-                        <td>$filename</td>
-                        <td>$sizeKB</td>
-                        <td><button class='btn btn-sm btn-success editBtn'>Edit</button></td>
-                    </tr>";
-                }
+$baseURL = $protocol . $host . "/" . $projectFolder . "/students/";
+
+
+
+                echo "__DIR__ = " . __DIR__ . "<br>";
+                echo "DOCUMENT_ROOT = " . $_SERVER['DOCUMENT_ROOT'] . "<br>";
+                echo "students full path = " . dirname(__DIR__) . "/students<br>";
+
+                $test = dirname(__DIR__) . "/students";
+                echo "is_dir(students)? ";
+                echo is_dir($test) ? "YES" : "NO";
+
+
+               $folder = dirname(__DIR__) . '/students';
+$images = glob($folder . '/*.{jpg,jpeg,png,gif}', GLOB_BRACE);
+
+foreach ($images as $img) {
+
+    $sizeKB = round(filesize($img) / 1024, 2);
+    $filename = basename($img);
+
+    // Auto generated full URL for local + live server
+    $url = $baseURL . $filename;
+
+    echo "<tr data-filename='$filename' data-size='$sizeKB'>
+        <td><img src='$url' style='height:50px; border:1px solid #ccc;'></td>
+        <td>$filename</td>
+        <td>$sizeKB</td>
+        <td><button class='btn btn-sm btn-success editBtn'>Edit</button></td>
+    </tr>";
+}
+
                 ?>
             </tbody>
         </table>
