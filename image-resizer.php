@@ -51,6 +51,29 @@
     </div>
 </div>
 
+
+<!-- VIEW MODAL -->
+<div class="modal fade" id="viewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">Student Details</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body" id="viewBody">
+                Loading...
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-danger" id="deleteImageBtn">Delete</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <?php require_once 'footer.php'; ?>
 
 
@@ -77,6 +100,7 @@
                 }
                 lazyLoadInit();
                 bindEditButtons();
+                bindViewButtons();
             })
             .catch(err => console.error(err));
     }
@@ -220,8 +244,53 @@
         loadImages(true);
     });
 
+    function bindViewButtons() {
+        document.querySelectorAll(".viewBtn").forEach(btn => {
+            btn.onclick = () => {
+
+                let tr = btn.closest("tr");
+                let filename = tr.dataset.filename;
+
+                // remove extension
+                let baseID = filename.replace(/\.[^/.]+$/, "");
+      
+                const viewBody = document.getElementById("viewBody");
+                viewBody.innerHTML = "Loading...";
+
+                // Load student data from server
+                fetch("core/view-image-student.php?id=" + baseID)
+                    .then(r => r.text())
+                    .then(html => viewBody.innerHTML = html)
+                    .catch(err => viewBody.innerHTML = "Error loading data");
+
+                // set delete button filename
+                document.getElementById("deleteImageBtn").dataset.file = filename;
+
+                let modalEl = document.getElementById("viewModal");
+                let modal = new bootstrap.Modal(modalEl);
+                modal.show();
+            };
+        });
+    }
+
+    document.getElementById("deleteImageBtn").addEventListener("click", function () {
+
+        let filename = this.dataset.file;
+        if (!confirm("Are you sure you want to delete " + filename + "?")) return;
+
+        fetch("core/delete-student-image.php?file=" + filename)
+            .then(r => r.text())
+            .then(msg => {
+                showToast('success', msg, "Deleted");
+                location.reload();
+            })
+            .catch(err => alert("Delete failed."));
+    });
+
+
     // Initial load
     loadImages();
+    bindViewButtons();
 </script>
 
 

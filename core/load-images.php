@@ -73,13 +73,28 @@ $baseURL = BASE_PATH . "students/";
 // Output rows
 foreach ($chunk as $img) {
 
-    $url = $baseURL . $img['name'];
+    $filename = $img['name'];
+    $sizeKB = $img['sizeKB'];
+    $width = $img['width'];
+    $height = $img['height'];
 
-   echo "<tr data-filename='$filename' data-fullsrc='$url'>
-    <td><img class='lazy' data-src='$url' style='height:50px; border:1px solid #ccc;'></td>
-    <td>$filename</td>  
-    <td>{$width}×{$height}</td> 
-    <td>$sizeKB KB</td>
-    <td><button class='btn btn-sm btn-success editBtn'>Edit</button></td>
-</tr>";
+    $url = $baseURL . $filename;
+
+    echo "<tr 
+            data-filename='$filename' 
+            data-fullsrc='$url' 
+            data-width='$width' 
+            data-height='$height' 
+            data-size='$sizeKB'
+        >
+        <td><img class='lazy' data-src='$url' style='height:50px; border:1px solid #ccc;'></td>
+        <td>$filename</td>  
+        <td>{$width}×{$height}</td> 
+        <td>{$sizeKB} KB</td>
+
+        <td>
+            <button class='btn btn-sm btn-info viewBtn'>View</button>
+            <button class='btn btn-sm btn-success editBtn'>Edit</button>
+        </td>
+    </tr>";
 }
