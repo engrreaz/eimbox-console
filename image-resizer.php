@@ -17,6 +17,7 @@
                 <tr>
                     <th>Preview</th>
                     <th>Name</th>
+                    <th>Pixels</th>
                     <th>Size (KB)</th>
                     <th>Action</th>
                 </tr>

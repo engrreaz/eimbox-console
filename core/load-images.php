@@ -37,14 +37,19 @@ $baseURL = BASE_PATH . "students/";
 foreach($chunk as $img){
     $filename = basename($img);
     $sizeKB = round(filesize($img)/1024);
-    $url = $baseURL . $filename;
-    // $url = BASE_PATH . 'students/' . $filename;
 
+    // get image resolution
+    $imgSize = getimagesize($img); // returns [width, height, type, attr]
+    $width = $imgSize[0];
+    $height = $imgSize[1];
+
+    $url = $baseURL . $filename;
 
     echo "<tr data-filename='$filename'>
         <td><img class='lazy' data-src='$url' style='height:50px; border:1px solid #ccc;'></td>
-        <td>$filename</td>
-        <td>$sizeKB</td>
+        <td>$filename</td>  <td>{$width}x{$height}</td> 
+        <td>$sizeKB KB</td>
+      
         <td><button class='btn btn-sm btn-success editBtn'>Edit</button></td>
     </tr>";
 }
