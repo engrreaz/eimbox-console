@@ -1,9 +1,9 @@
 <?php
 include_once('core-val.php');
-$folder = dirname(__DIR__) . "/students";
+$folder = dirname(dirname(__DIR__)) . "/students";
 
 $page = isset($_GET['page']) ? intval($_GET['page']) : 0;
-$limit = 200;
+$limit = 50;
 $offset = $page * $limit;
 
 $searchName = strtolower($_GET['name'] ?? "");
