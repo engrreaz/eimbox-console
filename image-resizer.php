@@ -23,11 +23,14 @@
             </thead>
             <tbody>
                 <?php
-$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
-$host = $_SERVER['HTTP_HOST'];
-$projectFolder = basename(dirname(__DIR__)); 
+                $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
+                $host = $_SERVER['HTTP_HOST'];
+                $projectFolder = basename(dirname(__DIR__));
 
-$baseURL = $protocol . $host . "/" . $projectFolder . "/students/";
+                $baseURL = $protocol . $host . "/" . $projectFolder . "/students/";
+                $baseURL = BASE_PATH . "students/";
+
+                echo $baseURL;
 
 
 
@@ -40,24 +43,24 @@ $baseURL = $protocol . $host . "/" . $projectFolder . "/students/";
                 echo is_dir($test) ? "YES" : "NO";
 
 
-               $folder = dirname(__DIR__) . '/students';
-$images = glob($folder . '/*.{jpg,jpeg,png,gif}', GLOB_BRACE);
+                $folder = dirname(__DIR__) . '/students';
+                $images = glob($folder . '/*.{jpg,jpeg,png,gif}', GLOB_BRACE);
 
-foreach ($images as $img) {
+                foreach ($images as $img) {
 
-    $sizeKB = round(filesize($img) / 1024, 2);
-    $filename = basename($img);
+                    $sizeKB = round(filesize($img) / 1024, 2);
+                    $filename = basename($img);
 
-    // Auto generated full URL for local + live server
-    $url = $baseURL . $filename;
+                    // Auto generated full URL for local + live server
+                    $url = $baseURL . $filename;
 
-    echo "<tr data-filename='$filename' data-size='$sizeKB'>
-        <td><img src='$url' style='height:50px; border:1px solid #ccc;'></td>
-        <td>$filename</td>
-        <td>$sizeKB</td>
-        <td><button class='btn btn-sm btn-success editBtn'>Edit</button></td>
-    </tr>";
-}
+                    echo "<tr data-filename='$filename' data-size='$sizeKB'>
+                        <td><img src='$url' style='height:50px; border:1px solid #ccc;'></td>
+                        <td>$filename</td>
+                        <td>$sizeKB</td>
+                        <td><button class='btn btn-sm btn-success editBtn'>Edit</button></td>
+                    </tr>";
+                }
 
                 ?>
             </tbody>
