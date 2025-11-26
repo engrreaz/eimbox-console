@@ -98,70 +98,107 @@
     }
 
 
-    // Bind edit buttons for crop
     function bindEditButtons() {
         document.querySelectorAll(".editBtn").forEach(btn => {
             btn.onclick = () => {
 
-                let tr = btn.closest("tr");
-                currentFile = tr.dataset.filename;
+                // reset previous cropper
+                if (cropper) {
+                    try { cropper.destroy(); } catch (e) { }
+                    cropper = null;
+                }
 
-                let imgSrc = tr.querySelector("img").dataset.src || tr.querySelector("img").src;
+                let tr = btn.closest("tr");
+                currentFile = tr.dataset.filename || "";
+
+                // prefer data-fullsrc, fallback to img dataset.src or src
+                let imgEl = tr.querySelector("img");
+                let fullSrc = tr.dataset.fullsrc || (imgEl && (imgEl.dataset.src || imgEl.src)) || "";
+
+                if (!fullSrc) {
+                    console.error("No image source found for cropping.");
+                    return;
+                }
+
+                // add cache-bust to force fresh load if needed
+                fullSrc = fullSrc + (fullSrc.indexOf('?') === -1 ? '?_=' + Date.now() : '&_=' + Date.now());
 
                 const cropImageEl = document.getElementById("cropImage");
-                cropImageEl.crossOrigin = "anonymous"; // FIX #1
-                cropImageEl.src = imgSrc;
 
+                // set crossOrigin before setting src (CORS header must be present on server)
+                cropImageEl.crossOrigin = "anonymous";
+
+                // remove previous onload to avoid multiple binds
+                cropImageEl.onload = null;
+
+                // show modal first
                 let modalEl = document.getElementById("cropModal");
                 let modal = new bootstrap.Modal(modalEl);
                 modal.show();
 
-                modalEl.addEventListener("shown.bs.modal", function () {
+                // when modal fully shown, set src (so animation doesn't mess layout) and init cropper after load
+                modalEl.addEventListener('shown.bs.modal', function onShown() {
 
-                    if (cropper) cropper.destroy();
+                    // set image src AFTER modal shown
+                    cropImageEl.src = fullSrc;
 
-                    cropper = new Cropper(cropImageEl, {
-                        aspectRatio: 300 / 380,
-                        viewMode: 1,
-                        autoCropArea: 1,
-                        responsive: true
-                    });
+                    // init when image loaded
+                    cropImageEl.onload = function () {
+                        // small delay to ensure layout settled (helps with some browsers)
+                        setTimeout(() => {
+                            if (cropper) {
+                                try { cropper.destroy(); } catch (e) { }
+                                cropper = null;
+                            }
 
-                }, { once: true });  // prevents double init
+                            // init cropper
+                            cropper = new Cropper(cropImageEl, {
+                                aspectRatio: 300 / 380,
+                                viewMode: 1,
+                                autoCropArea: 0.8,
+                                responsive: true,
+                                background: true
+                            });
+
+                        }, 50);
+                    };
+
+                    // clean this listener so it runs once
+                    modalEl.removeEventListener('shown.bs.modal', onShown);
+                });
             };
         });
     }
 
 
-    // Save cropped image
     document.getElementById("saveCropBtn").addEventListener("click", function () {
-        if (!cropper) return;
+        if (!cropper) {
+            alert("Cropper not initialized.");
+            return;
+        }
 
-        // get cropped canvas with proper size
-        cropper.getCroppedCanvas({
-            width: 300,
-            height: 380,
-            imageSmoothingEnabled: true,
-            imageSmoothingQuality: 'high'
-        }).toBlob(function (blob) {
-
+        // size according to desired output
+        cropper.getCroppedCanvas({ width: 300, height: 380 }).toBlob(function (blob) {
             let fd = new FormData();
             fd.append("file", blob, currentFile);
 
-            fetch("core/save-image.php", {
-                method: "POST",
-                body: fd
-            })
+            fetch("core/save-image.php", { method: "POST", body: fd })
                 .then(r => r.text())
                 .then(t => {
-                    showToast('success', t, 'Success');
-                    location.reload();
+                    showToast && showToast('success', t, 'Success');
+                    // close modal first then refresh
+                    let modalEl = document.getElementById("cropModal");
+                    let bs = bootstrap.Modal.getInstance(modalEl);
+                    if (bs) bs.hide();
+                    setTimeout(() => location.reload(), 300);
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert("Save failed. Check console and server logs.");
                 });
 
         }, "image/jpeg", 0.9);
-
     });
-
 
 
 

@@ -75,11 +75,11 @@ foreach ($chunk as $img) {
 
     $url = $baseURL . $img['name'];
 
-    echo "<tr data-filename='{$img['name']}'>
-            <td><img class='lazy' data-src='$url' style='height:50px; border:1px solid #ccc;'></td>
-            <td>{$img['name']}</td>
-            <td>{$img['width']}×{$img['height']}</td>
-            <td>{$img['sizeKB']} KB</td>
-            <td><button class='btn btn-sm btn-success editBtn'>Edit</button></td>
-        </tr>";
+   echo "<tr data-filename='$filename' data-fullsrc='$url'>
+    <td><img class='lazy' data-src='$url' style='height:50px; border:1px solid #ccc;'></td>
+    <td>$filename</td>  
+    <td>{$width}×{$height}</td> 
+    <td>$sizeKB KB</td>
+    <td><button class='btn btn-sm btn-success editBtn'>Edit</button></td>
+</tr>";
 }
