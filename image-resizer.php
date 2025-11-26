@@ -88,6 +88,7 @@
         imgs.forEach(img => observer.observe(img));
     }
 
+
     // Bind edit buttons for crop
     function bindEditButtons() {
         document.querySelectorAll(".editBtn").forEach(btn => {
@@ -102,38 +103,43 @@
                 let modal = new bootstrap.Modal(document.getElementById("cropModal"));
                 modal.show();
 
-                // Destroy previous cropper instance if exists
-                if (cropper) cropper.destroy();
+                // wait until image is loaded
+                cropImageEl.onload = function () {
+                    if (cropper) cropper.destroy();
 
-                cropper = new Cropper(cropImageEl, {
-                    aspectRatio: 150 / 190,
-                    viewMode: 1,
-                    autoCropArea: 1,
-                    responsive: true
-                });
+                    cropper = new Cropper(cropImageEl, {
+                        aspectRatio: 150 / 190,
+                        viewMode: 1,
+                        autoCropArea: 1,
+                        responsive: true,
+                        background: true
+                    });
+                };
             };
         });
     }
 
     // Save cropped image
     document.getElementById("saveCropBtn").addEventListener("click", function () {
-        alert('a');
         if (!cropper) return;
 
-        cropper.getCroppedCanvas({ width: 150, height: 10 }).toBlob(function (blob) {
+        // get cropped canvas with proper size
+        cropper.getCroppedCanvas({ width: 150, height: 190 }).toBlob(function (blob) {
             let fd = new FormData();
             fd.append("file", blob, currentFile);
-            alert('b');
+
             fetch("core/save-image.php", { method: "POST", body: fd })
                 .then(res => res.text())
                 .then(resp => {
-                    // alert(resp);
                     showToast('success', resp, 'Success');
                     location.reload();
                 })
                 .catch(err => console.error(err));
         }, "image/jpeg", 1.0);
     });
+
+
+
 
     // Load more button
     document.getElementById("loadMoreBtn").addEventListener("click", () => {
@@ -154,4 +160,6 @@
 </script>
 
 
-</body></html>
+</body>
+
+</html>
