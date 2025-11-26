@@ -6,11 +6,11 @@
     <!-- Search -->
     <form class="d-flex gap-2 mb-3" onsubmit="return false;">
         <input type="text" id="searchName" class="form-control" placeholder="Search filename">
-      
-    <input type="number" id="searchMinWidth" class="form-control" placeholder="Min Width px">
-    <input type="number" id="searchMinHeight" class="form-control" placeholder="Min Height px">
 
-    <input type="number" id="searchSize" class="form-control" placeholder="Min Size KB">
+        <input type="number" id="searchMinWidth" class="form-control" placeholder="Min Width px">
+        <input type="number" id="searchMinHeight" class="form-control" placeholder="Min Height px">
+
+        <input type="number" id="searchSize" class="form-control" placeholder="Min Size KB">
         <button type="button" id="searchBtn" class="btn btn-primary">Search</button>
     </form>
 
@@ -62,11 +62,11 @@
     let currentSearchName = "";
     let currentSearchSize = 0;
     let currentMinWidth = 0;
-let currentMinHeight = 0;
+    let currentMinHeight = 0;
 
     // Load images from server
     function loadImages(reset = false) {
-fetch(`core/load-images.php?page=${page}&name=${encodeURIComponent(currentSearchName)}&size=${currentSearchSize}&w=${currentMinWidth}&h=${currentMinHeight}`)
+        fetch(`core/load-images.php?page=${page}&name=${encodeURIComponent(currentSearchName)}&size=${currentSearchSize}&w=${currentMinWidth}&h=${currentMinHeight}`)
             .then(res => res.text())
             .then(html => {
                 const tbody = document.querySelector("#imagesTable tbody");
@@ -102,49 +102,64 @@ fetch(`core/load-images.php?page=${page}&name=${encodeURIComponent(currentSearch
     function bindEditButtons() {
         document.querySelectorAll(".editBtn").forEach(btn => {
             btn.onclick = () => {
+
                 let tr = btn.closest("tr");
                 currentFile = tr.dataset.filename;
+
                 let imgSrc = tr.querySelector("img").dataset.src || tr.querySelector("img").src;
 
                 const cropImageEl = document.getElementById("cropImage");
+                cropImageEl.crossOrigin = "anonymous"; // FIX #1
                 cropImageEl.src = imgSrc;
 
-                let modal = new bootstrap.Modal(document.getElementById("cropModal"));
+                let modalEl = document.getElementById("cropModal");
+                let modal = new bootstrap.Modal(modalEl);
                 modal.show();
 
-                // wait until image is loaded
-                cropImageEl.onload = function () {
+                modalEl.addEventListener("shown.bs.modal", function () {
+
                     if (cropper) cropper.destroy();
 
                     cropper = new Cropper(cropImageEl, {
                         aspectRatio: 300 / 380,
                         viewMode: 1,
                         autoCropArea: 1,
-                        responsive: true,
-                        background: true
+                        responsive: true
                     });
-                };
+
+                }, { once: true });  // prevents double init
             };
         });
     }
+
 
     // Save cropped image
     document.getElementById("saveCropBtn").addEventListener("click", function () {
         if (!cropper) return;
 
         // get cropped canvas with proper size
-        cropper.getCroppedCanvas({ width: 300, height: 380 }).toBlob(function (blob) {
+        cropper.getCroppedCanvas({
+            width: 300,
+            height: 380,
+            imageSmoothingEnabled: true,
+            imageSmoothingQuality: 'high'
+        }).toBlob(function (blob) {
+
             let fd = new FormData();
             fd.append("file", blob, currentFile);
 
-            fetch("core/save-image.php", { method: "POST", body: fd })
-                .then(res => res.text())
-                .then(resp => {
-                    showToast('success', resp, 'Success');
+            fetch("core/save-image.php", {
+                method: "POST",
+                body: fd
+            })
+                .then(r => r.text())
+                .then(t => {
+                    showToast('success', t, 'Success');
                     location.reload();
-                })
-                .catch(err => console.error(err));
-        }, "image/jpeg", 1.0);
+                });
+
+        }, "image/jpeg", 0.9);
+
     });
 
 
@@ -157,16 +172,16 @@ fetch(`core/load-images.php?page=${page}&name=${encodeURIComponent(currentSearch
     });
 
     // Search button
-  document.getElementById("searchBtn").addEventListener("click", () => {
-    page = 0;
-    currentSearchName = document.getElementById("searchName").value.trim();
-    currentSearchSize = document.getElementById("searchSize").value || 0;
+    document.getElementById("searchBtn").addEventListener("click", () => {
+        page = 0;
+        currentSearchName = document.getElementById("searchName").value.trim();
+        currentSearchSize = document.getElementById("searchSize").value || 0;
 
-    currentMinWidth = document.getElementById("searchMinWidth").value || 0;
-    currentMinHeight = document.getElementById("searchMinHeight").value || 0;
+        currentMinWidth = document.getElementById("searchMinWidth").value || 0;
+        currentMinHeight = document.getElementById("searchMinHeight").value || 0;
 
-    loadImages(true);
-});
+        loadImages(true);
+    });
 
     // Initial load
     loadImages();
