@@ -49,106 +49,106 @@
 <?php require_once 'footer.php'; ?>
 
 <script>
-let page = 0;
-let cropper = null;
-let currentFile = "";
-let currentSearchName = "";
-let currentSearchSize = 0;
+    let page = 0;
+    let cropper = null;
+    let currentFile = "";
+    let currentSearchName = "";
+    let currentSearchSize = 0;
 
-// Load images from server
-function loadImages(reset = false) {
-    fetch(`core/load-images.php?page=${page}&name=${encodeURIComponent(currentSearchName)}&size=${currentSearchSize}`)
-    .then(res => res.text())
-    .then(html => {
-        const tbody = document.querySelector("#imagesTable tbody");
-        if(reset) {
-            tbody.innerHTML = html;
-        } else {
-            tbody.insertAdjacentHTML("beforeend", html);
-        }
-        lazyLoadInit();
-        bindEditButtons();
-    })
-    .catch(err => console.error(err));
-}
+    // Load images from server
+    function loadImages(reset = false) {
+        fetch(`core/load-images.php?page=${page}&name=${encodeURIComponent(currentSearchName)}&size=${currentSearchSize}`)
+            .then(res => res.text())
+            .then(html => {
+                const tbody = document.querySelector("#imagesTable tbody");
+                if (reset) {
+                    tbody.innerHTML = html;
+                } else {
+                    tbody.insertAdjacentHTML("beforeend", html);
+                }
+                lazyLoadInit();
+                bindEditButtons();
+            })
+            .catch(err => console.error(err));
+    }
 
-// Lazy load images
-function lazyLoadInit() {
-    const imgs = document.querySelectorAll("img.lazy");
-    const observer = new IntersectionObserver(entries => {
-        entries.forEach(entry => {
-            if(entry.isIntersecting) {
-                let img = entry.target;
-                img.src = img.dataset.src;
-                img.classList.remove("lazy");
-                observer.unobserve(img);
-            }
-        });
-    });
-    imgs.forEach(img => observer.observe(img));
-}
-
-// Bind edit buttons for crop
-function bindEditButtons() {
-    document.querySelectorAll(".editBtn").forEach(btn => {
-        btn.onclick = () => {
-            let tr = btn.closest("tr");
-            currentFile = tr.dataset.filename;
-            let imgSrc = tr.querySelector("img").dataset.src || tr.querySelector("img").src;
-
-            const cropImageEl = document.getElementById("cropImage");
-            cropImageEl.src = imgSrc;
-
-            let modal = new bootstrap.Modal(document.getElementById("cropModal"));
-            modal.show();
-
-            // Destroy previous cropper instance if exists
-            if(cropper) cropper.destroy();
-
-            cropper = new Cropper(cropImageEl, {
-                aspectRatio: 150/190,
-                viewMode: 1,
-                autoCropArea: 1,
-                responsive: true
+    // Lazy load images
+    function lazyLoadInit() {
+        const imgs = document.querySelectorAll("img.lazy");
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    let img = entry.target;
+                    img.src = img.dataset.src;
+                    img.classList.remove("lazy");
+                    observer.unobserve(img);
+                }
             });
-        };
+        });
+        imgs.forEach(img => observer.observe(img));
+    }
+
+    // Bind edit buttons for crop
+    function bindEditButtons() {
+        document.querySelectorAll(".editBtn").forEach(btn => {
+            btn.onclick = () => {
+                let tr = btn.closest("tr");
+                currentFile = tr.dataset.filename;
+                let imgSrc = tr.querySelector("img").dataset.src || tr.querySelector("img").src;
+
+                const cropImageEl = document.getElementById("cropImage");
+                cropImageEl.src = imgSrc;
+
+                let modal = new bootstrap.Modal(document.getElementById("cropModal"));
+                modal.show();
+
+                // Destroy previous cropper instance if exists
+                if (cropper) cropper.destroy();
+
+                cropper = new Cropper(cropImageEl, {
+                    aspectRatio: 150 / 190,
+                    viewMode: 1,
+                    autoCropArea: 1,
+                    responsive: true
+                });
+            };
+        });
+    }
+
+    // Save cropped image
+    document.getElementById("saveCropBtn").addEventListener("click", function () {
+        alert('a');
+        if (!cropper) return;
+
+        cropper.getCroppedCanvas({ width: 150, height: 10 }).toBlob(function (blob) {
+            let fd = new FormData();
+            fd.append("file", blob, currentFile);
+            alert('b');
+            fetch("core/save-image.php", { method: "POST", body: fd })
+                .then(res => res.text())
+                .then(resp => {
+                    // alert(resp);
+                    showToast('success', resp, 'Success');
+                    location.reload();
+                })
+                .catch(err => console.error(err));
+        }, "image/jpeg", 1.0);
     });
-}
 
-// Save cropped image
-document.getElementById("saveCropBtn").addEventListener("click", function(){
-    alert('a');
-    if(!cropper) return;
-    alert('b');
-    cropper.getCroppedCanvas({ width: 150, height: 10 }).toBlob(function(blob){
-        let fd = new FormData();
-        fd.append("file", blob, currentFile);
+    // Load more button
+    document.getElementById("loadMoreBtn").addEventListener("click", () => {
+        page++;
+        loadImages();
+    });
 
-        fetch("core/save-image.php", { method: "POST", body: fd })
-        .then(res => res.text())
-        .then(resp => {
-            // alert(resp);
-            showToast('success', resp, 'Success');
-            location.reload();
-        })
-        .catch(err => console.error(err));
-    }, "image/jpeg", 1.0);
-});
+    // Search button
+    document.getElementById("searchBtn").addEventListener("click", () => {
+        page = 0;
+        currentSearchName = document.getElementById("searchName").value.trim();
+        currentSearchSize = document.getElementById("searchSize").value || 0;
+        loadImages(true);
+    });
 
-// Load more button
-document.getElementById("loadMoreBtn").addEventListener("click", () => {
-    page++;
+    // Initial load
     loadImages();
-});
-
-// Search button
-document.getElementById("searchBtn").addEventListener("click", () => {
-    page = 0;
-    currentSearchName = document.getElementById("searchName").value.trim();
-    currentSearchSize = document.getElementById("searchSize").value || 0;
-    loadImages(true);
-});
-
-// Initial load
-loadImages();
 </script>
