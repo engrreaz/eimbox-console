@@ -13,7 +13,7 @@ $folder = dirname(dirname(__DIR__)) . "/students";
 
 // Pagination
 $page = isset($_GET['page']) ? intval($_GET['page']) : 0;
-$limit = 30;
+$limit = 5;
 $offset = $page * $limit;
 
 // Filters
