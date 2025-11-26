@@ -1,4 +1,8 @@
 <?php
+header("Access-Control-Allow-Origin: https://console.eimbox.com");
+header("Content-Type: image/jpeg");
+// readfile("students/1000000001.jpg");
+
 include_once('core-val.php');
 $folder = dirname(dirname(__DIR__)) . "/students";
 

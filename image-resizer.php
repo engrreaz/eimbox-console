@@ -48,6 +48,11 @@
 
 <?php require_once 'footer.php'; ?>
 
+
+<link href="https://cdn.jsdelivr.net/npm/cropperjs/dist/cropper.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/cropperjs/dist/cropper.min.js"></script>
+
+
 <script>
     let page = 0;
     let cropper = null;
