@@ -3,7 +3,7 @@ include_once('core-val.php');
 $folder = dirname(dirname(__DIR__)) . "/students";
 
 $page = isset($_GET['page']) ? intval($_GET['page']) : 0;
-$limit = 50;
+$limit = 5;
 $offset = $page * $limit;
 
 $searchName = strtolower($_GET['name'] ?? "");
