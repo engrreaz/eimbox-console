@@ -280,21 +280,23 @@ $stmt->close();
     #sidebar {
         position: fixed;
         top: 0;
-        right: -400px;
+        left: -400px;
         /* hidden */
         width: 400px;
+        max-width:90%;
         height: 100%;
+        max-width: 90%;
         /* background: #2c3e50; */
         /* color: #fff; */
         padding: 20px;
         box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
-        transition: right 0.4s ease;
+        transition: left 0.4s ease;
         /* smooth transition */
         z-index: 10000;
     }
 
     #sidebar.open {
-        right: 0;
+        left: 0;
     }
 
     /* Lock button */
@@ -338,15 +340,15 @@ $stmt->close();
     let sidebar = document.getElementById("sidebar");
     let lockBtn = document.getElementById("lockBtn");
     let timer = null;
-    let delay = 500; // 0.5 sec
+    let delay = 500;
     let locked = false;
 
-    // ----- Mouse edge detect → open sidebar -----
+    // ----- Mouse edge detect → open sidebar (LEFT SIDE) -----
     document.addEventListener("mousemove", function (e) {
-        let viewportWidth = document.documentElement.clientWidth;
         let mouseX = e.clientX;
 
-        if (!locked && mouseX >= viewportWidth - 1) {
+        // LEFT EDGE → 0px–1px
+        if (!locked && mouseX <= 1) {
             if (!timer && !sidebar.classList.contains("open")) {
                 timer = setTimeout(() => {
                     sidebar.classList.add("open");
@@ -359,17 +361,18 @@ $stmt->close();
         }
     });
 
-    // Auto close when mouse leaves sidebar
+    // Auto close when mouse leaves
     sidebar.addEventListener("mouseleave", function () {
         if (!locked) sidebar.classList.remove("open");
     });
 
-    // Scroll detect → auto close
+    // Scroll detect → close
     window.addEventListener("scroll", function () {
-        if (!locked && sidebar.classList.contains("open")) sidebar.classList.remove("open");
+        if (!locked && sidebar.classList.contains("open"))
+            sidebar.classList.remove("open");
     });
 
-    // Lock button toggle
+    // Lock toggle
     lockBtn.addEventListener("click", function () {
         locked = !locked;
         if (locked) {
@@ -380,36 +383,36 @@ $stmt->close();
         }
     });
 
-    // Escape key closes sidebar if unlocked
+    // Escape → close
     document.addEventListener("keydown", function (e) {
         if (!locked && e.key === "Escape" && sidebar.classList.contains("open")) {
             sidebar.classList.remove("open");
         }
     });
 
-    // ----- Swipe detection for mobile -----
+    // ----- Swipe detect (same logic works for left sidebar) -----
     let touchStartX = 0;
     let touchEndX = 0;
 
-    document.addEventListener('touchstart', e => {
+    document.addEventListener("touchstart", e => {
         touchStartX = e.changedTouches[0].screenX;
     });
 
-    document.addEventListener('touchend', e => {
+    document.addEventListener("touchend", e => {
         touchEndX = e.changedTouches[0].screenX;
         handleSwipe();
     });
 
     function handleSwipe() {
         const swipeDistance = touchEndX - touchStartX;
-        const threshold = 50; // কমপক্ষে 50px swipe হলে কাজ করবে
+        const threshold = 50;
 
         if (!locked) {
             if (swipeDistance > threshold) {
-                // Right swipe → sidebar open
+                // Right swipe → open sidebar (LEFT SIDEBAR)
                 sidebar.classList.add("open");
             } else if (swipeDistance < -threshold) {
-                // Left swipe → sidebar close
+                // Left swipe → close
                 sidebar.classList.remove("open");
             }
         }

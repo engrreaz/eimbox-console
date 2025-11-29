@@ -292,7 +292,7 @@
                 <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse"
                     data-bs-target="#collapsePayments" aria-expanded="false">
                     <span class="pe-4 fw-bold text-primary"><i class="icon-base bi bi-coin me-2"></i>
-                        Clone Payments</span> 
+                        Clone Payments</span>
                 </button>
             </h2>
 
@@ -420,12 +420,9 @@
 
 
 <script>
+   
     document.addEventListener('DOMContentLoaded', function () {
         // Tooltip initialization (already working)
-        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
-        });
 
         // Expand All (native bootstrap collapse)
         document.getElementById('btnExpandAll').addEventListener('click', function () {

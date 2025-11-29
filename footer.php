@@ -320,9 +320,9 @@ $release_colors = [
 
 
 <!-- Core JS -->
-<script src="assets/vendor/libs/jquery/jquery.js"></script>
+
 <script src="assets/vendor/libs/popper/popper.js"></script>
-<script src="assets/vendor/js/bootstrap.js"></script>
+
 <script src="assets/vendor/js/menu.js"></script>
 <script src="assets/vendor/libs/notiflix/notiflix.js"></script>
 <script src="assets/js/forms-editors.js"></script>
@@ -339,12 +339,16 @@ $release_colors = [
 <!-- <script src="assets/js/extended-ui-media-player.js"></script> -->
 <script src="assets/js/pages-auth-multisteps.js"></script>
 <script src="assets/js/extended-ui-treeview.js"></script>
-<script src="assets/js/ui-toasts.js"></script>
-<script src="https://cdn.datatables.net/2.3.5/js/dataTables.min.js"></script>
+<!-- <script src="assets/js/ui-toasts.js"></script> -->
+
 <script src="ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
+<script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
 
 
+
+<script>
+</script>
 <script src="assets/js/eimbox.js"></script>
 
 <!-- Main JS -->
@@ -353,10 +357,7 @@ $release_colors = [
 <!-- Custom JS -->
 
 
-<script>
-    // ✅ Bootstrap Toast Notification Function
 
-</script>
 
 
 
@@ -379,7 +380,14 @@ $release_colors = [
 </script>
 
 
-
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
 
 
 <script>

@@ -31,4 +31,3 @@ function showToast(type, message, title = '') {
     toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
 }
 
-

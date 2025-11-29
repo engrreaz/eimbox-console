@@ -2,6 +2,8 @@
 require_once 'db.php';
 require_once 'core-val.php';
 require_once 'global_values.php';
+require_once 'sms-var.php';
+
 
 // ========================
 // XSS Safe Output
@@ -170,7 +172,13 @@ function store_user_session($user, $school = [])
     $_SESSION['address'] = $user['address'] ?? '';
     $_SESSION['dob'] = $user['dob'] ?? '';
     $_SESSION['user_role'] = $user['role'] ?? 'user';
-    $_SESSION['userlevel'] = $user['userlevel'] ?? '';
+
+    if (($user['is_chief'] ?? '0') == 1) {
+        $_SESSION['userlevel'] = 'Chief';
+    } else {
+        $_SESSION['userlevel'] = $user['userlevel'] ?? '';
+    }
+
     $_SESSION['sccode'] = $user['sccode'] ?? '';
     $_SESSION['photourl'] = $user['photourl'] ?? '';
     $_SESSION['isadmin'] = $user['admin'] ?? 0;
@@ -680,18 +688,68 @@ function taka($number)
 
 }
 
+function is_bengali_unicode($text)
+{
+    return preg_match('/\p{Bengali}/u', $text) ? true : false;
+}
+function sms_templete_2_text($msgText)
+{
+    global $sms_hint, $sms_var, $sms_sample;
+
+    global $stnameeng, $stnameben, $guarname, $classname, $sectionname,
+    $dueamount, $paymentamount, $paymentdate, $intime, $outtime, $month, $cur;
+
+    $msgText = htmlspecialchars($msgText);
+    // $sms_var অ্যারের প্রতিটি ভ্যালুকে প্রপার মানে রূপান্তর
+    $values = [];
+    foreach ($sms_var as $vname) {
+        // $vname হলো '$stnameeng', '$classname' ইত্যাদি
+        // substring(1) করে $ চিহ্ন বাদ দিয়ে variable variable ব্যবহার
+        $varName = substr($vname, 1);
+        if (isset($$varName)) {
+            $values[] = $$varName; // ভ্যালু
+        } else {
+            $values[] = ""; // ডিফল্ট খালি স্ট্রিং
+        }
+    }
+
+    // এখন replace করুন
+    return str_replace($sms_hint, $sms_sample, $msgText);
+}
 
 
 function global_send_sms($mobile, $message, $campaign = 'Regular', $type = '', $stid = 0)
 {
-    global $sms_api_key, $sms_secret_key, $sms_username, $sms_password, $sms_url;
+    global $sms_api_key, $sms_secret_key, $sms_username, $sms_password, $sms_url, $sms_provider, $sms_price;
     global $sccode, $y_v2, $conn, $usr, $cur;
 
-    // -----------------------------------------
-    // 1. Sanitize Inputs
-    // -----------------------------------------
+    global $sms_hint, $sms_var;
+
+    global $stnameeng, $stnameben, $guarname, $classname, $sectionname,
+    $dueamount, $paymentamount, $paymentdate, $intime, $outtime, $month, $cur;
+
+    $msgText = $message;
+    // $msgText = htmlspecialchars($message);
+    // $sms_var অ্যারের প্রতিটি ভ্যালুকে প্রপার মানে রূপান্তর
+    $values = [];
+    foreach ($sms_var as $vname) {
+        // $vname হলো '$stnameeng', '$classname' ইত্যাদি
+        // substring(1) করে $ চিহ্ন বাদ দিয়ে variable variable ব্যবহার
+        $varName = substr($vname, 1);
+        if (isset($$varName)) {
+            $values[] = $$varName; // ভ্যালু
+        } else {
+            $values[] = ""; // ডিফল্ট খালি স্ট্রিং
+        }
+    }
+
+    // এখন replace করুন
+    $message = str_replace($sms_hint, $values, $msgText);
+
+
     $mobile = mysqli_real_escape_string($conn, $mobile);
-    $message_original = $message;              // real message for length
+    // $message_original = $message;              // real message for length
+    $message_original = htmlspecialchars($message);              // real message for length
     $message = urlencode($message);            // encoded for API
 
     // -----------------------------------------
@@ -725,7 +783,8 @@ function global_send_sms($mobile, $message, $campaign = 'Regular', $type = '', $
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
         $response_raw = curl_exec($ch);
-        curl_close($ch);
+        // curl_close($ch);
+        $ch = null;
 
         // JSON → associative array
         $response = json_decode($response_raw, true);
@@ -776,8 +835,17 @@ function global_send_sms($mobile, $message, $campaign = 'Regular', $type = '', $
     // -----------------------------------------
     // 6. SMS Count (real message)
     // -----------------------------------------
-    $msg_length = strlen($message_original);
-    $count = ceil($msg_length / 160);
+
+
+    $msg_length = mb_strlen($message_original);
+    if (is_bengali_unicode($message_original)) {
+        $count = ceil($msg_length / 70);
+    } else {
+        $count = ceil($msg_length / 160);
+    }
+
+
+
 
     // -----------------------------------------
     // 7. Get session info for this student
@@ -805,7 +873,12 @@ function global_send_sms($mobile, $message, $campaign = 'Regular', $type = '', $
     // -----------------------------------------
     // 8. Cost calculation
     // -----------------------------------------
-    $cost = 0.45 * $count;
+    if ($sms_provider != 'self') {
+        $cost = $sms_price *= $count;
+    } else {
+        $cost = 0;
+    }
+
     $td = date('Y-m-d');
 
     // -----------------------------------------

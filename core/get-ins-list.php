@@ -24,7 +24,7 @@ if($is_admin == 5){
 }
 
 if ($q->num_rows > 0) {
-  echo '<table class="table table-bordered  table-sm" id="insTable">';
+  echo '<table class="table table-responsive   table-sm" id="insTable">';
   echo '<thead>
             <tr>
               <th>EIIN</th>
@@ -56,15 +56,3 @@ if ($q->num_rows > 0) {
   echo "<div class='alert alert-warning'>No institutions found.</div>";
 }
 ?>
-
-<script>
-  // $(document).ready(function () {
-  $('#insTable').DataTable({
-    pageLength: 5,          // প্রতি পেজে ৫টা রো দেখাবে
-    lengthMenu: [5, 10, 25, 50],
-    searching: true,        // সার্চ বক্স অন
-    ordering: true,         // কলাম sort হবে
-    responsive: true        // মোবাইল ফ্রেন্ডলি
-  });
-  // });
-</script>

@@ -12,5 +12,3 @@ if(isset($_FILES['file'])){
 } else {
     echo "No file received!";
 }
-
-

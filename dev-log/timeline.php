@@ -156,7 +156,7 @@ function statusBadge($status)
 
     <div class="tab-content p-0">
 
-        <?php  if ($is_admin >= 4) { ?>
+        <?php if ($is_admin >= 4) { ?>
             <div class="tab-pane fade active show" id="navs-justified-dev-note" role="tabpanel">
                 <div class="col-lg-12 p-0">
                     <div class="d-flex justify-content-between align-items-center mb-2">
@@ -473,12 +473,13 @@ function statusBadge($status)
     <div class="modal-dialog modal-xl">
         <div class="modal-content ">
             <div class="modal-header">
-                <h5 class="modal-title">Institution List</h5>
+                <h5 class="modal-title" >Institution List</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
-            <div class="modal-body m-5 fs-6" id="ins-list" style="max-height:70vh; overflow-y:auto;">
-
+            <div class="modal-body">
+                <input type="text" id="customSearch" class="form-control mb-2" placeholder="Search...">
+                <div id="ins-list"></div>
             </div>
 
         </div>
@@ -537,6 +538,39 @@ function statusBadge($status)
         </div>
     </div>
 </div>
+
+
+<script>
+    document.getElementById('openInsList').addEventListener('click', function () {
+        const modalEl = document.getElementById('insListModal');
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+
+        fetch('core/get-ins-list.php')
+            .then(res => res.text())
+            .then(html => {
+                document.getElementById('ins-list').innerHTML = html;
+
+                // এখন টেবিল DOM তৈরি হয়েছে, DataTable ইনিশিয়ালাইজ করা
+                var table = $('#insTable').DataTable({
+                    pageLength: 5,
+                    lengthMenu: [5, 10, 25, 50],
+                    ordering: true,
+                    responsive: true,
+                    dom: 't' // ডিফল্ট সার্চ বাদ, কাস্টম সার্চ ব্যবহার হবে
+                });
+
+                // কাস্টম সার্চ
+                $('#customSearch').on('keyup', function () {
+                    table.search(this.value).draw();
+                });
+            })
+            .catch(err => console.error('❌ Fetch error:', err));
+    });
+</script>
+
+
+
 
 <script>
     function openAddModal() {
@@ -785,7 +819,7 @@ function statusBadge($status)
 
 <script>
 
-    document.getElementById('openInsList').addEventListener('click', function () {
+    document.getElementById('openInsList2').addEventListener('click', function () {
         const modalEl = document.getElementById('insListModal');
         const modal = new bootstrap.Modal(modalEl);
         modal.show();

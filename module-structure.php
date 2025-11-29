@@ -335,6 +335,7 @@ $files = array_filter(scandir(__DIR__), function ($f) {
 
         $.post('core/update_inline.php', { page_name: id, field: field, value: value }, function (res) {
             console.log(res);
+            showToast('info', res + 'Settings updated', 'Chages');
         });
     });
 
@@ -343,7 +344,7 @@ $files = array_filter(scandir(__DIR__), function ($f) {
         let page = $(this).data('page');
         let role = $(this).data('role');
         let title = $(this).data('title');
-    
+
         let perm = $(this).val();
 
         $(this).removeClass("perm-none perm-0 perm-1 perm-2 perm-3");
@@ -354,10 +355,23 @@ $files = array_filter(scandir(__DIR__), function ($f) {
         else if (perm === '2') { $(this).addClass('perm-2'); tooltipText = 'Write'; }
         else if (perm === '3') { $(this).addClass('perm-3'); tooltipText = 'Full'; }
 
-    //    $(this).attr('title', tooltipText).tooltip('dispose').tooltip();
+        //    $(this).attr('title', tooltipText).tooltip('dispose').tooltip();
 
         $.post('core/update_permission.php', { page_name: page, userlevel: role, permission: perm, title: title }, function (res) {
             console.log(res);
+        });
+    });
+
+
+</script>
+
+<script>
+    $(document).ready(function () {
+        $('#permissionTable').DataTable({
+            "pageLength": 10,
+            "lengthMenu": [5, 10, 25, 50, 100],
+            "ordering": true,
+            "searching": true
         });
     });
 </script>

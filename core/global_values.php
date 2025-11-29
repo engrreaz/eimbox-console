@@ -184,6 +184,8 @@ $sms_secret_key = $sms_gateway[2] ?? '';
 $sms_username = $sms_gateway[3] ?? '';
 $sms_password = $sms_gateway[4] ?? '';
 $sms_url = $sms_gateway[5] ?? '';
+$sms_provider = $sms_gateway[6] ?? 'eimbox';
+$sms_price = $sms_gateway[7] ?? '0.50';
 
 
 

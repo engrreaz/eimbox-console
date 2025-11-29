@@ -99,7 +99,7 @@
                         </div>
                         <div class="col-md-3">
 
-                            <button class=" btn btn-success w-100" onclick="saveGateway(this)">
+                            <button class=" btn btn-success w-100" onclick="saveGateway(this)" >
                                 <i class="bi bi-floppy pe-3"></i> Save
 
 
