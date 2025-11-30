@@ -165,13 +165,13 @@ $stmt->close();
 
         <?php foreach ($menu as $moduleName => $moduleData):
             if ($moduleName == 'Backend') {
-                $mname_color = '#991ab3ff';
+                $mname_color = '#769603ff';
             } else if ($moduleName == 'Orion') {
-                $mname_color = '#ec0a0aff';
+                $mname_color = '#960b83ff';
             } else if ($moduleName == 'Seed') {
-                $mname_color = '#5f0909ff';
+                $mname_color = '#940808ff';
             } else if ($moduleName == 'Authority') {
-                $mname_color = '#186958ff';
+                $mname_color = '#058d70ff';
             } else {
                 $mname_color = 'gray';
             }

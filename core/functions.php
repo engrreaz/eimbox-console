@@ -893,3 +893,127 @@ function global_send_sms($mobile, $message, $campaign = 'Regular', $type = '', $
 
     $conn->query($sqls);
 }
+
+
+
+function pass_validation(
+    $ct = 0,
+    $mt = 0,
+    $sub = 0,
+    $obj = 0,
+    $pra = 0,
+    $ca = 0,
+    $fm_sub = 0,
+    $fm_obj = 0,
+    $fm_pra = 0,
+    $fm = 0,
+    $alg = 0,
+    $min = 33,
+    $decimal = 0
+) {
+
+    // Full mark zero হলে student pass = false
+    if ($fm <= 0)
+        return false;
+
+    $total = ($ct + $mt + $sub + $obj + $pra + $ca);
+
+    // ------------ Percentage Calculation -----------
+    if ($decimal == 0) {
+        $rate = ceil(($total * 100) / $fm);
+    } else if ($decimal == 2) {
+        $rate = round(($total * 100) / $fm);
+    } else {
+        $rate = ($total * 100) / $fm;
+    }
+
+    // ------------------------
+    // Algorithm 0: Only total checking
+    // ------------------------
+    if ($alg == 0) {
+        return ($rate >= $min);
+    }
+
+    // ------------------------
+    // Algorithm 1:
+    // mandatory checking of sub/obj/pra individually
+    // ------------------------
+
+    // Avoid division by zero
+    if ($fm_sub <= 0)
+        $fm_sub = 1;
+    if ($fm_obj <= 0)
+        $fm_obj = 1;
+    if ($fm_pra <= 0)
+        $fm_pra = 1;
+
+    if ($decimal == 0) {
+        $sub_pass = ceil(($sub * 100) / $fm_sub);
+        $obj_pass = ceil(($obj * 100) / $fm_obj);
+        $pra_pass = ceil(($pra * 100) / $fm_pra);
+    } else if ($decimal == 2) {
+        $sub_pass = round(($sub * 100) / $fm_sub);
+        $obj_pass = round(($obj * 100) / $fm_obj);
+        $pra_pass = round(($pra * 100) / $fm_pra);
+    } else {
+        $sub_pass = ($sub * 100) / $fm_sub;
+        $obj_pass = ($obj * 100) / $fm_obj;
+        $pra_pass = ($pra * 100) / $fm_pra;
+    }
+
+    // একটাও fail হলে ব্যর্থ
+    if ($sub_pass < $min || $obj_pass < $min || $pra_pass < $min) {
+        return false;
+    }
+
+    // সব individual pass হলে → এখন total pass check
+    return ($rate >= $min);
+}
+
+function get_GP_GL($mark, $fullmark, $decimal = 0)
+{
+    global $conn, $sccode;
+    if ($decimal == 0) {
+        $mark = ceil(($mark) * 100 / $fullmark);
+    } else if ($decimal == 2) {
+        $mark = round(($mark) * 100 / $fullmark);
+    } else {
+        $mark = floatval($mark) * 100 / $fullmark;
+    }
+
+
+
+    // Query priority:
+    // 1) sccode = current school
+    // 2) sccode = 0 (default)
+    $q = "
+        SELECT * FROM gpa 
+        WHERE minvalues <= $mark 
+        AND maxvalues >= $mark 
+        AND (sccode = '$sccode' OR sccode = 0)
+        ORDER BY 
+            CASE WHEN sccode = '$sccode' THEN 1 ELSE 2 END ASC,
+            id ASC
+        LIMIT 1
+    ";
+
+    $res = mysqli_query($conn, $q);
+
+    if ($res && mysqli_num_rows($res) > 0) {
+        $row = mysqli_fetch_assoc($res);
+        return [
+            "gp" => $row['gp'],
+            "gl" => $row['gl'],
+            "remark" => $row['remark'],
+            "color" => $row['colorcode']
+        ];
+    }
+
+    // কোনো ম্যাচ না পেলে Default F
+    return [
+        "gp" => 0.00,
+        "gl" => "F",
+        "remark" => "Failed",
+        "color" => "000000"
+    ];
+}
