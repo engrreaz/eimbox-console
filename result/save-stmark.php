@@ -13,14 +13,14 @@ $class = $_POST['class'];
 $section = $_POST['section'];
 $subject = $_POST['subject'];
 
-$ct = $_POST['ct'];
-$mt = $_POST['mt'];
-$sub = $_POST['sub'];
-$obj = $_POST['obj'];
-$pra = $_POST['pra'];
-$ca = $_POST['ca'];
-$total = $_POST['total'];
-$alg = $_POST['alg'];
+$ct = $_POST['ct'] ?? 0;
+$mt = $_POST['mt'] ?? 0;
+$sub = $_POST['sub'] ?? 0;
+$obj = $_POST['obj'] ?? 0;
+$pra = $_POST['pra'] ?? 0;
+$ca = $_POST['ca'] ?? 0;
+$total = $_POST['total'] ?? 0;
+$alg = $_POST['alg'] ?? 0;
 
 $q_str = "SELECT * FROM subsetup 
           WHERE sccode='$sccode' 
@@ -79,7 +79,8 @@ $ins = "INSERT INTO stmark (slot, sccode, stid, sessionyear, exam, subject, clas
 // echo $ins;
 mysqli_query($conn, $ins);
 
-echo "$gp/$gl";
-echo $gp . '/' . $gl;
+echo "<span class='text-success fw-bold'>$gp | $gl</span>";
+echo '<i class="bi bi-check-circle-fill text-success fs-5 ps-3 "></i>';
+
 
 

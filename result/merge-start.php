@@ -1,4 +1,5 @@
 <?php
+ob_clean();
 session_start();
 require_once '../core/config.php';
 require_once '../core/db.php';
@@ -10,6 +11,7 @@ $exam = $_POST['exam'];
 $class = $_POST['class'];
 $section = $_POST['section'];
 $subject = $_POST['subject'];
+
 
 $where = "sccode='$sccode' AND slot='$slot' AND sessionyear='$session' ";
 
@@ -36,7 +38,9 @@ while ($r = mysqli_fetch_assoc($q)) {
 
 $_SESSION['merge_students'] = $students;
 
+ob_clean();
 echo json_encode([
     "total" => $total,
-    "cry" => ($q_str)
+    "cry" => $q_str
 ]);
+exit;

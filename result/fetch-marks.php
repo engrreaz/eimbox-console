@@ -75,15 +75,15 @@ $stid_csv = implode(",", $stid_list);
 // ---------------------------
 // 2. students টেবিল থেকে bulk student info আনবো
 // ---------------------------
-$q2 = "SELECT id, stnameeng, stnameben 
+$q2 = "SELECT stid, stnameeng, stnameben 
        FROM students 
-       WHERE id IN ($stid_csv)";
+       WHERE stid IN ($stid_csv)";
 
 $r2 = mysqli_query($conn, $q2);
 
 $students = [];
 while ($row = mysqli_fetch_assoc($r2)) {
-    $students[$row['id']] = $row;
+    $students[$row['stid']] = $row;
 }
 
 // var_dump($stid_csv);
@@ -137,7 +137,7 @@ echo '
 foreach ($stid_list as $stid) {
 
     $roll = $roll_list[$stid];
-    $name = isset($students[$stid]) ? $students[$stid]['stnameeng'] : "Unknown";
+    $name = isset($students[$stid]) ? $students[$stid]['stnameeng'] : $stid;
 
     $ct_dis = ($ct_max == 0) ? "disabled" : "";
     $mt_dis = ($mt_max == 0) ? "disabled" : "";

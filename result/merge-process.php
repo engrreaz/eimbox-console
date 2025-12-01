@@ -11,12 +11,34 @@ $class = $_POST['class'];
 $section = $_POST['section'];
 $subject = $_POST['subject'];
 
+if (isset($_POST['examitems']) && is_array($_POST['examitems'])) {
+    $selectedExams = $_POST['examitems']; // array হিসেবে পাওয়া যাবে
+}
+
+
+
+
 $index = intval($_POST['index']);
 $students = $_SESSION['merge_students'];
 $stid = $students[$index];
 
 // Build WHERE condition
 $where = "sccode='$sccode' AND slot='$slot' AND sessionyear='$session' AND stid='$stid'";
+
+$examCondition = "";
+if (isset($_POST['examitems']) && is_array($_POST['examitems']) && count($_POST['examitems']) > 0) {
+    // SQL injection থেকে বাঁচার জন্য mysqli_real_escape_string ব্যবহার
+    $escapedExams = array_map(function ($ex) use ($conn) {
+        return "'" . mysqli_real_escape_string($conn, $ex) . "'";
+    }, $_POST['examitems']);
+
+    $examList = implode(",", $escapedExams);
+    $examCondition = " AND exam IN ($examList)";
+} else {
+    // যদি কোনো exam নির্বাচন না করা হয়
+    $examCondition = " AND 0"; // কোন রেকর্ড আসবে না
+}
+
 
 if (!empty($class)) {
     $where .= " AND classname='$class'";
@@ -76,11 +98,41 @@ foreach ($sublist as $subject) {
             SUM(on100) AS on100,
             SUM(fullmark) AS fullmark
         FROM stmark 
-        WHERE $where AND subject='$subject' and exam !='GRAND'
+        WHERE $where AND subject='$subject'  $examCondition
     ");
 
     $m = mysqli_fetch_assoc($sumQ);
 
+
+    $checkQ = "
+    SELECT id 
+    FROM stmark 
+    WHERE slot='$slot' 
+      AND sessionyear='$session' 
+      AND sccode='$sccode' 
+      AND stid='$stid' 
+      AND classname='$class' 
+      AND sectionname='$section' 
+      AND subject='$subject' 
+      AND exam='GRAND'
+    LIMIT 1
+";
+
+
+
+
+    $resCheck = mysqli_query($conn, $checkQ);
+
+    if (mysqli_num_rows($resCheck) > 0) {
+        // আগের Grand রেকর্ড ডিলিট করো
+        $row = mysqli_fetch_assoc($resCheck);
+        $id = $row['id'];
+        mysqli_query($conn, "DELETE FROM stmark WHERE id='$id'");
+    }
+
+
+
+    
     // Insert grand result
     $insert = "
     INSERT INTO stmark (

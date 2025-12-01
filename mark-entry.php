@@ -350,11 +350,12 @@
             let subCode = $("#subject").val();
 
             if (subCode === "") {
-                alert("Please select subject.");
+                // alert("Please select subject.");
+                showToast('danger', 'Subject Missing. Please select a subject first.', 'Subject Not Define');
                 return;
             }
 
-            $("#get-marks").html('Loading...');
+            $("#get-marks").html('<div class="text-info fs-3 text-center p-5 fw-bold"><i class="bi bi-hourglass-top pe-3"></i>Loading....</div>');
             $.ajax({
                 url: "result/fetch-marks.php",
                 type: "POST",
@@ -375,6 +376,21 @@
                 }
             });
         }
+
+
+        var a = $("#slot").val();
+        var b = $("#session").val();
+        var c = $("#class").val();
+        var d = $("#section").val();
+        var e = $("#exam").val();
+
+        if (a == '' || a == null) showToast('danger', 'Missing Slot', 'Missing Value');
+        if (b == '' || b == null) showToast('danger', 'Missing Session', 'Missing Value');
+        if (c == '' || c == null) showToast('danger', 'Missing Class', 'Missing Value');
+        if (d == '' || d == null) showToast('danger', 'Missing Section', 'Missing Value');
+        if (e == '' || e == null) showToast('danger', 'Missing Exam', 'Missing Value');
+      
+
 
         // যদি mark-setup hidden থাকে → restore section + subject
         if ($("#mark-setup").is(":hidden")) {
@@ -440,7 +456,8 @@
 
 
         if (ct > ctmax || mt > mtmax || sub > submax || obj > objmax || pra > pramax || ca > camax) {
-            alert(ct + 'Invalid Marks' + ctmax);
+            // alert(ct + 'Invalid Marks' + ctmax);
+            showToast('danger', 'Invalid Marks. Please enter valid marks.', 'Marks Overflow');
             let input = $(this);
             setTimeout(function () {
                 input.focus();
@@ -467,6 +484,8 @@
 
         row.find(".total").val(total);
 
+        $("#gpgl_" + stid).html('<i class="bi bi-floppy  text-primary"></i> <span class="fs-tiny  text-primary">Saving...</span>');
+
         // AJAX Save
         $.ajax({
             url: "result/save-stmark.php",
@@ -484,7 +503,7 @@
             },
             success: function (response) {
                 // response = "4.50/A" এর মতো আসবে
-                $("#gpgl_" + stid).text(response);
+                $("#gpgl_" + stid).html(response);
             },
             error: function () {
                 alert("Unable to save marks!");
