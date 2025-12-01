@@ -108,6 +108,7 @@
             </div>
         </div>
     </div>
+    <div id="data">....</div>
 
 </div>
 
@@ -518,37 +519,60 @@
     });
 
     function mergeBatch(offset, slot, session, batchSize = 1) {
-        let ct = $("#ctmax_final").text();
-        let mt = $("#mtmax_final").text();
-        let sub = $("#submax_final").text();
-        let obj = $("#objmax_final").text();
-        let pra = $("#pramax_final").text();
-        let ca = $("#camax_final").text();
-        let total = $("#totalmax_final").text();
-        let alg = $("#alg_final").text();
-        let fourth = $("#fourth_final").text();
+     
         $.ajax({
             url: "result/merge-entire-batch.php",
             method: "POST",
-            data: { slot: slot, session: session, offset: offset, batchSize: batchSize, ct: ct, mt:mt, sub:sub, obj:obj, pra:pra, ca:ca, total:total, alg:alg, fourth:fourth },
+            data: { slot: slot, session: session, offset: offset, batchSize: batchSize},
             dataType: "json",
+
             success: function (res) {
+
+                // যদি res JSON string হয়ে আসে → parse
+                if (typeof res === "string") {
+                    try { res = JSON.parse(res); } catch (e) {
+                        console.error("Invalid JSON:", res);
+                        alert("Invalid server response!");
+                        return;
+                    }
+                }
+
                 if (res.done) {
-                    // update progress
-                    let percent = Math.min(100, Math.round(((offset + res.count) / res.total) * 100));
-                    let up = Math.round(res.total) + 1;
-                    updateProgress(percent, `Merged ${offset + res.count} of ${up} students`);
-                    showToast('success', `Merged ${offset + res.count} of ${up} students`, 'On progress...');
+
+                    // Progress calculation
+                    let merged = offset + res.count;
+                    let total = res.total;
+                    let percent = Math.min(100, Math.round((merged / total) * 100));
+
+                    // তোমার logic: +1
+                    let up = total + 1;
+
+                    updateProgress(percent, `Merged ${merged} of ${up} students`);
+
+                    showToast(
+                        'success',
+                        `Merged ${merged} of ${up} students<br>${res.data ? res.data : ""}`,
+                        'On progress...'
+                    );
+
+                    // Show SQL/log data
+                    let ddx = document.getElementById('data').innerHTML;
+                    document.getElementById('data').innerHTML =
+                        ddx + "<hr>" + (res.data ? res.data : "");
+
+                    // Continue next batch
                     if (res.nextOffset !== null) {
                         mergeBatch(res.nextOffset, slot, session, batchSize);
                     } else {
                         updateProgress(100, "All students merged successfully!");
                         alert("Merge completed for entire session.");
                     }
+
                 } else {
                     alert("Error during merging.");
                 }
             },
+
             error: function () {
                 alert("AJAX error during merging.");
             }

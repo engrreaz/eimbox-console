@@ -5,6 +5,7 @@ require_once '../core/db.php';
 require_once '../core/global_values.php';
 require_once '../core/functions.php';
 
+$data = '';
 set_time_limit(0); // বড় session handle করতে
 
 $slot = $_POST['slot'];
@@ -12,15 +13,7 @@ $session = $_POST['session'];
 $offset = intval($_POST['offset'] ?? 0);
 $batchSize = intval($_POST['batchSize'] ?? 1);
 
-$ctfinal = $_POST['ct'];
-$mtfinal = $_POST['mt'];
-$subfinal = $_POST['sub'];
-$objfinal = $_POST['obj'];
-$prafinal = $_POST['pra'];
-$cafinal = $_POST['ca'];
-$totalfinal = $_POST['total'];
-$algfinal = $_POST['alg'];
-$fourthfinal = $_POST['fourth'];
+
 
 $selectedExams = [];
 $examcount = 0;
@@ -65,10 +58,10 @@ function mergeStudent($stid, $class, $section, $slot, $session, $sccode, $usr, $
     $where = "sccode='$sccode' AND slot='$slot' AND sessionyear='$session' AND stid='$stid'";
     global $examCondition;
     global $examcount;
+    global $data;
 
     $subfinal = $objfinal = $prafinal = $cafinal = $totalfinal = $algfinal = 0;
     // Fetch subjects
-
 
     $sublist = [];
     $qsub = "SELECT * FROM subsetup WHERE sessionyear='$session' AND sccode='$sccode' AND classname='$class' AND sectionname='$section'";
@@ -79,7 +72,7 @@ function mergeStudent($stid, $class, $section, $slot, $session, $sccode, $usr, $
 
     foreach ($sublist as $subrow) {
 
-        $subject = $subrow['subject'] * $examcount;
+        $subject = $subrow['subject'];
         $subfinal = $subrow['subj'] * $examcount;
         $objfinal = $subrow['obj'] * $examcount;
         $prafinal = $subrow['pra'] * $examcount;
@@ -95,7 +88,7 @@ function mergeStudent($stid, $class, $section, $slot, $session, $sccode, $usr, $
         }
 
         // Sum marks
-        $sumQ = mysqli_query($conn, "
+        $sqlq = "
             SELECT 
                 SUM(ctest) AS ctest,
                 SUM(mtest) AS mtest,
@@ -111,9 +104,11 @@ function mergeStudent($stid, $class, $section, $slot, $session, $sccode, $usr, $
                 SUM(fullmark) AS fullmark
             FROM stmark 
             WHERE $where AND subject='$subject' $examCondition
-        ");
+        ";
+        $sumQ = mysqli_query($conn, $sqlq);
         $m = mysqli_fetch_assoc($sumQ);
 
+        $data .= $sqlq . '<br><br>';
 
         $p = pass_validation($m['ctest'], $m['mtest'], $m['subj'], $m['obj'], $m['pra'], $m['ca'], $subfinal, $objfinal, $prafinal, $totalfinal, $algfinal, 36, 2);
         // echo $p;
@@ -137,12 +132,13 @@ function mergeStudent($stid, $class, $section, $slot, $session, $sccode, $usr, $
             markobt, on100, examtype, entryby, gp, gl
         ) VALUES (
             '$slot','$session','$sccode','GRAND','$class','$section','$subject',
-            '$stid','{$m['fullmark']}',
+            '$stid','{$totalfinal}',
             '{$m['ctest']}','{$m['mtest']}','{$m['subj']}','{$m['obj']}','{$m['pra']}','{$m['ca']}',
             '{$m['sub_final']}','{$m['obj_final']}','{$m['pra_final']}',
             '{$m['markobt']}','{$m['on100']}','MG','$usr', '$gp', '$gl'
         )";
         mysqli_query($conn, $insert);
+        $data .= $insert;
     }
 
     // Mark as merged
@@ -162,5 +158,6 @@ echo json_encode([
     'done' => true,
     'count' => count($students),
     'total' => $total,
-    'nextOffset' => $nextOffset
+    'nextOffset' => $nextOffset,
+    'data' => $data
 ]);
