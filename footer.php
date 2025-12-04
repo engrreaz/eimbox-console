@@ -362,6 +362,13 @@ $release_colors = [
 
 
 <script>
+
+    function setCookie(name, value, days = 30) {
+    let d = new Date();
+    d.setTime(d.getTime() + (days*24*60*60*1000));
+    document.cookie = name + "=" + value + "; expires=" + d.toUTCString() + "; path=/";
+}
+
     setInterval(function () {
 
         // যেসব ক্লাসকে hide করতে চান

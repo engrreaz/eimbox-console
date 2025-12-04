@@ -2,7 +2,7 @@
 
 <div class="container-xxl flex-grow-1 container-p-y">
     <form id="mainForm" method="POST">
-        <div class="card">
+        <div class="card   ">
             <div class="card-body">
 
                 <div class="row">
@@ -64,7 +64,7 @@
 
                     <div class="col-md-2 mb-3">
                         <label>&nbsp;</label><br>
-                        <button type="submit" id="btnMerge" class="btn btn-warning text-dark btn-sm py-2 w-100">Merge
+                        <button type="submit" id="btnMerge" class="btn btn-warning text-dark btn-sm py-2 w-100" disabled>Merge
                             Grand</button>
                     </div>
 
@@ -108,7 +108,7 @@
             </div>
         </div>
     </div>
-    <div id="data">....</div>
+    <div id="data" hidden>....</div>
 
 </div>
 
@@ -461,6 +461,8 @@
 
             let slot = $("#slot").val();
             let session = $("#session").val();
+            let cls = $("#class").val();
+            let sec = $("#section").val();
 
             if (!slot || !session) {
                 alert("Please select Slot and Session first.");
@@ -473,7 +475,7 @@
             $.ajax({
                 url: "result/reset-merge.php",
                 method: "POST",
-                data: { slot: slot, session: session },
+                data: { slot: slot, session: session, cls:cls, sec:sec },
                 success: function (res) {
                     // Assume res = { success: true/false, message: "..." }
                     try { res = JSON.parse(res); } catch (e) { res = { success: false, message: "Invalid response" }; }
@@ -520,10 +522,13 @@
 
     function mergeBatch(offset, slot, session, batchSize = 1) {
      
+          let className = $("#class").val();
+            let sectionName = $("#section").val();
+            let subcode = $("#subject").val();
         $.ajax({
             url: "result/merge-entire-batch.php",
             method: "POST",
-            data: { slot: slot, session: session, offset: offset, batchSize: batchSize},
+            data: { slot: slot, session: session, offset: offset, batchSize: batchSize, classname:className, sectionname:sectionName, subcode:subcode},
             dataType: "json",
 
             success: function (res) {

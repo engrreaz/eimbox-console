@@ -13,7 +13,9 @@ $session = $_POST['session'];
 $offset = intval($_POST['offset'] ?? 0);
 $batchSize = intval($_POST['batchSize'] ?? 1);
 
-
+$cls = $_POST['classname'] ?? '';
+$sec = $_POST['sectionname'] ?? '';
+$subcode = $_POST['subcode'] ?? '';
 
 $selectedExams = [];
 $examcount = 0;
@@ -35,15 +37,28 @@ if (count($selectedExams) > 0) {
     $examCondition = " AND 0";
 }
 
-// Fetch total number of students for this session
-$q_total = "SELECT COUNT(*) AS cnt FROM sessioninfo 
-            WHERE sessionyear='$session' AND slot='$slot' AND sccode='$sccode' AND grand_merged=0";
+// Base WHERE conditions
+$where = "sessionyear='$session' AND slot='$slot' AND sccode='$sccode' AND grand_merged=0";
+
+// Add classname filter if provided
+if ($cls !== '') {
+    $where .= " AND classname='$cls'";
+}
+
+// Add section filter if provided
+if ($sec !== '') {
+    $where .= " AND sectionname='$sec'";
+}
+
+// Total students
+$q_total = "SELECT COUNT(*) AS cnt FROM sessioninfo WHERE $where";
 $res_total = mysqli_query($conn, $q_total);
 $total = mysqli_fetch_assoc($res_total)['cnt'];
 
 // Fetch batch of students
-$q = "SELECT stid, classname, sectionname FROM sessioninfo 
-      WHERE sessionyear='$session' AND slot='$slot' AND sccode='$sccode' AND grand_merged=0
+$q = "SELECT stid, classname, sectionname 
+      FROM sessioninfo 
+      WHERE $where 
       LIMIT $offset, $batchSize";
 $res = mysqli_query($conn, $q);
 
@@ -59,16 +74,29 @@ function mergeStudent($stid, $class, $section, $slot, $session, $sccode, $usr, $
     global $examCondition;
     global $examcount;
     global $data;
+    global $subcode;
 
     $subfinal = $objfinal = $prafinal = $cafinal = $totalfinal = $algfinal = 0;
     // Fetch subjects
 
     $sublist = [];
-    $qsub = "SELECT * FROM subsetup WHERE sessionyear='$session' AND sccode='$sccode' AND classname='$class' AND sectionname='$section'";
-    $ressub = mysqli_query($conn, $qsub);
-    while ($r = mysqli_fetch_assoc($ressub)) {
-        $sublist[] = $r;
+
+    if ($subcode !== '') {
+        $qsub = "SELECT * FROM subsetup WHERE sessionyear='$session' AND sccode='$sccode'
+             AND classname='$class' AND sectionname='$section' AND subject='$subcode'";
+        $ressub = mysqli_query($conn, $qsub);
+        while ($r = mysqli_fetch_assoc($ressub)) {
+            $sublist[] = $r;
+        }
+    } else {
+        $qsub = "SELECT * FROM subsetup WHERE sessionyear='$session' AND sccode='$sccode' AND classname='$class' AND sectionname='$section'";
+        $ressub = mysqli_query($conn, $qsub);
+        while ($r = mysqli_fetch_assoc($ressub)) {
+            $sublist[] = $r;
+        }
     }
+
+
 
     foreach ($sublist as $subrow) {
 

@@ -2,7 +2,7 @@
 
 <div class="container-xxl flex-grow-1 container-p-y">
 
-    <div class="card">
+    <div class="card card-border-shadow-secondary ">
         <div class="card-body">
 
             <div class="row">
@@ -389,7 +389,7 @@
         if (c == '' || c == null) showToast('danger', 'Missing Class', 'Missing Value');
         if (d == '' || d == null) showToast('danger', 'Missing Section', 'Missing Value');
         if (e == '' || e == null) showToast('danger', 'Missing Exam', 'Missing Value');
-      
+
 
 
         // যদি mark-setup hidden থাকে → restore section + subject
@@ -432,7 +432,10 @@
         }
     });
 
+    let focusLocked = false;
+
     $(document).on("blur", ".mark", function () {
+        if (focusLocked) return; // prevent infinite loop
 
         let stid = $(this).data("stid");
 
@@ -457,11 +460,15 @@
 
         if (ct > ctmax || mt > mtmax || sub > submax || obj > objmax || pra > pramax || ca > camax) {
             // alert(ct + 'Invalid Marks' + ctmax);
+
+          
             showToast('danger', 'Invalid Marks. Please enter valid marks.', 'Marks Overflow');
             let input = $(this);
+            focusLocked = true;
             setTimeout(function () {
                 input.focus();
-            }, 0);
+                focusLocked = false;
+            }, 10);
             return;
         }
 

@@ -14,5 +14,6 @@ $data = [];
 while ($r = mysqli_fetch_assoc($q)) {
     $data[] = ["value" => $r['examtitle'], "label" => $r['examtitle']];
 }
+ $data[] = ["value" => 'Grand', "label" => 'Grand'];
 
 echo json_encode($data);
