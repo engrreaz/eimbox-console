@@ -66,11 +66,13 @@
                     <button id="btnView" class="btn btn-primary btn-sm py-2 w-100">View</button>
                 </div>
 
+
                 <div class="col-md-3 mb-3">
-                    <label>&nbsp;</label><br>
-                    <button type="submit" id="btnMerge" class="btn btn-success btn-sm py-2 w-100">Merge
-                        Grand</button>
+                    
+                    <input type="checkbox" style="transform: scale(1.5);" class="form-check mt-2 " id="saveMode" /> Save on Every Student (Fill All Inputs)
                 </div>
+
+
 
             </div>
 
@@ -103,67 +105,7 @@
 
 
 
-<script>
-    $(document).ready(function () {
 
-        $("#btnMerge").click(function (e) {
-            e.preventDefault(); // form submit stop
-
-            let formData = $("#mainForm").serialize();
-
-            // Show progress UI
-            $("#progressArea").show();
-            updateProgress(0, "Starting merge...");
-
-            $.ajax({
-                url: "result/merge-start.php",
-                method: "POST",
-                data: formData,
-                dataType: "json",
-                success: function (res) {
-                    // $("#progressText").html(res.total);
-
-                    if (res.total == 0) {
-                        updateProgress(0, "No students found. " + res.cry);
-                        return;
-                    }
-
-                    // Start student processing loop
-                    processStudentRecursive(0, res.total, formData);
-                }
-            });
-        });
-
-        function processStudentRecursive(index, total, formData) {
-
-            $.ajax({
-                url: "result/merge-process.php",
-                method: "POST",
-                data: formData + "&index=" + index,
-                dataType: "json",
-                success: function (res) {
-
-                    let percent = Math.round(((index + 1) / total) * 100);
-
-                    updateProgress(percent, "Processing student " + (index + 1) + " of " + total);
-
-                    // Continue loop
-                    if (index + 1 < total) {
-                        processStudentRecursive(index + 1, total, formData);
-                    } else {
-                        updateProgress(100, "Merge completed successfully!");
-                    }
-                }
-            });
-        }
-
-        function updateProgress(percent, text) {
-            $("#mergeProgress").css("width", percent + "%").html(percent + "%");
-            $("#progressText").html(text);
-        }
-
-    });
-</script>
 
 <!-- *************************************************************************************************************** -->
 <!-- UNIVERSAL SELECT LOADER -->
@@ -435,13 +377,48 @@
     let focusLocked = false;
 
     $(document).on("blur", ".mark", function () {
-        if (focusLocked) return; // prevent infinite loop
+
+        // style reset
+        $(this).css({
+            "background-color": "",
+            "color": "",
+            "font-size": "",
+            "font-weight": ""
+        });
+
+        if (focusLocked) return;
 
         let stid = $(this).data("stid");
-
         let row = $(this).closest("tr");
 
-        // Enabled inputs collect
+        let saveMode = $("#saveMode").prop("checked"); // NEW
+
+        // Enabled inputs
+        let inputs = row.find(".mark:enabled");
+        let filled = true;
+
+        inputs.each(function () {
+            if ($(this).val() === "") filled = false;
+        });
+
+        // ১) saveMode OFF → ইনপুট ব্লার হলেই সেভ করুন
+        if (!saveMode) {
+            if (!validateMarks(row)) return;
+            saveMarks(stid, row);
+            return;
+        }
+
+        // ২) saveMode ON → যদি সব enabled inputs পূর্ণ হয়, এবং এটা "শেষ blur", তখন save
+        if (filled) {
+            // এই ব্লার-টাই কি স্টুডেন্টের শেষ enabled ইনপুট?
+            // মানে: সব input পূর্ণ হয়েছে → true
+            if (!validateMarks(row)) return;
+            saveMarks(stid, row);
+        }
+
+    });
+
+    function validateMarks(row) {
         let ct = row.find(".ct:enabled").val();
         let mt = row.find(".mt:enabled").val();
         let sub = row.find(".sub:enabled").val();
@@ -449,77 +426,126 @@
         let pra = row.find(".pra:enabled").val();
         let ca = row.find(".ca:enabled").val();
 
-        let ctmax = parseFloat(document.getElementById('ctmax')?.innerText) || 0;
-        let mtmax = parseFloat(document.getElementById('mtmax')?.innerText) || 0;
-        let submax = parseFloat(document.getElementById('submax')?.innerText) || 0;
-        let objmax = parseFloat(document.getElementById('objmax')?.innerText) || 0;
-        let pramax = parseFloat(document.getElementById('pramax')?.innerText) || 0;
-        let camax = parseFloat(document.getElementById('camax')?.innerText) || 0;
-        let alg = parseFloat(document.getElementById('alg')?.innerText) || 0;
-
+        let ctmax = parseFloat($('#ctmax').text()) || 0;
+        let mtmax = parseFloat($('#mtmax').text()) || 0;
+        let submax = parseFloat($('#submax').text()) || 0;
+        let objmax = parseFloat($('#objmax').text()) || 0;
+        let pramax = parseFloat($('#pramax').text()) || 0;
+        let camax = parseFloat($('#camax').text()) || 0;
 
         if (ct > ctmax || mt > mtmax || sub > submax || obj > objmax || pra > pramax || ca > camax) {
-            // alert(ct + 'Invalid Marks' + ctmax);
-
-          
             showToast('danger', 'Invalid Marks. Please enter valid marks.', 'Marks Overflow');
-            let input = $(this);
+            let input = row.find(".mark:focus");
             focusLocked = true;
-            setTimeout(function () {
-                input.focus();
-                focusLocked = false;
-            }, 10);
-            return;
+            setTimeout(() => { input.focus(); focusLocked = false; }, 100);
+            return false;
         }
 
+        return true;
+    }
 
-        // যদি কোনো enabled খাত ফাঁকা থাকে → return
-        let allFilled = true;
-        row.find(".mark:enabled").each(function () {
-            if ($(this).val() === "") allFilled = false;
-        });
-        if (!allFilled) return;
 
-        // মোট নম্বর হিসাব
-        let total =
-            (parseFloat(ct || 0) +
-                parseFloat(mt || 0) +
-                parseFloat(sub || 0) +
-                parseFloat(obj || 0) +
-                parseFloat(pra || 0) +
-                parseFloat(ca || 0));
+    function saveMarks(stid, row) {
 
-        row.find(".total").val(total);
+        let ct = row.find(".ct:enabled").val();
+        let mt = row.find(".mt:enabled").val();
+        let sub = row.find(".sub:enabled").val();
+        let obj = row.find(".obj:enabled").val();
+        let pra = row.find(".pra:enabled").val();
+        let ca = row.find(".ca:enabled").val();
+        let alg = parseFloat($("#alg").text()) || 0;
 
-        $("#gpgl_" + stid).html('<i class="bi bi-floppy  text-primary"></i> <span class="fs-tiny  text-primary">Saving...</span>');
+        let total = (parseFloat(ct || 0) + parseFloat(mt || 0) + parseFloat(sub || 0) +
+            parseFloat(obj || 0) + parseFloat(pra || 0) + parseFloat(ca || 0));
 
-        // AJAX Save
-        $.ajax({
-            url: "result/save-stmark.php",
-            type: "POST",
-            data: {
-                stid: stid,
-                slot: $("#slot").val(),
-                session: $("#session").val(),
-                class: $("#class").val(),
-                section: $("#section").val(),
-                exam: $("#exam").val(),
-                subject: $("#subject").val(),
-                ct: ct, mt: mt, sub: sub, obj: obj, pra: pra, ca: ca, alg: alg,
-                total: total
-            },
-            success: function (response) {
-                // response = "4.50/A" এর মতো আসবে
-                $("#gpgl_" + stid).html(response);
-            },
-            error: function () {
-                alert("Unable to save marks!");
-            }
-        });
+        if (total > 0) {
 
+            row.find(".total").val(total);
+
+
+
+            $("#gpgl_" + stid).html('<i class="bi bi-floppy text-primary"></i> <span class="fs-tiny text-primary">Saving...</span>');
+
+            $.ajax({
+                url: "result/save-stmark.php",
+                type: "POST",
+                data: {
+                    stid: stid,
+                    slot: $("#slot").val(),
+                    session: $("#session").val(),
+                    class: $("#class").val(),
+                    section: $("#section").val(),
+                    exam: $("#exam").val(),
+                    subject: $("#subject").val(),
+                    ct: ct, mt: mt, sub: sub, obj: obj, pra: pra, ca: ca, alg: alg,
+                    total: total
+                },
+                success: function (response) {
+                    $("#gpgl_" + stid).html(response);
+                },
+                error: function () {
+                    alert("Unable to save marks!");
+                }
+            });
+        }
+    }
+
+
+    $("#saveMode").on("change", function () {
+        let val = $(this).prop("checked") ? "1" : "0";
+        localStorage.setItem("saveMode", val);
+    });
+
+    $(document).ready(function () {
+        let saved = localStorage.getItem("saveMode");
+
+        if (saved === "1") {
+            $("#saveMode").prop("checked", true);
+        } else {
+            $("#saveMode").prop("checked", false);
+        }
     });
 
 </script>
+
+<script>
+    $(document).on("keydown", ".mark", function (e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+
+            let inputs = $(".mark").filter(function () {
+                return !$(this).prop("disabled"); // শুধু enabled input
+            });
+
+            let index = inputs.index(this);
+
+            // Next enabled input exists?
+            if (index !== -1 && index < inputs.length - 1) {
+                inputs.eq(index + 1).focus();
+            }
+        }
+    });
+
+    $(document).on("focus", ".mark", function () {
+
+        // টেক্সট select
+        let input = this;
+        setTimeout(function () {
+            input.select();
+        }, 10);
+
+        // CSS highlight
+        $(this).css({
+            "background-color": "#0d6efd",
+            "color": "#fff",
+            "font-size": "20px",
+            "font-weight": "bold"
+        });
+    });
+
+
+</script>
+
 
 </body>
 

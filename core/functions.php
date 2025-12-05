@@ -895,7 +895,6 @@ function global_send_sms($mobile, $message, $campaign = 'Regular', $type = '', $
 }
 
 
-
 function pass_validation(
     $ct = 0,
     $mt = 0,
@@ -912,63 +911,64 @@ function pass_validation(
     $decimal = 0
 ) {
 
-    // Full mark zero হলে student pass = false
-    if ($fm <= 0)
+    // Full mark zero হলে অনিয়মিত (Fail)
+    if ($fm <= 0) {
+
         return false;
-
-    $total = ($ct + $mt + $sub + $obj + $pra + $ca);
-
-    // ------------ Percentage Calculation -----------
-    if ($decimal == 0) {
-        $rate = ceil(($total * 100) / $fm);
-    } else if ($decimal == 2) {
-        $rate = round(($total * 100) / $fm);
-    } else {
-        $rate = ($total * 100) / $fm;
     }
 
-    // ------------------------
-    // Algorithm 0: Only total checking
-    // ------------------------
+    // helper function: percentage calculation
+    $calc = function ($got, $full, $decimal) {
+        if ($full <= 0)
+            return 0;
+
+        $p = ((float)$got * 100) / $full;
+
+        if ($decimal == 0)
+            return ceil($p);
+        if ($decimal == 2)
+            return round($p);
+        return $p; // default float
+    };
+
+    // Total Marks
+    $total = ((float)$ct + (float)$mt + (float)$sub + (float)$obj + (float)$pra + (float)$ca);
+    $rate = $calc($total, $fm, $decimal);
+
+    // ---------------- Algorithm 0 ----------------
+    // Only total percentage check
     if ($alg == 0) {
         return ($rate >= $min);
     }
 
-    // ------------------------
-    // Algorithm 1:
-    // mandatory checking of sub/obj/pra individually
-    // ------------------------
+    // ---------------- Algorithm 1 ----------------
+    // Individual (sub/obj/pra) mandatory pass + total pass
 
-    // Avoid division by zero
-    if ($fm_sub <= 0)
-        $fm_sub = 1;
-    if ($fm_obj <= 0)
-        $fm_obj = 1;
-    if ($fm_pra <= 0)
-        $fm_pra = 1;
+    $sub_pass = $calc($sub, $fm_sub, $decimal);
+    $obj_pass = $calc($obj, $fm_obj, $decimal);
+    $pra_pass = $calc($pra, $fm_pra, $decimal);
 
-    if ($decimal == 0) {
-        $sub_pass = ceil(($sub * 100) / $fm_sub);
-        $obj_pass = ceil(($obj * 100) / $fm_obj);
-        $pra_pass = ceil(($pra * 100) / $fm_pra);
-    } else if ($decimal == 2) {
-        $sub_pass = round(($sub * 100) / $fm_sub);
-        $obj_pass = round(($obj * 100) / $fm_obj);
-        $pra_pass = round(($pra * 100) / $fm_pra);
-    } else {
-        $sub_pass = ($sub * 100) / $fm_sub;
-        $obj_pass = ($obj * 100) / $fm_obj;
-        $pra_pass = ($pra * 100) / $fm_pra;
-    }
+    // echo '//' . $fm_sub . '/' . $fm_obj . '/' . $fm_pra . '/' . $decimal . '//';
+    // echo '//' . $sub . '/' . $obj . '/' . $pra .  '//';
+    // echo '//' . $sub_pass . '/' . $obj_pass . '/' . $pra_pass . '/' . $min . '//';
+    // One fail = total fail
 
-    // একটাও fail হলে ব্যর্থ
-    if ($sub_pass < $min || $obj_pass < $min || $pra_pass < $min) {
+
+
+
+    if (
+        ($sub_pass != 0 && $sub_pass < $min) ||
+        ($obj_pass != 0 && $obj_pass < $min) ||
+        ($pra_pass != 0 && $pra_pass < $min)
+    ) {
+
         return false;
     }
 
-    // সব individual pass হলে → এখন total pass check
+    // Check total percentage after individual pass
     return ($rate >= $min);
 }
+
 
 function get_GP_GL($mark, $fullmark, $decimal = 0)
 {

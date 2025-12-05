@@ -1,4 +1,22 @@
 <?php
+
+if (session_status() !== PHP_SESSION_ACTIVE) {
+
+    $cookieParams = session_get_cookie_params();
+
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => $cookieParams['path'],
+        'domain' => $cookieParams['domain'],
+        'secure' => true,
+        'httponly' => true,
+        'samesite' => 'Strict'
+    ]);
+
+    session_start();
+}
+
+
 require_once 'config.php';
 require_once 'db.php';
 
@@ -10,20 +28,20 @@ require_once 'core-val.php';
 
 
 
-$cookieParams = session_get_cookie_params();
-session_set_cookie_params([
-    'lifetime' => 0,
-    'path' => $cookieParams['path'],
-    'domain' => $cookieParams['domain'],
-    'secure' => true,
-    'httponly' => true,
-    'samesite' => 'Strict'
-]);
+// $cookieParams = session_get_cookie_params();
+// session_set_cookie_params([
+//     'lifetime' => 0,
+//     'path' => $cookieParams['path'],
+//     'domain' => $cookieParams['domain'],
+//     'secure' => true,
+//     'httponly' => true,
+//     'samesite' => 'Strict'
+// ]);
 
 require_once 'functions.php';
 
-if (session_status() === PHP_SESSION_NONE)
-    session_start();
+// if (session_status() === PHP_SESSION_NONE)
+//     session_start();
 
 
 if (isset($_SESSION['locked']) && $_SESSION['locked'] === true) {

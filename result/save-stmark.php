@@ -22,6 +22,25 @@ $ca = $_POST['ca'] ?? 0;
 $total = $_POST['total'] ?? 0;
 $alg = $_POST['alg'] ?? 0;
 
+
+$sql = "SELECT maxvalues FROM gpa 
+        WHERE (sccode='$sccode' OR sccode = '0') 
+        AND (slot IS NULL OR slot = '$slot')
+        AND gp=0
+        ORDER BY  sccode DESC, slot DESC LIMIT 1";
+
+$res = mysqli_query($conn, $sql);
+$row = mysqli_fetch_assoc($res);
+$min = $row['maxvalues'] ?? null;
+$min = floor($min) + 1;
+
+
+$sqly = "SELECT decimal_mark FROM slots   WHERE sccode='$sccode'    AND slotname = '$slot'  LIMIT 1";
+$resy = mysqli_query($conn, $sqly);
+$rowy = mysqli_fetch_assoc($resy);
+$decimal = $rowy['decimal_mark'] ?? 0;
+
+
 $q_str = "SELECT * FROM subsetup 
           WHERE sccode='$sccode' 
           AND sessionyear='$session' 
@@ -48,17 +67,19 @@ if (mysqli_num_rows($q) > 0) {
 }
 
 
-
+// echo $sub_full . '-' . $obj_full . '-' . $pra_full . '-' . $full_full . '***' ;
 // delete old if exists
 $chk = "DELETE FROM stmark WHERE sccode='$sccode' AND stid='$stid' AND sessionyear='$session' 
         AND exam='$exam' AND subject='$subject' AND classname='$class' AND sectionname='$section'";
 mysqli_query($conn, $chk);
 
 
-$p = pass_validation($ct, $mt, $sub, $obj, $pra, $ca, $sub_full, $obj_full, $pra_full, $full_full, $alg);
+$p = pass_validation($ct, $mt, $sub, $obj, $pra, $ca, $sub_full, $obj_full, $pra_full, $full_full, $alg, $min, $decimal);
+
 
 // echo $p;
 if ($p === false || $p == 0) {
+
     $gp = 0;
     $gl = 'F';
 } else {
@@ -67,7 +88,6 @@ if ($p === false || $p == 0) {
     $gp = $gpgl['gp'];
     $gl = $gpgl['gl'];
 }
-
 
 
 // insert new row
@@ -81,6 +101,3 @@ mysqli_query($conn, $ins);
 
 echo "<span class='text-success fw-bold'>$gp | $gl</span>";
 echo '<i class="bi bi-check-circle-fill text-success fs-5 ps-3 "></i>';
-
-
-

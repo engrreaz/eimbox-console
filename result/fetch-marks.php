@@ -3,6 +3,7 @@ session_start();
 require_once '../core/config.php';
 require_once '../core/db.php';
 require_once '../core/global_values.php';
+require_once '../core/core-val.php';
 
 $slot = $_POST['slot'];
 $session = $_POST['session'];
@@ -117,7 +118,7 @@ echo '
     <thead>
         <tr>
         <th style="width:10px;"></th>
-            <th>Roll</th>
+            <th colspan="2">Roll</th>
             <th>Name</th>
             <th>C Test</th>
             <th>m Test</th>
@@ -150,11 +151,19 @@ foreach ($stid_list as $stid) {
     // যদি mark পাওয়া যায়
     $mq = isset($marks[$stid]) ? $marks[$stid] : null;
 
+    $sobi = dirname(dirname(__DIR__)) . '/students/' . $stid . '.jpg';
+    if (!file_exists($sobi)) {
+        $sobi = BASE_PATH . 'students/noimg.jpg';
+    } else {
+        $sobi = BASE_PATH . 'students/' . $stid . '.jpg';
+    }
+
     echo '<tr>';
 
     echo '<td class="p-1"></td>';
 
 
+    echo '<td class="p-1"><img src="' . $sobi . '" style="height:25px; border-radius: 2px;"/></td>';
     echo '<td class="p-1">' . $roll . '</td>';
     echo '<td class="p-1">' . $name . '</td>';
 
