@@ -7,7 +7,7 @@
 
                 <div class="row">
 
-                    <!-- Slot -->
+         
                     <div class="col-md-2 mb-3">
                         <label>Slot</label>
                         <select id="slot" name="slot" class="form-select form-select-sm">
@@ -21,7 +21,7 @@
                         </select>
                     </div>
 
-                    <!-- Session -->
+     
                     <div class="col-md-2 mb-3">
                         <label>Session</label>
                         <select id="session" name="session" class="form-select form-select-sm">
@@ -29,7 +29,7 @@
                         </select>
                     </div>
 
-                    <!-- Exam -->
+      
                     <div class="col-md-3 mb-3" hidden>
                         <label>Exam</label>
                         <select id="exam" name="exam" class="form-select form-select-sm">
@@ -37,7 +37,7 @@
                         </select>
                     </div>
 
-                    <!-- Class -->
+
                     <div class="col-md-2 mb-3">
                         <label>Class</label>
                         <select id="class" name="class" class="form-select form-select-sm">
@@ -53,7 +53,7 @@
                         </select>
                     </div>
 
-                    <!-- Subject -->
+
                     <div class="col-md-2 mb-3">
                         <label>Subject</label>
                         <select id="subject" name="subject" class="form-select form-select-sm">
@@ -124,10 +124,9 @@
 
     $(document).ready(function () {
         $("#btnMerge").click(function (e) {
-            e.preventDefault(); // form submit stop
+            e.preventDefault(); 
 
             let formData = $("#mainForm").serialize();
-            // h5 এর মানগুলো পড়া
             let ct = $("#ctmax_final").text();
             let mt = $("#mtmax_final").text();
             let sub = $("#submax_final").text();
@@ -138,7 +137,6 @@
             let alg = $("#alg_final").text();
             let fourth = $("#fourth_final").text();
 
-            // formData তে যুক্ত করা
             formData += `&ctmax_final=${encodeURIComponent(ct)}`;
             formData += `&mtmax_final=${encodeURIComponent(mt)}`;
             formData += `&submax_final=${encodeURIComponent(sub)}`;
@@ -149,7 +147,7 @@
             formData += `&alg_final=${encodeURIComponent(alg)}`;
             formData += `&fourth_final=${encodeURIComponent(fourth)}`;
             // alert(formData);
-            // Show progress UI
+
             $("#progressArea").show();
             updateProgress(0, "Starting merge..." + formData);
 
@@ -167,7 +165,6 @@
                         return;
                     }
 
-                    // Start student processing loop
                     processStudentRecursive(0, res.total, formData);
                 }
             });
@@ -186,7 +183,7 @@
 
                     updateProgress(percent, "Processing student " + (index + 1) + " of " + total);
 
-                    // Continue loop
+          
                     if (index + 1 < total) {
                         processStudentRecursive(index + 1, total, formData);
                     } else {
@@ -207,7 +204,6 @@
 <script>
     const currentPage = "<?php echo basename($_SERVER['PHP_SELF'], ".php"); ?>";
 
-    // UNIVERSAL SELECT LOADER
     function loadOptions(url, target, placeholder = "Select", callback = null) {
         $("#" + target).html(`<option value="">Loading...</option>`);
 
@@ -223,19 +219,18 @@
                     });
                 }
 
-                // Restore saved value
+
                 let saved = localStorage.getItem(currentPage + "_" + target);
                 if (saved !== null && saved !== "") {
                     $("#" + target).val(saved);
                 }
 
-                // callback after load
+
                 if (typeof callback === "function") callback();
             }
         });
     }
 
-    // UNIVERSAL SAVE/LOAD
     function saveValue(id) {
         let key = currentPage + "_" + id;
         let val = $("#" + id).val();
@@ -247,15 +242,14 @@
         return localStorage.getItem(key);
     }
 
-    // MAIN CHAIN
     $(document).ready(function () {
 
-        // Auto-save
+
         $("#slot, #session, #exam, #class, #section, #subject").on("change click", function () {
             saveValue($(this).attr("id"));
         });
 
-        // Slot → Session
+
         $(document).on("change click", "#slot", function () {
             let slot = $(this).val();
             if (!slot) return;
@@ -268,7 +262,6 @@
             );
         });
 
-        // Session → Exam + Class
         $(document).on("change click", "#session", function () {
             let slot = $("#slot").val();
             let session = $(this).val();
@@ -289,7 +282,6 @@
             );
         });
 
-        // Class → Section
         $(document).on("change click", "#class", function () {
             let slot = $("#slot").val();
             let session = $("#session").val();
@@ -304,7 +296,6 @@
             );
         });
 
-        // Section → Subject
         $(document).on("change click", "#section", function () {
             let slot = $("#slot").val();
             let session = $("#session").val();
@@ -317,7 +308,6 @@
                 "subject",
                 "Select Subject",
                 function () {
-                    // Small delay to ensure DOM is updated
                     setTimeout(function () {
                         $("#subject").trigger("change");
                     }, 200);
@@ -325,7 +315,7 @@
             );
         });
 
-        // Subject → Fetch Marks Setup
+
         $(document).on("change click", "#subject", function () {
             let slot = $("#slot").val();
             let session = $("#session").val();
@@ -354,7 +344,6 @@
             });
         });
 
-        // Restore previous selection
         let savedSlot = loadValue("slot");
         if (savedSlot) $("#slot").val(savedSlot).trigger("change");
 
@@ -374,7 +363,6 @@
 
 <script>
 
-    // Cookie সেট করার ফাংশন  
     function setCookie(name, value, days = 30) {
         let expires = "";
         if (days) {
@@ -385,7 +373,6 @@
         document.cookie = name + "=" + value + expires + "; path=/";
     }
 
-    // Cookie পড়ার ফাংশন
     function getCookie(name) {
         let cname = name + "=";
         let ca = document.cookie.split(';');
@@ -397,9 +384,6 @@
     }
 
 
-    // -----------------------------
-    //  Checkbox Selection Handler
-    // -----------------------------
     $(document).on("change", ".examItem", function () {
 
         let selected = [];
@@ -407,25 +391,16 @@
             selected.push($(this).val());
         });
 
-        // Cookie save
         setCookie("examitems", selected.join(","), 30);
-
-        // Update final area
         updateFinalMarks();
 
     });
 
 
-    // -----------------------------------------
-    //  Final Calculation Function
-    // -----------------------------------------
     function updateFinalMarks() {
-
-        // কতগুলো exam select হয়েছে
         let count = $(".examItem:checked").length;
         if (count == 0) count = 0;
 
-        // উপরের ব্লক থেকে মান পড়া
         let ct = parseFloat($("#ctmax").text()) || 0;
         let mt = parseFloat($("#mtmax").text()) || 0;
         let sub = parseFloat($("#submax").text()) || 0;
@@ -434,7 +409,6 @@
         let ca = parseFloat($("#camax").text()) || 0;
         let total = parseFloat($("#totalmax").text()) || 0;
 
-        // গুণ করে নিচের ব্লকে বসানো
         $("#ctmax_final").text(ct * count);
         $("#mtmax_final").text(mt * count);
         $("#submax_final").text(sub * count);
@@ -443,11 +417,9 @@
         $("#camax_final").text(ca * count);
         $("#totalmax_final").text(total * count);
 
-        // অন্যান্য ফিল্ড যদি দরকার হয় → নিচে বসাতে পারো
     }
 
     $(document).ready(function () {
-        // পেজ লোড হলে পুরোটাই আপডেট হবে
         updateFinalMarks();
     });
 
@@ -471,18 +443,16 @@
 
             if (!confirm("Do you want to reset all merged marks for this session?")) return;
 
-            // AJAX call to reset
             $.ajax({
                 url: "result/reset-merge.php",
                 method: "POST",
                 data: { slot: slot, session: session, cls:cls, sec:sec },
                 success: function (res) {
-                    // Assume res = { success: true/false, message: "..." }
                     try { res = JSON.parse(res); } catch (e) { res = { success: false, message: "Invalid response" }; }
 
                     if (res.success) {
                         alert("Reset completed. Starting merge again...");
-                        // Trigger mergeEntire click
+        
                         $("#mergeEntire").click();
                     } else {
                         alert("Reset failed: " + res.message);
@@ -499,8 +469,7 @@
 </script>
 
 <script>
-    // Merge Entire Session
-    // Batch-wise Merge Entire
+
     $("#mergeEntire").click(function (e) {
         e.preventDefault();
         if (!confirm("Do you want to merge all students in this session?")) return;
@@ -515,8 +484,6 @@
 
         $("#progressArea").show();
         updateProgress(0, "Starting merge of entire session...");
-
-        // Start batch processing
         mergeBatch(0, slot, session);
     });
 
@@ -533,7 +500,6 @@
 
             success: function (res) {
 
-                // যদি res JSON string হয়ে আসে → parse
                 if (typeof res === "string") {
                     try { res = JSON.parse(res); } catch (e) {
                         console.error("Invalid JSON:", res);
@@ -544,12 +510,10 @@
 
                 if (res.done) {
 
-                    // Progress calculation
                     let merged = offset + res.count;
                     let total = res.total;
                     let percent = Math.min(100, Math.round((merged / total) * 100));
 
-                    // তোমার logic: +1
                     let up = total + 1;
 
                     updateProgress(percent, `Merged ${merged} of ${up} students`);
@@ -560,12 +524,11 @@
                         'On progress...'
                     );
 
-                    // Show SQL/log data
                     let ddx = document.getElementById('data').innerHTML;
                     document.getElementById('data').innerHTML =
                         ddx + "<hr>" + (res.data ? res.data : "");
 
-                    // Continue next batch
+
                     if (res.nextOffset !== null) {
                         mergeBatch(res.nextOffset, slot, session, batchSize);
                     } else {
