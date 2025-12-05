@@ -5,6 +5,7 @@ require_once '../core/db.php';
 require_once '../core/global_values.php';
 
 
+
 $id = $_POST['id'];
 $mode = $_POST['mode'];
 $slot = $_POST['slot'];
@@ -14,8 +15,11 @@ $max = $_POST['maxv'];
 $gp = $_POST['gp'];
 $gl = $_POST['gl'];
 $remark = $_POST['remark'];
-$color = $_POST['color'];
+// $color = toHexColor($_POST['color']);
+$color = str_replace('#', '', $_POST['color']);
+
 $base_sccode = $_POST['base_sccode'];
+
 if ($base_sccode == 0) {
     $mode = 'add';
 }
@@ -25,17 +29,12 @@ if ($mode == "add") {
             VALUES('$sccode','$slot','$min','$max','$gp','$gl','$remark','$color')";
     mysqli_query($conn, $sql);
 } else if ($mode == "edit") {
-    if ($base_sccode == 0) {
-        // create new
-        $sql = "INSERT INTO gpa(sccode,slot,minvalues,maxvalues,gp,gl,remark,colorcode)
-                VALUES('$sccode','$slot','$min','$max','$gp','$gl','$remark','$color')";
-    } else {
-        // normal update
-        $sql = "UPDATE gpa SET 
+    // normal update
+    $sql = "UPDATE gpa SET 
                 minvalues='$min', maxvalues='$max', gp='$gp', gl='$gl',
                 remark='$remark', colorcode='$color'
                 WHERE id='$id'";
-    }
+
     mysqli_query($conn, $sql);
 }
 

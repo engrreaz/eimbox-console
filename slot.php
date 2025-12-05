@@ -17,7 +17,8 @@ $slotCount = mysqli_num_rows($slotQ);
         <div class="alert alert-danger">No Slot/Unit Found</div>
     <?php } ?>
 
-    <table class="table table-bordered table-sm">
+    <div class="card">
+            <table class="table table-bordered table-sm">
         <thead class="table-dark">
             <tr>
                 <th>#</th>
@@ -37,14 +38,16 @@ $slotCount = mysqli_num_rows($slotQ);
                     <td><?= $row['slotname'] ?></td>
                     <td><?= $row['merit'] == 1 ? 'GPA' : 'Total' ?></td>
                     <td><?= $row['parents'] ?></td>
-                    <td>
-                        <button class="btn btn-sm btn-info" onclick='openEdit(<?= json_encode($row) ?>)'>Edit</button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteSlot(<?= $row['id'] ?>)">Del</button>
+                    <td class="d-flex ">
+                        <button class="btn btn-sm btn-info me-2" onclick='openEdit(<?= json_encode($row) ?>)'><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteSlot(<?= $row['id'] ?>)"><i class="bi bi-trash"></i></button>
                     </td>
                 </tr>
             <?php } ?>
         </tbody>
     </table>
+    </div>
+
 
 </div>
 
@@ -104,6 +107,8 @@ $slotCount = mysqli_num_rows($slotQ);
     </div>
 </div>
 
+<?php include 'footer.php';?>
+
 <script>
     // Create
     function openCreate() {
@@ -133,8 +138,7 @@ $slotCount = mysqli_num_rows($slotQ);
         })
             .then(res => res.text())
             .then(res => {
-                alert(res);
-                // showToast('info', res, 'Data');
+                showToast("Success", res, "Saved");
                 location.reload();
             });
     });
@@ -150,7 +154,7 @@ $slotCount = mysqli_num_rows($slotQ);
         })
             .then(res => res.text())
             .then(data => {
-                alert(data);
+                showToast("danger", data, "Slot Deleted");
                 location.reload();
             });
     }
@@ -167,7 +171,8 @@ $slotCount = mysqli_num_rows($slotQ);
         })
             .then(res => res.text())
             .then(res => {
-                alert(res);
+    
+                showToast("success", "Default Slot Implemented", "Include Default");
                 location.reload();
             });
     }

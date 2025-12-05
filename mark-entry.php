@@ -4,10 +4,7 @@
 
     <div class="card card-border-shadow-secondary ">
         <div class="card-body">
-
             <div class="row">
-
-                <!-- Slot -->
                 <div class="col-md-3 mb-3">
                     <label>Slot</label>
                     <select id="slot" name="slot" class="form-select form-select-sm">
@@ -21,7 +18,6 @@
                     </select>
                 </div>
 
-                <!-- Session -->
                 <div class="col-md-3 mb-3">
                     <label>Session</label>
                     <select id="session" name="session" class="form-select form-select-sm">
@@ -29,7 +25,6 @@
                     </select>
                 </div>
 
-                <!-- Exam -->
                 <div class="col-md-3 mb-3">
                     <label>Exam</label>
                     <select id="exam" name="exam" class="form-select form-select-sm">
@@ -37,7 +32,7 @@
                     </select>
                 </div>
 
-                <!-- Class -->
+
                 <div class="col-md-3 mb-3">
                     <label>Class</label>
                     <select id="class" name="class" class="form-select form-select-sm">
@@ -45,7 +40,7 @@
                     </select>
                 </div>
 
-                <!-- Section -->
+
                 <div class="col-md-3 mb-3">
                     <label>Section</label>
                     <select id="section" name="section" class="form-select form-select-sm">
@@ -53,7 +48,7 @@
                     </select>
                 </div>
 
-                <!-- Subject -->
+
                 <div class="col-md-3 mb-3">
                     <label>Subject</label>
                     <select id="subject" name="subject" class="form-select form-select-sm">
@@ -114,7 +109,6 @@
 <script>
     const currentPage = "<?php echo basename($_SERVER['PHP_SELF'], ".php"); ?>";
 
-    // UNIVERSAL SELECT LOADER
     function loadOptions(url, target, placeholder = "Select", callback = null) {
         $("#" + target).html(`<option value="">Loading...</option>`);
 
@@ -130,19 +124,19 @@
                     });
                 }
 
-                // Restore saved value
+   
                 let saved = localStorage.getItem(currentPage + "_" + target);
                 if (saved !== null && saved !== "") {
                     $("#" + target).val(saved);
                 }
 
-                // callback after load
+      
                 if (typeof callback === "function") callback();
             }
         });
     }
 
-    // UNIVERSAL SAVE/LOAD
+
     function saveValue(id) {
         let key = currentPage + "_" + id;
         let val = $("#" + id).val();
@@ -154,15 +148,13 @@
         return localStorage.getItem(key);
     }
 
-    // MAIN CHAIN
+
     $(document).ready(function () {
 
-        // Auto-save
         $("#slot, #session, #exam, #class, #section, #subject").on("change click", function () {
             saveValue($(this).attr("id"));
         });
 
-        // Slot → Session
         $(document).on("change click", "#slot", function () {
             let slot = $(this).val();
             if (!slot) return;
@@ -175,7 +167,6 @@
             );
         });
 
-        // Session → Exam + Class
         $(document).on("change click", "#session", function () {
             let slot = $("#slot").val();
             let session = $(this).val();
@@ -196,7 +187,6 @@
             );
         });
 
-        // Class → Section
         $(document).on("change click", "#class", function () {
             let slot = $("#slot").val();
             let session = $("#session").val();
@@ -211,7 +201,6 @@
             );
         });
 
-        // Section → Subject
         $(document).on("change click", "#section", function () {
             let slot = $("#slot").val();
             let session = $("#session").val();
@@ -224,7 +213,6 @@
                 "subject",
                 "Select Subject",
                 function () {
-                    // Small delay to ensure DOM is updated
                     setTimeout(function () {
                         $("#subject").trigger("change");
                     }, 200);
@@ -232,7 +220,7 @@
             );
         });
 
-        // Subject → Fetch Marks Setup
+
         $(document).on("change click", "#subject", function () {
             let slot = $("#slot").val();
             let session = $("#session").val();
@@ -261,7 +249,6 @@
             });
         });
 
-        // Restore previous selection
         let savedSlot = loadValue("slot");
         if (savedSlot) $("#slot").val(savedSlot).trigger("change");
 
@@ -336,28 +323,24 @@
 
 
 
-        // যদি mark-setup hidden থাকে → restore section + subject
         if ($("#mark-setup").is(":hidden")) {
             if (savedSection) {
                 $("#section").val(savedSection).trigger("click");
 
-                // Section trigger হলে subject trigger
                 setTimeout(function () {
                     if (savedSubject) {
                         $("#subject").val(savedSubject).trigger("click");
                     }
-                    // AJAX call এখন চালাবে
+
                     doFetch();
-                }, 500); // subject load delay
+                }, 500); 
             } else {
-                // Section না থাকলে সরাসরি subject restore
                 if (savedSubject) {
                     $("#subject").val(savedSubject).trigger("click");
                 }
                 doFetch();
             }
         } else {
-            // hidden না হলে সরাসরি AJAX
             doFetch();
         }
     });
@@ -367,11 +350,11 @@
 <script>
     $(document).on("keydown", ".mark", function (e) {
         if (e.key === "Enter") {
-            e.preventDefault(); // form submit না হওয়ার জন্য
+            e.preventDefault(); 
             let inputs = $(".mark");
-            let idx = inputs.index(this); // current input index
+            let idx = inputs.index(this); 
             if (idx >= 0 && idx < inputs.length - 1) {
-                inputs.eq(idx + 1).focus(); // next input এ ফোকাস
+                inputs.eq(idx + 1).focus(); 
             }
         }
     });
@@ -380,7 +363,6 @@
 
     $(document).on("blur", ".mark", function () {
 
-        // style reset
         $(this).css({
             "background-color": "",
             "color": "",
@@ -393,9 +375,7 @@
         let stid = $(this).data("stid");
         let row = $(this).closest("tr");
 
-        let saveMode = $("#saveMode").prop("checked"); // NEW
-
-        // Enabled inputs
+        let saveMode = $("#saveMode").prop("checked"); 
         let inputs = row.find(".mark:enabled");
         let filled = true;
 
@@ -403,17 +383,13 @@
             if ($(this).val() === "") filled = false;
         });
 
-        // ১) saveMode OFF → ইনপুট ব্লার হলেই সেভ করুন
         if (!saveMode) {
             if (!validateMarks(row)) return;
             saveMarks(stid, row);
             return;
         }
 
-        // ২) saveMode ON → যদি সব enabled inputs পূর্ণ হয়, এবং এটা "শেষ blur", তখন save
         if (filled) {
-            // এই ব্লার-টাই কি স্টুডেন্টের শেষ enabled ইনপুট?
-            // মানে: সব input পূর্ণ হয়েছে → true
             if (!validateMarks(row)) return;
             saveMarks(stid, row);
         }
@@ -516,12 +492,10 @@
             e.preventDefault();
 
             let inputs = $(".mark").filter(function () {
-                return !$(this).prop("disabled"); // শুধু enabled input
+                return !$(this).prop("disabled"); 
             });
 
             let index = inputs.index(this);
-
-            // Next enabled input exists?
             if (index !== -1 && index < inputs.length - 1) {
                 inputs.eq(index + 1).focus();
             }
@@ -530,13 +504,11 @@
 
     $(document).on("focus", ".mark", function () {
 
-        // টেক্সট select
         let input = this;
         setTimeout(function () {
             input.select();
         }, 10);
 
-        // CSS highlight
         $(this).css({
             "background-color": "#0d6efd",
             "color": "#fff",
