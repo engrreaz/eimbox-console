@@ -255,7 +255,7 @@
                 },
                 success: function (response) {
                     $("#mark-setup").html(response).removeAttr("hidden");
-                    $("#btnView").trigger("click");
+                    // $("#btnView").trigger("click");
                 },
                 error: function () { alert("Unable to load marks distribution."); }
             });
