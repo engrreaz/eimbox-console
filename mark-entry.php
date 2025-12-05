@@ -68,8 +68,9 @@
 
 
                 <div class="col-md-3 mb-3">
-                    
-                    <input type="checkbox" style="transform: scale(1.5);" class="form-check mt-2 " id="saveMode" /> Save on Every Student (Fill All Inputs)
+
+                    <input type="checkbox" style="transform: scale(1.5);" class="form-check mt-2 " id="saveMode" /> Save
+                    on Every Student (Fill All Inputs)
                 </div>
 
 
@@ -254,6 +255,7 @@
                 },
                 success: function (response) {
                     $("#mark-setup").html(response).removeAttr("hidden");
+                    $("#btnView").trigger("click");
                 },
                 error: function () { alert("Unable to load marks distribution."); }
             });
