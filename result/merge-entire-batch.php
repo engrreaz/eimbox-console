@@ -6,8 +6,7 @@ require_once '../core/global_values.php';
 require_once '../core/functions.php';
 
 $data = '';
-set_time_limit(0); // বড় session handle করতে
-
+set_time_limit(0);
 $slot = $_POST['slot'];
 $session = $_POST['session'];
 $offset = intval($_POST['offset'] ?? 0);
@@ -24,7 +23,7 @@ if (!empty($_COOKIE['examitems'])) {
     $examcount = count($selectedExams);
 }
 
-// Build exam condition
+
 $examCondition = "";
 if (count($selectedExams) > 0) {
     $escapedExams = array_map(function ($ex) use ($conn) {
@@ -33,29 +32,29 @@ if (count($selectedExams) > 0) {
     $examList = implode(",", $escapedExams);
     $examCondition = " AND exam IN ($examList)";
 } else {
-    // কোন exam select করা হয়নি → সব বাদ
+
     $examCondition = " AND 0";
 }
 
-// Base WHERE conditions
+
 $where = "sessionyear='$session' AND slot='$slot' AND sccode='$sccode' AND grand_merged=0";
 
-// Add classname filter if provided
+
 if ($cls !== '') {
     $where .= " AND classname='$cls'";
 }
 
-// Add section filter if provided
+
 if ($sec !== '') {
     $where .= " AND sectionname='$sec'";
 }
 
-// Total students
+
 $q_total = "SELECT COUNT(*) AS cnt FROM sessioninfo WHERE $where";
 $res_total = mysqli_query($conn, $q_total);
 $total = mysqli_fetch_assoc($res_total)['cnt'];
 
-// Fetch batch of students
+
 $q = "SELECT stid, classname, sectionname 
       FROM sessioninfo 
       WHERE $where 
@@ -67,7 +66,7 @@ while ($row = mysqli_fetch_assoc($res)) {
     $students[] = $row;
 }
 
-// Merge function (reuse merge-process logic)
+
 function mergeStudent($stid, $class, $section, $slot, $session, $sccode, $usr, $conn)
 {
     $where = "sccode='$sccode' AND slot='$slot' AND sessionyear='$session' AND stid='$stid'";
@@ -77,7 +76,6 @@ function mergeStudent($stid, $class, $section, $slot, $session, $sccode, $usr, $
     global $subcode;
 
     $subfinal = $objfinal = $prafinal = $cafinal = $totalfinal = $algfinal = 0;
-    // Fetch subjects
 
     $sublist = [];
 
@@ -108,14 +106,12 @@ function mergeStudent($stid, $class, $section, $slot, $session, $sccode, $usr, $
         $totalfinal = $subrow['fullmarks'] * $examcount;
         $algfinal = $subrow['pass_algorithm'];
 
-        // Delete previous GRAND
         $found = "SELECT id FROM stmark WHERE sessionyear='$session' AND sccode='$sccode' AND stid='$stid' AND exam='GRAND' AND subject='$subject'";
         $resf = mysqli_query($conn, $found);
         while ($rowf = mysqli_fetch_assoc($resf)) {
             mysqli_query($conn, "DELETE FROM stmark WHERE id='{$rowf['id']}'");
         }
 
-        // Sum marks
         $sqlq = "
             SELECT 
                 SUM(ctest) AS ctest,
@@ -137,20 +133,23 @@ function mergeStudent($stid, $class, $section, $slot, $session, $sccode, $usr, $
         $m = mysqli_fetch_assoc($sumQ);
 
         $data .= $sqlq . '<br><br>';
+        $txts = 'ct=' . $m['ctest'] . ' | mt=' . $m['mtest'] . ' | sub=' . $m['subj'] . ' | obj=' . $m['obj'] . ' | pra=' . $m['pra'] . ' | ca=' . $m['ca'] . ' | subFM=' . $subfinal . ' | objFM=' . $objfinal . ' | praFM=' . $prafinal . ' | FM=' . $totalfinal . ' | ALG = ' . $algfinal . ' | min=' . 36 . ' | decimal=' . 2;
+        $data .= $txts;
 
         $p = pass_validation($m['ctest'], $m['mtest'], $m['subj'], $m['obj'], $m['pra'], $m['ca'], $subfinal, $objfinal, $prafinal, $totalfinal, $algfinal, 36, 2);
-        // echo $p;
+
         if ($p === false || $p == 0) {
+            $data .= 'no test';
             $gp = 0;
             $gl = 'F';
         } else {
-            // echo 'check';
+            $data .= 'Yes Test' . $m['markobt'];
             $gpgl = get_GP_GL($m['markobt'], $totalfinal);
             $gp = $gpgl['gp'];
             $gl = $gpgl['gl'];
         }
 
-        // Insert GRAND
+
         $insert = "
         INSERT INTO stmark (
             slot, sessionyear, sccode, exam, classname, sectionname, subject, 
@@ -169,23 +168,24 @@ function mergeStudent($stid, $class, $section, $slot, $session, $sccode, $usr, $
         $data .= $insert;
     }
 
-    // Mark as merged
+
     mysqli_query($conn, "UPDATE sessioninfo SET grand_merged=1 
                          WHERE stid='$stid' AND sessionyear='$session' AND slot='$slot'");
 }
 
-// Process batch
+
 foreach ($students as $stu) {
     mergeStudent($stu['stid'], $stu['classname'], $stu['sectionname'], $slot, $session, $sccode, $usr, $conn);
 }
 
-// Determine next offset
-$nextOffset = (count($students) + $offset < $total) ? ($offset + $batchSize) : null;
+
+$nextOffset = (count($students) + $offset < $total) ? ($offset + $batchSize - $batchSize) : null;
 
 echo json_encode([
     'done' => true,
     'count' => count($students),
     'total' => $total,
     'nextOffset' => $nextOffset,
-    'data' => $data
+    'data' => $data,
+    'stid' => $students[0]['stid']
 ]);

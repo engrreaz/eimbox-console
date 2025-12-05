@@ -7,7 +7,7 @@
 
                 <div class="row">
 
-         
+
                     <div class="col-md-2 mb-3">
                         <label>Slot</label>
                         <select id="slot" name="slot" class="form-select form-select-sm">
@@ -21,7 +21,7 @@
                         </select>
                     </div>
 
-     
+
                     <div class="col-md-2 mb-3">
                         <label>Session</label>
                         <select id="session" name="session" class="form-select form-select-sm">
@@ -29,7 +29,7 @@
                         </select>
                     </div>
 
-      
+
                     <div class="col-md-3 mb-3" hidden>
                         <label>Exam</label>
                         <select id="exam" name="exam" class="form-select form-select-sm">
@@ -64,8 +64,11 @@
 
                     <div class="col-md-2 mb-3">
                         <label>&nbsp;</label><br>
-                        <button type="submit" id="btnMerge" class="btn btn-warning text-dark btn-sm py-2 w-100" disabled>Merge
+                        <button type="submit" id="btnMerge" class="btn btn-warning text-dark btn-sm py-2 w-100" disabled
+                            hidden>Merge
                             Grand</button>
+                        <button type="button" id="btnGetExam" class="btn btn-dark text-white btn-sm py-2 w-100">Get
+                            Exam List</button>
                     </div>
 
                 </div>
@@ -85,9 +88,7 @@
 
 
 
-        <div class="card mt-3" id="mark-setup" hidden>
-
-
+        <div class="card mt-3" id="mark-setup">
         </div>
 
 
@@ -124,7 +125,7 @@
 
     $(document).ready(function () {
         $("#btnMerge").click(function (e) {
-            e.preventDefault(); 
+            e.preventDefault();
 
             let formData = $("#mainForm").serialize();
             let ct = $("#ctmax_final").text();
@@ -183,7 +184,7 @@
 
                     updateProgress(percent, "Processing student " + (index + 1) + " of " + total);
 
-          
+
                     if (index + 1 < total) {
                         processStudentRecursive(index + 1, total, formData);
                     } else {
@@ -322,8 +323,8 @@
             let className = $("#class").val();
             let sectionName = $("#section").val();
             let examName = $("#exam").val();
-            let subCode = $(this).val();
-            if (!subCode) return;
+            let subCode = $(this).val() || 0;
+            // if (!subCode) return;
 
             $.ajax({
                 url: "result/fetch-exam-list.php",
@@ -446,13 +447,13 @@
             $.ajax({
                 url: "result/reset-merge.php",
                 method: "POST",
-                data: { slot: slot, session: session, cls:cls, sec:sec },
+                data: { slot: slot, session: session, cls: cls, sec: sec },
                 success: function (res) {
                     try { res = JSON.parse(res); } catch (e) { res = { success: false, message: "Invalid response" }; }
 
                     if (res.success) {
                         alert("Reset completed. Starting merge again...");
-        
+
                         $("#mergeEntire").click();
                     } else {
                         alert("Reset failed: " + res.message);
@@ -487,15 +488,16 @@
         mergeBatch(0, slot, session);
     });
 
+
     function mergeBatch(offset, slot, session, batchSize = 1) {
-     
-          let className = $("#class").val();
-            let sectionName = $("#section").val();
-            let subcode = $("#subject").val();
+
+        let className = $("#class").val();
+        let sectionName = $("#section").val();
+        let subcode = $("#subject").val();
         $.ajax({
             url: "result/merge-entire-batch.php",
             method: "POST",
-            data: { slot: slot, session: session, offset: offset, batchSize: batchSize, classname:className, sectionname:sectionName, subcode:subcode},
+            data: { slot: slot, session: session, offset: offset, batchSize: batchSize, classname: className, sectionname: sectionName, subcode: subcode },
             dataType: "json",
 
             success: function (res) {
@@ -512,15 +514,16 @@
 
                     let merged = offset + res.count;
                     let total = res.total;
+                    // let total = res.count;
                     let percent = Math.min(100, Math.round((merged / total) * 100));
 
                     let up = total + 1;
 
-                    updateProgress(percent, `Merged ${merged} of ${up} students`);
+                    updateProgress(percent, `Merged now ${merged} : Remaining  ${total} students`);
 
                     showToast(
                         'success',
-                        `Merged ${merged} of ${up} students<br>${res.data ? res.data : ""}`,
+                        `Merged marks for students` + res.stid,
                         'On progress...'
                     );
 
@@ -546,6 +549,11 @@
             }
         });
     }
+
+
+    $("#btnGetExam").click(function () {
+        $('#subject').trigger('click');
+    });
 
 
 </script>

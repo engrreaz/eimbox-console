@@ -12,7 +12,7 @@ $class = $_POST['class'];
 $section = $_POST['section'];
 $subject = $_POST['subject'];
 
-
+echo $exam;
 
 // ---------------------------
 // 0. subsetup থেকে distribution আনবো
@@ -140,12 +140,12 @@ foreach ($stid_list as $stid) {
     $roll = $roll_list[$stid];
     $name = isset($students[$stid]) ? $students[$stid]['stnameeng'] : $stid;
 
-    $ct_dis = ($ct_max == 0) ? "disabled" : "";
-    $mt_dis = ($mt_max == 0) ? "disabled" : "";
-    $sub_dis = ($sub_max == 0) ? "disabled" : "";
-    $obj_dis = ($obj_max == 0) ? "disabled" : "";
-    $pra_dis = ($pra_max == 0) ? "disabled" : "";
-    $ca_dis = ($ca_max == 0) ? "disabled" : "";
+    $ct_dis = ($ct_max == 0 || strtolower($exam) == 'grand') ? "disabled" : "";
+    $mt_dis = ($mt_max == 0 || strtolower($exam) == 'grand') ? "disabled" : "";
+    $sub_dis = ($sub_max == 0 || strtolower($exam) == 'grand') ? "disabled" : "";
+    $obj_dis = ($obj_max == 0 || strtolower($exam) == 'grand') ? "disabled" : "";
+    $pra_dis = ($pra_max == 0 || strtolower($exam) == 'grand') ? "disabled" : "";
+    $ca_dis = ($ca_max == 0 || strtolower($exam) == 'grand') ? "disabled" : "";
 
 
     // যদি mark পাওয়া যায়
