@@ -35,6 +35,7 @@ $sql = "SELECT examtitle
         WHERE sccode='$sccode'
           AND datestart <= '$today'
           AND result_publish >= '$today'";
+          echo '<br><br>' . $sql . '<br><br>';
 $q = mysqli_query($conn, $sql);
 
 while($r = mysqli_fetch_assoc($q)){
