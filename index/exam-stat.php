@@ -24,7 +24,7 @@ while($r = mysqli_fetch_assoc($q)){
     $clssecCount[$key] = $r['total'];
 }
 
-var_dump($clssecCount);
+// var_dump($clssecCount);
 // ------------------;--------------------------
 // 2️⃣ examlist → valid exam গুলো বের করা
 // --------------------------------------------
@@ -35,13 +35,13 @@ $sql = "SELECT examtitle
         WHERE sccode='$sccode'
           AND datestart <= '$today'
           AND result_publish >= '$today'";
-          echo '<br><br>' . $sql . '<br><br>';
+        //   echo '<br><br>' . $sql . '<br><br>';
 $q = mysqli_query($conn, $sql);
 
 while($r = mysqli_fetch_assoc($q)){
     $examArr[] = $r['examtitle'];
 }
-var_dump($examArr);
+// var_dump($examArr);
 if(empty($examArr)){
     echo "<div class='alert alert-warning'>No Active Exam Found</div>";
     exit;
@@ -52,10 +52,10 @@ $examIn = "'" . implode("','", $examArr) . "'";
 // --------------------------------------------
 // 3️⃣ examroutine → class/section বের করা
 // --------------------------------------------
-$sql = "SELECT clsname, secname, examname
+$sql = "SELECT clsname, secname, examname, subcode
         FROM examroutine
         WHERE examname IN ($examIn)
-          AND sessionyear LIKE '%$y_v2%'";
+          AND sessionyear LIKE '%$y_v2%' and sccode='$sccode'";
 $q = mysqli_query($conn, $sql);
 
 $totalClassCount = 0; // মোট ক্লাস অনুযায়ী ছাত্র সংখ্যা
@@ -77,7 +77,7 @@ while($r = mysqli_fetch_assoc($q)){
 $sql = "SELECT COUNT(*) AS total
         FROM stmark
         WHERE sessionyear LIKE '%$y_v2%'
-          AND exam IN ($examIn)";
+          AND exam IN ($examIn) and sccode='$sccode'";
 $q = mysqli_query($conn, $sql);
 $mr = mysqli_fetch_assoc($q);
 $totalMarkRows = $mr['total'];
@@ -115,3 +115,5 @@ $percent = number_format($percent, 2);
         </tr>
     </table>
 </div>
+
+<button class="btn btn-info btn-sm" id="detailExamStat">Details</button>

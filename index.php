@@ -13,9 +13,9 @@ require_once 'header.php';
 <!-- Content -->
 <div class="container-xxl flex-grow-1 container-p-y">
 
-<div class="card">
-    <div class="card-body" id="exam-stat">dddd</div>
-</div>
+    <div class="card">
+        <div class="card-body" id="exam-stat"></div>
+    </div>
 
     <!-- Card Border Shadow -->
     <div class="row g-6">
@@ -204,6 +204,24 @@ require_once 'header.php';
 
 
 
+
+
+<!-- Modal -->
+<div class="modal fade" id="examDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Exam Detailed Statistics</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="examDetailBody">
+                <div class="p-3 text-center">Loading...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <?php require_once 'footer.php'; ?>
 
 <!-- ----------------------------------- -->
@@ -212,14 +230,35 @@ require_once 'header.php';
 
 
 
+
+
+
 <script>
     $(document).ready(function () {
-    $("#exam-stat").html("<div class='text-center p-3'>Loading...</div>");
+        $("#exam-stat").html("<div class='text-center p-3'>Loading...</div>");
 
-    $.post("index/exam-stat.php", {}, function (data) {
-        $("#exam-stat").html(data);
+        $.post("index/exam-stat.php", {}, function (data) {
+            $("#exam-stat").html(data);
+        });
     });
-});
+
+    $(document).on("click", "#detailExamStat", function () {
+
+        $("#examDetailBody").html("<div class='p-3 text-center'>Loading...</div>");
+
+        $.post("index/exam-stat-details.php", {}, function (data) {
+            $("#examDetailBody").html(data);
+
+            // গ্রাফ রেন্ডার
+            // if (typeof renderExamChart === "function") {
+            //     renderExamChart();
+            // }
+
+            let modalEl = document.getElementById("examDetailModal");
+            let modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        });
+    });
 </script>
 </body>
 

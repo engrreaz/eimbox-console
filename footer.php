@@ -334,6 +334,7 @@ $release_colors = [
 <script src="dev-log/dev-timeline.js"></script> <!-- আমাদের কাস্টম JS -->
 <script src="dev-log/dev-loader.js"></script>
 <script src="assets/js/app-chat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="assets/js/cards-action.js"></script>
 <script src="assets/js/notifications.js"></script>
 <!-- <script src="assets/js/extended-ui-media-player.js"></script> -->
@@ -364,10 +365,10 @@ $release_colors = [
 <script>
 
     function setCookie(name, value, days = 30) {
-    let d = new Date();
-    d.setTime(d.getTime() + (days*24*60*60*1000));
-    document.cookie = name + "=" + value + "; expires=" + d.toUTCString() + "; path=/";
-}
+        let d = new Date();
+        d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+        document.cookie = name + "=" + value + "; expires=" + d.toUTCString() + "; path=/";
+    }
 
     setInterval(function () {
 
