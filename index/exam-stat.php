@@ -5,7 +5,7 @@ require_once '../core/db.php';
 require_once '../core/global_values.php';
 
 
-$today   = date("Y-m-d");
+$today = date("Y-m-d");
 
 // --------------------------------------------
 // 1️⃣ sessioninfo → class + section group count
@@ -19,8 +19,8 @@ $sql = "SELECT classname, sectionname, COUNT(*) AS total
         GROUP BY classname, sectionname";
 $q = mysqli_query($conn, $sql);
 
-while($r = mysqli_fetch_assoc($q)){
-    $key = $r['classname']."|".$r['sectionname'];
+while ($r = mysqli_fetch_assoc($q)) {
+    $key = $r['classname'] . "|" . $r['sectionname'];
     $clssecCount[$key] = $r['total'];
 }
 
@@ -35,14 +35,14 @@ $sql = "SELECT examtitle
         WHERE sccode='$sccode'
           AND datestart <= '$today'
           AND result_publish >= '$today'";
-        //   echo '<br><br>' . $sql . '<br><br>';
+//   echo '<br><br>' . $sql . '<br><br>';
 $q = mysqli_query($conn, $sql);
 
-while($r = mysqli_fetch_assoc($q)){
+while ($r = mysqli_fetch_assoc($q)) {
     $examArr[] = $r['examtitle'];
 }
 // var_dump($examArr);
-if(empty($examArr)){
+if (empty($examArr)) {
     echo "<div class='alert alert-warning'>No Active Exam Found</div>";
     exit;
 }
@@ -59,13 +59,13 @@ $sql = "SELECT clsname, secname, examname, subcode
 $q = mysqli_query($conn, $sql);
 
 $totalClassCount = 0; // মোট ক্লাস অনুযায়ী ছাত্র সংখ্যা
-$totalMarkRows   = 0;
+$totalMarkRows = 0;
 
 // --------------------------------------------
 // 4️⃣ প্রতিটি রো অনুযায়ী sessioninfo কাউন্ট যোগ করা
 // --------------------------------------------
-while($r = mysqli_fetch_assoc($q)){
-    $key = $r['clsname']."|".$r['secname'];
+while ($r = mysqli_fetch_assoc($q)) {
+    $key = $r['clsname'] . "|" . $r['secname'];
 
     $cnt = $clssecCount[$key] ?? 0;
     $totalClassCount += $cnt;
@@ -86,7 +86,7 @@ $totalMarkRows = $mr['total'];
 // 6️⃣ শতাংশ হিসাব
 // --------------------------------------------
 $percent = 0;
-if($totalClassCount > 0){
+if ($totalClassCount > 0) {
     $percent = ($totalMarkRows / $totalClassCount) * 100;
 }
 $percent = number_format($percent, 2);
@@ -116,6 +116,6 @@ $percent = number_format($percent, 2);
     </table>
 </div>
 
-<button class="btn btn-info btn-sm me-3" id="detailExamStat" disabled>Details (Class | Section) </button>
+<button class="btn btn-info btn-sm me-3" id="detailExamclssec" disabled>Details (Class | Section) </button>
 <button class="btn btn-primary btn-sm me-3" id="detailExamStat">Details (Subjects Level) </button>
-<button class="btn btn-danger btn-sm" id="detailExamStat" disabled>Teacher's Progress</button>
+<button class="btn btn-danger btn-sm" id="detailExamteacher" disabled>Teacher's Progress</button>
