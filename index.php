@@ -13,6 +13,10 @@ require_once 'header.php';
 <!-- Content -->
 <div class="container-xxl flex-grow-1 container-p-y">
 
+<div class="card">
+    <div class="card-body" id="exam-stat">dddd</div>
+</div>
+
     <!-- Card Border Shadow -->
     <div class="row g-6">
 
@@ -206,6 +210,17 @@ require_once 'header.php';
 <script></script>
 <!-- ----------------------------------- -->
 
+
+
+<script>
+    $(document).ready(function () {
+    $("#exam-stat").html("<div class='text-center p-3'>Loading...</div>");
+
+    $.post("index/exam-stat.php", {}, function (data) {
+        $("#exam-stat").html(data);
+    });
+});
+</script>
 </body>
 
 </html>
