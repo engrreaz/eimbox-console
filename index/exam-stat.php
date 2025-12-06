@@ -95,7 +95,7 @@ $percent = number_format($percent, 2);
 // 7️⃣ HTML আউটপুট
 // -------------------------------
 ?>
-<div class="p-3 border rounded">
+<div class="p-3 border rounded mb-3 ">
     <h5 class="mb-3">Exam Statistics</h5>
 
     <table class="table table-sm table-bordered">
@@ -116,4 +116,6 @@ $percent = number_format($percent, 2);
     </table>
 </div>
 
-<button class="btn btn-info btn-sm" id="detailExamStat">Details</button>
+<button class="btn btn-info btn-sm me-3" id="detailExamStat" disabled>Details (Class | Section) </button>
+<button class="btn btn-primary btn-sm me-3" id="detailExamStat">Details (Subjects Level) </button>
+<button class="btn btn-danger btn-sm" id="detailExamStat" disabled>Teacher's Progress</button>

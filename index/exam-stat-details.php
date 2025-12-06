@@ -4,7 +4,7 @@ require_once '../core/config.php';
 require_once '../core/db.php';
 require_once '../core/global_values.php';
 
-$today  = date("Y-m-d");
+$today = date("Y-m-d");
 
 // 1) sessioninfo count
 $clssecCount = [];
@@ -14,8 +14,8 @@ $sql = "SELECT classname, sectionname, COUNT(*) AS total
           AND sessionyear LIKE '%$y_v2%'
         GROUP BY classname, sectionname";
 $q = mysqli_query($conn, $sql);
-while($r = mysqli_fetch_assoc($q)){
-    $key = $r['classname']."|".$r['sectionname'];
+while ($r = mysqli_fetch_assoc($q)) {
+    $key = $r['classname'] . "|" . $r['sectionname'];
     $clssecCount[$key] = $r['total'];
 }
 
@@ -26,10 +26,31 @@ $sql = "SELECT examtitle FROM examlist
         AND datestart <= '$today'
         AND result_publish >= '$today'";
 $q = mysqli_query($conn, $sql);
-while($r = mysqli_fetch_assoc($q)){
+while ($r = mysqli_fetch_assoc($q)) {
     $examArr[] = $r['examtitle'];
 }
 $examIn = "'" . implode("','", $examArr) . "'";
+
+
+$stmark = [];
+
+$sql2 = "SELECT classname, sectionname, exam, subject, COUNT(*) AS t
+         FROM stmark
+         WHERE sessionyear LIKE '%$y_v2%'
+           AND exam IN ($examIn)
+           AND sccode='$sccode'
+         GROUP BY classname, sectionname, exam, subject";
+
+$q2 = mysqli_query($conn, $sql2);
+
+if ($q2 && mysqli_num_rows($q2) > 0) {
+    while ($m = mysqli_fetch_assoc($q2)) {
+        $stmark[] = $m;   // FIX: array name corrected
+    }
+}
+
+
+
 
 // 3) examroutine → cls/sec/subject
 $sql = "SELECT clsname, secname, subcode, examname
@@ -41,47 +62,65 @@ $q = mysqli_query($conn, $sql);
 // details array
 $details = [];
 
-while($r = mysqli_fetch_assoc($q)){
+while ($r = mysqli_fetch_assoc($q)) {
 
     $cls = $r['clsname'];
     $sec = $r['secname'];
     $sub = $r['subcode'];
+    $examt = $r['examname'];
 
-    $key = $cls."|".$sec."|".$sub;
+    $key = $cls . "|" . $sec . "|" . $sub;
 
     // total students
     $stKey = $cls . "|" . $sec;
     $totalStudents = $clssecCount[$stKey] ?? 0;
 
-    // mark entries
-    $sql2 = "SELECT COUNT(*) AS t
-             FROM stmark
-             WHERE sessionyear LIKE '%$y_v2%'
-               AND exam='{$r['examname']}'
-               AND classname='$cls'
-               AND sectionname='$sec'
-              AND sccode = '$sccode'
-               AND subject='$sub'";
-    $q2 = mysqli_query($conn, $sql2);
-    $m = mysqli_fetch_assoc($q2);
-    $markCount = $m['t'];
+    $markCount = 0;
 
-    $details[] = [
-        'cls' => $cls,
-        'sec' => $sec,
-        'sub' => $sub,
-        'students' => $totalStudents,
-        'marks' => $markCount,
-        'percent' => $totalStudents > 0 ? number_format(($markCount / $totalStudents) * 100, 2) : 0
-    ];
+    foreach ($stmark as $idx => $stm) {
+
+        $e = $stm['exam'];
+        $c = $stm['classname'];
+        $s = $stm['sectionname'];
+        $b = $stm['subject'];
+
+        if ($e == $examt && $c == $cls && $s == $sec && $b == $sub) {
+            $markCount = $stm['t'];
+            unset($stmark[$idx]);
+            break;
+        }
+    }
+
+
+
+    if ($totalStudents > 0) {
+        $details[] = [
+            'exam' => $examt,
+            'cls' => $cls,
+            'sec' => $sec,
+            'sub' => $sub,
+            'students' => $totalStudents,
+            'marks' => $markCount,
+            'percent' => $totalStudents > 0 ? number_format(($markCount / $totalStudents) * 100, 2) : 0
+        ];
+    }
+
 }
 ?>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
 <h5 class="mb-3">Class / Section / Subject Wise Statistics</h5>
+
+
+<canvas id="examChart" height="100"></canvas>
+<hr>
 
 <table class="table table-bordered table-sm">
     <thead>
         <tr>
+            <th>Exam</th>
             <th>Class</th>
             <th>Section</th>
             <th>Subject</th>
@@ -91,66 +130,67 @@ while($r = mysqli_fetch_assoc($q)){
         </tr>
     </thead>
     <tbody>
-        <?php foreach($details as $d){ ?>
-        <tr>
-            <td><?= $d['cls'] ?></td>
-            <td><?= $d['sec'] ?></td>
-            <td><?= $d['sub'] ?></td>
-            <td><?= $d['students'] ?></td>
-            <td><?= $d['marks'] ?></td>
-            <td><?= $d['percent'] ?>%</td>
-        </tr>
+        <?php foreach ($details as $d) { ?>
+            <tr>
+                <td><?= $d['exam'] ?></td>
+                <td><?= $d['cls'] ?></td>
+                <td><?= $d['sec'] ?></td>
+                <td><?= $d['sub'] ?></td>
+                <td><?= $d['students'] ?></td>
+                <td><?= $d['marks'] ?></td>
+                <td><?= $d['percent'] ?>%</td>
+            </tr>
         <?php } ?>
     </tbody>
 </table>
 
-<hr>
-
-<canvas id="examChart" height="100"></canvas>
-
 
 
 <script>
-function renderExamChart(){
-    const labels = [
-        <?php
-            foreach($details as $d){
+    function renderExamChart() {
+        const labels = [
+            <?php
+            foreach ($details as $d) {
                 echo "'" . $d['cls'] . "-" . $d['sec'] . "-" . $d['sub'] . "',";
             }
-        ?>
-    ];
+            ?>
+        ];
 
-    const marks = [
-        <?php foreach($details as $d){ echo $d['marks'] . ","; } ?>
-    ];
+        const marks = [
+            <?php foreach ($details as $d) {
+                echo $d['marks'] . ",";
+            } ?>
+        ];
 
-    const students = [
-        <?php foreach($details as $d){ echo $d['students'] . ","; } ?>
-    ];
+        const students = [
+            <?php foreach ($details as $d) {
+                echo $d['students'] . ",";
+            } ?>
+        ];
 
-    const ctx = document.getElementById("examChart");
+        const ctx = document.getElementById("examChart");
 
-    new Chart(ctx, {
-        type: "bar",
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: "Mark Entries",
-                    data: marks
-                },
-                {
-                    label: "Total Students",
-                    data: students
+        new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: "Mark Entries",
+                        data: marks
+                    },
+                    {
+                        label: "Total Students",
+                        data: students
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true }
                 }
-            ]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: { beginAtZero: true }
             }
-        }
-    });
-}
+        });
+    }
 </script>

@@ -13,7 +13,7 @@ require_once 'header.php';
 <!-- Content -->
 <div class="container-xxl flex-grow-1 container-p-y">
 
-    <div class="card">
+    <div class="card mb-3">
         <div class="card-body" id="exam-stat"></div>
     </div>
 
@@ -205,16 +205,16 @@ require_once 'header.php';
 
 
 
-
 <!-- Modal -->
 <div class="modal fade" id="examDetailModal" tabindex="-1">
-    <div class="modal-dialog modal-xl">
+    <div class="modal-dialog modal-xl" style="max-width:80%;">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Exam Detailed Statistics</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" id="examDetailBody">
+            <div class="modal-body" id="examDetailBody"
+                style=" height: 80vh; overflow-y: auto;   overflow-x: hidden;  ">
                 <div class="p-3 text-center">Loading...</div>
             </div>
         </div>
@@ -245,14 +245,12 @@ require_once 'header.php';
     $(document).on("click", "#detailExamStat", function () {
 
         $("#examDetailBody").html("<div class='p-3 text-center'>Loading...</div>");
-
         $.post("index/exam-stat-details.php", {}, function (data) {
             $("#examDetailBody").html(data);
 
-            // গ্রাফ রেন্ডার
-            // if (typeof renderExamChart === "function") {
-            //     renderExamChart();
-            // }
+            if (typeof renderExamChart === "function") {
+                renderExamChart();
+            }
 
             let modalEl = document.getElementById("examDetailModal");
             let modal = new bootstrap.Modal(modalEl);
