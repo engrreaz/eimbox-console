@@ -6,8 +6,6 @@ require_once '../core/global_values.php';
 
 
 $today   = date("Y-m-d");
-$y_v2    = $_SESSION['y_v2'] ?? "";  
-$sccode  = $_SESSION['sccode'] ?? "";
 
 // --------------------------------------------
 // 1️⃣ sessioninfo → class + section group count
@@ -26,7 +24,8 @@ while($r = mysqli_fetch_assoc($q)){
     $clssecCount[$key] = $r['total'];
 }
 
-// --------------------------------------------
+var_dump($clssecCount);
+// ------------------;--------------------------
 // 2️⃣ examlist → valid exam গুলো বের করা
 // --------------------------------------------
 $examArr = [];
@@ -41,7 +40,7 @@ $q = mysqli_query($conn, $sql);
 while($r = mysqli_fetch_assoc($q)){
     $examArr[] = $r['examtitle'];
 }
-
+var_dump($examArr);
 if(empty($examArr)){
     echo "<div class='alert alert-warning'>No Active Exam Found</div>";
     exit;
