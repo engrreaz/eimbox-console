@@ -100,7 +100,7 @@ $percent = number_format($percent, 2);
 
     <table class="table table-sm table-bordered">
         <tr>
-            <th>Total Students (Class/Section Count)</th>
+            <th>Total Required Entries</th>
             <td><?php echo $totalClassCount; ?></td>
         </tr>
 

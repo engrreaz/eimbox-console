@@ -176,11 +176,11 @@ while ($row = $q2->fetch_assoc()) {
 
     <div class="card mt-3" id="print-block">
 
-        <div class="text-center fs-xlarge  fw-bold mt-4">Class/Section Wise Item Collection</d>
+        <div class="text-center fs-xlarge  fw-bold mt-4 mb-3">Class/Section Wise Item Collection</div>
 
             <div class="table-responsive">
                 <table class="table table-sm" cellspacing="0" cellpadding="5">
-                    <tr class="fw-bold  bg-gray">
+                    <tr class=" bg-gray">
                         <td>Class</td>
                         <td>Section</td>
                         <?php
@@ -267,11 +267,11 @@ while ($row = $q2->fetch_assoc()) {
             </div>
 
 
-            <div class="text-center fs-4  fw-bold mt-4">Item Wise Total Collection</div>
+            <div class="text-center fs-4  fw-bold mt-4 mb-3">Item Wise Total Collection</div>
 
             <div class="table-responsive">
                 <table class="table table-sm" cellspacing="0" cellpadding="5">
-                    <tr class="fw-bold bg-gray text-white">
+                    <tr class=" bg-gray text-white">
                         <td>Item Code</td>
                         <td>Item Name (English)</td>
                         <td>Item Name (Bangla)</td>
