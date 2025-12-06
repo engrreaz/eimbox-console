@@ -91,6 +91,7 @@ while ($row = mysqli_fetch_assoc($r2)) {
 // ---------------------------
 // 3. stmark টেবিল থেকে bulk marks আনবো
 // ---------------------------
+
 $q3 = "SELECT * 
        FROM stmark
        WHERE sccode='$sccode'

@@ -116,6 +116,6 @@ $percent = number_format($percent, 2);
     </table>
 </div>
 
-<button class="btn btn-info btn-sm me-3" id="detailExamclssec" disabled>Details (Class | Section) </button>
-<button class="btn btn-primary btn-sm me-3" id="detailExamStat">Details (Subjects Level) </button>
-<button class="btn btn-danger btn-sm" id="detailExamteacher" disabled>Teacher's Progress</button>
+<button class="btn btn-info btn-sm me-3 details" id="detailExamclssec" data-type="clssec">Details (Class | Section) </button>
+<button class="btn btn-primary btn-sm me-3 details" id="detailExamStat" data-type="subject">Details (Subjects Level) </button>
+<button class="btn btn-danger btn-sm details" id="detailExamteacher"  data-type="teacher">Teacher's Progress</button>

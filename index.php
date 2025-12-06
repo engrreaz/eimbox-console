@@ -242,21 +242,27 @@ require_once 'header.php';
         });
     });
 
-    $(document).on("click", "#detailExamStat", function () {
+   $(document).on("click", ".details", function () {
 
-        $("#examDetailBody").html("<div class='p-3 text-center'>Loading...</div>");
-        $.post("index/exam-stat-details.php", {}, function (data) {
-            $("#examDetailBody").html(data);
+    let dtype = $(this).data("type");   // student / clssec / teacher
+    let url = "index/exam-stat-details.php?type=" + dtype;
 
-            if (typeof renderExamChart === "function") {
-                renderExamChart();
-            }
+    $("#examDetailBody").html("<div class='p-3 text-center'>Loading...</div>");
 
-            let modalEl = document.getElementById("examDetailModal");
-            let modal = new bootstrap.Modal(modalEl);
-            modal.show();
-        });
+    $.post(url, {}, function (data) {
+
+        $("#examDetailBody").html(data);
+
+        if (typeof renderExamChart === "function") {
+            renderExamChart();
+        }
+
+        let modalEl = document.getElementById("examDetailModal");
+        let modal = new bootstrap.Modal(modalEl);
+        modal.show();
     });
+});
+
 </script>
 </body>
 
