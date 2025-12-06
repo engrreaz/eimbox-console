@@ -56,7 +56,7 @@ if ($q2 && mysqli_num_rows($q2) > 0) {
 $sql = "SELECT clsname, secname, subcode, examname
         FROM examroutine
         WHERE sessionyear LIKE '%$y_v2%'
-          AND examname IN ($examIn)";
+          AND examname IN ($examIn) ORDER BY examname, clsname, secname, subcode";
 $q = mysqli_query($conn, $sql);
 
 // details array
