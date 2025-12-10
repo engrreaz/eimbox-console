@@ -1,6 +1,8 @@
 <?php
 require_once 'core/init.php';
 
+// var_dump($_SESSION);
+
 
 if (isset($_SESSION['user_id'])) {
     // Already logged in → redirect to dashboard
@@ -155,11 +157,139 @@ $csrf = csrf_token();
 
 include_once('header-plain.php');
 ?>
-<div class="position-relative">
-    <div class="authentication-wrapper authentication-basic container-p-y">
-        <div class="authentication-inner py-0 mx-4">
+
+<style>
+    .square-box {
+        aspect-ratio: 1 / 1;
+        /* Perfect square */
+        border-radius: 5px;
+        width: 100%;
+    }
+
+    .fade-cardd {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 2.8s ease, transform 2.8s ease;
+    }
+
+    .fade-card.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+</style>
+
+
+
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="row justify-content-center align-items-center g-9" style="min-height:90vh; display:flex;">
+        <div class=" col-md-3 py-0 d-flex   order-2 order-md-1 ">
+            <div class="card fade-card  flex-grow-1 d-flex flex-column" style="min-height:90vh; display:flex;"
+                id="myCard">
+                <div class="card-body flex-grow-1 mt-1">
+
+                    <div class="row">
+                        <div class="col-6">
+                            <button class="btn btn-outline-danger" onclick="openAdmissionForm()">
+                                <div class="text-center">
+                                    <i class="bi bi-input-cursor-text fs-1"></i>
+                                    <p class="mb-0">Admission Form</p>
+                                </div>
+                            </button>
+                        </div>
+
+                        <div class="col-6">
+                            <button class="btn btn-outline-primary" onclick="openAdmissionLogin()">
+                                <div class="text-center">
+                                    <i class="bi bi-shield-lock-fill fs-1"></i>
+                                    <p class="mb-0">Admission Login</p>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
+
+
+
+
+                    <div class="row my-4">
+                        <div class="col-12">
+                            <!-- বড় ডার্ক বাটন (১০ কলাম) -->
+                            <button class="btn btn-dark w-100 p-3" onclick="openGuestModal()">
+                                <div class="row align-items-center m-0">
+                                    <div class="col-3 text-center">
+                                        <i class="bi bi-key-fill fs-2"></i>
+                                    </div>
+                                    <div class="col-9">
+                                        <div class="fs-6 fw-bold">Guest Access</div>
+                                        <div class="fs-tiny">Temporary Log in</div>
+                                    </div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
+
+
+                    <div class="mt-10">
+                        <div class="divider mt-1">
+                            <div class="divider-text">View Tutorials</div>
+                        </div>
+                    </div>
+
+
+
+
+
+                    <div class="d-flex justify-content-center gap-2">
+                        <a href="javascript:;" class="btn btn-icon btn-lg rounded-pill">
+                            <i class="icon-base bi bi-youtube icon-24px text-danger"></i>
+                        </a>
+
+                        <a href="javascript:;" class="btn btn-icon btn-lg rounded-pill btn-text-twitter">
+                            <i class="icon-base ri ri-twitter-fill icon-24px"></i>
+                        </a>
+
+                        <a href="javascript:;" class="btn btn-icon btn-lg rounded-pill btn-text-github">
+                            <i class="icon-base ri ri-github-fill icon-24px"></i>
+                        </a>
+
+                        <a href="javascript:;" class="btn btn-icon btn-lg rounded-pill btn-text-google-plus">
+                            <i class="icon-base ri ri-google-fill icon-24px"></i>
+                        </a>
+
+                        <a href="javascript:;" class="btn btn-icon btn-lg rounded-pill btn-text-linkedin">
+                            <i class="icon-base bi bi-qr-code icon-20px"></i>
+                        </a>
+                    </div>
+
+
+                    <div class="row my-6">
+                        <div class="col-12">
+                            <button class="btn btn-success w-100 p-3">
+                                <div class="row align-items-center m-0">
+                                    <div class="col-3 text-center">
+                                        <i class="bi bi-android2 fs-2"></i>
+                                    </div>
+                                    <div class="col-9">
+                                        <div class="fs-6 fw-bold">Download App</div>
+                                        <div class="fs-tiny">Android Version</div>
+                                    </div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
+
+
+                </div>
+
+            </div>
+        </div>
+
+        <div class=" col-md-4 py-0 d-flex order-1 order-md-2">
             <!-- Login -->
-            <div class="card p-sm-7 p-2">
+            <div class="card    flex-grow-1 d-flex flex-column" style="min-height:90vh; display:flex;">
                 <!-- Logo -->
                 <div class="app-brand justify-content-center mt-5">
 
@@ -167,7 +297,7 @@ include_once('header-plain.php');
                 </div>
                 <!-- /Logo -->
 
-                <div class="card-body mt-1">
+                <div class="card-body mt-1 flex-grow-1">
                     <p class="mb-5">Please sign-in to your account</p>
 
                     <?php if (!empty($errors)): ?>
@@ -225,10 +355,6 @@ include_once('header-plain.php');
                         <div class="divider-text">or</div>
                     </div>
 
-                    <div class="mb-5">
-                        <a href="admission-login.php" class="btn btn-danger d-grid w-100">Admission New Student</a>
-                    </div>
-
                     <div class="d-flex justify-content-center gap-2">
                         <a href="javascript:;" class="btn btn-icon btn-lg rounded-pill btn-text-facebook">
                             <i class="icon-base ri ri-facebook-fill icon-24px"></i>
@@ -253,17 +379,230 @@ include_once('header-plain.php');
                 </div>
             </div>
             <!-- /Login -->
-            <img src="https://demos.themeselection.com/materio-bootstrap-html-admin-template/assets/img/illustrations/tree-3.png"
-                alt="auth-tree" class="authentication-image-object-left d-none d-lg-block" />
-            <img src="https://demos.themeselection.com/materio-bootstrap-html-admin-template/assets/img/illustrations/auth-basic-mask-light.png"
-                class="authentication-image d-none d-lg-block scaleX-n1-rtl" height="172" alt="triangle-bg"
-                data-app-light-img="illustrations/auth-basic-mask-light.png"
-                data-app-dark-img="https://demos.themeselection.com/materio-bootstrap-html-admin-template/html/vertical-menu-template/illustrations/auth-basic-mask-dark.png" />
-            <img src="https://demos.themeselection.com/materio-bootstrap-html-admin-template/assets/img/illustrations/tree.png"
-                alt="auth-tree" class="authentication-image-object-right d-none d-lg-block" />
         </div>
     </div>
 </div>
 
 
+
+
+<!-- Guest Login Modal -->
+<div class="modal fade" id="guestLoginModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Guest Login</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <form id="guestLoginForm">
+                    <div class="row">
+
+                        <div class="col-6 mb-3">
+                            <label>Institute Code</label>
+                            <input type="text" id="sccode" name="sccode" class="form-control" required>
+                        </div>
+
+                        <div class="col-6 mb-3">
+                            <label>Session</label>
+                            <select id="session" name="session" class="form-control" required></select>
+                        </div>
+
+                        <div class="col-6 mb-3">
+                            <label>Unit</label>
+                            <select id="unit" name="unit" class="form-control" required></select>
+                        </div>
+
+                        <div class="col-6 mb-3">
+                            <label>Class</label>
+                            <select id="class" name="class" class="form-control" required></select>
+                        </div>
+
+                        <div class="col-6 mb-3">
+                            <label>Section</label>
+                            <select id="section" name="section" class="form-control" required></select>
+                        </div>
+
+                        <div class="col-6 mb-3">
+                            <label>Roll</label>
+                            <input type="text" id="roll" name="roll" class="form-control" required>
+                        </div>
+
+                        <div class="col-12 mb-3">
+                            <label>Class Teacher</label>
+                            <select id="teacher" name="teacher" class="form-control" required></select>
+                        </div>
+
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button class="btn btn-dark" onclick="submitGuestLogin()">Log in</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
 <?php include_once('footer-plain.php'); ?>
+
+
+<script>
+    function openAdmissionForm() {
+        window.location.href = "admission-form.php";
+    }
+
+    function openAdmissionLogin() {
+        window.location.href = "admission-login.php";
+    }
+</script>
+
+
+<script>
+    $("#sccode").on("keyup change", function () {
+        let sccode = $(this).val();
+
+        if (sccode.length > 2) {
+            $.post("guest-login/get-session.php", { sccode: sccode }, function (data) {
+                $("#session").html(data);
+            });
+
+            $.post("guest-login/get-unit.php", { sccode: sccode }, function (data) {
+                $("#unit").html(data);
+            });
+
+            $.post("guest-login/get-class.php", { sccode: sccode }, function (data) {
+
+                $("#class").html(data);
+            });
+        }
+    });
+
+    $("#class").change(function () {
+        let sccode = $("#sccode").val();       // Institute Code
+        let classname = $(this).val();         // Selected Class
+
+        $.post("guest-login/get-section.php",
+            {
+                sccode: sccode,
+                class: classname
+            },
+            function (data) {
+                $("#section").html(data);      // Section dropdown update
+            }
+        );
+    });
+
+
+    $("#section").change(function () {
+        $.post("guest-login/get-teacher.php",
+            {
+                sccode: $("#sccode").val(),
+                unit: $("#unit").val(),
+                session: $("#session").val(),
+                class: $("#class").val(),
+                section: $(this).val()
+            },
+            function (data) {
+                console.log(data);
+                $("#teacher").html(data);
+            }
+        );
+    });
+</script>
+
+
+<script>
+    function openGuestModal() {
+        let modal = new bootstrap.Modal(document.getElementById('guestLoginModal'));
+        modal.show();
+    }
+</script>
+
+
+<script>
+    $("#sccode").on("keyup change", function () {
+
+        let sccode = $(this).val();
+
+        if (sccode.length >= 3) {
+
+            $.post("guest-login/get-session.php", { sccode }, data => {
+                $("#session").html(data);
+            });
+
+            $.post("guest-login/get-unit.php", { sccode }, data => {
+                $("#unit").html(data);
+            });
+
+            $.post("guest-login/get-class.php", { sccode }, data => {
+                $("#class").html(data);
+            });
+
+        }
+    });
+
+    // CLASS → SECTION
+    $("#class").change(function () {
+        $.post("guest-login/get-section.php", {
+            sccode: $("#sccode").val(),
+            class: $(this).val()
+        }, data => {
+            $("#section").html(data);
+        });
+    });
+
+    // SECTION → TEACHER
+    $("#section").change(function () {
+        $.post("guest-login/get-teacher.php", {
+            sccode: $("#sccode").val(),
+            class: $("#class").val(),
+            section: $("#section").val()
+        }, data => {
+            $("#teacher").html(data);
+        });
+    });
+</script>
+
+
+<script>
+    function submitGuestLogin() {
+
+        let formData = $("#guestLoginForm").serialize();
+
+        $.post("guest-login/guest-login.php", formData, function (res) {
+
+            console.log(res);
+
+            if (res.status === "ok") {
+                window.location.href = "index.php";
+            } else {
+                alert(res.message);
+            }
+
+        }, "json");
+    }
+
+</script>
+
+
+
+
+
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+        document.getElementById("myCard").classList.add("show");
+    });
+
+</script>
+</body>
+
+</html>

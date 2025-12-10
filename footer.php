@@ -339,16 +339,14 @@ $release_colors = [
 <!-- <script src="assets/js/extended-ui-media-player.js"></script> -->
 <script src="assets/js/pages-auth-multisteps.js"></script>
 <script src="assets/js/extended-ui-treeview.js"></script>
+
+
 <!-- <script src="assets/js/ui-toasts.js"></script> -->
 
 <script src="ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
+<script src="assets/js/app-academy-dashboard.js"></script>
 
-
-
-<script>
-</script>
 <script src="assets/js/eimbox.js"></script>
 
 <!-- Main JS -->

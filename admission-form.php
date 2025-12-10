@@ -59,7 +59,7 @@ include_once('actions/get-sc-data.php');
 
 
 <div class="row">
-    <div class="col-md-4 " style="
+    <div class="col-md-4 d-none d-md-block" style="
             background-image: url('assets/images/core/regd-form.jpg');
             background-size: cover;
             background-position: center;
@@ -81,6 +81,7 @@ include_once('actions/get-sc-data.php');
 
         <div class="row ps-3 pe-3 mb-1 ">
             <div class="col-12 text-center  alert alert-primary m-0">
+                <a class="btn btn-outline-info float-end" href="index.php"><i class="bi bi-house-fill"></i></a>
                 <h3 class="m-0 p-0 fw-bold text-primary "> Admission Form </h3>
                 <div class="m-0 p-0 text-danger">
                     (All fields must be completed. | সব ফিল্ড সম্পূর্ণভাবে পূরণ করতে হবে।)
@@ -95,9 +96,26 @@ include_once('actions/get-sc-data.php');
             <input type="hidden" name="sccode" value="<?= $sccode; ?>">
             <!-- Card 1: Basic Information -->
             <div class="card mb-3">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 text-info fw-bold">Student's Information / শিক্ষার্থীর তথ্য</h5>
+                <div class="card-header d-flex justify-content-between align-items-center ">
+                    <div class="col-md-9">
+                        <h5 class="mb-0 text-info fw-bold">Student's Information / শিক্ষার্থীর তথ্য</h5>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="admclass">Admitted Class</label>
+                        <select name="admclass" class="form-select form-select-sm">
+                            <option value="Six">Six</option>
+                            <option value="Seven">Seven</option>
+                            <option value="Eight">Eight</option>
+                            <option value="Nine">Nine</option>
+                            <option value="Ten">Ten</option>
+                        </select>
+                    </div>
+                
+
                 </div>
+
+
                 <div class="card-body">
                     <div class="row">
                         <!-- left: inputs (6 cols) -->
@@ -105,19 +123,19 @@ include_once('actions/get-sc-data.php');
                             <div class="mb-3">
                                 <label class="form-label">Name (English) / নাম (ইংরেজীতে) <span
                                         class="text-danger">*</span></label>
-                                <input name="stnameeng" class="form-control" placeholder="Name of Student in English">
+                                <input name="stnameeng" class="form-control form-control-sm" placeholder="Name of Student in English">
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Name (Bangla) / নাম (বাংলায়) <span
                                         class="text-danger">*</span></label>
-                                <input name="stnameben" class="form-control" placeholder="বাংলায় শিক্ষার্থীর নাম">
+                                <input name="stnameben" class="form-control form-control-sm" placeholder="বাংলায় শিক্ষার্থীর নাম">
                             </div>
                             <div class="mb-3">
                                 <div class="row">
                                     <div class="col-6">
                                         <label class="form-label">Religion / ধর্ম <span
                                                 class="text-danger">*</span></label>
-                                        <select name="religion" class="form-select">
+                                        <select name="religion" class="form-select form-select-sm">
                                             <option value=""> -- Choose One --</option>
                                             <option value="Islam">Islam</option>
                                             <option value="Hindu">Hindu</option>
@@ -129,7 +147,7 @@ include_once('actions/get-sc-data.php');
                                     <div class="col-6">
                                         <label class="form-label">Gender / লিঙ্গ <span
                                                 class="text-danger">*</span></label>
-                                        <select name="gender" class="form-select">
+                                        <select name="gender" class="form-select form-select-sm">
                                             <option value=""> -- Choose One --</option>
                                             <option value="Boy">Boy</option>
                                             <option value="Girl">Girl</option>
@@ -147,7 +165,7 @@ include_once('actions/get-sc-data.php');
                             <label class="form-label">Student Photo (150x190) / শিক্ষার্থীর ছবি <span
                                     class="text-danger">*</span></label>
                             <div class="mb-2">
-                                <input id="photoInput" type="file" accept="image/*" class="form-control">
+                                <input id="photoInput" type="file" accept="image/*" class="form-control form-control-sm">
                             </div>
 
                             <div id="crop-area" style="display:none;">
@@ -191,7 +209,7 @@ include_once('actions/get-sc-data.php');
                         <div class="col-md-3">
 
                             <label class="form-label">Blood Group/ রক্তের গ্রুপ</label>
-                            <select name="bgroup" class="form-select">
+                            <select name="bgroup" class="form-select form-select-sm">
                                 <option value=""> -- Choose One --</option>
                                 <option value="A+">A+</option>
                                 <option value="A-">A-</option>
@@ -206,14 +224,14 @@ include_once('actions/get-sc-data.php');
                         <div class="col-md-3">
                             <label for="ps" class="form-label">Date of Birth / জন্ম তারিখ <span
                                     class="text-danger">*</span></label>
-                            <input type="date" id="dob" name="dob" class="form-control" value=""
+                            <input type="date" id="dob" name="dob" class="form-control form-control-sm" value=""
                                 placeholder="Date of Birth">
 
                         </div>
                         <div class="col-md-6">
                             <label for="po" class="form-label">Birth Registration Number / জন্ম নিবন্ধন
                                 নম্বর</label>
-                            <input name="brnno" class="form-control" placeholder="Birth Registration Number">
+                            <input name="brnno" class="form-control form-control-sm" placeholder="Birth Registration Number">
                         </div>
                     </div>
                 </div>
@@ -229,12 +247,12 @@ include_once('actions/get-sc-data.php');
 
                             <label class="form-label">Father's Name / পিতার নাম <span
                                     class="text-danger">*</span></label>
-                            <input name="fname" class="form-control" placeholder="Father's Name">
+                            <input name="fname" class="form-control form-control-sm" placeholder="Father's Name">
 
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">Alive / জীবিত <span class="text-danger">*</span></label>
-                            <select name="falive" class="form-select">
+                            <select name="falive" class="form-select form-select-sm">
                                 <option value=""> -- Choose One --</option>
                                 <option value="Yes">Alive / জীবিত</option>
                                 <option value="No">Died / মৃত</option>
@@ -244,7 +262,7 @@ include_once('actions/get-sc-data.php');
                         <div class="col-md-4">
                             <label for="fmobile" class="form-label">Mobile Number / মোবাইল নম্বর
                                 নম্বর</label>
-                            <input name="fmobile" class="form-control" placeholder="Father's Mobile Number">
+                            <input name="fmobile" class="form-control form-control-sm" placeholder="Father's Mobile Number">
                         </div>
                     </div>
                     <div class="row g-3">
@@ -252,12 +270,12 @@ include_once('actions/get-sc-data.php');
 
                             <label class="form-label">Mother's Name / মাতার নাম <span
                                     class="text-danger">*</span></label>
-                            <input name="mname" class="form-control" placeholder="Mother's Name">
+                            <input name="mname" class="form-control form-control-sm" placeholder="Mother's Name">
 
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">Alive / জীবিত <span class="text-danger">*</span></label>
-                            <select name="malive" class="form-select">
+                            <select name="malive" class="form-select form-select-sm">
                                 <option value=""> -- Choose One --</option>
                                 <option value="Yes">Alive / জীবিত</option>
                                 <option value="No">Died / মৃত</option>
@@ -267,7 +285,7 @@ include_once('actions/get-sc-data.php');
                         <div class="col-md-4">
                             <label for="mmobile" class="form-label">Mobile Number / মোবাইল নম্বর
                                 নম্বর</label>
-                            <input name="mmobile" class="form-control" placeholder="Mother's Mobile Number">
+                            <input name="mmobile" class="form-control form-control-sm" placeholder="Mother's Mobile Number">
                         </div>
                     </div>
                 </div>
@@ -283,7 +301,7 @@ include_once('actions/get-sc-data.php');
 
                         <div class="col-md-3">
                             <label class="form-label">Guardian / অভিভাবক <span class="text-danger">*</span></label>
-                            <select id="guar" name="guar" class="form-select">
+                            <select id="guar" name="guar" class="form-select form-select-sm">
                                 <option value=""> -- Choose One --</option>
                                 <option value="Father">Father</option>
                                 <option value="Mother">Mother</option>
@@ -295,14 +313,14 @@ include_once('actions/get-sc-data.php');
                         <div class="col-md-5">
                             <label for="po" class="form-label">Guardian name / অভিভাবকের নাম
                                 <span class="text-danger">*</span> </label>
-                            <input name="guarname" class="form-control" placeholder="Guardian's Name">
+                            <input name="guarname" class="form-control form-control-sm" placeholder="Guardian's Name">
                         </div>
 
                         <div class="col-md-4">
 
                             <label class="form-label">Guardian Mobile Number / মোবাইল নম্বর <span
                                     class="text-danger">*</span></label>
-                            <input id="mnumber" name="mnumber" class="form-control" placeholder="Mobile Number">
+                            <input id="mnumber" name="mnumber" class="form-control form-control-sm" placeholder="Mobile Number">
 
                         </div>
 
@@ -322,7 +340,7 @@ include_once('actions/get-sc-data.php');
                         <div class="col-md-3">
                             <label for="dist" class="form-label">District / জেলা <span
                                     class="text-danger">*</span></label>
-                            <select id="dist" name="dist" class="form-control">
+                            <select id="dist" name="dist" class="form-control form-control-sm">
                                 <option value="">-- Select District --</option>
                                 <!-- JS will populate -->
                             </select>
@@ -330,7 +348,7 @@ include_once('actions/get-sc-data.php');
                         <div class="col-md-3">
                             <label for="ps" class="form-label">Upzila / উপজেলা <span
                                     class="text-danger">*</span></label>
-                            <select id="ps" name="ps" class="form-control" disabled>
+                            <select id="ps" name="ps" class="form-control form-control-sm" disabled>
                                 <option value="">-- Select PS / Upazila --</option>
                                 <!-- JS will populate based on district -->
                             </select>
@@ -338,12 +356,12 @@ include_once('actions/get-sc-data.php');
                         <div class="col-md-3">
                             <label for="po" class="form-label">Post Office / ডাকঘর <span
                                     class="text-danger">*</span></label>
-                            <input name="po" class="form-control" placeholder="Post Office">
+                            <input name="po" class="form-control form-control-sm" placeholder="Post Office">
                         </div>
                         <div class="col-md-3">
                             <label for="village" class="form-label">Village | Area / গ্রাম | মহল্লা <span
                                     class="text-danger">*</span></label>
-                            <input name="village" class="form-control" placeholder="Village">
+                            <input name="village" class="form-control form-control-sm" placeholder="Village">
                         </div>
                     </div>
                 </div>
@@ -359,12 +377,12 @@ include_once('actions/get-sc-data.php');
                         <div class="col-md-3">
                             <label for="testno" class="form-label">Testimonial | TC. No. / প্রশংসা পত্র | টিসি
                                 নম্বর </label>
-                            <input name="testno" class="form-control" placeholder="Testimonial / TC Number">
+                            <input name="testno" class="form-control form-control-sm" placeholder="Testimonial / TC Number">
                         </div>
                         <div class="col-md-3">
                             <label for="insdist" class="form-label"> Institute District /<br> প্রতিষ্ঠানের জেলা
                             </label>
-                            <select id="insdist" name="insdist" class="form-control">
+                            <select id="insdist" name="insdist" class="form-control form-control-sm">
                                 <option value="">-- Select Institute District --</option>
                                 <!-- JS populate -->
                             </select>
@@ -372,7 +390,7 @@ include_once('actions/get-sc-data.php');
                         <div class="col-md-3">
                             <label for="insps" class="form-label"> Institute Upazila /<br> প্রতিষ্ঠানের উপজেলা
                             </label>
-                            <select id="insps" name="insps" class="form-control" disabled>
+                            <select id="insps" name="insps" class="form-control form-control-sm" disabled>
                                 <option value="">-- Select Institute PS / Upazila --</option>
                                 <!-- JS populate based on insdist -->
                             </select>
@@ -380,13 +398,13 @@ include_once('actions/get-sc-data.php');
                         <div class="col-md-3">
                             <label for="inspo" class="form-label"> Institute Post Office /<br> প্রতিষ্ঠানের ডাকঘর
                             </label>
-                            <input name="inspo" class="form-control" placeholder="Institute Post"
+                            <input name="inspo" class="form-control form-control-sm" placeholder="Institute Post"
                                 aria-placeholder="Post Office">
                         </div>
                         <div class="col-12 mt-4">
                             <label for="insname" class="form-label"> Institute Name / প্রতিষ্ঠানের নাম <span
                                     class="text-danger">*</span></label>
-                            <input name="insname" class="form-control" placeholder="Institute Name">
+                            <input name="insname" class="form-control form-control-sm" placeholder="Institute Name">
                         </div>
                     </div>
                 </div>
@@ -816,6 +834,7 @@ include_once('footer-plain.php');
             const insps = document.getElementsByName('insps')[0]?.value.trim() || '';
             const inspo = document.getElementsByName('inspo')[0]?.value.trim() || '';
             const insname = document.getElementsByName('insname')[0]?.value.trim() || '';
+            const admclass = document.getElementsByName('admclass')[0]?.value.trim() || '';
 
 
             validateFormFields();
@@ -853,8 +872,12 @@ include_once('footer-plain.php');
             var dd2 = $('#insdist option:selected').data('ins');
             formData.set('dist', dd);
             formData.set('insdist', dd2);
+            // formData.set('admclass', dd2);
 
             $('#submitBtn').prop('disabled', true).text('Submitting...');
+
+            alert(formData);
+
 
             $.ajax({
                 url: 'core/register_process.php',

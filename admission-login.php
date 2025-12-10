@@ -149,7 +149,9 @@ require_once 'header-plain.php';
                 <div class="mb-3"><input name="reg_id" class="form-control"
                         placeholder="Registration ID / রেজিস্ট্রেশন নম্বর"></div>
                 <div class="mb-3"><input name="pin" class="form-control" placeholder="PIN / পিন নম্বর"></div>
-                <div class="d-flex justify-content-between"><button class="btn btn-secondary" type="button"
+                <div class="d-flex justify-content-between">
+                    <a class="btn btn-outline-info" href="index.php"><i class="bi bi-house-fill"></i></a>
+                    <button class="btn btn-secondary" type="button"
                         onclick="window.location='admission-form.php'"> New Admission </button>
                     <button class="btn btn-primary" type="submit">Login</button>
                 </div>

@@ -1,16 +1,31 @@
 <style>
-    #themeToggleBtn {
+    #fixed-plain-block {
         position: fixed;
         bottom: 40px;
         right: 45px;
-        z-index: 1000;
+        z-index: 5000;
+        text-align: center;
+    }
+
+    #fixed-plain-block img {
+        display: block;
+        margin: 0 auto 8px;
+        /* নিচে 8px গ্যাপ */
+        max-width: 80px;
+        /* চাইলে সাইজ কমাতে/বাড়াতে পারবেন */
     }
 </style>
 
+<div id="fixed-plain-block">
+    <img src="https://demos.themeselection.com/materio-bootstrap-html-admin-template/assets/img/illustrations/tree-3.png"
+        alt="auth-tree" />
 
-<button id="themeToggleBtn" class="btn btn-outline-primary">
-    Toggle Theme
-</button>
+    <button id="themeToggleBtn" class="btn btn-outline-primary">
+        Toggle Theme
+    </button>
+</div>
+
+
 
 
 <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 2000"></div>

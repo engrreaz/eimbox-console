@@ -21,7 +21,8 @@ $inspo = $_POST['inspo'] ?? '';
 $insname = $_POST['insname'] ?? '';
 $dob = $_POST['dob'] ?? '';
 $brnno = $_POST['brnno'] ?? '';
-$cls = $_POST['admit_class'] ?? 'Six';
+// $cls = $_POST['admit_class'] ?? 'Six';
+$cls = $_POST['admclass'] ?? 'Six';
 // $photo_data = $_POST['photo_data'] ?? '';
 
 // Session Year ও SCCODE

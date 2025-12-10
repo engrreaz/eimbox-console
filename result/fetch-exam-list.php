@@ -20,7 +20,7 @@ $subject = $_POST['subject'];
 $sql = "SELECT examtitle FROM examlist 
         WHERE sccode='$sccode' 
         AND sessionyear='$session' 
-        AND slot='$slot'";
+        AND (slot='$slot' OR slot='')";
 
 $qq = mysqli_query($conn, $sql);
 
