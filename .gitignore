@@ -12,6 +12,8 @@ php-error.log
 
 # thrown directory (সব কিছু)
 thrown/
+eimbox-panel/
+
 
 # nav file with space
 nav/nav copy.php
