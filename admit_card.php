@@ -301,7 +301,7 @@ $html .= '<br><span style="font-size:10px;">Student\'s Photo<br>শিক্ষ�
 $html .= '
 
 
-<br><br>
+<br>
 <img src="' . dirname(__DIR__) . '/sign/' . $sccode . '.png' . '" style="width:100px;"/>
 <div style="font-size: 11px;">(' .
 
