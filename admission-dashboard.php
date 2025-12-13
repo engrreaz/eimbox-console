@@ -14,7 +14,7 @@ if ($sccode == '') {
 
 
 $reg = $_SESSION['student_reg'] ?? null;
-$scode = $_SESSION['scode'] ?? null;
+$scode = $_SESSION['sccode'] ?? null;
 if (!$reg) {
   header("Location: admission-login.php");
   exit;

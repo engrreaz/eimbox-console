@@ -767,7 +767,7 @@ function global_send_sms($mobile, $message, $campaign = 'Regular', $type = '', $
     // 3. SMS Gateway: bulksmsbd.net
     // -----------------------------------------
     if (str_contains($sms_url, 'bulksmsbd.net')) {
-
+        $sms_url = "http://bulksmsbd.net/api/smsapi";
         $data = [
             "api_key" => $sms_api_key,
             "senderid" => $sms_username,
@@ -890,7 +890,7 @@ function global_send_sms($mobile, $message, $campaign = 'Regular', $type = '', $
         VALUES
         ('$sccode', '$sessionyear', '$stid',  '$td', '$campaign', '$type', '$mobile', '$message_original', '$msg_length', '$count',
          '$usr', '$cur', '$cost', '$response_code', '$message_id', '$success_message', '$error_message', '$status', '$cur')";
-
+    // echo $sqls;
     $conn->query($sqls);
 }
 
@@ -922,7 +922,7 @@ function pass_validation(
         if ($full <= 0)
             return 0;
 
-        $p = ((float)$got * 100) / $full;
+        $p = ((float) $got * 100) / $full;
 
         if ($decimal == 0)
             return ceil($p);
@@ -932,7 +932,7 @@ function pass_validation(
     };
 
     // Total Marks
-    $total = ((float)$ct + (float)$mt + (float)$sub + (float)$obj + (float)$pra + (float)$ca);
+    $total = ((float) $ct + (float) $mt + (float) $sub + (float) $obj + (float) $pra + (float) $ca);
     $rate = $calc($total, $fm, $decimal);
 
     // ---------------- Algorithm 0 ----------------

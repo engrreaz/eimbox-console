@@ -5,11 +5,11 @@
     <h4 class="mb-3">Submitted Admission Form</h4>
 
     <div class="card">
-        <div class="card-body">
-            <table class="table table-bordered table-striped" id="admitTable">
+            <table class="table table-bordered table-striped table-sm" id="admitTable">
                 <thead class="table-dark">
                     <tr>
                         <th>#</th>
+                        <th>Class</th>
                         <th colspan="2"> Name of Applicant's (English | বাংলা)</th>
                         <th>Father</th>
                         <th>Mother</th>
@@ -21,17 +21,18 @@
                 </thead>
                 <tbody>
                     <?php
-                    $qry = $conn->query("SELECT * FROM registrations ORDER BY meritplace ASC, id DESC");
+                    $qry = $conn->query("SELECT * FROM registrations where sccode = '$sccode' ORDER BY meritplace ASC, id DESC");
                     $i = 1;
                     while ($row = $qry->fetch_assoc()) {
                         echo "<tr data-id='{$row['id']}'>
                                 <td>{$i}</td>
+                                <td><span class='badge badge-primary m-0 p-1'>{$row['admit_class']}</span></td>
                                 <td>{$row['stnameeng']}</td>
                                 <td>{$row['stnameben']}</td>
                                 <td>{$row['fname']}</td>
                                 <td>{$row['mname']}</td>
                                 <td>{$row['mnumber']}</td>
-                                <td><input style='text-align:center;' type='number' step='0.01' class='form-control markInput' value='{$row['adm_test_mark']}'></td>
+                                <td><input style='text-align:center;' type='number' step='0.01' class='form-control form-control-sm markInput' value='{$row['adm_test_mark']}'></td>
                                 <td>{$row['meritplace']}</td>
                                 <td class='text-nowrap'>
                                     <button class='btn btn-sm btn-outline-success btnSaveMark'><i class='bi bi-floppy fs-8'></i></button>
@@ -44,8 +45,7 @@
                     ?>
                 </tbody>
             </table>
-        
-        </div>
+
     </div>
 </div>
 

@@ -3,6 +3,12 @@ require_once 'core/init.php';
 
 // var_dump($_SESSION);
 
+$reg = $_SESSION['student_reg'] ?? null;
+$sccode = $_SESSION['scode'] ?? null;
+if ($reg) {
+    header("Location: admission-dashboard.php");
+    exit;
+}
 
 if (isset($_SESSION['user_id'])) {
     // Already logged in → redirect to dashboard

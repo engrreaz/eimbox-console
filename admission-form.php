@@ -55,13 +55,77 @@ include_once('actions/get-sc-data.php');
 
 
 
+<style>
+    /* মডাল ব্যাকগ্রাউন্ড */
+    .modal {
+        display: none;
+        /* hide by default */
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(241, 5, 5, 0.5);
+        /* আংশিক কালো ব্যাকগ্রাউন্ড */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    /* মডাল কন্টেন্ট */
+    .modal-content {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        text-align: center;
+    }
+</style>
+<!-- EIIN Input Modal -->
+<div id="eiinModal" class="modal" style="display:none;">
+    <div class="modal-content"
+        style="max-width:400px;margin:auto;padding:20px;border-radius:10px;box-shadow:0 0 10px #888;background:#fff;">
+        <h5 class="text-center m-0 p-0 ">Enter Your EIIN Number</h5>
+        <h5 class="text-center m-0 p-0">প্রতিষ্ঠানের ইআইআইএন নম্বর দাও</h5>
+        <input type="text" id="eiinInput" maxlength="6" placeholder="Enter 6-digit EIIN"
+            style="width:100%;padding:8px;font-size:16px;margin-top:10px;text-align:center;">
+
+        <div class="row mt-4">
+            <div class="col">
+                <button id=""
+                    style="margin-top:10px;width:100%;padding:8px;background:black;color:white;border:none;border-radius:6px;"
+                    onclick="closemodal();">
+                    Cancel
+                </button>
+
+
+            </div>
+            <div class="col">
+                <button id="saveEiin"
+                    style="margin-top:10px;width:100%;padding:8px;background:red;color:white;border:none;border-radius:6px;">
+                    Submit EIIN
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+<button style="position:fixed; top:20px; right:20px;" class="btn btn-outline-warning btn-sm fs-tiny" onclick="openmodal();">Change
+    EIIN</button>
+
 
 
 
 <div class="row">
     <div class="col-md-4 d-none d-md-block" style="
             background-image: url('assets/images/core/regd-form.jpg');
-            background-size: cover;
+            background-size: box;
             background-position: center;
             background-repeat: no-repeat;
             height: 98vh;
@@ -69,7 +133,7 @@ include_once('actions/get-sc-data.php');
             text-align:center;
             ">
 
-        <button class="btn btn-white top-50 text-center " style="position:relative;  " onclick="back();">
+        <button class="btn btn-dark top-50 text-center " style="position:relative; margin:150px; " onclick="back();">
             Back to Login</button>
     </div>
 
@@ -111,7 +175,7 @@ include_once('actions/get-sc-data.php');
                             <option value="Ten">Ten</option>
                         </select>
                     </div>
-                
+
 
                 </div>
 
@@ -123,12 +187,14 @@ include_once('actions/get-sc-data.php');
                             <div class="mb-3">
                                 <label class="form-label">Name (English) / নাম (ইংরেজীতে) <span
                                         class="text-danger">*</span></label>
-                                <input name="stnameeng" class="form-control form-control-sm" placeholder="Name of Student in English">
+                                <input name="stnameeng" class="form-control form-control-sm"
+                                    placeholder="Name of Student in English">
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Name (Bangla) / নাম (বাংলায়) <span
                                         class="text-danger">*</span></label>
-                                <input name="stnameben" class="form-control form-control-sm" placeholder="বাংলায় শিক্ষার্থীর নাম">
+                                <input name="stnameben" class="form-control form-control-sm"
+                                    placeholder="বাংলায় শিক্ষার্থীর নাম">
                             </div>
                             <div class="mb-3">
                                 <div class="row">
@@ -165,7 +231,8 @@ include_once('actions/get-sc-data.php');
                             <label class="form-label">Student Photo (150x190) / শিক্ষার্থীর ছবি <span
                                     class="text-danger">*</span></label>
                             <div class="mb-2">
-                                <input id="photoInput" type="file" accept="image/*" class="form-control form-control-sm">
+                                <input id="photoInput" type="file" accept="image/*"
+                                    class="form-control form-control-sm">
                             </div>
 
                             <div id="crop-area" style="display:none;">
@@ -231,7 +298,8 @@ include_once('actions/get-sc-data.php');
                         <div class="col-md-6">
                             <label for="po" class="form-label">Birth Registration Number / জন্ম নিবন্ধন
                                 নম্বর</label>
-                            <input name="brnno" class="form-control form-control-sm" placeholder="Birth Registration Number">
+                            <input name="brnno" class="form-control form-control-sm"
+                                placeholder="Birth Registration Number">
                         </div>
                     </div>
                 </div>
@@ -262,7 +330,8 @@ include_once('actions/get-sc-data.php');
                         <div class="col-md-4">
                             <label for="fmobile" class="form-label">Mobile Number / মোবাইল নম্বর
                                 নম্বর</label>
-                            <input name="fmobile" class="form-control form-control-sm" placeholder="Father's Mobile Number">
+                            <input name="fmobile" class="form-control form-control-sm"
+                                placeholder="Father's Mobile Number">
                         </div>
                     </div>
                     <div class="row g-3">
@@ -285,7 +354,8 @@ include_once('actions/get-sc-data.php');
                         <div class="col-md-4">
                             <label for="mmobile" class="form-label">Mobile Number / মোবাইল নম্বর
                                 নম্বর</label>
-                            <input name="mmobile" class="form-control form-control-sm" placeholder="Mother's Mobile Number">
+                            <input name="mmobile" class="form-control form-control-sm"
+                                placeholder="Mother's Mobile Number">
                         </div>
                     </div>
                 </div>
@@ -320,7 +390,8 @@ include_once('actions/get-sc-data.php');
 
                             <label class="form-label">Guardian Mobile Number / মোবাইল নম্বর <span
                                     class="text-danger">*</span></label>
-                            <input id="mnumber" name="mnumber" class="form-control form-control-sm" placeholder="Mobile Number">
+                            <input id="mnumber" name="mnumber" class="form-control form-control-sm"
+                                placeholder="Mobile Number">
 
                         </div>
 
@@ -377,7 +448,8 @@ include_once('actions/get-sc-data.php');
                         <div class="col-md-3">
                             <label for="testno" class="form-label">Testimonial | TC. No. / প্রশংসা পত্র | টিসি
                                 নম্বর </label>
-                            <input name="testno" class="form-control form-control-sm" placeholder="Testimonial / TC Number">
+                            <input name="testno" class="form-control form-control-sm"
+                                placeholder="Testimonial / TC Number">
                         </div>
                         <div class="col-md-3">
                             <label for="insdist" class="form-label"> Institute District /<br> প্রতিষ্ঠানের জেলা
@@ -876,7 +948,7 @@ include_once('footer-plain.php');
 
             $('#submitBtn').prop('disabled', true).text('Submitting...');
 
-            alert(formData);
+            // alert(formData);
 
 
             $.ajax({
@@ -930,6 +1002,90 @@ include_once('footer-plain.php');
 
 
 
+
+<script>
+    // Set cookie
+    function setCookie(name, value, days) {
+        const d = new Date();
+        d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+        const expires = "expires=" + d.toUTCString();
+        document.cookie = name + "=" + value + ";" + expires + ";path=/";
+    }
+
+    // Get cookie
+    function getCookie(name) {
+        const cname = name + "=";
+        const decodedCookie = decodeURIComponent(document.cookie);
+        const ca = decodedCookie.split(';');
+        for (let i = 0; i < ca.length; i++) {
+            let c = ca[i].trim();
+            if (c.indexOf(cname) === 0) return c.substring(cname.length, c.length);
+        }
+        return "";
+    }
+
+</script>
+
+
+<script>
+    $(document).ready(function () {
+        // PHP থেকে পাওয়া sccode
+        const phpSccode = "<?php echo $sccode ?? ''; ?>";
+        const localSccode = getCookie("sccode");
+
+        if (!phpSccode) {
+            if (!localSccode) {
+                // মডাল দেখাও
+                // $('#eiinModal').fadeIn(200);
+                document.getElementById('eiinModal').style.display = 'block';
+                document.getElementById('eiinModal').style.opacity = 0;
+
+                setTimeout(() => {
+                    document.getElementById('eiinModal').style.transition = "opacity .3s";
+                    document.getElementById('eiinModal').style.opacity = 1;
+                }, 10);
+            } else {
+                console.log('Using local sccode:', localSccode);
+            }
+        }
+
+        // EIIN সংরক্ষণ বাটন
+        $('#saveEiin').on('click', function () {
+            const eiin = $('#eiinInput').val().trim();
+            if (!/^\d{6}$/.test(eiin)) {
+                alert('Please enter a valid 6-digit EIIN number.');
+                return;
+            }
+
+            // লোকাল স্টোরেজে সংরক্ষণ
+            setCookie("sccode", eiin, 30); // ৩০ দিন মেয়াদ
+
+            // মডাল বন্ধ ও পেজ রিফ্রেশ
+            $('#eiinModal').fadeOut(200, function () {
+                location.reload();
+            });
+        });
+    });
+
+    function openmodal() {
+        // $('#eiinModal').fadeIn(500);
+
+        document.getElementById('eiinModal').style.display = 'block';
+        document.getElementById('eiinModal').style.opacity = 0;
+
+        setTimeout(() => {
+            document.getElementById('eiinModal').style.transition = "opacity .3s";
+            document.getElementById('eiinModal').style.opacity = 1;
+        }, 10);
+    }
+
+    function closemodal() {
+        $('#eiinModal').fadeOut(200, function () {
+            location.reload();
+        });
+    }
+</script>
 </body>
 
 </html>
+<!-- http://localhost/eimbox-dashboard/eimbox-materio/mobile_verify.php?id=111 -->

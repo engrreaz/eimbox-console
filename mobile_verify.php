@@ -3,10 +3,14 @@ session_start();
 include('core/config.php');
 include('core/db.php');
 include('core/core-val.php');
+include('core/functions.php');
 
 // echo $_SESSION['otp'];
 
 $sccode = $_COOKIE['sccode'];
+include_once('core/sms-gateway-info.php');
+
+// echo $sms_username . '/' . $sms_api_key;
 if ($sccode == '') {
     header("Location: admission-login.php");
     exit;
@@ -57,33 +61,7 @@ include_once('actions/get-sc-data.php');
 <?php
 
 
-// SMS Gateway Configuration (example)
-$sms_api_url = "http://bulksmsbd.net/api/smsapi?api_key=tNrdSSziORSgTc85sDxJ&type=text&number=Receiver&senderid=8809617618425&message=TestSMS";
-$sms_api_key = "tNrdSSziORSgTc85sDxJ"; // <-- এখানে তোমার gateway key দাও
 
-function sms_send($number, $message)
-{
-    $url = "http://bulksmsbd.net/api/smsapi";
-    $api_key = "tNrdSSziORSgTc85sDxJ";
-    $senderid = "8809617618425";
-
-
-    $data = [
-        "api_key" => $api_key,
-        "senderid" => $senderid,
-        "number" => $number,
-        "message" => $message
-    ];
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_POST, 1);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    $response = curl_exec($ch);
-    curl_close($ch);
-    return $response;
-}
 // ডাটাবেজ থেকে রেজিস্ট্রেশন তথ্য রিট্রিভ
 
 $query = mysqli_query($conn, "SELECT * FROM registrations WHERE id='$id' LIMIT 1");
@@ -103,14 +81,11 @@ if (isset($_POST['send_otp'])) {
     $_SESSION['otp'] = $otp;
     $_SESSION['otp_time'] = time();
 
-    $message = "Your verification code is: $otp";
+    $message = "Your verification code for admission is: $otp";
 
+    global_send_sms($mobile, $message, 'Admission', 'OTP');
 
     // sms_send($mobile, $message);
-
-
-
-    echo "<script>alert('OTP sent to $mobile / $otp / ');</script>";
 }
 
 // OTP যাচাই
@@ -127,13 +102,21 @@ if (isset($_POST['verify_otp'])) {
         mysqli_query($conn, "UPDATE registrations SET verified=1, verifytime=NOW() WHERE id='$id'");
 
         $message = $_SESSION['stname'] . ',\n Your Regd. No. is ' . $_SESSION['regid'] . ' and login PIN is ' . $_SESSION['pin'] . '\nURL is https://console.eimbox.com/admisssion.login.php';
-        // sms_send($mobile, $message);
+        global_send_sms($mobile, $message, 'Admission', 'Form Submit');
+
+        $_SESSION['student_reg'] = $_SESSION['regid'];
 
         echo "
             <script>
-            alert('Verification successful!');
+            alert('Verification successful! A SMS with related information has been sent.');
             if (confirm('Do you want to open Admit Card?')) {
-                window.location.href = 'admit_card.php?id=$id';
+
+                // Admit card new tab
+                window.open('admit_card.php?id=$id', '_blank');
+
+                
+                // Dashboard same tab
+                window.location.href = 'admission-dashboard.php';
             }
             </script>
             ";
@@ -157,9 +140,18 @@ if (isset($_POST['verify_otp'])) {
     <div class="container" style="max-width:500px;margin-top:70px;">
         <div class="card shadow">
 
-        <div class="alert alert-info">
-            OTP is <?= $_SESSION['otp'] ?? 0 ?>
-        </div>
+            <div class="alert alert-info">
+
+                <?php
+                $jt = $_SESSION['otp'] ?? 0;
+                if ($jt == 0) {
+                    echo '';
+                } else {
+                    echo 'An OTP has been send to your mobile.';
+                }
+                //
+                ?>
+            </div>
 
 
 
@@ -206,7 +198,6 @@ if (isset($_POST['verify_otp'])) {
             });
         </script>
     <?php endif; ?>
-
 
 </body>
 
