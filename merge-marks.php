@@ -489,48 +489,66 @@
     });
 
 
-    function mergeBatch(slot, session, batchSize = 1) {
+    function mergeBatch(offset, slot, session, batchSize = 1) {
 
         let className = $("#class").val();
         let sectionName = $("#section").val();
         let subcode = $("#subject").val();
-
         $.ajax({
             url: "result/merge-entire-batch.php",
             method: "POST",
-            data: {
-                slot,
-                session,
-                batchSize,
-                classname: className,
-                sectionname: sectionName,
-                subcode
-            },
+            data: { slot: slot, session: session, offset: offset, batchSize: batchSize, classname: className, sectionname: sectionName, subcode: subcode },
             dataType: "json",
 
             success: function (res) {
 
-                if (!res.done) {
-                    alert("Merge error");
-                    return;
+                if (typeof res === "string") {
+                    try { res = JSON.parse(res); } catch (e) {
+                        console.error("Invalid JSON:", res);
+                        alert("Invalid server response!");
+                        return;
+                    }
                 }
 
-                let merged = res.merged;
-                let total = res.total;
-                let percent = Math.round((merged / total) * 100);
+                if (res.done) {
 
-                updateProgress(percent, `Merged ${merged} / ${total}`);
+                    let merged = offset + res.count;
+                    let total = res.total;
+                    // let total = res.count;
+                    let percent = Math.min(100, Math.round((merged / total) * 100));
 
-                if (res.next) {
-                    mergeBatch(slot, session, batchSize);
+                    let up = total + 1;
+
+                    updateProgress(percent, `Merged now ${merged} : Remaining  ${total} students`);
+
+                    showToast(
+                        'success',
+                        `Merged marks for students` + res.stid,
+                        'On progress...'
+                    );
+
+                    let ddx = document.getElementById('data').innerHTML;
+                    document.getElementById('data').innerHTML =
+                        ddx + "<hr>" + (res.data ? res.data : "");
+
+
+                    if (res.nextOffset !== null) {
+                        mergeBatch(res.nextOffset, slot, session, batchSize);
+                    } else {
+                        updateProgress(100, "All students merged successfully!");
+                        alert("Merge completed for entire session.");
+                    }
+
                 } else {
-                    updateProgress(100, "All students merged successfully!");
-                    alert("Merge completed!");
+                    alert("Error during merging.");
                 }
+            },
+
+            error: function () {
+                alert("AJAX error during merging.");
             }
         });
     }
-
 
 
     $("#btnGetExam").click(function () {

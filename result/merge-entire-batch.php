@@ -42,20 +42,12 @@ if ($sec !== '')
     $whereBase .= " AND sectionname='$sec'";
 
 // Total students count
-$q_total = "
-SELECT COUNT(*) AS cnt
-FROM sessioninfo
-WHERE sessionyear='$session'
-AND slot='$slot'
-AND sccode='$sccode'
-";
-
+$q_total = "SELECT COUNT(*) AS cnt FROM sessioninfo WHERE $whereBase";
 $res_total = mysqli_query($conn, $q_total);
 $total = mysqli_fetch_assoc($res_total)['cnt'];
 
 // Fetch batch of students
-// $q = "SELECT stid, classname, sectionname FROM sessioninfo WHERE $whereBase LIMIT $offset, $batchSize";
-$q = "SELECT stid, classname, sectionname FROM sessioninfo WHERE $whereBase LIMIT  $batchSize";
+$q = "SELECT stid, classname, sectionname FROM sessioninfo WHERE $whereBase LIMIT $offset, $batchSize";
 $res = mysqli_query($conn, $q);
 $students = [];
 while ($row = mysqli_fetch_assoc($res)) {
@@ -173,26 +165,13 @@ foreach ($students as $stu) {
 }
 
 // Determine next offset
-// $nextOffset = (count($students)  < $total) ? ($offset + $batchSize) : null;
-
-$nextOffset = (count($students) == $batchSize) ? 1 : null;
-
-
-$q_total = "
-SELECT COUNT(*) AS cnt
-FROM sessioninfo
-WHERE sessionyear='$session'
-AND slot='$slot'
-AND sccode='$sccode'
-";
-$res_total = mysqli_query($conn, $q_total);
-$totalCount = (int) mysqli_fetch_assoc($res_total)['cnt'];
-
+$nextOffset = (count($students) + $্র < $total) ? ($offset + $batchSize) : null;
 
 echo json_encode([
     'done' => true,
-    'stid' => $stid,
-    'merged' => $mergedCount,
-    'total' => $totalCount,
-    'next' => ($remaining > 0)
+    'count' => count($students),
+    'total' => $total,
+    'nextOffset' => $nextOffset,
+    'data' => $data,
+    'stid' => $students[0]['stid'] ?? ''
 ]);
