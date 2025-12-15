@@ -515,7 +515,7 @@
                     let merged = offset + res.count;
                     let total = res.total;
                     // let total = res.count;
-                    let percent = Math.min(100, Math.round((merged / (total+merged*2)) * 100));
+                    let percent = Math.min(100, Math.round((merged / (total)) * 100));
 
                     let up = total + 1;
 
@@ -533,7 +533,7 @@
 
 
                     if (res.nextOffset !== null) {
-                        mergeBatch(res.nextOffset-batchSize, slot, session, batchSize);
+                        mergeBatch(res.nextOffset, slot, session, batchSize);
                     } else {
                         updateProgress(100, "All students merged successfully!");
                         alert("Merge completed for entire session.");

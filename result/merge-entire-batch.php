@@ -170,7 +170,7 @@ $nextOffset = (count($students) + $্র < $total) ? ($offset + $batchSize) : n
 echo json_encode([
     'done' => true,
     'count' => count($students),
-    'total' => $total,
+    'total' => $total + count($students),
     'nextOffset' => $nextOffset,
     'data' => $data,
     'stid' => $students[0]['stid'] ?? ''
