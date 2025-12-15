@@ -533,7 +533,7 @@
 
 
                     if (res.nextOffset !== null) {
-                        mergeBatch(res.nextOffset, slot, session, batchSize);
+                        mergeBatch(res.nextOffset-batchSize, slot, session, batchSize);
                     } else {
                         updateProgress(100, "All students merged successfully!");
                         alert("Merge completed for entire session.");
