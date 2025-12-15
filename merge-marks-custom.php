@@ -109,7 +109,7 @@
             </div>
         </div>
     </div>
-    <div id="data">....</div>
+    <div id="data" >....</div>
 
 </div>
 
@@ -129,11 +129,11 @@
 
             let formData = $("#mainForm").serialize();
             $(".examItem:checked").each(function () {
-                let examTitle = $(this).val();
-                let rateInput = $("input[name='rate[" + examTitle + "]']").val();
+    let examTitle = $(this).val();
+    let rateInput = $("input[name='rate[" + examTitle + "]']").val();
 
-                formData += "&rate[" + encodeURIComponent(examTitle) + "]=" + encodeURIComponent(rateInput);
-            });
+    formData += "&rate[" + encodeURIComponent(examTitle) + "]=" + encodeURIComponent(rateInput);
+});
 
             let ct = $("#ctmax_final").text();
             let mt = $("#mtmax_final").text();
@@ -180,7 +180,7 @@
 
         function processStudentRecursive(index, total, formData) {
 
-
+       
 
 
             $.ajax({
@@ -481,7 +481,6 @@
 
     $("#mergeEntire").click(function (e) {
         e.preventDefault();
-
         if (!confirm("Do you want to merge all students in this session?")) return;
 
         let slot = $("#slot").val();
@@ -493,61 +492,71 @@
         }
 
         $("#progressArea").show();
-        updateProgress(0, "Starting merge...");
-
-        mergeBatch(slot, session);
+        updateProgress(0, "Starting merge of entire session...");
+        mergeBatch(0, slot, session);
     });
 
-    function mergeBatch(slot, session, batchSize = 1) {
+
+    function mergeBatch(offset, slot, session, batchSize = 1) {
 
         let className = $("#class").val();
         let sectionName = $("#section").val();
         let subcode = $("#subject").val();
-
         $.ajax({
             url: "result/merge-entire-batch.php",
             method: "POST",
+            data: { slot: slot, session: session, offset: offset, batchSize: batchSize, classname: className, sectionname: sectionName, subcode: subcode },
             dataType: "json",
-            data: {
-                slot: slot,
-                session: session,
-                batchSize: batchSize,
-                classname: className,
-                sectionname: sectionName,
-                subcode: subcode
-            },
 
             success: function (res) {
 
-                if (!res.done) {
-                    alert("Merge failed!");
-                    return;
+                if (typeof res === "string") {
+                    try { res = JSON.parse(res); } catch (e) {
+                        console.error("Invalid JSON:", res);
+                        alert("Invalid server response!");
+                        return;
+                    }
                 }
 
-                let merged = res.merged;
-                let total = res.total;
-                let percent = Math.round((merged / total) * 100);
+                if (res.done) {
 
-                updateProgress(percent, `Merged ${merged} of ${total}`);
+                    let merged = offset + res.count;
+                    let total = res.total;
+                    // let total = res.count;
+                    let percent = Math.min(100, Math.round((merged / (total)) * 100));
 
-                if (res.data) {
-                    $("#data").append("<hr>" + res.data);
-                }
+                    let up = total + 1;
 
-                if (res.hasMore) {
-                    mergeBatch(slot, session, batchSize);
+                    updateProgress(percent, `Merged now ${merged} : Remaining  ${total} students`);
+
+                    showToast(
+                        'success',
+                        `Merged marks for students` + res.stid,
+                        'On progress...'
+                    );
+
+                    let ddx = document.getElementById('data').innerHTML;
+                    document.getElementById('data').innerHTML =
+                        ddx + "<hr>" + (res.data ? res.data : "");
+
+
+                    if (res.nextOffset !== null) {
+                        mergeBatch(res.nextOffset, slot, session, batchSize);
+                    } else {
+                        updateProgress(100, "All students merged successfully!");
+                        alert("Merge completed for entire session.");
+                    }
+
                 } else {
-                    updateProgress(100, "Merge completed!");
-                    alert("All students merged successfully.");
+                    alert("Error during merging.");
                 }
             },
 
             error: function () {
-                alert("AJAX error occurred!");
+                alert("AJAX error during merging.");
             }
         });
     }
-
 
     $(document).on("keyup change", "input[id^='rate_']", function () {
 
