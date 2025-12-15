@@ -191,6 +191,7 @@ $totalCount = (int) mysqli_fetch_assoc($res_total)['cnt'];
 
 echo json_encode([
     'done' => true,
+    'stid' => $stid,
     'merged' => $mergedCount,
     'total' => $totalCount,
     'next' => ($remaining > 0)
