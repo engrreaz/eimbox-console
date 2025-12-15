@@ -47,7 +47,7 @@ $res_total = mysqli_query($conn, $q_total);
 $total = mysqli_fetch_assoc($res_total)['cnt'];
 
 // Fetch batch of students
-$q = "SELECT stid, classname, sectionname FROM sessioninfo WHERE $whereBase LIMIT $offset, $batchSize";
+$q = "SELECT stid, classname, sectionname FROM sessioninfo WHERE $whereBase LIMIT $batchSize";
 $res = mysqli_query($conn, $q);
 $students = [];
 while ($row = mysqli_fetch_assoc($res)) {
@@ -165,7 +165,10 @@ foreach ($students as $stu) {
 }
 
 // Determine next offset
-$nextOffset = (count($students) + $offset < $total) ? ($offset + $batchSize) : null;
+$nextOffset = ($total - ($offset + count($students)) > 0)
+    ? ($offset + count($students))
+    : null;
+
 $data .= count($students) . '//' . $total . '//' . $nextOffset . '................';
 echo json_encode([
     'done' => true,
