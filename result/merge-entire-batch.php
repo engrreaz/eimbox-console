@@ -170,7 +170,7 @@ $data .= count($students) . '//' . $total . '//' . $nextOffset . '..............
 echo json_encode([
     'done' => true,
     'count' => count($students),
-    'total' => $total,
+    'total' => $total+$nextOffset,
     'nextOffset' => $nextOffset,
     'data' => $data,
     'stid' => $students[0]['stid'] ?? ''
