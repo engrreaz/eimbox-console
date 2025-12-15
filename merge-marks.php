@@ -109,7 +109,7 @@
             </div>
         </div>
     </div>
-    <div id="data" >....</div>
+    <div id="data">....</div>
 
 </div>
 
@@ -517,7 +517,7 @@
                     // let total = res.count;
                     let percent = Math.min(100, Math.round((merged / total) * 100));
 
-            
+
                     updateProgress(percent, `Merged now ${merged} : Remaining  ${total} students`);
 
                     showToast(
@@ -530,13 +530,13 @@
                     document.getElementById('data').innerHTML =
                         ddx + "<hr>" + (res.data ? res.data : "");
 
-
+                    alert(res.nextOffset + slot + session + batchSize)
                     if (res.nextOffset !== null) {
                         mergeBatch(res.nextOffset, slot, session, batchSize);
                     } else {
                         updateProgress(100, "All students merged successfully!");
                         // alert("Merge completed for entire session.");
-                         $('#mergeEntire').trigger('click');
+                        $('#mergeEntire').trigger('click');
                     }
 
                 } else {
