@@ -165,7 +165,7 @@ foreach ($students as $stu) {
 }
 
 // Determine next offset
-$nextOffset = (count($students) + $z < $total) ? ($offset + $batchSize) : null;
+$nextOffset = (count($students) + $offset < $total) ? ($offset + $batchSize) : null;
 
 echo json_encode([
     'done' => true,
