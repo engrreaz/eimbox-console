@@ -512,7 +512,8 @@
 
                 if (res.done) {
 
-                    let merged = offset + res.count;
+                    // let merged = offset + res.count;
+                    let merged = res.count;
                     let total = res.total;
                     // let total = res.count;
                     let percent = Math.min(100, Math.round((merged / (total)) * 100));
