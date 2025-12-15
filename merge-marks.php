@@ -518,6 +518,7 @@
                     let percent = Math.min(100, Math.round((merged / total) * 100));
 
                     let up = total + 1;
+                    merged = 1;
 
                     updateProgress(percent, `Merged now ${merged} : Remaining  ${total} students`);
 
