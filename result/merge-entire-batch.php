@@ -47,7 +47,7 @@ $res_total = mysqli_query($conn, $q_total);
 $total = mysqli_fetch_assoc($res_total)['cnt'];
 
 // Fetch batch of students
-$q = "SELECT stid, classname, sectionname FROM sessioninfo WHERE $whereBase LIMIT $offset, $batchSize";
+$q = "SELECT stid, classname, sectionname FROM sessioninfo WHERE $whereBase LIMIT $batchSize";
 $res = mysqli_query($conn, $q);
 $students = [];
 while ($row = mysqli_fetch_assoc($res)) {
