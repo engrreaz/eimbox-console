@@ -517,9 +517,7 @@
                     // let total = res.count;
                     let percent = Math.min(100, Math.round((merged / total) * 100));
 
-                    let up = total + 1;
-                    merged = 1;
-
+            
                     updateProgress(percent, `Merged now ${merged} : Remaining  ${total} students`);
 
                     showToast(
@@ -537,7 +535,8 @@
                         mergeBatch(res.nextOffset, slot, session, batchSize);
                     } else {
                         updateProgress(100, "All students merged successfully!");
-                        alert("Merge completed for entire session.");
+                        // alert("Merge completed for entire session.");
+                         $('#mergeEntire').trigger('click');
                     }
 
                 } else {
