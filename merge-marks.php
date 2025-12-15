@@ -519,7 +519,7 @@
 
                     let up = total + 1;
 
-                    updateProgress(percent, `Merged now ${merged} : Remaining  ${total} students`);
+                    updateProgress(percent, `Merged now ${merged} : Remaining  ${total+merged} students`);
 
                     showToast(
                         'success',

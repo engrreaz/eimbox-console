@@ -76,16 +76,15 @@ $regid = $reg['reg_id'];
 $pin = $reg['pin'];
 
 // OTP তৈরি
-if (isset($_POST['send_otp'])) {
-    $otp = rand(100000, 999999);
+if (isset($_POST['send_otp']) && empty($_SESSION['regid'])) {
+
+    $otp = random_int(100000, 999999); // more secure
     $_SESSION['otp'] = $otp;
     $_SESSION['otp_time'] = time();
 
     $message = "Your verification code for admission is: $otp";
 
     global_send_sms($mobile, $message, 'Admission', 'OTP');
-
-    // sms_send($mobile, $message);
 }
 
 // OTP যাচাই
