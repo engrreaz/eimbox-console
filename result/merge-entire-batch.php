@@ -171,7 +171,7 @@ echo json_encode([
     'done' => true,
     'count' => count($students),
     'total' => $total+$nextOffset,
-    'nextOffset' => $nextOffset,
+    'nextOffset' => $nextOffset--,
     'data' => $data,
     'stid' => $students[0]['stid'] ?? ''
 ]);

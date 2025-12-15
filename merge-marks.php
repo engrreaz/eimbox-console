@@ -530,7 +530,7 @@
                     document.getElementById('data').innerHTML =
                         ddx + "<hr>" + (res.data ? res.data : "");
 
-                    alert(res.nextOffset + slot + session + batchSize);
+            
                     if (res.nextOffset !== null) {
                         mergeBatch(res.nextOffset, slot, session, batchSize);
                     } else {
