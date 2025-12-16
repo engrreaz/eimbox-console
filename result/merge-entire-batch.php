@@ -133,6 +133,9 @@ function mergeStudent($stid, $class, $section, $slot, $session, $sccode, $usr, $
             }
         }
         $m['on100'] = $m['markobt'] * 100 / $m['fullmark'];
+        if($subject == 999){
+            $totalfinal =    $m['fullmark'];
+        }
         $data .= "Subject: $subject | markobt={$m['markobt']} | total=$totalfinal | {$m['on100']} <br>";
 
         // Pass/fail calculation
