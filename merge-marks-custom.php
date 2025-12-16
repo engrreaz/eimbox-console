@@ -87,7 +87,7 @@
         </div>
 
 
-        <input type="text" id="count" />
+        <input type="text" id="counto" />
         <div id="datax">000</div>
 
         <div class="card mt-3" id="mark-setup">ddd
@@ -527,7 +527,7 @@
             success: function (res) {
                 // if (res.done) {
                 let total = res.total;
-                $("#count").val(total);   // ✅ FIXED
+                $("#counto").val(total);   // ✅ FIXED
                 $("#slot").prop("disabled", true);
                 $("#session").prop("disabled", true);
                 $("#class").prop("disabled", true);
@@ -577,7 +577,7 @@
                     // let total = res.count;
                     // let percent = Math.min(100, Math.round((merged / total) * 100));
 
-                    let mot = $("#count").val();
+                    let mot = $("#counto").val();
                     let percent = Math.min(100, Math.round(((mot - total) / mot) * 100));
 
 
