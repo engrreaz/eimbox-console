@@ -71,14 +71,22 @@ function mergeStudent($stid, $class, $section, $slot, $session, $sccode, $usr, $
         $sublist[] = $r;
     }
 
+    if ($subcode !== '') {
+        $sublist[] = [
+            'subject' => 999
+        ];
+    }
+
+
+
     foreach ($sublist as $subrow) {
         $subject = $subrow['subject'];
-        $subfinal = $subrow['subj'] * array_sum($examRates);
-        $objfinal = $subrow['obj'] * array_sum($examRates);
-        $prafinal = $subrow['pra'] * array_sum($examRates);
-        $cafinal = $subrow['ca'] * array_sum($examRates);
-        $totalfinal = $subrow['fullmarks'] * array_sum($examRates);
-        $algfinal = $subrow['pass_algorithm'];
+        $subfinal = $subrow['subj'] * array_sum($examRates) ?? 0;
+        $objfinal = $subrow['obj'] * array_sum($examRates) ?? 0;
+        $prafinal = $subrow['pra'] * array_sum($examRates) ?? 0;
+        $cafinal = $subrow['ca'] * array_sum($examRates) ?? 0;
+        $totalfinal = $subrow['fullmarks'] * array_sum($examRates) ?? 0;
+        $algfinal = $subrow['pass_algorithm'] ?? 0;
 
         // Delete old GRAND marks
         $resf = mysqli_query($conn, "SELECT id FROM stmark WHERE sessionyear='$session' AND sccode='$sccode' AND stid='$stid' AND exam='GRAND' AND subject='$subject'");
