@@ -87,7 +87,7 @@
         </div>
 
 
-        <input type="text" id="count" />
+        <input type="text" id="counto" />
 
         <div class="card mt-3" id="mark-setup">ddd
         </div>
@@ -512,12 +512,10 @@
             dataType: "json",
 
             success: function (res) {
-
-
                 if (res.done) {
                     let total = res.total;
                     alert(total);
-                    $("#count").val() = total;
+                    $("#count").val(total);
                 } else {
                     alert("Error during Count.");
                 }
