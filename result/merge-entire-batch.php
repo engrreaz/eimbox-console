@@ -78,7 +78,7 @@ function mergeStudent($stid, $class, $section, $slot, $session, $sccode, $usr, $
     }
 
 
-
+ 
     foreach ($sublist as $subrow) {
         $subject = $subrow['subject'];
         $subfinal = $subrow['subj'] * array_sum($examRates) ?? 0;
