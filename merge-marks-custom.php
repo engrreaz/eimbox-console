@@ -522,16 +522,16 @@
             },
 
             success: function (res) {
-                if (res.done) {
+                // if (res.done) {
                     let total = res.total;
                     $("#count").val(total);   // ✅ FIXED
 
                        document.getElementById('datax').innerHTML =
                          (res.data ? res.data : "");
 
-                } else {
-                    alert("Error during Count.");
-                }
+                // } else {
+                //     alert("Error during Count.");
+                // }
             },
 
             error: function () {
