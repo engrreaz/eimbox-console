@@ -29,6 +29,7 @@ $q_total = "SELECT COUNT(*) AS cnt FROM sessioninfo WHERE $whereBase";
 $res_total = mysqli_query($conn, $q_total);
 $total = mysqli_fetch_assoc($res_total)['cnt'];
 
+$data .= $total;
 echo json_encode([
     'done' => true,
     'total' => $total,
