@@ -493,10 +493,13 @@
             return;
         }
 
-        mergeBatch(0, slot, session);
+        mergeCount(0, slot, session);
 
         $("#progressArea").show();
         updateProgress(0, "Starting merge of entire session...");
+
+
+
         mergeBatch(0, slot, session);
     });
 
@@ -523,11 +526,16 @@
 
             success: function (res) {
                 // if (res.done) {
-                    let total = res.total;
-                    $("#count").val(total);   // ✅ FIXED
+                let total = res.total;
+                $("#count").val(total);   // ✅ FIXED
+                $("#slot").prop("disabled", true);
+                $("#session").prop("disabled", true);
+                $("#class").prop("disabled", true);
+                $("#section").prop("disabled", true);
+                $("#subject").prop("disabled", true);
 
-                       document.getElementById('datax').innerHTML =
-                         (res.data ? res.data : "");
+                document.getElementById('datax').innerHTML =
+                    (res.data ? res.data : "");
 
                 // } else {
                 //     alert("Error during Count.");
