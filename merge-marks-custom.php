@@ -505,17 +505,25 @@
         let className = $("#class").val();
         let sectionName = $("#section").val();
         let subcode = $("#subject").val();
+
         $.ajax({
             url: "result/merge-entire-count.php",
             method: "POST",
-            data: { slot: slot, session: session, offset: offset, batchSize: batchSize, classname: className, sectionname: sectionName, subcode: subcode },
             dataType: "json",
+            data: {
+                slot: slot,
+                session: session,
+                offset: offset,
+                batchSize: batchSize,
+                classname: className,
+                sectionname: sectionName,
+                subcode: subcode
+            },
 
             success: function (res) {
                 if (res.done) {
                     let total = res.total;
-                    alert(total);
-                    $("#count").val(total);
+                    $("#count").val(total);   // ✅ FIXED
                 } else {
                     alert("Error during Count.");
                 }
@@ -526,6 +534,7 @@
             }
         });
     }
+
 
     function mergeBatch(offset, slot, session, batchSize = 1) {
 
