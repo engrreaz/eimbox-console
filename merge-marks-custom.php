@@ -601,6 +601,12 @@
                     } else {
                         updateProgress(100, "All students merged successfully!");
                         alert("Merge completed for entire session.");
+                        $("#slot").prop("disabled", false);
+                        $("#session").prop("disabled", false);
+                        $("#class").prop("disabled", false);
+                        $("#section").prop("disabled", false);
+                        $("#subject").prop("disabled", false);
+
                     }
 
                 } else {
