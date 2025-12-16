@@ -87,6 +87,7 @@
         </div>
 
 
+<div id="count">0</div>
 
         <div class="card mt-3" id="mark-setup">ddd
         </div>
@@ -109,7 +110,7 @@
             </div>
         </div>
     </div>
-    <div id="data" >....</div>
+    <div id="data">....</div>
 
 </div>
 
@@ -129,11 +130,11 @@
 
             let formData = $("#mainForm").serialize();
             $(".examItem:checked").each(function () {
-    let examTitle = $(this).val();
-    let rateInput = $("input[name='rate[" + examTitle + "]']").val();
+                let examTitle = $(this).val();
+                let rateInput = $("input[name='rate[" + examTitle + "]']").val();
 
-    formData += "&rate[" + encodeURIComponent(examTitle) + "]=" + encodeURIComponent(rateInput);
-});
+                formData += "&rate[" + encodeURIComponent(examTitle) + "]=" + encodeURIComponent(rateInput);
+            });
 
             let ct = $("#ctmax_final").text();
             let mt = $("#mtmax_final").text();
@@ -180,7 +181,7 @@
 
         function processStudentRecursive(index, total, formData) {
 
-       
+
 
 
             $.ajax({
@@ -491,11 +492,41 @@
             return;
         }
 
+        mergeBatch(0, slot, session);
+
         $("#progressArea").show();
         updateProgress(0, "Starting merge of entire session...");
         mergeBatch(0, slot, session);
     });
 
+
+    function mergeCount(offset, slot, session, batchSize = 1) {
+
+        let className = $("#class").val();
+        let sectionName = $("#section").val();
+        let subcode = $("#subject").val();
+        $.ajax({
+            url: "result/merge-entire-count.php",
+            method: "POST",
+            data: { slot: slot, session: session, offset: offset, batchSize: batchSize, classname: className, sectionname: sectionName, subcode: subcode },
+            dataType: "json",
+
+            success: function (res) {
+
+          
+                if (res.done) {
+                    let total = res.total;
+                    $("#count").val() = total;
+                } else {
+                    alert("Error during Count.");
+                }
+            },
+
+            error: function () {
+                alert("Count Error.");
+            }
+        });
+    }
 
     function mergeBatch(offset, slot, session, batchSize = 1) {
 
