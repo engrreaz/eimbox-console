@@ -71,7 +71,7 @@ function mergeStudent($stid, $class, $section, $slot, $session, $sccode, $usr, $
         $sublist[] = $r;
     }
 
-    if ($subcode !== '') {
+    if ($subcode == '') {
         $sublist[] = [
             'subject' => 999
         ];
