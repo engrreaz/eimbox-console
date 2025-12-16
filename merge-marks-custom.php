@@ -87,7 +87,7 @@
         </div>
 
 
-<div id="count">0</div>
+        <input type="text" id="count" />
 
         <div class="card mt-3" id="mark-setup">ddd
         </div>
@@ -513,9 +513,10 @@
 
             success: function (res) {
 
-          
+
                 if (res.done) {
                     let total = res.total;
+                    alert(total);
                     $("#count").val() = total;
                 } else {
                     alert("Error during Count.");
