@@ -125,7 +125,7 @@ function mergeStudent($stid, $class, $section, $slot, $session, $sccode, $usr, $
             }
         }
         $m['on100'] = $m['markobt'] * 100 / $m['fullmark'];
-        $data .= "Subject: $subject | markobt={$m['markobt']} | total=$totalfinal<br>";
+        $data .= "Subject: $subject | markobt={$m['markobt']} | total=$totalfinal | {$m['on100']} <br>";
 
         // Pass/fail calculation
         $p = pass_validation($m['ctest'], $m['mtest'], $m['subj'], $m['obj'], $m['pra'], $m['ca'], $subfinal, $objfinal, $prafinal, $totalfinal, $algfinal, 36, 2);
