@@ -87,7 +87,7 @@
         </div>
 
 
-        <input type="text" id="counto" />
+        <input type="text" id="count" />
         <div id="datax">000</div>
 
         <div class="card mt-3" id="mark-setup">ddd
@@ -575,7 +575,11 @@
                     let merged = offset + res.count;
                     let total = res.total;
                     // let total = res.count;
-                    let percent = Math.min(100, Math.round((merged / total) * 100));
+                    // let percent = Math.min(100, Math.round((merged / total) * 100));
+
+                    let mot = $("#count").val();
+                    let percent = Math.min(100, Math.round(((mot - total) / mot) * 100));
+
 
                     let up = total + 1;
 
