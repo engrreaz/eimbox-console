@@ -88,6 +88,7 @@
 
 
         <input type="text" id="counto" />
+        <div id="datax">000</div>
 
         <div class="card mt-3" id="mark-setup">ddd
         </div>
@@ -524,6 +525,10 @@
                 if (res.done) {
                     let total = res.total;
                     $("#count").val(total);   // ✅ FIXED
+
+                       document.getElementById('datax').innerHTML =
+                         (res.data ? res.data : "");
+
                 } else {
                     alert("Error during Count.");
                 }

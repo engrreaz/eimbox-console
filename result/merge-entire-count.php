@@ -33,4 +33,5 @@ $data .= $total . '%%%%%%%%%%%%%%%%%%';
 echo json_encode([
     'done' => true,
     'total' => $total,
+    'data' => $data
 ]);
