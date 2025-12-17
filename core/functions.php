@@ -991,7 +991,7 @@ function get_GP_GL($mark, $fullmark, $slot='School', $decimal = 0)
         WHERE minvalues <= $mark 
         AND maxvalues >= $mark 
         AND (sccode = '$sccode' OR sccode = 0)
-        AND (slot = '$slot' OR slot = '')
+        AND (slot = '$slot' OR slot = '' OR slot IS NULL)
         ORDER BY 
             CASE WHEN sccode = '$sccode' THEN 1 ELSE 2 END ASC,
             id ASC
