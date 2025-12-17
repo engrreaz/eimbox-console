@@ -6,7 +6,7 @@ require_once '../core/global_values.php';
 require_once '../core/functions.php';
 
 set_time_limit(0);
-$data = '';
+$data = '*';
 
 // POST variables
 $slot = $_POST['slot'];
@@ -189,6 +189,6 @@ echo json_encode([
     'count' => count($students),
     'total' => $total,
     'nextOffset' => $nextOffset,
-    // 'data' => $data,
+    'data' => $data,
     'stid' => $students[0]['stid'] ?? ''
 ]);
