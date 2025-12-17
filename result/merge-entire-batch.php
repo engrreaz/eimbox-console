@@ -78,7 +78,7 @@ function mergeStudent($stid, $class, $section, $slot, $session, $sccode, $usr, $
     }
 
 
- 
+
     foreach ($sublist as $subrow) {
         $subject = $subrow['subject'];
         $subfinal = $subrow['subj'] * array_sum($examRates) ?? 0;
@@ -133,8 +133,8 @@ function mergeStudent($stid, $class, $section, $slot, $session, $sccode, $usr, $
             }
         }
         $m['on100'] = $m['markobt'] * 100 / $m['fullmark'];
-        if($subject == 999){
-            $totalfinal =    $m['fullmark'];
+        if ($subject == 999) {
+            $totalfinal = $m['fullmark'];
         }
         $data .= "Subject: $subject | markobt={$m['markobt']} | total=$totalfinal | {$m['on100']} <br>";
 
@@ -145,8 +145,8 @@ function mergeStudent($stid, $class, $section, $slot, $session, $sccode, $usr, $
             $gp = 0;
             $gl = 'F';
         } else {
-                  $data .= '-------------- OKOKOK ************************ ';
             $gpgl = get_GP_GL($m['markobt'], $totalfinal);
+            $data .= $gpgl['qr'];
             $gp = $gpgl['gp'];
             $gl = $gpgl['gl'];
         }

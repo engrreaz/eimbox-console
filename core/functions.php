@@ -996,7 +996,7 @@ function get_GP_GL($mark, $fullmark, $decimal = 0)
             id ASC
         LIMIT 1
     ";
-echo $q;
+
     $res = mysqli_query($conn, $q);
 
     if ($res && mysqli_num_rows($res) > 0) {
@@ -1005,7 +1005,8 @@ echo $q;
             "gp" => $row['gp'],
             "gl" => $row['gl'],
             "remark" => $row['remark'],
-            "color" => $row['colorcode']
+            "color" => $row['colorcode'],
+            "qr" => $q
         ];
     }
 
@@ -1014,6 +1015,7 @@ echo $q;
         "gp" => 0.00,
         "gl" => "F",
         "remark" => "Failed",
-        "color" => "000000"
+        "color" => "000000",
+        "qr" => $q
     ];
 }
