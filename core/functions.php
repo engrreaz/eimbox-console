@@ -970,7 +970,7 @@ function pass_validation(
 }
 
 
-function get_GP_GL($mark, $fullmark, $decimal = 0)
+function get_GP_GL($mark, $fullmark, $slot='School', $decimal = 0)
 {
     global $conn, $sccode;
     if ($decimal == 0) {
@@ -991,6 +991,7 @@ function get_GP_GL($mark, $fullmark, $decimal = 0)
         WHERE minvalues <= $mark 
         AND maxvalues >= $mark 
         AND (sccode = '$sccode' OR sccode = 0)
+        AND (slot = '$slot' OR slot = '')
         ORDER BY 
             CASE WHEN sccode = '$sccode' THEN 1 ELSE 2 END ASC,
             id ASC
