@@ -44,7 +44,7 @@ if (mysqli_num_rows($qq) > 0) {
         <div class="form-check mb-1 col-md-4 col-sm-6">
             <div class="row g-1">
                 <div class="col-auto">
-                    <input class="form-check-input examItem pt-2"
+                    <input class="form-check-input examItem mt-2"
                            type="checkbox"
                            name="examitems[]"
                            value="<?php echo htmlspecialchars($title); ?>"
