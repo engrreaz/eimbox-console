@@ -996,7 +996,7 @@ function get_GP_GL($mark, $fullmark, $decimal = 0)
             id ASC
         LIMIT 1
     ";
-
+echo $q;
     $res = mysqli_query($conn, $q);
 
     if ($res && mysqli_num_rows($res) > 0) {
