@@ -81,7 +81,7 @@
 
 
         <input type="text" id="counto" />
-        
+
 
         <div class="card mt-3" id="mark-setup">ddd
         </div>
@@ -90,9 +90,9 @@
     </form>
 
 
-    <div class="card mt-3">
+    <div class="card mt-3" id="progressArea" style="display:none;">
         <div class="card-body">
-            <div id="progressArea" style="display:none;">
+            <div>
                 <label>Merging Progress</label>
                 <div class="progress" style="height:20px;">
                     <div id="mergeProgress" class="progress-bar progress-bar-striped progress-bar-animated"
@@ -100,7 +100,7 @@
                 </div>
 
                 <div class="mt-2 small text-secondary float-end" id="datax"></div>
-       
+
                 <div id="progressText" class="mt-2 small text-secondary"></div>
             </div>
         </div>
@@ -545,7 +545,7 @@
                 $("#subject").prop("disabled", true);
 
                 document.getElementById('datax').innerHTML =
-                    (res.data ? res.data : "") ;
+                    (res.data ? res.data : "");
 
                 // } else {
                 //     alert("Error during Count.");
