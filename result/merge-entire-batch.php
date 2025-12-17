@@ -145,6 +145,7 @@ function mergeStudent($stid, $class, $section, $slot, $session, $sccode, $usr, $
             $gp = 0;
             $gl = 'F';
         } else {
+                  $data .= '-------------- OKOKOK ************************ ';
             $gpgl = get_GP_GL($m['markobt'], $totalfinal);
             $gp = $gpgl['gp'];
             $gl = $gpgl['gl'];
