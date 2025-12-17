@@ -80,7 +80,7 @@
         </div>
 
 
-        <input type="text" id="counto" />
+        <input type="hidden" id="counto"  />
 
 
         <div class="card mt-3" id="mark-setup">ddd
