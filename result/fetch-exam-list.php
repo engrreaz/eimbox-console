@@ -44,7 +44,7 @@ if (mysqli_num_rows($qq) > 0) {
         <div class="form-check mb-1 col-md-4 col-sm-6">
             <div class="row g-1">
                 <div class="col-auto">
-                    <input class="form-check-input examItem"
+                    <input class="form-check-input examItem pt-2"
                            type="checkbox"
                            name="examitems[]"
                            value="<?php echo htmlspecialchars($title); ?>"
@@ -53,7 +53,7 @@ if (mysqli_num_rows($qq) > 0) {
                 </div>
 
                 <div class="col-auto">
-                    <label class="form-check-label" for="ex_<?php echo md5($title); ?>">
+                    <label class="form-check-label pt-2" for="ex_<?php echo md5($title); ?>">
                         <?php echo htmlspecialchars($title); ?>
                     </label>
                 </div>
@@ -65,7 +65,7 @@ if (mysqli_num_rows($qq) > 0) {
                            value="<?php echo $rateValue; ?>"
                            class="form-control form-control-sm text-center" />
                 </div>
-                <div class="col-auto pt-1">%</div>
+                <div class="col-auto pt-2">%</div>
             </div>
         </div>
         <?php } ?>
