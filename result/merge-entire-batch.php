@@ -20,18 +20,18 @@ $subcode = $_POST['subcode'] ?? '';
 // Selected exams and their rates from cookies
 $selectedExams = [];
 $examRates = [];
-$data .= '<br>--------------------';
+// $data .= '<br>--------------------';
 if (!empty($_COOKIE['examitems'])) {
     $selectedExams = explode(",", $_COOKIE['examitems']);
     foreach ($selectedExams as $ex) {
         $key = "rate_" . str_replace(" ", "_", $ex);
         $examRates[$ex] = isset($_COOKIE[$key]) ? floatval($_COOKIE[$key]) / 100 : 1;
 
-        $data .= $ex . '//' . $key . '//' . $examRates[$ex] . ' *********** ';
+        // $data .= $ex . '//' . $key . '//' . $examRates[$ex] . ' *********** ';
     }
 }
 
-$data .= '--------------------<br>';
+// $data .= '--------------------<br>';
 $examCount = count($selectedExams);
 
 // Base WHERE for sessioninfo
@@ -136,17 +136,17 @@ function mergeStudent($stid, $class, $section, $slot, $session, $sccode, $usr, $
         if ($subject == 999) {
             $totalfinal = $m['fullmark'];
         }
-        $data .= "Subject: $subject | markobt={$m['markobt']} | total=$totalfinal | {$m['on100']} <br>";
+        // $data .= "Subject: $subject | markobt={$m['markobt']} | total=$totalfinal | {$m['on100']} <br>";
 
         // Pass/fail calculation
         $p = pass_validation($m['ctest'], $m['mtest'], $m['subj'], $m['obj'], $m['pra'], $m['ca'], $subfinal, $objfinal, $prafinal, $totalfinal, $algfinal, 33, 2);
         if ($p === false || $p == 0) {
-            $data .= '--------------------- No VALID ---------------- ';
+            // $data .= '--------------------- No VALID ---------------- ';
             $gp = 0;
             $gl = 'F';
         } else {
             $gpgl = get_GP_GL($m['markobt'], $totalfinal, $slot);
-            $data .= $gpgl['qr'];
+            // $data .= $gpgl['qr'];
             $gp = $gpgl['gp'];
             $gl = $gpgl['gl'];
         }
@@ -167,7 +167,7 @@ function mergeStudent($stid, $class, $section, $slot, $session, $sccode, $usr, $
                 '{$m['markobt']}','{$m['on100']}','MG','$usr', '$gp', '$gl'
             )";
         mysqli_query($conn, $insert);
-        $data .= $insert . "<br>";
+        // $data .= $insert . "<br>";
     }
 
     // Update sessioninfo
@@ -183,12 +183,12 @@ foreach ($students as $stu) {
 // $nextOffset = (count($students) + $offset < $total) ? ($offset + $batchSize) : null;
 $nextOffset = (count($students) + $offset < $total) ? 0 : null;
 
-$data .= count($students) . '//' . $total . '//' . $nextOffset . '................';
+// $data .= count($students) . '//' . $total . '//' . $nextOffset . '................';
 echo json_encode([
     'done' => true,
     'count' => count($students),
     'total' => $total,
     'nextOffset' => $nextOffset,
-    'data' => $data,
+    // 'data' => $data,
     'stid' => $students[0]['stid'] ?? ''
 ]);
