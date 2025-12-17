@@ -67,7 +67,7 @@
                         <button type="submit" id="btnMerge" class="btn btn-warning text-dark btn-sm py-2 w-100" disabled
                             hidden>Merge
                             Grand</button>
-                        <button type="button" id="btnGetExam" class="btn btn-dark text-white btn-sm py-2 w-100">Get
+                        <button type="button" id="btnGetExam" class="btn btn-info text-white btn-sm py-2 w-100">Get
                             Exam List</button>
                     </div>
 
@@ -109,11 +109,11 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-auto gap-2">
-                    <button type="submit" class="btn btn-danger btn-sm " id="mergeEntire">Merge Entire Session</button>
+                    <button type="submit" class="btn btn-primary btn-sm " id="mergeEntire">Merge Entire Session</button>
 
                 </div>
                 <div class="col-auto gap-2">
-                    <button type="submit" class="btn btn-dark btn-sm " id="resetMerge">Reset All</button>
+                    <button type="submit" class="btn btn-danger btn-sm " id="resetMerge">Reset All</button>
 
                 </div>
 
