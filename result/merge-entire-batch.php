@@ -139,8 +139,9 @@ function mergeStudent($stid, $class, $section, $slot, $session, $sccode, $usr, $
         $data .= "Subject: $subject | markobt={$m['markobt']} | total=$totalfinal | {$m['on100']} <br>";
 
         // Pass/fail calculation
-        $p = pass_validation($m['ctest'], $m['mtest'], $m['subj'], $m['obj'], $m['pra'], $m['ca'], $subfinal, $objfinal, $prafinal, $totalfinal, $algfinal, 36, 2);
+        $p = pass_validation($m['ctest'], $m['mtest'], $m['subj'], $m['obj'], $m['pra'], $m['ca'], $subfinal, $objfinal, $prafinal, $totalfinal, $algfinal, 33, 2);
         if ($p === false || $p == 0) {
+            $data
             $gp = 0;
             $gl = 'F';
         } else {
