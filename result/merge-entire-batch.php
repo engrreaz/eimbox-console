@@ -141,7 +141,7 @@ function mergeStudent($stid, $class, $section, $slot, $session, $sccode, $usr, $
         // Pass/fail calculation
         $p = pass_validation($m['ctest'], $m['mtest'], $m['subj'], $m['obj'], $m['pra'], $m['ca'], $subfinal, $objfinal, $prafinal, $totalfinal, $algfinal, 33, 2);
         if ($p === false || $p == 0) {
-            $data
+            $data .= '--------------------- No VALID ---------------- ';
             $gp = 0;
             $gl = 'F';
         } else {
