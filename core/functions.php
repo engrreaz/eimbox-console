@@ -932,13 +932,15 @@ function pass_validation(
     };
 
     // Total Marks
+    $total_chk = ( (float) $sub + (float) $obj + (float) $pra );
     $total = ((float) $ct + (float) $mt + (float) $sub + (float) $obj + (float) $pra + (float) $ca);
+    $rate_chk = $calc($total_chk, $fm, $decimal);
     $rate = $calc($total, $fm, $decimal);
 
     // ---------------- Algorithm 0 ----------------
     // Only total percentage check
     if ($alg == 0) {
-        return ($rate >= $min);
+        return ($rate_chk >= $min);
     }
 
     // ---------------- Algorithm 1 ----------------
