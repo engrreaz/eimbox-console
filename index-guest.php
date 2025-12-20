@@ -1,5 +1,37 @@
 <?php
 include_once('index-guest-student-info.php');
+
+$marksArr = [32, 39, 49, 59, 69, 79, 100];
+$colorArr = ['red', 'orange', 'darkorange', 'steelblue', 'darkcyan', 'teal', 'seagreen'];
+$barColor = $colorArr[0]; // default
+
+$sql = "SELECT * from examlist where sccode='$sccode' and result_publish>= now() order by datestart desc limit 1";
+$result = $conn->query($sql);
+while ($row = $result->fetch_assoc()) {
+    $lastExamName = $row['examtitle'];
+    $dateStart = $row['datestart'];
+    $datePublish = $row['date_publish'];
+    $sessionyear = $row['sessionyear'];
+}
+
+$sql = "SELECT * from tabulatingsheet where sccode='$sccode' and exam='$lastExamName' and sessionyear='$sessionyear' and stid='$stid' order by id DESC limit 1";
+$result = $conn->query($sql);
+while ($row = $result->fetch_assoc()) {
+    $gpa = $row['gpa'];
+    $grade = $row['gla'];
+    $totalMarks = $row['totalmarks'];
+    $avgRate = $row['avgrate'];
+}
+
+
+foreach ($marksArr as $i => $max) {
+    if ($avgRate <= $max) {
+        $barColor = $colorArr[$i];
+        break;
+    }
+}
+
+
 ?>
 
 <!-- Content -->
@@ -15,7 +47,7 @@ include_once('index-guest-student-info.php');
                 <div class="col-12 mb-2">
                     ID # <b><?= $stid ?></b>
                 </div>
-             
+
 
                 <div class="d-flex justify-content-between flex-wrap gap-4 me-12 mt-4">
                     <div class="d-flex align-items-center gap-4 me-6 me-sm-0">
@@ -82,7 +114,160 @@ include_once('index-guest-student-info.php');
     </div>
     <!-- Hour chart End  -->
 
-    <!-- Topic and Instructors -->
+    <div class="row mb-5">
+        <div class="col-md-12 ">
+            <div class="card">
+                <div class="card-header d-flex align-items-center justify-content-between">
+                    <div>
+                        <h5 class="text-primary card-title m-0 me-2">Grade Book</h5>
+                        <div class="fs-tiny text-secondary">Last exam status are given below</div>
+                    </div>
+                    <span class="rounded-circle text-primary ">
+                        <i class="bi bi-file-earmark-break icon-28px"></i>
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center g-4">
+                        <div class="col-md-3">
+                            <p class="mb-1">Session</p>
+                            <h5><?= $sessionyear ?></h5>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="mb-1">Examination Title</p>
+                            <h5><?= $lastExamName ?></h5>
+                        </div>
+
+                        <div class="col-md-5">
+                            <p class="mb-1 text-dark">Result Summary</p>
+
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="progress w-50 bg-label-primary" style="height:12px;">
+                                    <div class="progress-bar" role="progressbar"
+                                        style="width:<?= $avgRate ?>%; background:<?= $barColor ?>;"
+                                        aria-valuenow="<?= $avgRate ?>" aria-valuemin="0" aria-valuemax="100">
+                                    </div>
+                                </div>
+                                <p class="ms-2 mb-0" style="color:<?= $barColor ?>;"><?= $avgRate ?>%</p>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-6" style="color:<?= $barColor ?>;">GPA : <?= $gpa . ' | ' . $grade ?>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+                     
+                    </div>
+                </div>
+            </div>
+
+
+
+
+        </div>
+
+    </div>
+
+    <div class="row mb-5">
+        <div class="col-md-12">
+
+            <div class="card">
+                <div class="card-header d-flex align-items-center justify-content-between">
+                    <div>
+                        <h5 class="text-primary card-title m-0 me-2">Attendance</h5>
+                        <div class="fs-tiny text-secondary">Attendance summery for current session</div>
+                    </div>
+                    <span class="rounded-circle text-primary ">
+                        <i class="bi bi-fingerprint icon-28px"></i>
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center g-4">
+                        <div class="col-md-3">
+                            <p class="mb-1">Attendance</p>
+                            <h5><?= $sessionyear ?></h5>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="mb-1">Working Days</p>
+                            <h5><?= $lastExamName ?></h5>
+                        </div>
+
+                        <div class="col-md-5">
+                            <p class="mb-1 text-dark">Attendaance Summary</p>
+
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="progress w-50 bg-label-primary" style="height:12px;">
+                                    <div class="progress-bar" role="progressbar"
+                                        style="width:<?= $avgRate ?>%; background:<?= $barColor ?>;"
+                                        aria-valuenow="<?= $avgRate ?>" aria-valuemin="0" aria-valuemax="100">
+                                    </div>
+                                </div>
+                                <p class="ms-2 mb-0" style="color:<?= $barColor ?>;"><?= $avgRate ?>%</p>
+                            </div>
+
+                            <div class="row" hidden>
+                                <div class="col-6" style="color:<?= $barColor ?>;">GPA : <?= $gpa . ' | ' . $grade ?>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row mb-5">
+        <div class="col-md-12">
+
+            <div class="card">
+                <div class=" card-header d-flex align-items-center justify-content-between">
+                    <div>
+                        <h5 class="card-title m-0 me-2 text-primary">Dues</h5>
+                        <div class="fs-tiny text-secondary">Dues till today</div>
+                    </div>
+                    <span class="rounded-circle text-primary ">
+                        <i class="bi bi-coin icon-28px"></i>
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center g-4">
+                        <div class="col-md-3">
+                            <p class="mb-1">......</p>
+                            <h5><?= $sessionyear ?></h5>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="mb-1">Amount Dues</p>
+                            <h5><?= $lastExamName ?></h5>
+                        </div>
+
+                        <div class="col-md-5">
+                            <p class="mb-1 text-dark">Attendaance Summary</p>
+
+                            <div class="d-flex align-items-center mb-3">
+                                <button class="btn btn-danger">Pay with bkash</button>
+                            </div>
+
+
+                        </div>
+
+
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Topic and Instructors
     <div class="row mb-6 g-6">
         <div class="col-12 col-xxl-8">
             <div class="card h-100">
@@ -475,9 +660,9 @@ include_once('index-guest-student-info.php');
             </div>
         </div>
     </div>
-    <!--  Topic and Instructors  End-->
+  End-->
 
-    <!-- Course datatable -->
+    <!-- Course datatable 
     <div class="card mb-4">
         <div class="table-responsive mb-3">
             <table class="table datatables-academy-course">
@@ -495,7 +680,13 @@ include_once('index-guest-student-info.php');
         </div>
     </div>
 
-    <!-- Course datatable End -->
+     -->
 
 </div>
 <!-- / Content -->
+
+
+
+<script>
+
+</script>
