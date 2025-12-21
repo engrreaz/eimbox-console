@@ -213,7 +213,7 @@ if (isset($_POST['verify_otp'])) {
                 });
 
                 // চাইলে বোতামও disable করতে পারো
-                $('form button[type="submit"]').prop('disabled', true);
+                // $('form button[type="submit"]').prop('disabled', true);
             });
         </script>
     <?php endif; ?>
