@@ -58,3 +58,8 @@
  .data-table-stripe tbody tr:nth-child(even) {
      background: #ffffff !important;
  }
+
+
+ .fs-small {
+     font-size: 0.8rem;
+ }

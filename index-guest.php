@@ -1,9 +1,42 @@
 <?php
 include_once('index-guest-student-info.php');
 
+$guest = $settings['Panel Settings']['Guest Student'];
+
+// basic
+$panel_active     = $guest['panel_active'] ?? 'no';
+$access_times     = (int)($guest['access_times'] ?? 0);
+$max_stay_time    = (int)($guest['max_stay_time'] ?? 0);
+
+// login security (array)
+$login_security   = $guest['login_security'] ?? [];
+
+// permissions / features
+$result               = (int)($guest['result'] ?? 0);
+$result_details       = $guest['result_details'] ?? '';
+$result_pdf           = $guest['result_pdf'] ?? '';
+$result_archive       = $guest['result_archive'] ?? '';
+
+$attendance            = (int)($guest['attendance'] ?? 0);
+$attendance_details    = $guest['attendance_details'] ?? '';
+
+$payment               = (int)($guest['payment'] ?? 0);
+$payment_details       = $guest['payment_details'] ?? '';
+$payment_history       = $guest['payment_history'] ?? '';
+$online_payment        = (int)($guest['online_payment'] ?? 0);
+
+$download_profile      = (int)($guest['download_profile'] ?? 0);
+$notice                = $guest['notice'] ?? '';
+$notification          = (int)($guest['notification'] ?? 0);
+
+
+
+
 $marksArr = [32, 39, 49, 59, 69, 79, 100];
 $colorArr = ['red', 'orange', 'darkorange', 'steelblue', 'darkcyan', 'teal', 'seagreen'];
 $barColor = $colorArr[0]; // default
+$attndColor = 'seagreen';
+$duesColor = 'crimson';
 
 $sql = "SELECT * from examlist where sccode='$sccode' and result_publish>= now() order by datestart desc limit 1";
 $result = $conn->query($sql);
@@ -32,7 +65,134 @@ foreach ($marksArr as $i => $max) {
 }
 
 
+
+// ------------------------র Attendance Calculation ------------------------
+$from = $SY . '-01-01';
+$to = date('Y-m-d');
+
+$sql = "
+SELECT COUNT(*) AS working_days
+FROM (
+    SELECT adate
+    FROM stattnd
+    WHERE sccode='$sccode'
+      AND sessionyear='$SY'
+      AND adate BETWEEN '$from' AND '$to'
+    GROUP BY adate
+    HAVING SUM(yn) > 0
+) x
+";
+
+$res = mysqli_query($conn, $sql);
+$row = mysqli_fetch_assoc($res);
+
+$workingDays = (int) $row['working_days'];
+
+$sql = "
+SELECT
+    SUM(yn=1)   AS present_days,
+    SUM(bunk=1) AS bunk_days
+FROM stattnd
+WHERE sccode='$sccode'
+  AND sessionyear='$SY'
+  AND stid='$stid'
+  AND adate BETWEEN '$from' AND '$to'
+";
+
+$res = mysqli_query($conn, $sql);
+$row = mysqli_fetch_assoc($res);
+
+$present0 = (int) $row['present_days'];
+$bunk0 = (int) $row['bunk_days'];
+$absent0 = max(0, $workingDays - ($present0 + $bunk0));
+
+
+
+
+
+
+
+$present0 = 0;
+$bunk0 = 0;
+$absent0 = $workingDays - $present0 - $bunk0;
+
+if ($present0 + $bunk0 > 100) {
+    $present0 = 100;
+    $bunk0 = 0;
+}
+$absent = 100 - $present0 - $bunk0;
+
+$present = ($present0 > 0 && $workingDays > 0)
+    ? ($present0 / $workingDays) * 100
+    : 0;
+
+$bunk = ($bunk0 > 0 && $workingDays > 0)
+    ? ($bunk0 / $workingDays) * 100
+    : 0;
+
+$absent = ($absent0 > 0 && $workingDays > 0)
+    ? ($absent0 / $workingDays) * 100
+    : 0;
+
+
+
+
+// --------------------- Dues Calculation ------------------------
+$currentMonth = (int) date('n'); // 1–12
+$sql = "
+SELECT SUM(dues) AS total_dues
+FROM stfinance
+WHERE stid='$stid'
+  AND sccode='$sccode'
+  AND sessionyear='$SY'
+  AND month <= '$currentMonth'
+";
+
+$res = mysqli_query($conn, $sql);
+$row = mysqli_fetch_assoc($res);
+
+// $totalDues = (float)($row['total_dues'] ?? 0);
+$totalDues = $row['total_dues'] !== null ? (float) $row['total_dues'] : 0;
 ?>
+
+
+<style>
+    .progress-present {
+        background: seagreen;
+    }
+
+    .progress-bunk {
+        background: orange;
+    }
+
+    .progress-absent {
+        background: crimson;
+    }
+</style>
+
+<style>
+    .avatar-circle {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all .25s ease;
+    }
+
+    .avatar-circle:hover {
+        transform: scale(1.12);
+        box-shadow: 0 0 0 4px rgba(0, 0, 0, .08);
+    }
+
+    .avatar-circle:active {
+        transform: scale(0.95);
+    }
+</style>
+
 
 <!-- Content -->
 <div class="container-xxl flex-grow-1 container-p-y">
@@ -114,7 +274,7 @@ foreach ($marksArr as $i => $max) {
     </div>
     <!-- Hour chart End  -->
 
-    <div class="row mb-5">
+    <div class="row mb-5" <?php if($result==0) echo 'style="display:none;"'; ?>>
         <div class="col-md-12 ">
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between">
@@ -122,9 +282,17 @@ foreach ($marksArr as $i => $max) {
                         <h5 class="text-primary card-title m-0 me-2">Grade Book</h5>
                         <div class="fs-tiny text-secondary">Last exam status are given below</div>
                     </div>
-                    <span class="rounded-circle text-primary ">
-                        <i class="bi bi-file-earmark-break icon-28px"></i>
-                    </span>
+
+
+
+                    <div class="avatar-circle" style="background:<?= $barColor ?>;" onclick="alert('Clicked!');">
+                        <i class="bi bi-file-earmark-break text-white"></i>
+                    </div>
+
+
+
+
+
                 </div>
                 <div class="card-body">
                     <div class="row align-items-center g-4">
@@ -158,7 +326,7 @@ foreach ($marksArr as $i => $max) {
 
 
 
-                     
+
                     </div>
                 </div>
             </div>
@@ -179,43 +347,65 @@ foreach ($marksArr as $i => $max) {
                         <h5 class="text-primary card-title m-0 me-2">Attendance</h5>
                         <div class="fs-tiny text-secondary">Attendance summery for current session</div>
                     </div>
-                    <span class="rounded-circle text-primary ">
-                        <i class="bi bi-fingerprint icon-28px"></i>
-                    </span>
+                    <div class="avatar-circle" style="background:<?= $attndColor ?>;" onclick="alert('Clicked!');">
+                        <i class="bi bi-fingerprint text-white"></i>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="row align-items-center g-4">
-                        <div class="col-md-3">
-                            <p class="mb-1">Attendance</p>
-                            <h5><?= $sessionyear ?></h5>
-                        </div>
-                        <div class="col-md-4">
+                        <div class="col-md-2">
                             <p class="mb-1">Working Days</p>
-                            <h5><?= $lastExamName ?></h5>
+                            <h5><?= $workingDays ?></h5>
+                        </div>
+                        <div class="col-md-2">
+                            <p class="mb-1">Present</p>
+                            <h5><?= $present0 ?></h5>
                         </div>
 
-                        <div class="col-md-5">
+                        <div class="col-md-2">
+                            <p class="mb-1">Bunk</p>
+                            <h5><?= $bunk0 ?></h5>
+                        </div>
+                        <div class="col-md-2">
+                            <p class="mb-1">Absent</p>
+                            <h5><?= $absent0 ?></h5>
+                        </div>
+
+                        <div class="col-md-4">
                             <p class="mb-1 text-dark">Attendaance Summary</p>
 
                             <div class="d-flex align-items-center mb-3">
-                                <div class="progress w-50 bg-label-primary" style="height:12px;">
-                                    <div class="progress-bar" role="progressbar"
-                                        style="width:<?= $avgRate ?>%; background:<?= $barColor ?>;"
-                                        aria-valuenow="<?= $avgRate ?>" aria-valuemin="0" aria-valuemax="100">
+                                <div class="progress w-75 bg-label-primary" style="height:12px;">
+                                    <div class="progress w-100" style="height:12px;">
+                                        <div class="progress-bar progress-present" style="width:<?= $present ?>%"
+                                            title="Present <?= round($present) ?>%">
+                                        </div>
+
+                                        <div class="progress-bar progress-bunk" style="width:<?= $bunk ?>%"
+                                            title="Bunk <?= round($bunk) ?>%">
+                                        </div>
+
+                                        <div class="progress-bar progress-absent" style="width:<?= $absent ?>%"
+                                            title="Absent <?= round($absent) ?>%">
+                                        </div>
                                     </div>
+
                                 </div>
                                 <p class="ms-2 mb-0" style="color:<?= $barColor ?>;"><?= $avgRate ?>%</p>
                             </div>
 
-                            <div class="row" hidden>
-                                <div class="col-6" style="color:<?= $barColor ?>;">GPA : <?= $gpa . ' | ' . $grade ?>
-                                </div>
+
+                            <div class="row w-75 fs-small">
+                                <div class="col-4" style="color:seagreen;">Present</div>
+                                <div class="col-4" style="color:orange;">Bunk</div>
+                                <div class="col-4" style="color:crimson;">Absent</div>
+                            </div>
+                            <div class="row w-75 fs-5 fw-bold">
+                                <div class="col-4" style="color:seagreen;"><?= round($present) ?>%</div>
+                                <div class="col-4" style="color:orange;"><?= round($bunk) ?>%</div>
+                                <div class="col-4" style="color:crimson;"><?= round($absent) ?>%</div>
                             </div>
                         </div>
-
-
-
-
                     </div>
                 </div>
             </div>
@@ -232,9 +422,9 @@ foreach ($marksArr as $i => $max) {
                         <h5 class="card-title m-0 me-2 text-primary">Dues</h5>
                         <div class="fs-tiny text-secondary">Dues till today</div>
                     </div>
-                    <span class="rounded-circle text-primary ">
-                        <i class="bi bi-coin icon-28px"></i>
-                    </span>
+                    <div class="avatar-circle" style="background:<?= $duesColor ?>;" onclick="alert('Clicked!');">
+                        <i class="bi bi-coin text-white"></i>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="row align-items-center g-4">
@@ -244,7 +434,7 @@ foreach ($marksArr as $i => $max) {
                         </div>
                         <div class="col-md-4">
                             <p class="mb-1">Amount Dues</p>
-                            <h5><?= $lastExamName ?></h5>
+                            <h5 class="fw-bold text-danger"><?= number_format($totalDues, 2); ?></h5>
                         </div>
 
                         <div class="col-md-5">
