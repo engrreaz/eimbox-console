@@ -74,7 +74,7 @@ if (!$reg) {
 $mobile = $reg['mnumber'];
 $regid = $reg['reg_id'];
 $pin = $reg['pin'];
-echo $regid ;
+echo $regid . $_POST['send_otp'];
 
 // OTP তৈরি
 if (isset($_POST['send_otp']) && empty($_SESSION['regid'])) {
