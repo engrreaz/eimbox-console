@@ -77,22 +77,35 @@ $pin = $reg['pin'];
 echo $regid . $_POST['send_otp'];
 
 // OTP তৈরি
-if (isset($_POST['send_otp']) && empty($_SESSION['regid'])) {
+if (isset($_POST['send_otp']) && !isset($_SESSION['otp'])) {
 
-    $otp = random_int(100000, 999999); // more secure
+    $otp = random_int(100000, 999999);
     $_SESSION['otp'] = $otp;
     $_SESSION['otp_time'] = time();
-    if ($sms_active == 0) {
-        $alert = 'info';
-        $alert_text = 'OTP is ' . $otp . ' ';
-    } else {
+
+    // প্রয়োজনীয় session
+    $_SESSION['regid'] = $reg['reg_id'];
+    $_SESSION['pin'] = $reg['pin'];
+    $_SESSION['stname'] = $reg['name'];
+
+    if ($sms_active == 1) {
+
+        // SMS পাঠানো
         $message = "Your verification code for admission is: $otp";
         global_send_sms($mobile, $message, 'Admission', 'OTP');
 
+        // SMS + alert দুইটাই
+        // $alert = 'info';
+        // $alert_text = "OTP has been sent to your mobile.<br><b>OTP:</b> $otp";
+
+    } else {
+
+        // SMS বন্ধ থাকলে শুধু alert
+        $alert = 'warning';
+        $alert_text = "SMS service is disabled.<br><b>OTP:</b> $otp";
     }
-} else {
-    echo 'Error';
 }
+
 
 // OTP যাচাই
 if (isset($_POST['verify_otp'])) {
