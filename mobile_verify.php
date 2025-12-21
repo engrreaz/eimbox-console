@@ -89,6 +89,8 @@ if (isset($_POST['send_otp']) && empty($_SESSION['regid'])) {
         global_send_sms($mobile, $message, 'Admission', 'OTP');
 
     }
+} else {
+    echo 'Error';
 }
 
 // OTP যাচাই
