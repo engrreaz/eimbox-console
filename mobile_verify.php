@@ -74,7 +74,6 @@ if (!$reg) {
 $mobile = $reg['mnumber'];
 $regid = $reg['reg_id'];
 $pin = $reg['pin'];
-echo $regid . $_POST['send_otp'];
 
 // OTP তৈরি
 if (isset($_POST['send_otp']) && !isset($_SESSION['otp'])) {
@@ -209,7 +208,7 @@ if (isset($_POST['verify_otp'])) {
                 // alert_text আছে মানে invalid অবস্থা
                 $('form').on('submit', function (e) {
                     e.preventDefault(); // ফরম সাবমিট বন্ধ
-                    alert('⚠️ Invalid form. Please check and reload the page.');
+               //     alert('⚠️ Invalid form. Please check and reload the page.');
                 });
 
                 // চাইলে বোতামও disable করতে পারো
