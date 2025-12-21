@@ -403,42 +403,53 @@ include_once('header-plain.php');
             </div>
 
             <div class="modal-body">
+
+                <div class="row">
+
+                    <div class="col-md-6" id="guestPanelStatus"></div>
+                    <div class="col-md-6" id="resultBlock">dddddd</div>
+                </div>
+
                 <form id="guestLoginForm">
                     <div class="row">
 
-                        <div class="col-6 mb-3">
+                        <div class="col-3 mb-3">
                             <label>Institute Code</label>
-                            <input type="text" id="sccode" name="sccode" class="form-control" required>
+                            <input type="text" id="sccode" name="sccode" class="form-control form-control-sm" required>
+                        </div>
+                        <div class="col-9 mb-3">
+                            <label>Institute Name</label>
+                            <input type="text" id="insname" name="insname" class="form-control form-control-sm">
                         </div>
 
-                        <div class="col-6 mb-3">
+                        <div class="col-3 mb-3">
+                            <label>Slot/Shift</label>
+                            <select id="unit" name="unit" class="form-control form-control-sm" required></select>
+                        </div>
+
+                        <div class="col-3 mb-3">
                             <label>Session</label>
-                            <select id="session" name="session" class="form-control" required></select>
+                            <select id="session" name="session" class="form-control form-control-sm" required></select>
                         </div>
 
-                        <div class="col-6 mb-3">
-                            <label>Unit</label>
-                            <select id="unit" name="unit" class="form-control" required></select>
-                        </div>
-
-                        <div class="col-6 mb-3">
+                        <div class="col-2 mb-3">
                             <label>Class</label>
-                            <select id="class" name="class" class="form-control" required></select>
+                            <select id="class" name="class" class="form-control form-control-sm" required></select>
                         </div>
 
-                        <div class="col-6 mb-3">
+                        <div class="col-2 mb-3">
                             <label>Section</label>
-                            <select id="section" name="section" class="form-control" required></select>
+                            <select id="section" name="section" class="form-control form-control-sm" required></select>
                         </div>
 
-                        <div class="col-6 mb-3">
+                        <div class="col-2 mb-3">
                             <label>Roll</label>
-                            <input type="text" id="roll" name="roll" class="form-control" required>
+                            <input type="text" id="roll" name="roll" class="form-control form-control-sm" required>
                         </div>
 
                         <div class="col-12 mb-3">
                             <label>Class Teacher</label>
-                            <select id="teacher" name="teacher" class="form-control" required></select>
+                            <select id="teacher" name="teacher" class="form-control form-control-sm" required></select>
                         </div>
 
                     </div>
@@ -471,24 +482,80 @@ include_once('header-plain.php');
 
 
 <script>
+    let ajaxTimer = null;
+
     $("#sccode").on("keyup change", function () {
-        let sccode = $(this).val();
 
-        if (sccode.length > 2) {
-            $.post("guest-login/get-session.php", { sccode: sccode }, function (data) {
-                $("#session").html(data);
-            });
+        let sccode = $(this).val().trim();
+        clearTimeout(ajaxTimer);
 
-            $.post("guest-login/get-unit.php", { sccode: sccode }, function (data) {
-                $("#unit").html(data);
-            });
-
-            $.post("guest-login/get-class.php", { sccode: sccode }, function (data) {
-
-                $("#class").html(data);
-            });
+        if (sccode.length < 3) {
+            $("#session").html('<option value="">--</option>');
+            return;
         }
+
+        ajaxTimer = setTimeout(function () {
+
+            $.ajax({
+                url: "guest-login/get-session.php",
+                type: "POST",
+                data: { sccode: sccode },
+                dataType: "json",
+                success: function (data) {
+
+                    /* ================= SESSION ================= */
+                    let sessionHtml = '<option value="">Select session</option>';
+
+                    if (data.sessions && data.sessions.length > 0) {
+                        data.sessions.forEach(function (yr) {
+                            sessionHtml += `<option value="${yr}">${yr}</option>`;
+                        });
+                    } else {
+                        sessionHtml += '<option value="">No session found</option>';
+                    }
+
+                    $("#session").html(sessionHtml);
+
+                    /* ================= ADMIN DATA ================= */
+                    let ad =
+                        data.admin_data?.["Panel Settings"]?.["Guest Student"] ?? {};
+
+                    let isActive = (ad.panel_active || '').toLowerCase() === 'yes';
+
+                    /* Enable / Disable full form */
+                    $("#guestLoginForm")
+                        .find("input, select, textarea, button")
+                        .prop("disabled", !isActive);
+
+                    /* sccode always enabled */
+                    $("#sccode").prop("disabled", false);
+
+                    /* Status UI */
+                    if (!isActive) {
+
+                        $("#guestPanelStatus").html(
+                            '<span class="text-danger fw-bold">Guest login panel is disabled</span>'
+                        );
+
+                    } else {
+
+                        let adHtml = `
+                        <div class="fs-6">
+                            Panel: <b>ON</b><br>
+                            Access Times: <b>${ad.access_times ?? 0}</b><br>
+                            Max Stay: <b>${ad.max_stay_time ?? 0}</b>
+                        </div>
+                    `;
+
+                        $("#guestPanelStatus").html(adHtml);
+                    }
+                }
+            });
+
+        }, 400);
     });
+
+
 
     $("#class").change(function () {
         let sccode = $("#sccode").val();       // Institute Code

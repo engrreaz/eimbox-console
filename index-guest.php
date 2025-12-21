@@ -4,30 +4,30 @@ include_once('index-guest-student-info.php');
 $guest = $settings['Panel Settings']['Guest Student'];
 
 // basic
-$panel_active     = $guest['panel_active'] ?? 'no';
-$access_times     = (int)($guest['access_times'] ?? 0);
-$max_stay_time    = (int)($guest['max_stay_time'] ?? 0);
+$panel_active = $guest['panel_active'] ?? 'no';
+$access_times = (int) ($guest['access_times'] ?? 0);
+$max_stay_time = (int) ($guest['max_stay_time'] ?? 0);
 
 // login security (array)
-$login_security   = $guest['login_security'] ?? [];
+$login_security = $guest['login_security'] ?? [];
 
 // permissions / features
-$result               = (int)($guest['result'] ?? 0);
-$result_details       = $guest['result_details'] ?? '';
-$result_pdf           = $guest['result_pdf'] ?? '';
-$result_archive       = $guest['result_archive'] ?? '';
+$result = (int) ($guest['result'] ?? 0);
+$result_details = $guest['result_details'] ?? '';
+$result_pdf = $guest['result_pdf'] ?? '';
+$result_archive = $guest['result_archive'] ?? '';
 
-$attendance            = (int)($guest['attendance'] ?? 0);
-$attendance_details    = $guest['attendance_details'] ?? '';
+$attendance = (int) ($guest['attendance'] ?? 0);
+$attendance_details = $guest['attendance_details'] ?? '';
 
-$payment               = (int)($guest['payment'] ?? 0);
-$payment_details       = $guest['payment_details'] ?? '';
-$payment_history       = $guest['payment_history'] ?? '';
-$online_payment        = (int)($guest['online_payment'] ?? 0);
+$payment = (int) ($guest['payment'] ?? 0);
+$payment_details = $guest['payment_details'] ?? '';
+$payment_history = $guest['payment_history'] ?? '';
+$online_payment = (int) ($guest['online_payment'] ?? 0);
 
-$download_profile      = (int)($guest['download_profile'] ?? 0);
-$notice                = $guest['notice'] ?? '';
-$notification          = (int)($guest['notification'] ?? 0);
+$download_profile = (int) ($guest['download_profile'] ?? 0);
+$notice = $guest['notice'] ?? '';
+$notification = (int) ($guest['notification'] ?? 0);
 
 
 
@@ -38,13 +38,13 @@ $barColor = $colorArr[0]; // default
 $attndColor = 'seagreen';
 $duesColor = 'crimson';
 
-$sql = "SELECT * from examlist where sccode='$sccode' and result_publish>= now() order by datestart desc limit 1";
+$sql = "SELECT * from examlist where sccode='$sccode' and datestart <= '$td' order by datestart desc limit 1";
 $result = $conn->query($sql);
 while ($row = $result->fetch_assoc()) {
-    $lastExamName = $row['examtitle'];
-    $dateStart = $row['datestart'];
-    $datePublish = $row['date_publish'];
-    $sessionyear = $row['sessionyear'];
+    $lastExamName = $row['examtitle'] ?? '';
+    $dateStart = $row['datestart'] ?? '';
+    $datePublish = $row['result_publish'] ?? '';
+    $sessionyear = $row['sessionyear'] ?? '';
 }
 
 $sql = "SELECT * from tabulatingsheet where sccode='$sccode' and exam='$lastExamName' and sessionyear='$sessionyear' and stid='$stid' order by id DESC limit 1";
@@ -274,7 +274,8 @@ $totalDues = $row['total_dues'] !== null ? (float) $row['total_dues'] : 0;
     </div>
     <!-- Hour chart End  -->
 
-    <div class="row mb-5" <?php if($result==0) echo 'style="display:none;"'; ?>>
+    <div class="row mb-5" <?php if ($result == 0)
+        echo 'style="display:none;"'; ?>>
         <div class="col-md-12 ">
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between">
@@ -319,14 +320,16 @@ $totalDues = $row['total_dues'] !== null ? (float) $row['total_dues'] : 0;
                             </div>
 
                             <div class="row">
-                                <div class="col-6" style="color:<?= $barColor ?>;">GPA : <?= $gpa . ' | ' . $grade ?>
+                                <div class="col-8" style="color:<?= $barColor ?>;">
+                                    <?php if (strtotime($datePublish) > strtotime($cur)) {
+                                        echo 'Published Date: ' . date('d M, Y', strtotime($datePublish));
+                                    } else {
+                                        echo 'GPA' . $gpa . ' | ' . $grade;
+                                    }
+                                    ?>
                                 </div>
                             </div>
                         </div>
-
-
-
-
                     </div>
                 </div>
             </div>
