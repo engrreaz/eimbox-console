@@ -297,7 +297,7 @@ $totalDues = $row['total_dues'] !== null ? (float) $row['total_dues'] : 0;
                 </div>
                 <div class="card-body">
                     <div class="row align-items-center g-4">
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <p class="mb-1">Session</p>
                             <h5><?= $sessionyear ?></h5>
                         </div>
@@ -306,11 +306,15 @@ $totalDues = $row['total_dues'] !== null ? (float) $row['total_dues'] : 0;
                             <h5><?= $lastExamName ?></h5>
                         </div>
 
-                        <div class="col-md-5">
+                        <div class="col-md-2">
+
+                        </div>
+
+                        <div class="col-md-4">
                             <p class="mb-1 text-dark">Result Summary</p>
 
                             <div class="d-flex align-items-center mb-3">
-                                <div class="progress w-50 bg-label-primary" style="height:12px;">
+                                <div class="progress w-75 bg-label-primary" style="height:12px;">
                                     <div class="progress-bar" role="progressbar"
                                         style="width:<?= $avgRate ?>%; background:<?= $barColor ?>;"
                                         aria-valuenow="<?= $avgRate ?>" aria-valuemin="0" aria-valuemax="100">
@@ -320,7 +324,7 @@ $totalDues = $row['total_dues'] !== null ? (float) $row['total_dues'] : 0;
                             </div>
 
                             <div class="row">
-                                <div class="col-8" style="color:<?= $barColor ?>;">
+                                <div class="col-12" style="color:<?= $barColor ?>;">
                                     <?php if (strtotime($datePublish) > strtotime($cur)) {
                                         echo 'Published Date: ' . date('d M, Y', strtotime($datePublish));
                                     } else {

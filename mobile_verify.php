@@ -107,6 +107,7 @@ if (isset($_POST['send_otp']) && !isset($_SESSION['otp'])) {
 
 
 // OTP যাচাই
+echo $_POST['verify_otp'];
 if (isset($_POST['verify_otp'])) {
     $entered_otp = $_POST['otp'];
     $stored_otp = $_SESSION['otp'] ?? 0;

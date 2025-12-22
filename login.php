@@ -551,7 +551,6 @@ include_once('header-plain.php');
                     }
                 }
             });
-
         }, 400);
     });
 
