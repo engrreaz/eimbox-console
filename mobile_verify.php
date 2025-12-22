@@ -16,9 +16,15 @@ if ($sccode == '') {
     exit;
 }
 
-if (isset($_SESSION['admission']) !== true && isset($_SESSION['step']) !== 'otp') {
+if (
+    !isset($_SESSION['admission']) ||
+    !isset($_SESSION['step']) ||
+    $_SESSION['step'] !== 'otp'
+) {
     header("Location: admission-login.php");
+    exit;
 }
+
 
 $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 
@@ -107,44 +113,53 @@ if (isset($_POST['send_otp']) && !isset($_SESSION['otp'])) {
 
 
 // OTP যাচাই
-echo $_POST['verify_otp'];
+
 if (isset($_POST['verify_otp'])) {
-    $entered_otp = $_POST['otp'];
-    $stored_otp = $_SESSION['otp'] ?? 0;
+
+    $entered_otp = trim($_POST['otp']);
+    $stored_otp = $_SESSION['otp'] ?? '';
     $otp_time = $_SESSION['otp_time'] ?? 0;
 
-    if ((time() - $otp_time) > 300) { // ৫ মিনিট পর মেয়াদ শেষ
+    if (!$stored_otp) {
         $alert = 'danger';
-        $alert_text = "'OTP expired. Please Register Again.";
-        unset($_SESSION['otp']);
-    } elseif ($entered_otp == $stored_otp) {
-        mysqli_query($conn, "UPDATE registrations SET verified=1, verifytime=NOW() WHERE id='$id'");
+        $alert_text = 'OTP not found. Please request again.';
+    } elseif ((time() - $otp_time) > 300) {
+        $alert = 'danger';
+        $alert_text = 'OTP expired. Please request a new OTP.';
+        unset($_SESSION['otp'], $_SESSION['otp_time']);
+    } elseif ($entered_otp === (string) $stored_otp) {
 
-        $message = $_SESSION['stname'] . ',\n Your Regd. No. is ' . $_SESSION['regid'] . ' and login PIN is ' . $_SESSION['pin'] . '\nURL is https://console.eimbox.com/admisssion.login.php';
-        global_send_sms($mobile, $message, 'Admission', 'Form Submit');
+        $id = (int) $id;
+        mysqli_query($conn, "
+            UPDATE registrations 
+            SET verified=1
+            WHERE id=$id
+        ");
+
+        unset($_SESSION['otp'], $_SESSION['otp_time']);
 
         $_SESSION['student_reg'] = $_SESSION['regid'];
 
-        echo "
-            <script>
-            alert('Verification successful! A SMS with related information has been sent.');
-            if (confirm('Do you want to open Admit Card?')) {
+        $message =
+            $_SESSION['stname'] .
+            " Your Regd. No: " . $_SESSION['regid'] .
+            " PIN: " . $_SESSION['pin'] .
+            " URL: https://console.eimbox.com/admission-login.php";
 
-                // Admit card new tab
-                window.open('admit_card.php?id=$id', '_blank');
+        global_send_sms($mobile, $message, 'Admission', 'Verified');
 
-                
-                // Dashboard same tab
-                window.location.href = 'admission-dashboard.php';
-            }
-            </script>
-            ";
+        echo "<script>
+            alert('Verification successful!');
+            window.location.href='admission-dashboard.php';
+        </script>";
         exit;
 
     } else {
-        echo "<script>alert('Incorrect OTP');</script>";
+        $alert = 'danger';
+        $alert_text = 'Incorrect OTP.';
     }
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="bn">
@@ -190,7 +205,7 @@ if (isset($_POST['verify_otp'])) {
                         <button type="submit" name="send_otp" class="btn btn-success">Send OTP</button>
                     <?php else: ?>
                         <div class="mb-3">
-                            <input type="text" name="otp" class="form-control text-center" maxlength="6"
+                            <input type="number" name="otp" class="form-control text-center" maxlength="6"
                                 placeholder="৬-সংখ্যার OTP লিখুন" required>
                         </div>
                         <button type="submit" name="verify_otp" class="btn btn-primary"> Verify Now </button>
@@ -203,20 +218,7 @@ if (isset($_POST['verify_otp'])) {
     <?php include('footer-plain.php'); ?>
 
 
-    <?php if ($alert_text != ''): ?>
-        <script>
-            $(document).ready(function () {
-                // alert_text আছে মানে invalid অবস্থা
-                $('form').on('submit', function (e) {
-                    e.preventDefault(); // ফরম সাবমিট বন্ধ
-               //     alert('⚠️ Invalid form. Please check and reload the page.');
-                });
-
-                // চাইলে বোতামও disable করতে পারো
-                // $('form button[type="submit"]').prop('disabled', true);
-            });
-        </script>
-    <?php endif; ?>
+ 
 
 </body>
 
