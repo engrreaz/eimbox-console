@@ -193,7 +193,7 @@ $cur = date('Y-m-d H:i:s');
 $td = date('Y-m-d');
 $y_v2 = date('y');
 $y_v4 = date('Y');
-
+$chain = ''; // Slot -> Session -> Class -> Section chain holder
 
 // echo $usr;
 

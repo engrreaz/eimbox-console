@@ -47,15 +47,30 @@ while ($row = $result->fetch_assoc()) {
     $sessionyear = $row['sessionyear'] ?? '';
 }
 
-$sql = "SELECT * from tabulatingsheet where sccode='$sccode' and exam='$lastExamName' and sessionyear='$sessionyear' and stid='$stid' order by id DESC limit 1";
+$resultData = [];
+$sql = "SELECT * 
+        FROM tabulatingsheet 
+        WHERE sccode='$sccode' 
+          AND exam='$lastExamName' 
+          AND sessionyear='$sessionyear' 
+          AND stid='$stid' 
+        ORDER BY id DESC 
+        LIMIT 1";
+
 $result = $conn->query($sql);
-while ($row = $result->fetch_assoc()) {
-    $gpa = $row['gpa'];
-    $grade = $row['gla'];
-    $totalMarks = $row['totalmarks'];
-    $avgRate = $row['avgrate'];
+
+$resultData = [];   // single row array
+
+if ($result && $result->num_rows > 0) {
+    $resultData = $result->fetch_assoc();
 }
 
+
+$id = $resultData['id'];
+$gpa = $resultData['gpa'];
+$grade = $resultData['gla'];
+$totalMarks = $resultData['totalmarks'];
+$avgRate = $resultData['avgrate'];
 
 foreach ($marksArr as $i => $max) {
     if ($avgRate <= $max) {
@@ -194,6 +209,42 @@ $totalDues = $row['total_dues'] !== null ? (float) $row['total_dues'] : 0;
 </style>
 
 
+<div class="modal fade" id="transcriptModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"
+        style="width: 500px; max-width:80%; margin:auto;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Result Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="transcriptBody">
+                <div>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th>GPA</th>
+                            <td><?= $resultData['gpa'] ?></td>
+                        </tr>
+                        <tr>
+                            <th>Grade</th>
+                            <td><?= $resultData['gla'] ?></td>
+                        </tr>
+                        <tr>
+                            <th>Total Marks</th>
+                            <td><?= $resultData['totalmarks'] ?></td>
+                        </tr>
+                        <tr>
+                            <th>Average</th>
+                            <td><?= $resultData['avgrate'] ?></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
 <!-- Content -->
 <div class="container-xxl flex-grow-1 container-p-y">
 
@@ -286,8 +337,21 @@ $totalDues = $row['total_dues'] !== null ? (float) $row['total_dues'] : 0;
 
 
 
-                    <div class="avatar-circle" style="background:<?= $barColor ?>;" onclick="alert('Clicked!');">
-                        <i class="bi bi-file-earmark-break text-white"></i>
+
+
+                    <div class="dropdown">
+                        <button class="btn text-body-secondary p-0" type="button" id="topic" data-bs-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                            <i class="bi bi-three-dots-vertical icon-24px" style="color:<?= $barColor ?>;"></i>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="topic">
+                            <a class="dropdown-item view-transcript" href="javascript:void(0);"><i
+                                    class="bi bi-file-earmark-fill"></i> View Details</a>
+                            <a class="dropdown-item print-transcript" href="javascript:void(0);"><i
+                                    class="bi bi-printer-fill"></i> Print Marksheet</a>
+                            <a class="dropdown-item download-transcript" href="javascript:void(0);"><i
+                                    class="bi bi-file-pdf-fill"></i> Download PDF</a>
+                        </div>
                     </div>
 
 

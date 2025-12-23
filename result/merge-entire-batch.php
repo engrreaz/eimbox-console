@@ -58,6 +58,7 @@ while ($row = mysqli_fetch_assoc($res)) {
 function mergeStudent($stid, $class, $section, $slot, $session, $sccode, $usr, $conn, $selectedExams, $examRates, $subcode, &$data)
 {
     // Get subject setups
+    global $examCount;
     $sublist = [];
     if ($subcode !== '') {
         $qsub = "SELECT * FROM subsetup WHERE sessionyear='$session' AND sccode='$sccode'
@@ -158,13 +159,13 @@ function mergeStudent($stid, $class, $section, $slot, $session, $sccode, $usr, $
                 stid, fullmark, 
                 ctest, mtest, subj, obj, pra, ca,
                 sub_final, obj_final, pra_final,
-                markobt, on100, examtype, entryby, gp, gl
+                markobt, on100, examtype, entryby, gp, gl, excnt
             ) VALUES (
                 '$slot','$session','$sccode','GRAND','$class','$section','$subject',
                 '$stid','{$totalfinal}',
                 '{$m['ctest']}','{$m['mtest']}','{$m['subj']}','{$m['obj']}','{$m['pra']}','{$m['ca']}',
                 '{$m['sub_final']}','{$m['obj_final']}','{$m['pra_final']}',
-                '{$m['markobt']}','{$m['on100']}','MG','$usr', '$gp', '$gl'
+                '{$m['markobt']}','{$m['on100']}','MG','$usr', '$gp', '$gl', '$examCount'
             )";
         mysqli_query($conn, $insert);
         // $data .= $insert . "<br>";

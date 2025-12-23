@@ -78,9 +78,26 @@ $release_colors = [
         padding: 2px 4px;
         border-radius: 3px;
     }
+
+    .tree-node {
+        cursor: pointer;
+        padding: 4px 6px;
+    }
+
+    .tree-node.selected {
+        font-weight: bold;
+        background: #e9f2ff;
+        border-left: 3px solid #0d6efd;
+    }
+
+    .tree-node.disabled {
+        pointer-events: none;
+        opacity: 0.6;
+    }
 </style>
 
 
+<input type="text" id="selectedTree">
 
 <!-- Modal -->
 <div class="modal fade" id="myModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
@@ -952,4 +969,188 @@ $release_colors = [
     function goback() {
         window.history.back();
     }
+</script>
+
+
+<script>
+    let modal = new bootstrap.Modal(document.getElementById('nodeTreeModal'));
+
+    $('#openTree').on('click', function () {
+
+        $('#treeRoot').html('');
+
+        modal.show();
+        loadNodes('slot', {}, $('#treeRoot'));
+    });
+
+    function loadNodes(type, context, container) {
+
+        let chainInput = $('#chainInput').val();
+
+        $.post('components/node-tree.php', {
+            type: type,
+            context: context
+        }, function (res) {
+
+            let data = JSON.parse(res);
+
+            data.forEach(item => {
+
+                let li = $('<li>');
+                let node = $('<div class="tree-node">');
+                let toggle = $('<span class="toggle">+</span>');
+                let text = $('<span>').text(item.text);
+
+                node.append(toggle).append(text);
+                li.append(node);
+
+                let children = $('<ul>').hide();
+                li.append(children);
+
+                node.on('click', function (e) {
+                    e.stopPropagation();
+
+                    if (node.hasClass('disabled')) return;
+
+                    // remove previous selection (same level)
+                    node.closest('ul').find('.tree-node').removeClass('selected');
+
+                    // mark selected
+                    node.addClass('selected');
+
+                    let ctx = Object.assign({}, context);
+
+                    /* ---- context mapping ---- */
+                    if (type === 'slot') ctx.slot = item.text;
+                    if (type === 'session') ctx.sessionyear = item.text;
+                    if (type === 'exam') ctx.exam = item.text;
+                    if (type === 'class') ctx.areaname = item.text;
+                    if (type === 'section') ctx.subarea = item.text;
+                    // if (type === 'subject') ctx.subject = item.text;
+
+
+                    if (type === 'section' && chainInput.includes('subject')) {
+
+                        // show right panel
+                        $('#subjectColumn').removeClass('d-none');
+
+                        // modal auto expand
+                        $('#nodeTreeModal')
+                            .removeClass('modal-lg')
+                            .addClass('modal-xl');
+
+                        // clear old subject
+                        $('#subjectList').html('');
+
+                        // load subject into right panel
+                        loadSubjectList(ctx);
+
+                        return; // stop tree expansion here
+                    }
+
+
+
+                    /* ---- nextType resolver ---- */
+                    let nextType =
+                        type === 'slot' ? 'session' :
+                            type === 'session'
+                                ? (chainInput.includes('exam') ? 'exam' : 'class')
+                                : type === 'exam' ? 'class'
+                                    : type === 'class' ? 'section'
+                                        : type === 'section'
+                                            ? (chainInput.includes('subject') ? 'subject' : null)
+                                            : null;
+
+                    // disable this node after selection
+                    node.addClass('disabled');
+
+                    if (nextType) {
+                        // load only once
+                        if (children.children().length === 0) {
+                            loadNodes(nextType, ctx, children);
+                        }
+                        node.closest('ul').find('ul').not(children).slideUp();
+                        node.closest('ul').find('.toggle').text('+');
+                        children.slideDown();
+                        toggle.text('-');
+                    } else {
+                        finalizeSelection(ctx, item);
+                    }
+                });
+
+
+                container.append(li);
+            });
+        });
+    }
+
+
+    function finalizeSelection(ctx, item) {
+
+        let selected = {
+            slot: ctx.slot ?? null,
+            session: ctx.sessionyear ?? null,
+            exam: ctx.exam ?? null,
+            class: ctx.areaname ?? null,
+            section: ctx.subarea ?? null,
+            subject: ctx.subject ?? null,
+            final_text: item.text,
+            final_id: item.id
+        };
+
+        if ($('#slot-main').length) $('#slot-main').val(selected.slot);
+        if ($('#session-main').length) $('#session-main').val(selected.session);
+        if ($('#exam-main').length) $('#exam-main').val(selected.exam);
+        if ($('#class-main').length) $('#class-main').val(selected.class);
+        if ($('#section-main').length) $('#section-main').val(selected.section);
+        if ($('#subject-main').length) $('#subject-main').val(selected.subject);
+
+        $('#selectedTree').val(JSON.stringify(selected));
+        console.log(selected);
+        modal.hide();
+    }
+
+
+
+    function loadSubjectList(ctx) {
+        // alert(JSON.stringify(ctx));
+        $.post('components/node-tree.php', {
+            type: 'subject',
+            context: ctx
+        }, function (res) {
+
+            let data = JSON.parse(res);
+            let ul = $('#subjectList');
+
+            ul.html('');
+
+            data.forEach(item => {
+
+                let li = $('<li class="list-group-item">')
+                    .text(item.text)
+                    .on('click', function () {
+
+                        ul.find('.list-group-item').removeClass('active');
+                        $(this).addClass('active');
+
+                        ctx.subject = item.text;
+
+                        finalizeSelection(ctx, item);
+                    });
+
+                ul.append(li);
+            });
+        });
+    }
+
+    $('#nodeTreeModal').on('hidden.bs.modal', function () {
+
+        $('#subjectColumn').addClass('d-none');
+        $('#subjectList').html('');
+
+        $('#treeModalDialog')
+            .removeClass('modal-xl')
+            .addClass('modal-lg');
+    });
+
 </script>
