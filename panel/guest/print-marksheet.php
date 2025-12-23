@@ -17,9 +17,9 @@ $subjectList = array_filter(explode('.', $row['allsubject']));
 
 $sqlSub = "SELECT * FROM subjects WHERE sccategory='$sctype' and (sccode = 0 OR sccode = '$sccode')  ORDER BY subcode, sccode DESC ";
 $resSub = $conn->query($sqlSub);
-$subjectList = [];
+$subjectLists = [];
 while ($subRow = $resSub->fetch_assoc()) {
-    $subjectList[$subRow['subcode']] = $subRow['subject'];
+    $subjectLists[$subRow['subcode']] = $subRow['subject'];
 }
 
 ?>
@@ -90,7 +90,7 @@ while ($subRow = $resSub->fetch_assoc()) {
         $i = $subjectIndexMap[$subCode];
 
         $subjects[] = [
-            'code' => $subjectList[$subCode],
+            'code' => $subCode,
             'subj' => $row["sub_{$i}_sub"],
             'obj' => $row["sub_{$i}_obj"],
             'pra' => $row["sub_{$i}_pra"],
@@ -107,21 +107,20 @@ while ($subRow = $resSub->fetch_assoc()) {
 
     <table border="1" width="100%" cellpadding="6" cellspacing="0">
         <tr>
-            <th>Subject Code</th>
-            <th>Written</th>
-            <th>Objective</th>
-            <th>Practical</th>
+            <th>Subject</th>
+            <th>SUB</th>
+            <th>OBJ</th>
+            <th>PRA</th>
             <th>CA</th>
             <th>CT</th>
             <th>MT</th>
             <th>Total</th>
-            <th>GP</th>
-            <th>Grade</th>
+            <th colspan="2">Grade</th>
         </tr>
 
         <?php foreach ($subjects as $s): ?>
             <tr>
-                <td><?= $s['code'] ?></td>
+                <td><?= $subjectLists[$s['code']] ?></td>
                 <td class="cen"><?= $s['subj'] ?></td>
                 <td class="cen"><?= $s['obj'] ?></td>
                 <td class="cen"><?= $s['pra'] ?></td>
