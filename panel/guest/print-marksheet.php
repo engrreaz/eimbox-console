@@ -4,6 +4,8 @@ require_once dirname(dirname(dirname(__FILE__))) . '/core/config.php';
 require_once dirname(dirname(dirname(__FILE__))) . '/core/db.php';
 require_once dirname(dirname(dirname(__FILE__))) . '/core/global_values.php';
 
+include_once dirname(dirname(dirname(__FILE__))) . '/templete/letter-head-01.php';
+
 $id = isset($_GET['id']) ? $conn->real_escape_string($_GET['id']) : '';
 $stid = isset($_GET['stid']) ? $conn->real_escape_string($_GET['stid']) : '';
 
@@ -12,6 +14,13 @@ $sql = "SELECT * FROM tabulatingsheet WHERE stid='$stid' and id='$id' ORDER BY i
 $row = $conn->query($sql)->fetch_assoc();
 
 $subjectList = array_filter(explode('.', $row['allsubject']));
+
+$sqlSub = "SELECT * FROM subjects WHERE sccategory='$sctype' and (sccode = 0 OR sccode = '$sccode')  ORDER BY subcode, sccode DESC ";
+$resSub = $conn->query($sqlSub);
+$subjectList = [];
+while ($subRow = $resSub->fetch_assoc()) {
+    $subjectList[$subRow['subcode']] = $subRow['subject'];
+}
 
 ?>
 <!DOCTYPE html>
@@ -25,16 +34,22 @@ $subjectList = array_filter(explode('.', $row['allsubject']));
                 margin: 20mm;
             }
 
-            body{
-                font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                padding:18mm;
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                padding: 18mm;
             }
+
             table,
             td,
             th,
             tr {
                 border: 1px solid black;
                 border-collapse: collapse;
+            }
+
+            .cen {
+                text-align: center;
+                color: red;
             }
         }
     </style>
@@ -75,7 +90,7 @@ $subjectList = array_filter(explode('.', $row['allsubject']));
         $i = $subjectIndexMap[$subCode];
 
         $subjects[] = [
-            'code' => $subCode,
+            'code' => $subjectList[$subCode],
             'subj' => $row["sub_{$i}_sub"],
             'obj' => $row["sub_{$i}_obj"],
             'pra' => $row["sub_{$i}_pra"],
@@ -107,15 +122,15 @@ $subjectList = array_filter(explode('.', $row['allsubject']));
         <?php foreach ($subjects as $s): ?>
             <tr>
                 <td><?= $s['code'] ?></td>
-                <td><?= $s['subj'] ?></td>
-                <td><?= $s['obj'] ?></td>
-                <td><?= $s['pra'] ?></td>
-                <td><?= $s['ca'] ?></td>
-                <td><?= $s['ctest'] ?></td>
-                <td><?= $s['mtest'] ?></td>
-                <td><?= $s['total'] ?></td>
-                <td><?= $s['gp'] ?></td>
-                <td><?= $s['gl'] ?></td>
+                <td class="cen"><?= $s['subj'] ?></td>
+                <td class="cen"><?= $s['obj'] ?></td>
+                <td class="cen"><?= $s['pra'] ?></td>
+                <td class="cen"><?= $s['ca'] ?></td>
+                <td class="cen"><?= $s['ctest'] ?></td>
+                <td class="cen"><?= $s['mtest'] ?></td>
+                <td class="cen"><?= $s['total'] ?></td>
+                <td class="cen"><?= $s['gp'] ?></td>
+                <td class="cen"><?= $s['gl'] ?></td>
             </tr>
         <?php endforeach; ?>
     </table>
