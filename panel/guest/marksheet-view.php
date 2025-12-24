@@ -55,7 +55,7 @@
             </td>
 
             <td style="border:0; " rowspan="2">
-                <img src="https://eimbox.com/students/<?= $stid; ?>.jpg" style="border:1px solid gray; padding:2px; width:40mm;" />
+                <img src="https://eimbox.com/students/<?= $stid; ?>.jpg" style="border:1px solid gray; padding:2px; width:30mm;" />
             </td>
             <td style="width:55mm; border:0;" rowspan="2">
                 <?php
