@@ -15,4 +15,5 @@ include 'marksheet-view.php';
 $html = ob_get_clean();
 
 $mpdf->WriteHTML($html);
+$mpdf->Output('marksheet.pdf', 'D');
 $mpdf->Output('marksheet.pdf', 'I');
