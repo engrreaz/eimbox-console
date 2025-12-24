@@ -54,10 +54,10 @@
 
             </td>
 
-            <td style="border:0; width:120px;" rowspan="2">
-                <img src="https://eimbox.com/students/<?= $stid; ?>.jpg" style="border:1px solid gray; padding:2px;" />
+            <td style="border:0; " rowspan="2">
+                <img src="https://eimbox.com/students/<?= $stid; ?>.jpg" style="border:1px solid gray; padding:2px; width:40mm;" />
             </td>
-            <td style="width:45mm; border:0;" rowspan="2">
+            <td style="width:65mm; border:0;" rowspan="2">
                 <?php
                 $slot = $sessionInfo['slot'];
                 $sql = "
