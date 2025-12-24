@@ -9,6 +9,7 @@ include_once dirname(dirname(dirname(__FILE__))) . '/templete/letter-head-01.php
 $id = isset($_GET['id']) ? $conn->real_escape_string($_GET['id']) : '';
 $stid = isset($_GET['stid']) ? $conn->real_escape_string($_GET['stid']) : '';
 
+
 // fetch single row again (safe for direct access)
 $sql = "SELECT * FROM tabulatingsheet WHERE stid='$stid' and id='$id' ORDER BY id DESC LIMIT 1";
 $row = $conn->query($sql)->fetch_assoc();
@@ -22,16 +23,24 @@ while ($subRow = $resSub->fetch_assoc()) {
     $subjectLists[$subRow['subcode']] = $subRow['subject'];
 }
 
+
+
+$sqlSession = "SELECT * FROM sessioninfo WHERE stid='$stid' and sccode='$sccode' and sessionyear LIKE '%$y_v2%' ORDER BY id DESC LIMIT 1";
+$sessionInfo = $conn->query($sqlSession)->fetch_assoc();
+$sqlProfile = "SELECT * FROM students WHERE stid='$stid' and sccode='$sccode'  ORDER BY id DESC LIMIT 1";
+$profileInfo = $conn->query($sqlProfile)->fetch_assoc();
 ?>
 <!DOCTYPE html>
 <html>
 
 <head>
+    <meta charset="utf-8">
     <style>
         @media print {
             @page {
                 size: A4 portrait;
-                margin: 20mm;
+                margin: 15mm;
+
             }
 
             body {
@@ -52,25 +61,118 @@ while ($subRow = $resSub->fetch_assoc()) {
                 color: red;
             }
         }
+
+        .smtxt {
+            font-size: 11px;
+            font-weight: 400;
+            padding: 3px;
+        }
+
+        .lgtxt {
+            font-size: 15px;
+            font-weight: 700;
+            padding: 0 3px;
+        }
     </style>
 
-    <script>
-        window.onload = function () {
-            window.print();
-        };
 
-        window.onafterprint = function () {
-            // window.close();
-        };
-    </script>
 </head>
 
-<body onload="window.print()">
+<body>
 
-    <h3 style="text-align:center;">Progress Report</h3>
+    <h3 style="text-align:center; margin-bottom:0;">Progress Report</h3>
+
+    <table width="100%" cellpadding="8"
+        style="border:0; margin:0; padding:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+        <tr>
+            <td>
+                <table width="100%" style=" margin:0; padding:0;">
+                    <tr>
+
+                        <td colspan="4">
+                            <span style="font-size:11px;"><?= $stid; ?></span><br>
+                            <span style="font-size:16px; font-weight: 700;;"><?= $profileInfo['stnameeng'] ?></span>
+
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="smtxt">Class</td>
+                        <td class="smtxt">Section</td>
+                        <td class="smtxt">Roll No</td>
+                        <td class="smtxt">Session</td>
+
+                    </tr>
+                    <tr>
+                        <td class="lgtxt"><?= $sessionInfo['classname'] ?></td>
+                        <td class="lgtxt"><?= $sessionInfo['sectionname'] ?></td>
+                        <td class="lgtxt"><?= $sessionInfo['rollno'] ?></td>
+
+                        <td class="lgtxt"><?= $sessionInfo['sessionyear'] ?></td>
+                    </tr>
+
+                </table>
+
+            </td>
+            <td>
+                <img src="https://eimbox.com/students/<?= $stid; ?>" />
+            </td>
+            <td>
+                <?php
+                $slot = $sessionInfo['slots'];
+                $sql = "
+                    SELECT *
+                    FROM gpa
+                    WHERE slot = '$slot'
+                    AND (sccode = '$sccode' OR sccode = 0)
+                    ORDER BY 
+                        CASE 
+                            WHEN sccode = '$sccode' THEN 1
+                            ELSE 2
+                        END,
+                        minvalues DESC
+                    ";
+
+                $res = mysqli_query($conn, $sql);
+                ?>
+
+                <table border="1" width="100%" cellpadding="6" cellspacing="0">
+                    <tr>
+                        <th>Marks Range</th>
+                        <th>Grade Point</th>
+                        <th>Grade</th>
+                        <th>Remark</th>
+                    </tr>
+
+                    <?php while ($row = mysqli_fetch_assoc($res)): ?>
+                        <tr>
+                            <td class="cen">
+                                <?= $row['minvalues'] ?> – <?= $row['maxvalues'] ?>
+                            </td>
+                            <td class="cen">
+                                <?= number_format($row['gp'], 2) ?>
+                            </td>
+                            <td class="cen">
+                                <?= $row['gl'] ?>
+                            </td>
+                            <td>
+                                <?= htmlspecialchars($row['remark']) ?>
+                            </td>
+                        </tr>
+                    <?php endwhile; ?>
+
+                </table>
+
+
+            </td>
+        </tr>
+    </table>
+
 
 
     <?php
+
+
+
     $subjectIndexMap = [];
 
     for ($i = 1; $i <= 15; $i++) {

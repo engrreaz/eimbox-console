@@ -26,7 +26,7 @@ require_once 'footer.php'; ?>
     <script>
         $('.print-transcript').on('click', function () {
             window.open(
-                'panel/guest/print-marksheet.php?stid=<?= $stid ?>&id=<?= urlencode($id) ?>',
+                'panel/guest/marksheet-print.php?stid=<?= $stid ?>&id=<?= urlencode($id) ?>',
                 '_blank'
             );
         });
@@ -35,7 +35,7 @@ require_once 'footer.php'; ?>
     <script>
         $('.download-transcript').on('click', function () {
             window.location.href =
-                'panel/guest/download-pdf.php?stid=<?= $stid ?>&id=<?= urlencode($id) ?>';
+                'panel/guest/marksheet-pdf.php?stid=<?= $stid ?>&id=<?= urlencode($id) ?>';
         });
     </script>
 
