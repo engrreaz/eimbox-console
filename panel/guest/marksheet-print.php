@@ -11,7 +11,7 @@
 </style>
     <script>
         window.onload = function () {
-            // window.print();
+            window.print();
         };
 
         window.onafterprint = function () {
