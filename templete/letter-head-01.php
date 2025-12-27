@@ -35,12 +35,7 @@
                 <img src="https://eimbox.com/logo/<?php echo $sccode; ?>.png" width="80">
             </td>
             <td>
-                <div class="a"><?php echo $scname; ?></div>
-                <div class="b"><?php echo $scaddress; ?></div>
-                <div class="c">
-                    <?php echo 'Mobile : ' . $scmobile . ' | Email : ' . $scmail; ?>
-                </div>
-                <div class="c"><?php echo 'Web : ' . $scweb; ?></div>
+                sfsdfs d fdsf sdfdsf
             </td>
         </tr>
     </table>
