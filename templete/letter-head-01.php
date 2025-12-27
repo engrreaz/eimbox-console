@@ -1,15 +1,12 @@
 <style>
-    .header-wrap{
-        width:100%;
-        display:flex;
-        justify-content:center;   /* পুরো ব্লক মাঝখানে */
+    .lh-table{
+        margin: 0 auto;     /* পুরো ব্লক মাঝখানে */
+        border: 0;
     }
 
-    .header-box{
-        display:flex;
-        align-items:center;
-        gap:10px;                 /* logo + text gap */
-        text-align:left;
+    .lh-table td{
+        border: 0;
+        vertical-align: middle;
     }
 
     .a{
@@ -30,17 +27,18 @@
     }
 </style>
 
-<div class="header-wrap">
-    <div class="header-box">
-        <img src="https://eimbox.com/logo/<?php echo $sccode; ?>.png" width="80">
-
-        <div>
+<table class="lh-table">
+    <tr>
+        <td style="padding-right:10px;">
+            <img src="https://eimbox.com/logo/<?php echo $sccode; ?>.png" width="80">
+        </td>
+        <td>
             <div class="a"><?php echo $scname; ?></div>
             <div class="b"><?php echo $scaddress; ?></div>
             <div class="c">
                 <?php echo 'Mobile : '.$scmobile.' | Email : '.$scmail; ?>
             </div>
             <div class="c"><?php echo 'Web : '.$scweb; ?></div>
-        </div>
-    </div>
-</div>
+        </td>
+    </tr>
+</table>
