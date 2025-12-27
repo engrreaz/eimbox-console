@@ -39,18 +39,18 @@
     }
 </style>
 
-<div>
+<div style="text-align:center;">
 
     <table id="padbox" style="border:0; margin: auto; margin-bottom:20px;">
         <tr>
-            <td style="text-align:center; padding-right:10px;">
-                <img src="https://eimbox.com/logo/<?php echo $sccode; ?>.png" width="80" />
+            <td>
+                <img src="https://eimbox.com/logo/<?php echo $sccode; ?>.png" width="80" ‍style="padding-right:10px;" />
             </td>
-            <td style="text-align:center;">
+            <td>
                 <div class="a"><?php echo $scname; ?></div>
                 <div class="b"><?php echo $scaddress; ?></div>
                 <div class="c">
-                    <br><?php echo 'Mobile : ' . $scmobile . '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Email : ' . $scmail; ?>
+                    <?php echo 'Mobile : ' . $scmobile . '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Email : ' . $scmail; ?>
                 </div>
                 <div class="c"><?php echo 'Web : ' . $scweb; ?></div>
             </td>
