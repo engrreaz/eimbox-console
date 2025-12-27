@@ -407,47 +407,47 @@ include_once('header-plain.php');
                 <div class="row">
 
                     <div class="col-md-6" id="guestPanelStatus"></div>
-                    <div class="col-md-6" id="resultBlock">dddddd</div>
+                    <div class="col-md-6" id="resultBlock"></div>
                 </div>
 
                 <form id="guestLoginForm">
                     <div class="row">
 
-                        <div class="col-3 mb-3">
+                        <div class="col-md-3 mb-3">
                             <label>Institute Code</label>
                             <input type="text" id="sccode" name="sccode" class="form-control form-control-sm" required>
                         </div>
-                        <div class="col-9 mb-3">
+                        <div class="col-md-9 mb-3">
                             <label>Institute Name</label>
                             <input type="text" id="insname" name="insname" class="form-control form-control-sm">
                         </div>
 
-                        <div class="col-3 mb-3">
+                        <div class="col-md-3 mb-3">
                             <label>Slot/Shift</label>
                             <select id="unit" name="unit" class="form-control form-control-sm" required></select>
                         </div>
 
-                        <div class="col-3 mb-3">
+                        <div class="col-md-3 mb-3">
                             <label>Session</label>
                             <select id="session" name="session" class="form-control form-control-sm" required></select>
                         </div>
 
-                        <div class="col-2 mb-3">
+                        <div class="col-md-2 mb-3">
                             <label>Class</label>
                             <select id="class" name="class" class="form-control form-control-sm" required></select>
                         </div>
 
-                        <div class="col-2 mb-3">
+                        <div class="col-md-2 mb-3">
                             <label>Section</label>
                             <select id="section" name="section" class="form-control form-control-sm" required></select>
                         </div>
 
-                        <div class="col-2 mb-3">
+                        <div class="col-md-2 mb-3">
                             <label>Roll</label>
                             <input type="text" id="roll" name="roll" class="form-control form-control-sm" required>
                         </div>
 
-                        <div class="col-12 mb-3">
+                        <div class="col-md-12 mb-3" hidden>
                             <label>Class Teacher</label>
                             <select id="teacher" name="teacher" class="form-control form-control-sm" required></select>
                         </div>
