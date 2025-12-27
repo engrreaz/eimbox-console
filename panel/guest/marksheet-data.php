@@ -20,6 +20,8 @@ $sqlSub = "SELECT subcode, subject
            FROM subjects 
            WHERE sccategory='$sctype'
              AND (sccode=0 OR sccode='$sccode') ORDER BY sccode DESC";
+
+             echo $sqlSub;
 $resSub = $conn->query($sqlSub);
 
 $subjectLists = [];
