@@ -10,7 +10,7 @@
             font-size: 12px;
         }
 
-        table {
+        .tbl-100 {
             width: 100%;
             border-collapse: collapse;
         }
@@ -55,7 +55,8 @@
             </td>
 
             <td style="border:0; width:30mm;" rowspan="2">
-                <img src="https://eimbox.com/students/<?= $stid; ?>.jpg" style="border:1px solid gray; padding:2px; width:30mm; border-radius: 5px;" />
+                <img src="https://eimbox.com/students/<?= $stid; ?>.jpg"
+                    style="border:1px solid gray; padding:2px; width:30mm; border-radius: 5px;" />
             </td>
             <td style="width:52mm; border:0;" rowspan="2">
                 <?php
@@ -111,7 +112,7 @@
         <tr>
 
             <td style="border:0;">
-                <table style="border:0; font-size:11px; width:100%;">
+                <table class="tbl-100" style="border:0; font-size:11px; width:100%;">
                     <tr>
                         <td style="border:0;">
                             Class: <br>
@@ -139,7 +140,7 @@
 
     <br>
 
-    <table>
+    <table class="tbl-100">
         <tr>
             <th>Subject</th>
             <th>SUB</th>
@@ -155,7 +156,7 @@
 
         <?php foreach ($subjects as $s): ?>
             <tr>
-                <td><?=  $subjectLists[$s['code']] ?? '' ?></td>
+                <td><?= $subjectLists[$s['code']] ?? '' ?></td>
                 <td class="cen"><?= $s['subj'] ?></td>
                 <td class="cen"><?= $s['obj'] ?></td>
                 <td class="cen"><?= $s['pra'] ?></td>
