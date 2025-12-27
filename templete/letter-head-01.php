@@ -22,7 +22,7 @@
 
 
 
-<table style="margin:auto;">
+<table style="margin:auto; border:0;">
     <tr>
         <td style="padding-right:10px; width:90px;">
             <img src="https://eimbox.com/logo/<?php echo $sccode; ?>.png" width="80">
