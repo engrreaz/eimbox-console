@@ -44,14 +44,13 @@
 
     <?php include dirname(dirname(dirname(__FILE__))) . '/templete/letter-head-01.php'; ?>
 
-    <h3 style="text-align:center;">Progress Report</h3>
+    <div style="text-align:center; font-size:24px; color:seagreen; font-weight:700;">Progress Report</div>
 
-    <table style="border:0;">
+    <table class="tbl-100" style="border:0;">
         <tr>
             <td style="border:0;">
                 <div style="padding:0; margin:0; font-size:11px; font-weight:600;">ID : <?= $stid ?> </div>
                 <b><?= $profileInfo['stnameeng'] ?></b><br>
-
             </td>
 
             <td style="border:0; width:30mm;" rowspan="2">
