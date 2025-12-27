@@ -19,7 +19,7 @@ $subjectList = array_filter(explode('.', $row['allsubject']));
 $sqlSub = "SELECT subcode, subject 
            FROM subjects 
            WHERE sccategory='$sctype'
-             AND (sccode=0 OR sccode='$sccode') ORDER BY sccode DESC";
+             AND (sccode=0 OR sccode='$sccode') ORDER BY subcode, sccode DESC";
 
              echo $sqlSub;
 $resSub = $conn->query($sqlSub);
