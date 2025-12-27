@@ -1,4 +1,8 @@
 <style>
+    #letter-head.td {
+        border: 0;
+    }
+
     .a {
         font-size: 20px;
         font-weight: 700;
@@ -22,7 +26,7 @@
 
 
 
-<table style="margin:auto; border:0;">
+<table id="letter-head" style="margin:auto; border:0;">
     <tr>
         <td style="padding-right:10px; width:90px;">
             <img src="https://eimbox.com/logo/<?php echo $sccode; ?>.png" width="80">
