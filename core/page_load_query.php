@@ -42,3 +42,10 @@ while ($row = $res->fetch_assoc()) {
 $stmt->close();
 
 
+
+$sett = [];
+$sql = "SELECT * FROM settings WHERE sccode='$sccode' ORDER BY id";
+$res = $conn->query($sql);
+while ($row = $res->fetch_assoc()) {
+    $sett[] = $row;
+}

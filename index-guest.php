@@ -38,7 +38,9 @@ $barColor = $colorArr[0]; // default
 $attndColor = 'seagreen';
 $duesColor = 'crimson';
 
-$sql = "SELECT * from examlist where sccode='$sccode' and datestart <= '$td' order by datestart desc limit 1";
+
+$exx = ($classname == 'Ten') ? 'Test' : 'Annual';
+$sql = "SELECT * from examlist where sccode='$sccode' and datestart <= '$td' and examtitle='$exx' order by datestart desc limit 1";
 $result = $conn->query($sql);
 while ($row = $result->fetch_assoc()) {
     $lastExamName = $row['examtitle'] ?? '';
@@ -46,6 +48,7 @@ while ($row = $result->fetch_assoc()) {
     $datePublish = $row['result_publish'] ?? '';
     $sessionyear = $row['sessionyear'] ?? '';
 }
+
 
 $resultData = [];
 $sql = "SELECT * 

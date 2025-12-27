@@ -1051,15 +1051,42 @@ $release_colors = [
 
 
                     /* ---- nextType resolver ---- */
-                    let nextType =
-                        type === 'slot' ? 'session' :
-                            type === 'session'
-                                ? (chainInput.includes('exam') ? 'exam' : 'class')
-                                : type === 'exam' ? 'class'
-                                    : type === 'class' ? 'section'
-                                        : type === 'section'
-                                            ? (chainInput.includes('subject') ? 'subject' : null)
-                                            : null;
+                    let nextType = null;
+
+                    // helper (exact match এড়াতে চাইলে)
+                    const hasExam = /\bexam\b/.test(chainInput);
+                    const hasClass = /\bclass\b/.test(chainInput);
+                    const hasSubject = /\bsubject\b/.test(chainInput);
+
+                    if (type === 'slot') {
+
+                        nextType = 'session';
+
+                    } else if (type === 'session') {
+
+                        if (hasClass) {
+                            nextType = null;
+
+                        } else if (hasExam) {
+                            nextType = 'exam';
+
+                        } else {
+                            nextType = 'class';
+                        }
+
+                    } else if (type === 'exam') {
+
+                        nextType = 'class';
+
+                    } else if (type === 'class') {
+
+                        nextType = 'section';
+
+                    } else if (type === 'section') {
+
+                        nextType = hasSubject ? 'subject' : null;
+                    }
+
 
                     // disable this node after selection
                     node.addClass('disabled');

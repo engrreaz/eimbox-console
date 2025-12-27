@@ -9,10 +9,28 @@ require_once 'core/global_values.php';
 // $nodes = explode(' ', $chain);
 
 if (strpos($chain, 'subject') !== false) {
-    $col = 5; $size = 'xl';
+    $col = 5;
+    $size = 'xl';
 } else {
-   $col = 12; $size = 'lg';
+    $col = 12;
+    $size = 'lg';
 }
+
+$Title = 'Slot → Session';
+if (strpos($chain, 'exam') !== false) {
+    $Title .= ' → Exam';
+}
+
+$Title .= ' → Class → Section';
+
+if (strpos($chain, 'subject') !== false) {
+    $Title .= ' →  Subject';
+}
+
+if (strpos($chain, 'class') !== false) {
+    $Title = str_replace(' → Class → Section', '', $Title);
+}
+
 ?>
 
 <div class="modal fade" id="nodeTreeModal" tabindex="-1">
@@ -20,7 +38,7 @@ if (strpos($chain, 'subject') !== false) {
         <div class="modal-content" style="width:80%; max-width: 500px; margin:auto;">
             <input type="text" id="chainInput" value="<?php echo h($chain); ?>" hidden>
             <div class="modal-header">
-                <h5 class="modal-title">Select Slot → Session → Class → Section</h5>
+                <h5 class="modal-title">Select <span class="text-primary fw-bold"> &nbsp; <?= $Title ?></span></h5>
                 <button class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 

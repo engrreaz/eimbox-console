@@ -12,7 +12,7 @@
     <!-- <input type="text" id="selectedData"> -->
 
     <?php
-    $chain = 'subject';
+    $chain = 'class'; // -- class (class/section omit), exam (+exam), subject (+subject)
     include 'components/slot-tree-modal.php';
     ?>
 
