@@ -1,5 +1,5 @@
 <style>
-    #letter-head.td {
+    #letter-head .td {
         border: 0;
     }
 
