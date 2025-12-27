@@ -28,10 +28,10 @@
 
 <table id="letter-head" style="margin:auto; border:0;">
     <tr>
-        <td style="padding-right:10px; width:90px;">
+        <td style="padding-right:10px; width:90px; border:0;">
             <img src="https://eimbox.com/logo/<?php echo $sccode; ?>.png" width="80">
         </td>
-        <td>
+        <td style="border:0;">
             <div class="a"><?php echo $scname; ?></div>
             <div class="b"><?php echo $scaddress; ?></div>
             <div class="c">
