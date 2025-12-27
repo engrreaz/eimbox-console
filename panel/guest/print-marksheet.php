@@ -80,7 +80,7 @@ $profileInfo = $conn->query($sqlProfile)->fetch_assoc();
 
 <body>
 
-    <h3 style="text-align:center; margin-bottom:0;">Progress Report</h3>
+    <h2 style="text-align:center; margin-bottom:0;">Progress Report</h2>
 
     <table width="100%" cellpadding="8"
         style="border:0; margin:0; padding:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
