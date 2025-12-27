@@ -71,3 +71,5 @@ foreach ($subjectList as $code) {
 $gpa = $row['gpa'];
 $gla = $row['gla'];
 $totalmarks = $row['totalmarks'];
+
+var_dump($subjectLists);

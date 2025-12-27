@@ -155,7 +155,7 @@
 
         <?php foreach ($subjects as $s): ?>
             <tr>
-                <td><?= $subjectLists[$s['code']] ?? '' ?></td>
+                <td><?= $s['code']. $subjectLists[$s['code']] ?? '' ?></td>
                 <td class="cen"><?= $s['subj'] ?></td>
                 <td class="cen"><?= $s['obj'] ?></td>
                 <td class="cen"><?= $s['pra'] ?></td>
