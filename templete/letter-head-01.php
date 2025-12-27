@@ -1,7 +1,6 @@
 <style>
     .lh-table {
-        margin: 0 auto;
-        /* পুরো ব্লক মাঝখানে */
+        margin: auto;
         border: 0;
     }
 
@@ -14,17 +13,20 @@
         font-size: 20px;
         font-weight: 700;
         line-height: 24px;
+        display: block;
     }
 
     .b {
         font-size: 15px;
         line-height: 18px;
+        display: block;
     }
 
     .c {
         font-size: 12px;
         font-style: italic;
         line-height: 16px;
+        display: block;
     }
 </style>
 
@@ -35,7 +37,12 @@
                 <img src="https://eimbox.com/logo/<?php echo $sccode; ?>.png" width="80">
             </td>
             <td>
-                sfsdfs d fdsf sdfdsf
+                <div class="a"><?php echo $scname; ?></div>
+                <div class="b"><?php echo $scaddress; ?></div>
+                <div class="c">
+                    <?php echo 'Mobile : ' . $scmobile . ' | Email : ' . $scmail; ?>
+                </div>
+                <div class="c"><?php echo 'Web : ' . $scweb; ?></div>
             </td>
         </tr>
     </table>
