@@ -21,7 +21,7 @@ $sqlSub = "SELECT subcode, subject
            WHERE sccategory='$sctype'
              AND (sccode=0 OR sccode='$sccode') ORDER BY subcode, sccode DESC";
 
-             echo $sqlSub;
+
 $resSub = $conn->query($sqlSub);
 
 $subjectLists = [];
@@ -73,5 +73,3 @@ foreach ($subjectList as $code) {
 $gpa = $row['gpa'];
 $gla = $row['gla'];
 $totalmarks = $row['totalmarks'];
-
-var_dump($subjectLists);
