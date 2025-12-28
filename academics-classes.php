@@ -1,10 +1,38 @@
 <?php require_once 'header.php'; ?>
 
 <style>
+    /* Drag handle cursor */
+    .card-header {
+        cursor: grab;
+    }
+
+    .card-header:active {
+        cursor: grabbing;
+    }
+
+    /* While dragging */
+    .ui-sortable-helper {
+        opacity: 0.85;
+        transform: scale(1.02);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, .15);
+    }
+
+    /* Smooth movement animation */
+    .session-row>.class-card {
+        transition: transform .2s ease;
+    }
+
+    /* Drop placeholder */
     .sortable-placeholder {
-        height: 50px;
-        background: #f4f4f4;
-        border: 1px dashed #999;
+        background: #f8f9fa;
+        border: 2px dashed #adb5bd;
+        border-radius: .5rem;
+        min-height: 70px;
+    }
+
+    /* Prevent column break jump */
+    .class-card {
+        position: relative;
     }
 </style>
 
@@ -70,6 +98,15 @@
 <?php require_once 'footer.php'; ?>
 
 
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<!-- jQuery UI CSS -->
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.3/themes/base/jquery-ui.css">
+
+<!-- jQuery UI JS -->
+<script src="https://code.jquery.com/ui/1.13.3/jquery-ui.min.js"></script>
+
 <script>
     let areaModal = new bootstrap.Modal('#areaModal');
 
@@ -123,7 +160,6 @@
     /* ================= LOAD CLASSES ================= */
 
     function loadClasses() {
-
         let slots = $('.slotChk:checked').map((i, e) => e.value).get();
         let sessions = $('.sessionChk:checked').map((i, e) => e.value).get();
 
@@ -133,8 +169,8 @@
         }
 
         $.post('academics/get-classes.php', { slots, sessions }, res => {
-
-            let g = {}; let html = '';
+            let g = {};
+            let html = '';
 
             res.forEach(r => {
                 if (!g[r.slot]) g[r.slot] = {};
@@ -143,9 +179,7 @@
             });
 
             Object.keys(g).forEach(slot => {
-                html += `<div class="mb-4">
-                    <h4>${slot}</h4>`;
-
+                html += `<div class="mb-4"><h4>${slot}</h4>`;
                 Object.keys(g[slot]).forEach(session => {
                     html += `
                 <div class="ms-3 mb-3">
@@ -156,12 +190,12 @@
                             + Class
                         </button>
                     </h6>
-                    <div class="row g-3 session-row">`;
+                    <div class="session-row">`;
 
                     g[slot][session].forEach(cls => {
                         html += `
-                    <div class="col-md-4 class-card"
-                        data-class="${cls}" data-slot="${slot}" data-session="${session}">
+                    <div class="class-card mb-3"
+                        data-class="${cls}" data-slot="${slot}" data-session="${session}" >
                         <div class="card h-100">
                             <div class="card-header d-flex justify-content-between">
                                 <strong>${cls}</strong>
@@ -179,7 +213,6 @@
 
                     html += `</div></div>`;
                 });
-
                 html += `</div>`;
             });
 
@@ -188,6 +221,50 @@
             enableClassDrag();
         }, 'json');
     }
+
+
+    function enableClassDrag() {
+
+    $('.session-row').sortable({
+        items: '.class-card',
+        handle: '.card-header',
+        placeholder: 'sortable-placeholder',
+        tolerance: 'pointer',
+
+        update: function () {
+
+            let order = [];
+
+            $(this).children('.class-card').each(function (i) {
+                order.push({
+                    classname: $(this).data('class'),
+                    slot: $(this).data('slot'),
+                    session: $(this).data('session'),
+                    position: i + 1
+                });
+            });
+
+            console.log(order); // 🔴 প্রথমে এটা দেখো
+
+            $.ajax({
+                url: 'academics/update-class-order.php',
+                type: 'POST',
+                data: { order: JSON.stringify(order) },
+                success: function (res) {
+                    showToast("success", "Re-arrange Updated!");
+                    console.log(res);
+                }
+            });
+        }
+    });
+}
+
+
+
+
+
+
+
 
     /* ================= SECTIONS ================= */
 
@@ -223,25 +300,6 @@
 
     /* ================= DRAG ================= */
 
-    function enableClassDrag() {
-        $('.session-row').sortable({
-            items: '.class-card',
-            handle: '.card-header',
-            placeholder: 'sortable-placeholder',
-            update: function () {
-                let order = [];
-                $(this).children('.class-card').each((i, e) => {
-                    order.push({
-                        areaname: $(e).data('class'),
-                        slot: $(e).data('slot'),
-                        session: $(e).data('session'),
-                        idno: i + 1
-                    });
-                });
-                $.post('academics/update-class-order.php', { order });
-            }
-        });
-    }
 
     function enableSectionDrag() {
         $('.section-list').sortable({

@@ -4,21 +4,27 @@ require_once '../core/config.php';
 require_once '../core/db.php';
 require_once '../core/global_values.php';
 
-$order  = $_POST['order'] ?? [];
 
-foreach($order as $row){
 
-    $areaname = $row['areaname'];
-    $slot     = $row['slot'];
-    $session  = $row['session'];
-    $idno     = intval($row['idno']);
+$order = json_decode($_POST['order'], true);
 
-    mysqli_query($conn,"
-        UPDATE areas
-        SET idno='$idno'
-        WHERE sccode='$sccode'
-        AND areaname='$areaname'
-        AND slot='$slot'
-        AND sessionyear='$session'
-    ");
+$stmt = $conn->prepare(
+    "UPDATE areas 
+     SET idno = ? 
+     WHERE areaname = ? AND slot = ? AND sessionyear = ?"
+);
+
+foreach ($order as $row) {
+    $stmt->bind_param(
+        "isss",
+        $row['position'],
+        $row['classname'],
+        $row['slot'],
+        $row['session']
+    );
+    $stmt->execute();
 }
+
+$stmt->close();
+
+echo json_encode(['status' => 'success']);
