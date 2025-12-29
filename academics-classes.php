@@ -251,7 +251,7 @@
                 type: 'POST',
                 data: { order: JSON.stringify(order) },
                 success: function (res) {
-                    showToast("success", "Re-arrange Updated!");
+                    showToast("success", "Re-arrange Classes Updated!");
                     console.log(res);
                 }
             });
@@ -268,18 +268,25 @@
 
     /* ================= SECTIONS ================= */
 
-    function loadSections() {
-        $('.class-card').each(function () {
-            let c = $(this);
-            $.post('academics/get-sections.php', {
-                class: c.data('class'),
-                slot: c.data('slot'),
-                session: c.data('session')
-            }, res => {
-                let h = '';
-                res.forEach(r => {
-                    h += `
-                <div class="border p-2 mb-2 section-item" data-id="${r.id}">
+  function loadSections() {
+
+    $('.class-card').each(function () {
+
+        let card = $(this);
+        let sectionList = card.find('.section-list');
+
+        $.post('academics/get-sections.php', {
+            class: card.data('class'),
+            slot: card.data('slot'),
+            session: card.data('session')
+        }, function (res) {
+
+            let html = '';
+
+            res.forEach(r => {
+                html += `
+                <div class="border p-2 mb-2 section-item"
+                     data-id="${r.id}">
                     <div class="d-flex justify-content-between">
                         <div>
                             <strong>${r.subarea}</strong><br>
@@ -291,29 +298,53 @@
                         </div>
                     </div>
                 </div>`;
+            });
+
+            sectionList.html(html);
+
+            enableSectionDrag(sectionList, card);
+
+        }, 'json');
+    });
+}
+
+
+function enableSectionDrag(sectionList, card) {
+
+    sectionList.sortable({
+        items: '.section-item',
+        placeholder: 'sortable-placeholder',
+        tolerance: 'pointer',
+
+        update: function () {
+
+            let order = [];
+
+            sectionList.children('.section-item').each(function (i) {
+                order.push({
+                    section_id: $(this).data('id'),
+                    classname: card.data('class'),
+                    slot: card.data('slot'),
+                    session: card.data('session'),
+                    position: i + 1
                 });
-                c.find('.section-list').html(h);
-                enableSectionDrag();
-            }, 'json');
-        });
-    }
+            });
 
-    /* ================= DRAG ================= */
+            console.log('ORDER' + JSON.stringify(order)); // 🔴 debug
 
+            $.ajax({
+                url: 'academics/update-section-order.php',
+                type: 'POST',
+                data: { order: JSON.stringify(order) },
+                success: function (res) {
+                    console.log(res);
+                                     showToast("success", "Re-arrange Sections Updated!");
 
-    function enableSectionDrag() {
-        $('.section-list').sortable({
-            items: '.section-item',
-            placeholder: 'sortable-placeholder',
-            update: function () {
-                let o = [];
-                $(this).children().each((i, e) => {
-                    o.push({ id: $(e).data('id'), idno: i + 1 });
-                });
-                $.post('academics/update-section-order.php', { order: o });
-            }
-        });
-    }
+                }
+            });
+        }
+    });
+}
 
     /* ================= ADD / EDIT ================= */
 

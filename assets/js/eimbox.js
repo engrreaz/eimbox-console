@@ -31,3 +31,28 @@ function showToast(type, message, title = '') {
     toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
 }
 
+function setCookie(name, value, days = 30){
+    let d = new Date();
+    d.setTime(d.getTime() + (days*24*60*60*1000));
+    document.cookie = name + "=" + encodeURIComponent(value) +
+        ";expires=" + d.toUTCString() + ";path=/";
+}
+
+
+function getCookie(name){
+    let cname = name + "=";
+    let ca = document.cookie.split(';');
+    for(let i=0;i<ca.length;i++){
+        let c = ca[i].trim();
+        if(c.indexOf(cname) === 0){
+            return decodeURIComponent(c.substring(cname.length));
+        }
+    }
+    return "";
+}
+
+
+function deleteCookie(name){
+    document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;";
+}
+

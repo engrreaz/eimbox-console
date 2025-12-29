@@ -4,18 +4,32 @@ require_once '../core/config.php';
 require_once '../core/db.php';
 require_once '../core/global_values.php';
 
-$sccode = $_SESSION['sccode'];
-$order  = $_POST['order'] ?? [];
+$push = '';
 
-foreach($order as $row){
+$order = json_decode($_POST['order'], true);
 
-    $id   = intval($row['id']);
-    $idno = intval($row['idno']);
+$stmt = $conn->prepare(
+    "UPDATE areas 
+     SET idno = ? 
+     WHERE areaname = ? AND slot = ? AND sessionyear = ? AND id = ? AND sccode=?"
+);
 
-    mysqli_query($conn,"
-        UPDATE areas
-        SET idno='$idno'
-        WHERE id='$id'
-        AND sccode='$sccode'
-    ");
+foreach ($order as $row) {
+    $stmt->bind_param(
+        "isssii",
+        $row['position'],
+        $row['classname'],
+        $row['slot'],
+        $row['session'],
+        $row['section_id'],
+        $sccode
+
+    );
+
+    $stmt->execute();
+    $push .= $row['section_id'];
 }
+
+$stmt->close();
+
+echo json_encode(['status' => 'success-Sectuib' . $push]);
