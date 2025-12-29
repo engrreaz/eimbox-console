@@ -61,10 +61,10 @@ $session = $_COOKIE['session'] ?? $_GET['session'] ?? '';
                 ?>
             </select>
         </div>
-        <div class="col-md-1 col-3 " >
-            <button class="btn btn-dark btn-sm square-btn" id="openTree">
-                <i class="bi bi-stack fs-6"></i>
-            </button>
+        <div class="col-md-1 col-3 ">
+            <button class="btn btn-dark btn-sm rounded-circle" id="openTree">
+    <i class="bi bi-stack fs-5"></i>
+</button>
         </div>
         <?php
         $chain = 'class'; // -- class (class/section omit), exam (+exam), subject (+subject)
