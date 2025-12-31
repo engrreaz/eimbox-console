@@ -95,6 +95,10 @@
                     <button id="filterBtn" class="btn btn-primary btn-sm w-100 mt-1">Filter</button>
                 </div>
 
+                <div class="col-md-2 mb-3" id="errCount">
+                   
+                </div>
+
             </div>
         </div>
 
@@ -144,6 +148,8 @@
 
             $.post('promotion/getMeritData.php', data, function (res) {
                 $('#resultTable tbody').html(res);
+                let er = $('#cnt').text;
+                 $('#errCount').html(er);
             });
         }
 

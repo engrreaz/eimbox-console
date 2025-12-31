@@ -4,7 +4,7 @@ require_once '../core/config.php';
 require_once '../core/db.php';
 require_once '../core/global_values.php';
 
-
+$errorCount = 0;
 $slot = $_POST['slot'] ?? '';
 $session = $_POST['session'] ?? '';
 $exam = $_POST['exam'] ?? '';
@@ -77,6 +77,7 @@ while ($row = mysqli_fetch_assoc($res)) {
 
     if ($meritCombCheck == '' && $meritNumCheck == '') {
         $errorIcon = ' <span class="text-danger fw-bold">✖</span>';
+        $errorCount++;
     } else {
         $errorIcon = '';
     }
@@ -92,3 +93,4 @@ while ($row = mysqli_fetch_assoc($res)) {
     </tr>";
 }
 
+echo '<div id="cnt" hidden>'.$errorCount.'</div>';
