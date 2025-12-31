@@ -2,8 +2,10 @@
 
 <style>
     /* Drag handle cursor */
+
     .card-header {
-        cursor: grab;
+        cursor: move;
+        pointer-events: auto !important;
     }
 
     .card-header:active {
@@ -24,10 +26,10 @@
 
     /* Drop placeholder */
     .sortable-placeholder {
-        background: #f8f9fa;
-        border: 2px dashed #adb5bd;
-        border-radius: .5rem;
-        min-height: 70px;
+        height: 60px;
+        background: #f5f5f5;
+        border: 2px dashed #999;
+        margin-bottom: 10px;
     }
 
     /* Prevent column break jump */
@@ -263,39 +265,43 @@
 
     function enableClassDrag() {
 
-        $('.session-row').sortable({
-            items: '.class-card',
-            handle: '.card-header',
-            placeholder: 'sortable-placeholder',
-            tolerance: 'pointer',
+        $('.session-row').each(function () {
 
-            update: function () {
-
-                let order = [];
-
-                $(this).children('.class-card').each(function (i) {
-                    order.push({
-                        classname: $(this).data('class'),
-                        slot: $(this).data('slot'),
-                        session: $(this).data('session'),
-                        position: i + 1
-                    });
-                });
-
-                console.log(order); // 🔴 প্রথমে এটা দেখো
-
-                $.ajax({
-                    url: 'academics/update-class-order.php',
-                    type: 'POST',
-                    data: { order: JSON.stringify(order) },
-                    success: function (res) {
-                        showToast("success", "Re-arrange Classes Updated!");
-                        console.log(res);
-                    }
-                });
+            if ($(this).hasClass('ui-sortable')) {
+                $(this).sortable('destroy');
             }
+
+            $(this).sortable({
+                items: '.class-card',
+                handle: '.card-header',
+                placeholder: 'sortable-placeholder',
+                tolerance: 'pointer',
+                forcePlaceholderSize: true,
+
+                update: function () {
+
+                    let order = [];
+
+                    $(this).children('.class-card').each(function (i) {
+                        order.push({
+                            classname: $(this).data('class'),
+                            slot: $(this).data('slot'),
+                            session: $(this).data('session'),
+                            position: i + 1
+                        });
+                    });
+
+                    $.post('academics/update-class-order.php', {
+                        order: JSON.stringify(order)
+                    }, res => {
+                        showToast("success", "Re-arrange Classes Updated!");
+                    });
+                }
+            });
+
         });
     }
+
 
 
 
