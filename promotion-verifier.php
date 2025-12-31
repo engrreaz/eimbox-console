@@ -246,28 +246,28 @@
 
     function fixnow(id, rollno) {
 
-    if (!id || !rollno) {
-        showToast('danger', 'Invalid data');
-        return;
-    }
-alert(id + ' | ' + rollno);
-    $.post('promotion/fixnow.php', {
-        id: id,
-        rollno: rollno
-    }, function (r) {
-
-        if (r.status === 'ok') {
-            showToast('success', 'Fixed successfully' + r.msg);
-            loadResults(); // table auto refresh
-        } else {
-            showToast('danger', r.msg || 'Fix failed');
+        if (!id || !rollno) {
+            showToast('danger', 'Invalid data');
+            return;
         }
 
-    }, 'json')
-    .fail(function () {
-        showToast('danger', 'Server error');
-    });
-}
+        $.post('promotion/fixnow.php', {
+            id: id,
+            rollno: rollno
+        }, function (r) {
+
+            if (r.status === 'ok') {
+                showToast('success', 'Fixed successfully' + r.msg);
+                loadResults(); // table auto refresh
+            } else {
+                showToast('danger', r.msg || 'Fix failed');
+            }
+
+        }, 'json')
+            .fail(function () {
+                showToast('danger', 'Server error');
+            });
+    }
 
 </script>
 
