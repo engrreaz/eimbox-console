@@ -21,7 +21,7 @@
                     <select id="sessionFilter" class="form-select">
                         <option value="">Select Session</option>
                         <?php
-                        $sessions = mysqli_query($conn, "SELECT DISTINCT sessionyear FROM tabulatingsheet ORDER BY sessionyear");
+                        $sessions = mysqli_query($conn, "SELECT DISTINCT sessionyear FROM tabulatingsheet where sccode='$sccode' ORDER BY sessionyear");
                         while ($row = mysqli_fetch_assoc($sessions)) {
                             echo "<option value='{$row['sessionyear']}'>{$row['sessionyear']}</option>";
                         }
