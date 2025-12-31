@@ -51,7 +51,7 @@ $sql = "
     $whereSQL
     ORDER BY ts.meritnumcomb ASC
 ";
-echo $sql;
+
 $res = mysqli_query($conn, $sql);
 
 if (!$res) {
