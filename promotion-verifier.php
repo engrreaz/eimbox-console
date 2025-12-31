@@ -2,6 +2,9 @@
 
 <div class="container-xxl flex-grow-1 container-p-y">
     <div class="card mb-3">
+
+
+
         <div class="card-body">
             <!-- Tabulatingsheet Filter Section -->
             <h5>Result Filter (Tabulatingsheet)</h5>
@@ -93,27 +96,27 @@
                 </div>
 
             </div>
-
-
-
-            <!-- Result Table -->
-            <div class="table-responsive">
-                <table class="table table-bordered" id="resultTable">
-                    <thead>
-                        <tr>
-                            <th>MeritNumComb</th>
-                            <th>MeritNum</th>
-                            <th>STID</th>
-                            <th>RollNo</th>
-                            <th>ClassName</th>
-                            <th>SectionName</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-
         </div>
+
+
+        <!-- Result Table -->
+        <div class="table-responsive">
+            <table class="table table-bordered" id="resultTable">
+                <thead>
+                    <tr>
+                        <th>MeritNumComb</th>
+                        <th>MeritNum</th>
+                        <th>STID</th>
+                        <th>RollNo</th>
+                        <th>ClassName</th>
+                        <th>SectionName</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+
     </div>
 </div>
 
