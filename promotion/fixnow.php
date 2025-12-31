@@ -13,7 +13,7 @@ if (!$id || !$rollno) {
     exit;
 }
 
-$sql = "UPDATE sessioninfo set rollno='$roll' where id='$id' and sccode='$sccode'";
+$sql = "UPDATE sessioninfo set rollno='$rollno' where id='$id' and sccode='$sccode'";
 
 $q = mysqli_query($conn, $sql);
 
