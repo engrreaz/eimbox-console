@@ -257,7 +257,7 @@
     }, function (r) {
 
         if (r.status === 'ok') {
-            showToast('success', 'Fixed successfully');
+            showToast('success', 'Fixed successfully' + r.msg);
             loadResults(); // table auto refresh
         } else {
             showToast('danger', r.msg || 'Fix failed');
