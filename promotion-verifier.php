@@ -101,7 +101,7 @@
 
         <!-- Result Table -->
         <div class="table-responsive">
-            <table class="table table-bordered" id="resultTable">
+            <table class="table table-bordered table-sm" id="resultTable">
                 <thead>
                     <tr>
                         <th>MeritNumComb</th>
