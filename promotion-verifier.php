@@ -7,7 +7,7 @@
             <h5>Result Filter (Tabulatingsheet)</h5>
             <div class="row g-2 mb-3">
                 <div class="col-md-2">
-                    <select id="slotFilter" class="form-select">
+                    <select id="slotFilter" class="form-select form-select-sm">
                         <option value="">Select Slot</option>
                         <?php
                         $slots = mysqli_query($conn, "SELECT DISTINCT slot FROM tabulatingsheet WHERE sccode='$sccode' ORDER BY slot");
@@ -18,7 +18,7 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <select id="sessionFilter" class="form-select">
+                    <select id="sessionFilter" class="form-select form-select-sm">
                         <option value="">Select Session</option>
                         <?php
                         $sessions = mysqli_query($conn, "SELECT DISTINCT sessionyear FROM tabulatingsheet where sccode='$sccode' ORDER BY sessionyear");
@@ -29,7 +29,7 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <select id="examFilter" class="form-select">
+                    <select id="examFilter" class="form-select form-select-sm">
                         <option value="">Select Exam</option>
                         <?php
                         $exams = mysqli_query($conn, "SELECT DISTINCT exam FROM tabulatingsheet  Where   sccode='$sccode' ORDER BY exam");
@@ -40,7 +40,7 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <select id="classFilter" class="form-select">
+                    <select id="classFilter" class="form-select form-select-sm">
                         <option value="">Select Class</option>
                         <?php
                         $classes = mysqli_query($conn, "SELECT DISTINCT classname FROM tabulatingsheet Where  sccode='$sccode'  ORDER BY classname");
@@ -51,7 +51,7 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <select id="sectionFilter" class="form-select">
+                    <select id="sectionFilter" class="form-select form-select-sm">
                         <option value="">Select Section</option>
                         <?php
                         $sections = mysqli_query($conn, "SELECT DISTINCT sectionname FROM tabulatingsheet  Where   sccode='$sccode'  ORDER BY sectionname");
@@ -67,7 +67,7 @@
             <h5>Session Filter (SessionInfo)</h5>
             <div class="row g-2 mb-3">
                 <div class="col-md-2">
-                    <select id="sessioninfoSlot" class="form-select">
+                    <select id="sessioninfoSlot" class="form-select form-select-sm">
                         <option value="">Select Slot</option>
                         <?php
                         $siSlots = mysqli_query($conn, "SELECT DISTINCT slot FROM sessioninfo  Where   sccode='$sccode'  ORDER BY slot");
@@ -78,7 +78,7 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <select id="sessioninfoSession" class="form-select">
+                    <select id="sessioninfoSession" class="form-select form-select-sm">
                         <option value="">Select Session</option>
                         <?php
                         $siSessions = mysqli_query($conn, "SELECT DISTINCT sessionyear FROM sessioninfo  Where   sccode='$sccode' ORDER BY sessionyear");
@@ -91,7 +91,7 @@
             </div>
 
             <div class="col-md-2 mb-3">
-                <button id="filterBtn" class="btn btn-primary w-100">Filter</button>
+                <button id="filterBtn" class="btn btn-primary btn-sm w-100">Filter</button>
             </div>
 
             <!-- Result Table -->
