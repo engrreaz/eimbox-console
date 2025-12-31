@@ -128,6 +128,7 @@
                         <th>RollNo</th>
                         <th>ClassName</th>
                         <th>SectionName</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody></tbody>
