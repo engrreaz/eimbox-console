@@ -89,7 +89,7 @@
                     </select>
                 </div>
                 <div class="col-md-2 mb-3">
-                    <button id="filterBtn" class="btn btn-primary btn-sm w-100">Filter</button>
+                    <button id="filterBtn" class="btn btn-primary btn-sm w-100 mt-1">Filter</button>
                 </div>
 
             </div>
