@@ -62,10 +62,11 @@ $session = $_COOKIE['session'] ?? $_GET['session'] ?? '';
             </select>
         </div>
         <div class="col-md-1 col-3 ">
-            <button class="btn btn-dark btn-sm rounded-circle" id="openTree">
-    <i class="bi bi-stack fs-5"></i>
-</button>
+            <button type="button" class="btn btn-icon rounded-pill btn-label-github waves-effect" id="openTree">
+                <i class="icon-base bi bi-stack icon-22px"></i>
+            </button>
         </div>
+
         <?php
         $chain = 'class'; // -- class (class/section omit), exam (+exam), subject (+subject)
         include 'components/slot-tree-modal.php';
@@ -74,6 +75,7 @@ $session = $_COOKIE['session'] ?? $_GET['session'] ?? '';
         <div class="col-md-2 col-9">
             <button class="btn btn-primary btn-sm" onclick="openAdd()">Add New Item</button>
         </div>
+
     </div>
 
     <!-- ITEM LIST -->
@@ -89,7 +91,6 @@ $session = $_COOKIE['session'] ?? $_GET['session'] ?? '';
 
         $result = $conn->query($sqlAmt);
 
-        // অ্যারে বানানো: itemcode => amount
         $amounts = [];
         if ($result->num_rows > 0) {
             while ($row = $result->fetch_assoc()) {
@@ -146,7 +147,7 @@ $session = $_COOKIE['session'] ?? $_GET['session'] ?? '';
                 <h5 class="modal-title">Fee Item</h5><button class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <input type="hidden" id="fid" value="0">
+                <input type="text" id="fid" value="0">
                 <div class="row mb-2">
                     <div class="col-md-6"><label>Particular (English)</label><input type="text" id="peng"
                             class="form-control"></div>
@@ -223,7 +224,7 @@ $session = $_COOKIE['session'] ?? $_GET['session'] ?? '';
         $.post('payments/get-finance-item.php', { id }, function (res) {
             let d = JSON.parse(res);
             $('#fid').val(d.id); $('#peng').val(d.particulareng); $('#pben').val(d.particularben);
-            $('#mon').val(d.mon); $('#new_only').prop('checked', d.new_only == 1); $('#splitable').prop('checked', d.splitable == 1);
+            $('#mon').val(d.month); $('#new_only').prop('checked', d.new_only == 1); $('#splitable').prop('checked', d.splitable == 1);
             $('#itemMsg').html('');
             itemModal.show();
         });
@@ -275,16 +276,25 @@ $session = $_COOKIE['session'] ?? $_GET['session'] ?? '';
         $('#afid').val(fid); $('#aitemcode').val(itemcode); $('#aclass').val(cls); $('#asection').val(sec);
         let text = 'Item #' + fid; if (cls) text += ' | ' + cls; if (sec) text += ' - ' + sec;
         $('#ainfo').text(text); $('#aamount').val(''); $('#amountMsg').html('');
-
+        // alert(itemcode);
         $.post('payments/get-amount.php', { fid: fid, itemcode: itemcode, class: cls, section: sec }, function (r) {
-            if (r) $('#aamount').val(JSON.parse(r).amount);
-        });
+            if (!r) return;
 
+            let amt = JSON.parse(r).amount;
+            $('#aamount').val(amt);
+
+            // modal fully visible হলে focus + select
+            $('#amountModal').one('shown.bs.modal', function () {
+                $('#aamount').focus().select();
+            });
+        });
         amountModal.show();
     }
 
     function saveAmount() {
         let data = { fid: $('#afid').val(), fitemcode: $('#aitemcode').val(), class: $('#aclass').val(), section: $('#asection').val(), amount: $('#aamount').val() };
+
+        alert(JSON.stringify(data));
 
         $.post('payments/save-amount.php', data, function (res) {
             $('#amountMsg').html(res);
@@ -334,11 +344,13 @@ $session = $_COOKIE['session'] ?? $_GET['session'] ?? '';
 
     // ---------- Slot/Session ----------
     function applyFilter() {
+        alert('.');
         let slot = $('#slot-main').val(), session = $('#session-main').val();
         if (!slot || !session) { alert('Please select slot and session'); return; }
         setCookie('slot', slot); setCookie('session', session);
         window.location.href = '?slot=' + slot + '&session=' + session;
     }
+
     $('#slot-main,#session-main').on('change', () => applyFilter());
     function setCookie(name, value) { document.cookie = name + '=' + value + ';path=/'; }
     function getCookie(name) { let v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)'); return v ? v[2] : null; }
@@ -369,13 +381,49 @@ $session = $_COOKIE['session'] ?? $_GET['session'] ?? '';
     });
 
 </script>
+
+<script>
+    function watchSelectValue(selector, callback) {
+        const el = document.querySelector(selector);
+        if (!el) return;
+
+        let lastValue = el.value;
+
+        el.addEventListener('change', () => {
+            if (el.value !== lastValue) {
+                lastValue = el.value;
+                callback(el.value);
+            }
+        });
+
+        const observer = new MutationObserver(() => {
+            if (el.value !== lastValue) {
+                lastValue = el.value;
+                callback(el.value);
+            }
+        });
+
+        observer.observe(el, {
+            attributes: true,
+            childList: true,
+            subtree: true
+        });
+    }
+
+
+    watchSelectValue('#slot-main', function (newValue) {
+        console.log('slot changed to:', newValue);
+        applyFilter();
+    });
+
+</script>
+
 </body>
 
 </html>
 
 <!-- 
-১. আইটেম ব্লকের অ্যামাউন্ট সেট করা ঠিক আছে।
-২. ক্লাস ব্লকে অ্যামাউন্ট সেট করার বাটন/সুযোগ নাই। + অ্যামাউন্ট দেখারও ব্যবস্থা নাই।
-৩. ক্লাস ব্লক এক্সপান্ড করলে সেকশন ব্লকগুলো এক্সপান্ড হয়ে কলাপ্স হয়ে যায়। ওখানে অ্যামাউন্ট সেট করা যায়। ডিসপ্লে হয় না।
-৪. মূল কার্ড ড্রাগ ড্রপ হচ্ছে, ড্রাগ ড্রপের সময় একটা ডটেড এরিয়া দেকালে মনে হয় ভালো হয়।
-ধাপে ধাপে কি কি পরিবর্তন করবো, কোড সহ দাও -->
+১. সেট অ্যামাউন্ট টেক্সটবক্সে ফোকাট/সিলেক্ট
+2. ডায়নামি আপডেট ভ্যালূ
+3. 
+-->

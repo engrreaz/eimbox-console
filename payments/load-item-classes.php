@@ -35,7 +35,7 @@ while ($c = $classRs->fetch_assoc()) {
         <div class="d-flex justify-content-between align-items-center pointer class-toggle"
             onclick="$(this).siblings('.session-list').slideToggle(150); $(this).find('i').toggleClass('bi-chevron-right bi-chevron-down');">
             <div><i class="bi bi-chevron-right me-2"></i><strong><?= $class ?></strong></div>
-            <small class="text-success">--,৳ <?= number_format($totalClassAmount, 2) ?></small>
+            <small class="text-success">৳ <?= number_format($totalClassAmount, 2) ?></small>
 
 
             <!-- RIGHT : AMOUNT + BUTTON -->

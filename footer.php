@@ -97,7 +97,7 @@ $release_colors = [
 </style>
 
 
-<input type="text" id="selectedTree">
+<input type="hidden" id="selectedTree" >
 
 <!-- Modal -->
 <div class="modal fade" id="myModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
@@ -363,6 +363,8 @@ $release_colors = [
 <script src="ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
 <script src="assets/js/app-academy-dashboard.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 
 <script src="assets/js/eimbox.js"></script>
 
@@ -1057,6 +1059,7 @@ $release_colors = [
                     const hasExam = /\bexam\b/.test(chainInput);
                     const hasClass = /\bclass\b/.test(chainInput);
                     const hasSubject = /\bsubject\b/.test(chainInput);
+                    const hasReload = /\breload\b/.test(chainInput);
 
                     if (type === 'slot') {
 
@@ -1102,13 +1105,19 @@ $release_colors = [
                         toggle.text('-');
                     } else {
                         finalizeSelection(ctx, item);
+                        if (hasReload) {
+                            window.location.reload();
+                        }
                     }
                 });
 
 
                 container.append(li);
+
+
             });
         });
+
     }
 
 
@@ -1125,12 +1134,35 @@ $release_colors = [
             final_id: item.id
         };
 
-        if ($('#slot-main').length) $('#slot-main').val(selected.slot);
-        if ($('#session-main').length) $('#session-main').val(selected.session);
-        if ($('#exam-main').length) $('#exam-main').val(selected.exam);
-        if ($('#class-main').length) $('#class-main').val(selected.class);
-        if ($('#section-main').length) $('#section-main').val(selected.section);
-        if ($('#subject-main').length) $('#subject-main').val(selected.subject);
+        if ($('#slot-main').length) {
+            $('#slot-main').val(selected.slot);
+            setCookie('chain-slot', selected.slot);
+        }
+
+        if ($('#session-main').length) {
+            $('#session-main').val(selected.session);
+            setCookie('chain-session', selected.session);
+        }
+
+        if ($('#exam-main').length) {
+            $('#exam-main').val(selected.exam);
+            setCookie('chain-exam', selected.exam);
+        }
+
+        if ($('#class-main').length) {
+            $('#class-main').val(selected.class);
+            setCookie('chain-class', selected.class);
+        }
+
+        if ($('#section-main').length) {
+            $('#section-main').val(selected.section);
+            setCookie('chain-section', selected.section);
+        }
+
+        if ($('#subject-main').length) {
+            $('#subject-main').val(selected.subject);
+            setCookie('chain-subject', selected.subject);
+        }
 
         $('#selectedTree').val(JSON.stringify(selected));
         console.log(selected);

@@ -163,14 +163,52 @@
         let slots = $('.slotChk:checked').map((i, e) => e.value).get();
         let sessions = $('.sessionChk:checked').map((i, e) => e.value).get();
 
+       
         if (!slots.length || !sessions.length) {
             $('#classContainer').html('<div class="text-muted">No data</div>');
             return;
         }
 
         $.post('academics/get-classes.php', { slots, sessions }, res => {
-            let g = {};
+
             let html = '';
+
+            /* =========================
+               CASE–1 : কোন ডাটা নাই
+               ========================= */
+            if (!res || res.length === 0) {
+
+                slots.forEach(slot => {
+                    alert(slots + sessions);
+                    html += `<div class="mb-4"><h4>${slot}</h4>`;
+
+                    sessions.forEach(session => {
+                        html += `
+                <div class="ms-3 mb-3">
+                    <h6 class="d-flex justify-content-between">
+                        ${session}
+                        <button class="btn btn-sm btn-primary addClass"
+                            data-slot="${slot}" data-session="${session}">
+                            + Class
+                        </button>
+                    </h6>
+                    <div class="session-row text-muted small">
+                        No class added yet
+                    </div>
+                </div>`;
+                    });
+
+                    html += `</div>`;
+                });
+
+                $('#classContainer').html(html);
+                return;
+            }
+
+            /* =========================
+               CASE–2 : ডাটা আছে
+               ========================= */
+            let g = {};
 
             res.forEach(r => {
                 if (!g[r.slot]) g[r.slot] = {};
@@ -180,84 +218,88 @@
 
             Object.keys(g).forEach(slot => {
                 html += `<div class="mb-4"><h4>${slot}</h4>`;
+
                 Object.keys(g[slot]).forEach(session => {
                     html += `
-                <div class="ms-3 mb-3">
-                    <h6 class="d-flex justify-content-between">
-                        ${session}
-                        <button class="btn btn-sm btn-primary addClass"
-                            data-slot="${slot}" data-session="${session}">
-                            + Class
-                        </button>
-                    </h6>
-                    <div class="session-row">`;
+            <div class="ms-3 mb-3">
+                <h6 class="d-flex justify-content-between">
+                    ${session}
+                    <button class="btn btn-sm btn-primary addClass"
+                        data-slot="${slot}" data-session="${session}">
+                        + Class
+                    </button>
+                </h6>
+                <div class="session-row">`;
 
                     g[slot][session].forEach(cls => {
                         html += `
-                    <div class="class-card mb-3"
-                        data-class="${cls}" data-slot="${slot}" data-session="${session}" >
-                        <div class="card h-100">
-                            <div class="card-header d-flex justify-content-between">
-                                <strong>${cls}</strong>
-                                <div>
-                                    <button class="btn btn-sm btn-outline-primary addSection"
-                                        data-class="${cls}" data-slot="${slot}" data-session="${session}">+</button>
-                                    <button class="btn btn-sm btn-outline-danger delClass"
-                                        data-class="${cls}" data-slot="${slot}" data-session="${session}">×</button>
-                                </div>
+                <div class="class-card mb-3"
+                    data-class="${cls}" data-slot="${slot}" data-session="${session}">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between">
+                            <strong>${cls}</strong>
+                            <div>
+                                <button class="btn btn-sm btn-outline-primary addSection"
+                                    data-class="${cls}" data-slot="${slot}" data-session="${session}">+</button>
+                                <button class="btn btn-sm btn-outline-danger delClass"
+                                    data-class="${cls}" data-slot="${slot}" data-session="${session}">×</button>
                             </div>
-                            <div class="card-body section-list"></div>
                         </div>
-                    </div>`;
+                        <div class="card-body section-list"></div>
+                    </div>
+                </div>`;
                     });
 
                     html += `</div></div>`;
                 });
+
                 html += `</div>`;
             });
 
             $('#classContainer').html(html);
             loadSections();
             enableClassDrag();
+
         }, 'json');
+
     }
 
 
     function enableClassDrag() {
 
-    $('.session-row').sortable({
-        items: '.class-card',
-        handle: '.card-header',
-        placeholder: 'sortable-placeholder',
-        tolerance: 'pointer',
+        $('.session-row').sortable({
+            items: '.class-card',
+            handle: '.card-header',
+            placeholder: 'sortable-placeholder',
+            tolerance: 'pointer',
 
-        update: function () {
+            update: function () {
 
-            let order = [];
+                let order = [];
 
-            $(this).children('.class-card').each(function (i) {
-                order.push({
-                    classname: $(this).data('class'),
-                    slot: $(this).data('slot'),
-                    session: $(this).data('session'),
-                    position: i + 1
+                $(this).children('.class-card').each(function (i) {
+                    order.push({
+                        classname: $(this).data('class'),
+                        slot: $(this).data('slot'),
+                        session: $(this).data('session'),
+                        position: i + 1
+                    });
                 });
-            });
 
-            console.log(order); // 🔴 প্রথমে এটা দেখো
+                console.log(order); // 🔴 প্রথমে এটা দেখো
 
-            $.ajax({
-                url: 'academics/update-class-order.php',
-                type: 'POST',
-                data: { order: JSON.stringify(order) },
-                success: function (res) {
-                    showToast("success", "Re-arrange Classes Updated!");
-                    console.log(res);
-                }
-            });
-        }
-    });
-}
+                $.ajax({
+                    url: 'academics/update-class-order.php',
+                    type: 'POST',
+                    data: { order: JSON.stringify(order) },
+                    success: function (res) {
+                        showToast("success", "Re-arrange Classes Updated!");
+                        console.log(res);
+                    }
+                });
+            }
+        });
+    }
 
 
 
@@ -268,23 +310,23 @@
 
     /* ================= SECTIONS ================= */
 
-  function loadSections() {
+    function loadSections() {
 
-    $('.class-card').each(function () {
+        $('.class-card').each(function () {
 
-        let card = $(this);
-        let sectionList = card.find('.section-list');
+            let card = $(this);
+            let sectionList = card.find('.section-list');
 
-        $.post('academics/get-sections.php', {
-            class: card.data('class'),
-            slot: card.data('slot'),
-            session: card.data('session')
-        }, function (res) {
+            $.post('academics/get-sections.php', {
+                class: card.data('class'),
+                slot: card.data('slot'),
+                session: card.data('session')
+            }, function (res) {
 
-            let html = '';
+                let html = '';
 
-            res.forEach(r => {
-                html += `
+                res.forEach(r => {
+                    html += `
                 <div class="border p-2 mb-2 section-item"
                      data-id="${r.id}">
                     <div class="d-flex justify-content-between">
@@ -298,53 +340,53 @@
                         </div>
                     </div>
                 </div>`;
-            });
-
-            sectionList.html(html);
-
-            enableSectionDrag(sectionList, card);
-
-        }, 'json');
-    });
-}
-
-
-function enableSectionDrag(sectionList, card) {
-
-    sectionList.sortable({
-        items: '.section-item',
-        placeholder: 'sortable-placeholder',
-        tolerance: 'pointer',
-
-        update: function () {
-
-            let order = [];
-
-            sectionList.children('.section-item').each(function (i) {
-                order.push({
-                    section_id: $(this).data('id'),
-                    classname: card.data('class'),
-                    slot: card.data('slot'),
-                    session: card.data('session'),
-                    position: i + 1
                 });
-            });
 
-            console.log('ORDER' + JSON.stringify(order)); // 🔴 debug
+                sectionList.html(html);
 
-            $.ajax({
-                url: 'academics/update-section-order.php',
-                type: 'POST',
-                data: { order: JSON.stringify(order) },
-                success: function (res) {
-                    console.log(res);
-                                     showToast("success", "Re-arrange Sections Updated!");
+                enableSectionDrag(sectionList, card);
 
-                }
-            });
-        }
-    });
-}
+            }, 'json');
+        });
+    }
+
+
+    function enableSectionDrag(sectionList, card) {
+
+        sectionList.sortable({
+            items: '.section-item',
+            placeholder: 'sortable-placeholder',
+            tolerance: 'pointer',
+
+            update: function () {
+
+                let order = [];
+
+                sectionList.children('.section-item').each(function (i) {
+                    order.push({
+                        section_id: $(this).data('id'),
+                        classname: card.data('class'),
+                        slot: card.data('slot'),
+                        session: card.data('session'),
+                        position: i + 1
+                    });
+                });
+
+                console.log('ORDER' + JSON.stringify(order)); // 🔴 debug
+
+                $.ajax({
+                    url: 'academics/update-section-order.php',
+                    type: 'POST',
+                    data: { order: JSON.stringify(order) },
+                    success: function (res) {
+                        console.log(res);
+                        showToast("success", "Re-arrange Sections Updated!");
+
+                    }
+                });
+            }
+        });
+    }
 
     /* ================= ADD / EDIT ================= */
 
