@@ -35,7 +35,7 @@ if ($siSession)
     $where[] = "si.sessionyear='$siSession'";
 
 $whereSQL = $where ? 'WHERE ' . implode(' AND ', $where) : '';
-$whereSQL .= " AND sccode='$sccode'";
+$whereSQL .= " AND ts.sccode='$sccode'";
 $sql = "
     SELECT 
         ts.meritnumcomb,
