@@ -10,7 +10,7 @@
 
     <div class="navbar-nav-right d-flex align-items-center justify-content-end" id="navbar-collapse">
 
-        <div class="me-auto col-auto">
+        <div class="me-auto me-3 col-auto">
             <img src="<?php echo BASE_PATH . 'logo/' . $sccode; ?>.png"
                 style="height:30px; width:30px; border-radius:50%;" />
         </div>
