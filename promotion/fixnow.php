@@ -8,4 +8,5 @@ require_once '../core/global_values.php';
 $id = $_POST['id'] ?? '';
 $roll = $_POST['roll'] ?? '';
 
-$conn -> query("UPDATE sessioninfo set rollno='$roll' where id='$id' and sccode='$sccode'");
+$sql = "UPDATE sessioninfo set rollno='$roll' where id='$id' and sccode='$sccode'";
+$conn->query($sql);
