@@ -93,4 +93,4 @@ while ($row = mysqli_fetch_assoc($res)) {
     </tr>";
 }
 
-echo '<div id="cnt" hidden>'.$errorCount.'</div>';
+echo '<div id="cnt" >'.$errorCount.'</div>';
