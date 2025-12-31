@@ -98,6 +98,6 @@ while ($row = mysqli_fetch_assoc($res)) {
 
 ?>
 <tr>
-    <td colspan="7"><?= $crrorCount ?></td>
+    <td colspan="7" id="cnt"><?= $crrorCount ?></td>
 </tr>
 
