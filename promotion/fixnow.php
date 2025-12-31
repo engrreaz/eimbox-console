@@ -18,7 +18,7 @@ $sql = "UPDATE sessioninfo set rollno='$roll' where id='$id' and sccode='$sccode
 $q = mysqli_query($conn, $sql);
 
 if ($q) {
-    echo json_encode(['status' => 'ok']);
+    echo json_encode(['status' => 'ok', 'msg' => $sql]);
 } else {
     echo json_encode(['status' => 'err', 'msg' => mysqli_error($conn)]);
 }
