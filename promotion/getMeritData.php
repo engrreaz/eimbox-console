@@ -72,10 +72,10 @@ while ($row = mysqli_fetch_assoc($res)) {
         ? ' <span class="text-success fw-bold">✔</span>'
         : '';
 
-    if ($meritCombCheck == '' && $meritNumCheck = '') {
+    if ($meritCombCheck == '' && $meritNumCheck == '') {
         $errorIcon = ' <span class="text-danger fw-bold">✖</span>';
     } else {
-        $errorIcon = '***';
+        $errorIcon = '';
     }
 
     echo "<tr>
