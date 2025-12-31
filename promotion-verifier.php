@@ -248,7 +248,8 @@
             $.post('promotion/fixnow.php', {
                 id:id, roll:roll
             }, function (r) {
-                showToast('info', 'Fixed');
+                
+                showToast('info', 'Fixed'+r);
             });
         }
 </script>
