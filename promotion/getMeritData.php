@@ -95,4 +95,8 @@ while ($row = mysqli_fetch_assoc($res)) {
     </tr>";
 }
 
-echo '<div id="cnt" >' . $errorCount . '</div>';
+
+?>
+<script>
+     $('#errCount').text(<?= $crrorCount ?>);
+</script>
