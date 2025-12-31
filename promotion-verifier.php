@@ -250,7 +250,7 @@
         showToast('danger', 'Invalid data');
         return;
     }
-
+alert(id + ' | ' + rollno);
     $.post('promotion/fixnow.php', {
         id: id,
         rollno: rollno
