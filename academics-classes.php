@@ -97,9 +97,10 @@
 
 <?php require_once 'footer.php'; ?>
 
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.3/themes/base/jquery-ui.css">
-<script src="https://code.jquery.com/ui/1.13.3/jquery-ui.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
 
 
 <script>
@@ -158,7 +159,7 @@
         let slots = $('.slotChk:checked').map((i, e) => e.value).get();
         let sessions = $('.sessionChk:checked').map((i, e) => e.value).get();
 
-       
+
         if (!slots.length || !sessions.length) {
             $('#classContainer').html('<div class="text-muted">No data</div>');
             return;
