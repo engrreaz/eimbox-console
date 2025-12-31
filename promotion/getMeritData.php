@@ -101,7 +101,7 @@ while ($row = mysqli_fetch_assoc($res)) {
         <td>{$rollno}{$errorIcon}</td>
         <td>{$row['si_class']}</td>
         <td>{$row['si_section']}</td>
-        <td>{$btn}</td>
+        <td>{$row['id']} | {$btn}</td>
     </tr>";
 }
 
