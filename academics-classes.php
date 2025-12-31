@@ -97,15 +97,10 @@
 
 <?php require_once 'footer.php'; ?>
 
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.3/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/ui/1.13.3/jquery-ui.min.js"></script>
 
-<!-- jQuery -->
-<!-- <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script> -->
-
-<!-- jQuery UI CSS -->
-<!-- <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.3/themes/base/jquery-ui.css"> -->
-
-<!-- jQuery UI JS -->
-<!-- <script src="https://code.jquery.com/ui/1.13.3/jquery-ui.min.js"></script> -->
 
 <script>
     let areaModal = new bootstrap.Modal('#areaModal');
