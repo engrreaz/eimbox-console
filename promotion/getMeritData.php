@@ -102,5 +102,5 @@ if ($errorCount == 0) {
 }
 ?>
 <tr id="delrow">
-    <td colspan="7" id="cnt"><?= $errorCount ?></td>
+    <td colspan="7" id="cnt"><?= $txt ?></td>
 </tr>
