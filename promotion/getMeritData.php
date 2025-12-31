@@ -84,7 +84,7 @@ while ($row = mysqli_fetch_assoc($res)) {
         $clr = ' table-danger';
         $btn = '<button 
             class="btn btn-warning btn-sm"
-            onclick="fixnow(' . $row['id'] . ', ' . $isMeritNumMatch . ')">
+            onclick="fixnow(' . $row['id'] . ', ' . $row['meritnum']. ')">
             Fix
         </button>';
 
