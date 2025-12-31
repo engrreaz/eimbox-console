@@ -18,6 +18,7 @@ $q = mysqli_query($conn,"
     AND sessionyear='$session'
     AND exam='$exam'
     AND classname='$classname'
+    AND sccode='$sccode'
 ");
 
 while($r=mysqli_fetch_assoc($q)){
