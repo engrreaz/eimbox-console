@@ -10,12 +10,12 @@
 
     <div class="navbar-nav-right d-flex align-items-center justify-content-end" id="navbar-collapse">
 
-        <div class="me-auto ">
+        <div class="me-auto col-auto">
             <img src="<?php echo BASE_PATH . 'logo/' . $sccode; ?>.png"
                 style="height:30px; width:30px; border-radius:50%;" />
         </div>
 
-        <div class="me-auto text-start  d-none d-md-block">
+        <div class="me-auto text-start col  d-none d-md-block">
             <div class="m-0 p-0  fw-bold btn"><a href="index.php"><?php echo $_SESSION['scname']; ?></a></div>
             <div class="p-0 m-0 pt-1 text-muted fs-tiny "><?php echo $_SESSION['scaddress_top']; ?></div>
 
