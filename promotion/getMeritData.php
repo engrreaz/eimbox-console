@@ -97,6 +97,7 @@ while ($row = mysqli_fetch_assoc($res)) {
 
 
 ?>
-<script>
-     $('#errCount').text(<?= $crrorCount ?>);
-</script>
+<tr>
+    <td colspan="7"><?= $crrorCount ?></td>
+</tr>
+
