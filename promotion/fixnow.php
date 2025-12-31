@@ -5,8 +5,20 @@ require_once '../core/db.php';
 require_once '../core/global_values.php';
 
 
-$id = $_POST['id'] ?? '';
-$roll = $_POST['roll'] ?? '';
+$id = $_POST['id'] ?? 0;
+$rollno = $_POST['rollno'] ?? '';
+
+if (!$id || !$rollno) {
+    echo json_encode(['status' => 'err', 'msg' => 'Invalid input']);
+    exit;
+}
 
 $sql = "UPDATE sessioninfo set rollno='$roll' where id='$id' and sccode='$sccode'";
-$conn->query($sql);
+
+$q = mysqli_query($conn, $sql);
+
+if ($q) {
+    echo json_encode(['status' => 'ok']);
+} else {
+    echo json_encode(['status' => 'err', 'msg' => mysqli_error($conn)]);
+}

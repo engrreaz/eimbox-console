@@ -244,14 +244,31 @@
 
     });
 
-    function fixnow(id, roll) {
-            $.post('promotion/fixnow.php', {
-                id:id, roll:roll
-            }, function (r) {
-                
-                showToast('info', 'Fixed'+r);
-            });
+    function fixnow(id, rollno) {
+
+    if (!id || !rollno) {
+        showToast('danger', 'Invalid data');
+        return;
+    }
+
+    $.post('promotion/fixnow.php', {
+        id: id,
+        rollno: rollno
+    }, function (r) {
+
+        if (r.status === 'ok') {
+            showToast('success', 'Fixed successfully');
+            loadResults(); // table auto refresh
+        } else {
+            showToast('danger', r.msg || 'Fix failed');
         }
+
+    }, 'json')
+    .fail(function () {
+        showToast('danger', 'Server error');
+    });
+}
+
 </script>
 
 </body>
