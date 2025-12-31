@@ -60,12 +60,25 @@ if (!$res) {
 }
 
 while ($row = mysqli_fetch_assoc($res)) {
+
+    $rollno = $row['si_roll'] ?: $row['ts_roll'];
+
+    // check conditions
+    $meritCombCheck = ($rollno == $row['meritnumcomb'])
+        ? ' <span class="text-success fw-bold">✔</span>'
+        : '';
+
+    $meritNumCheck = ($rollno == $row['meritnum'])
+        ? ' <span class="text-success fw-bold">✔</span>'
+        : '';
+
     echo "<tr>
-        <td>{$row['meritnumcomb']}</td>
-        <td>{$row['meritnum']}</td>
+        <td>{$row['meritnumcomb']}{$meritCombCheck}</td>
+        <td>{$row['meritnum']}{$meritNumCheck}</td>
         <td>{$row['stid']}</td>
-        <td>" . ($row['si_roll'] ?: $row['ts_roll']) . "</td>
+        <td>{$rollno}</td>
         <td>{$row['si_class']}</td>
         <td>{$row['si_section']}</td>
     </tr>";
 }
+
