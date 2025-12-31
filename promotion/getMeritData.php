@@ -64,6 +64,7 @@ if (!$res) {
 
 while ($row = mysqli_fetch_assoc($res)) {
 
+    $clr = '';
     $rollno = $row['si_roll'] ?: $row['ts_roll'];
 
     // check conditions
@@ -78,11 +79,12 @@ while ($row = mysqli_fetch_assoc($res)) {
     if ($meritCombCheck == '' && $meritNumCheck == '') {
         $errorIcon = ' <span class="text-danger fw-bold">✖</span>';
         $errorCount++;
+        $clr = ' table-danger';
     } else {
         $errorIcon = '';
     }
 
-    echo "<tr>
+    echo "<tr class='{$clr}'>
         <td>{$row['meritnumcomb']}{$meritCombCheck}</td>
         <td>{$row['meritnum']}{$meritNumCheck}</td>
         <td>{$row['stid']}</td>
@@ -93,4 +95,4 @@ while ($row = mysqli_fetch_assoc($res)) {
     </tr>";
 }
 
-echo '<div id="cnt" >'.$errorCount.'</div>';
+echo '<div id="cnt" >' . $errorCount . '</div>';
