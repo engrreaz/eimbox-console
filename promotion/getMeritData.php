@@ -36,6 +36,7 @@ if ($siSession)
 
 $whereSQL = $where ? 'WHERE ' . implode(' AND ', $where) : '';
 $whereSQL .= " AND ts.sccode='$sccode'";
+
 $sql = "
     SELECT 
         ts.meritnumcomb,
@@ -46,14 +47,14 @@ $sql = "
         si.classname AS si_class,
         si.sectionname AS si_section,
         si.rollno AS si_roll
-    FROM tabulatingsheet ts
-    LEFT JOIN sessioninfo si 
+        FROM tabulatingsheet ts
+        LEFT JOIN sessioninfo si 
         ON ts.stid = si.stid
         LEFT JOIN students st
         ON ts.stid = st.stid
-    $whereSQL
-    ORDER BY ts.meritnumcomb ASC
-";
+        $whereSQL
+        ORDER BY ts.meritnumcomb ASC
+    ";
 
 $res = mysqli_query($conn, $sql);
 
