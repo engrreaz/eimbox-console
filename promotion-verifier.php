@@ -32,7 +32,7 @@
                     <select id="examFilter" class="form-select">
                         <option value="">Select Exam</option>
                         <?php
-                        $exams = mysqli_query($conn, "SELECT DISTINCT exam FROM tabulatingsheet ORDER BY exam");
+                        $exams = mysqli_query($conn, "SELECT DISTINCT exam FROM tabulatingsheet  sccode='$sccode' ORDER BY exam");
                         while ($row = mysqli_fetch_assoc($exams)) {
                             echo "<option value='{$row['exam']}'>{$row['exam']}</option>";
                         }
@@ -43,7 +43,7 @@
                     <select id="classFilter" class="form-select">
                         <option value="">Select Class</option>
                         <?php
-                        $classes = mysqli_query($conn, "SELECT DISTINCT classname FROM tabulatingsheet ORDER BY classname");
+                        $classes = mysqli_query($conn, "SELECT DISTINCT classname FROM tabulatingsheet  sccode='$sccode'  ORDER BY classname");
                         while ($row = mysqli_fetch_assoc($classes)) {
                             echo "<option value='{$row['classname']}'>{$row['classname']}</option>";
                         }
@@ -54,7 +54,7 @@
                     <select id="sectionFilter" class="form-select">
                         <option value="">Select Section</option>
                         <?php
-                        $sections = mysqli_query($conn, "SELECT DISTINCT sectionname FROM tabulatingsheet ORDER BY sectionname");
+                        $sections = mysqli_query($conn, "SELECT DISTINCT sectionname FROM tabulatingsheet  sccode='$sccode'  ORDER BY sectionname");
                         while ($row = mysqli_fetch_assoc($sections)) {
                             echo "<option value='{$row['sectionname']}'>{$row['sectionname']}</option>";
                         }
@@ -70,7 +70,7 @@
                     <select id="sessioninfoSlot" class="form-select">
                         <option value="">Select Slot</option>
                         <?php
-                        $siSlots = mysqli_query($conn, "SELECT DISTINCT slot FROM sessioninfo ORDER BY slot");
+                        $siSlots = mysqli_query($conn, "SELECT DISTINCT slot FROM sessioninfo  sccode='$sccode'  ORDER BY slot");
                         while ($row = mysqli_fetch_assoc($siSlots)) {
                             echo "<option value='{$row['slot']}'>{$row['slot']}</option>";
                         }
@@ -81,7 +81,7 @@
                     <select id="sessioninfoSession" class="form-select">
                         <option value="">Select Session</option>
                         <?php
-                        $siSessions = mysqli_query($conn, "SELECT DISTINCT sessionyear FROM sessioninfo ORDER BY sessionyear");
+                        $siSessions = mysqli_query($conn, "SELECT DISTINCT sessionyear FROM sessioninfo  sccode='$sccode' ORDER BY sessionyear");
                         while ($row = mysqli_fetch_assoc($siSessions)) {
                             echo "<option value='{$row['sessionyear']}'>{$row['sessionyear']}</option>";
                         }
