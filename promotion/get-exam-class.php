@@ -23,7 +23,7 @@ while($r=mysqli_fetch_assoc($q1)){
 $q2 = mysqli_query($conn,"
     SELECT DISTINCT classname 
     FROM tabulatingsheet 
-    WHERE slot='$slot' AND sessionyear='$session'
+    WHERE slot='$slot' AND sessionyear='$session' AND sccode='$sccode'
 ");
 
 while($r=mysqli_fetch_assoc($q2)){
