@@ -149,6 +149,7 @@
             $.post('promotion/getMeritData.php', data, function (res) {
                 $('#resultTable tbody').html(res);
                 $('#errCount').text($('#cnt').text());
+                $('#delrow').remove();
             });
         }
 
