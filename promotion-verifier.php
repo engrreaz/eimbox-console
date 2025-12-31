@@ -7,7 +7,7 @@
 
         <div class="card-body">
             <!-- Tabulatingsheet Filter Section -->
-            <h5>Result Filter (Tabulatingsheet)</h5>
+            <h5>Filter From <b>Tabulating Sheet</b></h5>
             <div class="row g-2 mb-3">
                 <div class="col-md-2">
                     <select id="slotFilter" class="form-select form-select-sm">
@@ -67,7 +67,7 @@
             </div>
 
             <!-- SessionInfo Filter Section -->
-            <h5>Session Filter (SessionInfo)</h5>
+            <h5>Maching With <b>Session Information</b></h5>
             <div class="row g-2 mb-3">
                 <div class="col-md-2">
                     <select id="sessioninfoSlot" class="form-select form-select-sm">
