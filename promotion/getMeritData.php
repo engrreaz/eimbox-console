@@ -41,6 +41,7 @@ $sql = "
         ts.meritnumcomb,
         ts.meritnum,
         ts.stid,
+        st.stnameeng,
         ts.rollno AS ts_roll,
         si.classname AS si_class,
         si.sectionname AS si_section,
@@ -48,6 +49,8 @@ $sql = "
     FROM tabulatingsheet ts
     LEFT JOIN sessioninfo si 
         ON ts.stid = si.stid
+        LEFT JOIN students st
+        ON ts.stid = st.stid
     $whereSQL
     ORDER BY ts.meritnumcomb ASC
 ";
@@ -82,6 +85,7 @@ while ($row = mysqli_fetch_assoc($res)) {
         <td>{$row['meritnumcomb']}{$meritCombCheck}</td>
         <td>{$row['meritnum']}{$meritNumCheck}</td>
         <td>{$row['stid']}</td>
+        <td>{$row['stnameeng']}</td>
         <td>{$rollno}{$errorIcon}</td>
         <td>{$row['si_class']}</td>
         <td>{$row['si_section']}</td>

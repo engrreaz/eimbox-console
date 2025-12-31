@@ -104,9 +104,14 @@
             <table class="table table-bordered table-sm" id="resultTable">
                 <thead>
                     <tr>
-                        <th>MeritNumComb</th>
-                        <th>MeritNum</th>
-                        <th>STID</th>
+                        <th colspan="4">Result Data</th>
+                        <th colspan="3">Session Data</th>
+                    </tr>
+                    <tr>
+                        <th>Merit (Combined)</th>
+                        <th>Merit</th>
+                        <th>ID</th>
+                        <th>Name of Student</th>
                         <th>RollNo</th>
                         <th>ClassName</th>
                         <th>SectionName</th>
