@@ -72,11 +72,17 @@ while ($row = mysqli_fetch_assoc($res)) {
         ? ' <span class="text-success fw-bold">✔</span>'
         : '';
 
+    if ($meritCombCheck == '' && $meritNumCheck = '') {
+        $errorIcon = ' <span class="text-danger fw-bold">✖</span>';
+    } else {
+        $errorIcon = '';
+    }
+
     echo "<tr>
         <td>{$row['meritnumcomb']}{$meritCombCheck}</td>
         <td>{$row['meritnum']}{$meritNumCheck}</td>
         <td>{$row['stid']}</td>
-        <td>{$rollno}</td>
+        <td>{$rollno}{$errorIcon}</td>
         <td>{$row['si_class']}</td>
         <td>{$row['si_section']}</td>
     </tr>";
