@@ -3,13 +3,16 @@
 <div class="container-xxl flex-grow-1 container-p-y">
     <div class="card mb-3">
 
-
+        <div class="card-header">
+            <h5 class="fw-bold">Promotion Verification Tool</h5>
+        </div>
 
         <div class="card-body">
             <!-- Tabulatingsheet Filter Section -->
             <h5>Filter From <b>Tabulating Sheet</b></h5>
             <div class="row g-2 mb-3">
                 <div class="col-md-2">
+                    <label for="slotFilter" class="fs-small ps-1">Slot / Unit</label>
                     <select id="slotFilter" class="form-select form-select-sm">
                         <option value="">Select Slot</option>
                         <?php
@@ -21,10 +24,11 @@
                     </select>
                 </div>
                 <div class="col-md-2">
+                    <label for="sessionFilter" class="fs-small ps-1">Session</label>
                     <select id="sessionFilter" class="form-select form-select-sm">
                         <option value="">Select Session</option>
                         <?php
-                        $sessions = mysqli_query($conn, "SELECT DISTINCT sessionyear FROM tabulatingsheet where sccode='$sccode' ORDER BY sessionyear");
+                        $sessions = mysqli_query($conn, "SELECT DISTINCT sessionyear FROM tabulatingsheet where sccode='$sccode' and (sessionyear !='' OR sessionyear IS NOT NULL) ORDER BY sessionyear");
                         while ($row = mysqli_fetch_assoc($sessions)) {
                             echo "<option value='{$row['sessionyear']}'>{$row['sessionyear']}</option>";
                         }
@@ -32,6 +36,7 @@
                     </select>
                 </div>
                 <div class="col-md-2">
+                    <label for="examFilter" class="fs-small ps-1">Examination</label>
                     <select id="examFilter" class="form-select form-select-sm">
                         <option value="">Select Exam</option>
                         <?php
@@ -43,6 +48,7 @@
                     </select>
                 </div>
                 <div class="col-md-2">
+                    <label for="classFilter" class="fs-small ps-1">Class</label>
                     <select id="classFilter" class="form-select form-select-sm">
                         <option value="">Select Class</option>
                         <?php
@@ -54,6 +60,7 @@
                     </select>
                 </div>
                 <div class="col-md-2">
+                    <label for="sectionFilter" class="fs-small ps-1">Section</label>
                     <select id="sectionFilter" class="form-select form-select-sm">
                         <option value="">Select Section</option>
                         <?php
@@ -70,6 +77,7 @@
             <h5>Maching With <b>Session Information</b></h5>
             <div class="row g-2 mb-3">
                 <div class="col-md-2">
+                    <label for="sessioninfoSlot" class="fs-small ps-1">Slot/Unit</label>
                     <select id="sessioninfoSlot" class="form-select form-select-sm">
                         <option value="">Select Slot</option>
                         <?php
@@ -81,6 +89,7 @@
                     </select>
                 </div>
                 <div class="col-md-2">
+                    <label for="sessioninfoSession" class="fs-small ps-1">Session</label>
                     <select id="sessioninfoSession" class="form-select form-select-sm">
                         <option value="">Select Session</option>
                         <?php
@@ -91,12 +100,12 @@
                         ?>
                     </select>
                 </div>
-                <div class="col-md-2 mb-3">
-                    <button id="filterBtn" class="btn btn-primary btn-sm w-100 mt-1">Filter</button>
+                <div class="col-md-2 mb-0 d-flex align-items-end ">
+                    <button id="filterBtn" class="btn btn-primary btn-sm w-100">Filter</button>
                 </div>
 
-                <div class="col-md-2 mb-3" id="errCount">
-                   
+                <div class="col-md-2  mb-0 d-flex align-items-end " id="errCount">
+
                 </div>
 
             </div>
@@ -156,3 +165,85 @@
         $('#filterBtn').on('click', loadResults);
     });
 </script>
+
+<script>
+    $(function () {
+
+        /* ---------- helpers ---------- */
+        function nextSession(val, list) {
+            let i = list.indexOf(val);
+            return (i >= 0 && list[i + 1]) ? list[i + 1] : val;
+        }
+
+        function syncSessionInfo() {
+            if (!$('#sessioninfoSlot').val()) {
+                $('#sessioninfoSlot').val($('#slotFilter').val());
+            }
+
+            if (!$('#sessioninfoSession').val()) {
+                let sessions = $('#sessionFilter option').map(function () {
+                    return $(this).val();
+                }).get();
+
+                let next = nextSession($('#sessionFilter').val(), sessions);
+                $('#sessioninfoSession').val(next);
+            }
+        }
+
+        /* ---------- dependent loaders ---------- */
+
+        function loadExamClass() {
+            $.post('promotion/get-exam-class.php', {
+                slot: $('#slotFilter').val(),
+                session: $('#sessionFilter').val()
+            }, function (r) {
+                $('#examFilter').html(r.exam);
+                $('#classFilter').html(r.classname);
+                loadSection();
+            }, 'json');
+        }
+
+        function loadSection() {
+            $.post('promotion/get-section.php', {
+                slot: $('#slotFilter').val(),
+                session: $('#sessionFilter').val(),
+                exam: $('#examFilter').val(),
+                classname: $('#classFilter').val()
+            }, function (r) {
+                $('#sectionFilter').html(r);
+                loadResults();
+            });
+        }
+
+        function loadResults() {
+            syncSessionInfo();
+
+            $.post('promotion/getMeritData.php', {
+                slot: $('#slotFilter').val(),
+                session: $('#sessionFilter').val(),
+                exam: $('#examFilter').val(),
+                classname: $('#classFilter').val(),
+                sectionname: $('#sectionFilter').val(),
+                sessioninfoSlot: $('#sessioninfoSlot').val(),
+                sessioninfoSession: $('#sessioninfoSession').val()
+            }, function (res) {
+                $('#resultTable tbody').html(res);
+                $('#errCount').text($('#cnt').text());
+                $('#delrow').remove();
+            });
+        }
+
+        /* ---------- events ---------- */
+
+        $('#slotFilter,#sessionFilter').on('change', loadExamClass);
+        $('#examFilter,#classFilter').on('change', loadSection);
+        $('#sectionFilter,#sessioninfoSlot,#sessioninfoSession').on('change', loadResults);
+
+        $('#filterBtn').on('click', loadResults);
+
+    });
+</script>
+
+</body>
+
+</html>

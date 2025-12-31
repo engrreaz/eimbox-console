@@ -98,7 +98,7 @@ while ($row = mysqli_fetch_assoc($res)) {
 if ($errorCount == 0) {
     $txt = '<span class="text-success">✔ No Error Found.</span>';
 } else {
-    $txt = '<span class="text-danger">✖ ' . $errorCount . ' Error Found.</span>';
+    $txt = '<span class="text-danger">✖ ' . $errorCount . ' Errors Found.</span>';
 }
 ?>
 <tr id="delrow">
