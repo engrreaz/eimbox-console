@@ -44,6 +44,7 @@ $sql = "
         ts.stid,
         st.stnameeng,
         ts.rollno AS ts_roll,
+        si.id,
         si.classname AS si_class,
         si.sectionname AS si_section,
         si.rollno AS si_roll
@@ -81,8 +82,15 @@ while ($row = mysqli_fetch_assoc($res)) {
         $errorIcon = ' <span class="text-danger fw-bold">✖</span>';
         $errorCount++;
         $clr = ' table-danger';
+        $btn = '<button 
+            class="btn btn-warning btn-sm"
+            onclick="fixnow(' . $row['id'] . ', ' . $isMeritNumMatch . ')">
+            Fix
+        </button>';
+
     } else {
         $errorIcon = '';
+        $btn = '';
     }
 
     echo "<tr class='{$clr}'>
@@ -93,6 +101,7 @@ while ($row = mysqli_fetch_assoc($res)) {
         <td>{$rollno}{$errorIcon}</td>
         <td>{$row['si_class']}</td>
         <td>{$row['si_section']}</td>
+        <td>{$btn}</td>
     </tr>";
 }
 

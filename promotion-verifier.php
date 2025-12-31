@@ -242,6 +242,14 @@
         $('#filterBtn').on('click', loadResults);
 
     });
+
+    function fixnow(id, roll) {
+            $.post('promotion/fixnow.php', {
+                id:id, roll:roll
+            }, function (r) {
+                showToast('info', 'Fixed');
+            });
+        }
 </script>
 
 </body>
