@@ -60,9 +60,11 @@ $sql = "
 $res = mysqli_query($conn, $sql);
 
 if (!$res) {
-    echo '<tr><td colspan="6" class="text-danger">' . mysqli_error($conn) . '</td></tr>';
+    echo '<tr><td colspan="8" class="text-danger">No Data Found. ' . mysqli_error($conn) . '</td></tr>';
     exit;
 }
+// $res no recored found
+
 
 while ($row = mysqli_fetch_assoc($res)) {
 

@@ -1,5 +1,7 @@
 <?php require_once 'header.php'; ?>
 
+
+
 <style>
     /* Drag handle cursor */
 
@@ -72,20 +74,67 @@
             </div>
 
             <div class="modal-body">
-                <input type="hidden" name="mode" value="add">
+                <input type="text" name="mode" value="add">
                 <input type="hidden" name="id">
                 <input type="hidden" name="slot">
                 <input type="hidden" name="sessionyear">
+                <?php
+                $classesSetting = null;
+                foreach ($sett as $item) {
+                    if ($item['setting_title'] === 'Classes') {
+                        $classesSetting = $item;
+                        break;
+                    }
+                }
+
+                if ($classesSetting) {
+                    $classesArray = explode(',', $classesSetting['settings_value']);
+                } else {
+                    echo "Setting 'Classes' not found.";
+                }
+                ?>
 
                 <div class="mb-2">
                     <label>Class</label>
-                    <input type="text" name="areaname" class="form-control form-control-sm" required>
+                    <select name="areaname" class="form-control form-control-sm" required>
+                        <option value="">Select a class</option>
+                        <?php
+                        foreach ($classesArray as $class) {
+                            echo '<option value="' . htmlspecialchars($class) . '">' . htmlspecialchars($class) . '</option>';
+                        }
+
+                        ?>
+                    </select>
                 </div>
 
                 <div class="mb-2">
                     <label>Section</label>
                     <input type="text" name="subarea" class="form-control form-control-sm">
-                    <small class="text-muted">Class add হলে optional</small>
+                </div>
+                <div class="mb-2">
+                    <label>Class Teacher</label>
+                    <?php
+                    $query = "SELECT tid, tname FROM teacher WHERE sccode = ?";
+                    $stmt = $conn->prepare($query);
+                    $stmt->bind_param("s", $sccode);
+                    $stmt->execute();
+                    $result = $stmt->get_result();
+                    $teachers = $result->fetch_all(MYSQLI_ASSOC);
+                    ?>
+
+                    <select name="teacher" class="form-control form-control-sm" required>
+                        <option value="">Select a teacher</option>
+                        <?php foreach ($teachers as $teacher): ?>
+                            <option value="<?= htmlspecialchars($teacher['tid']) ?>">
+                                <?= htmlspecialchars($teacher['tid']) ?> | <?= htmlspecialchars($teacher['tname']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+
+                    <?php
+                    // Close statement and result
+                    $stmt->close();
+                    ?>
                 </div>
             </div>
 
@@ -132,7 +181,8 @@
         list.forEach(v => {
             let chk = saved.length === 0 || saved.includes(v);
             if (!chk) all = false;
-            html += `<label><input type="checkbox" class="${type}Chk" value="${v}" ${chk ? 'checked' : ''}> ${v}</label>`;
+            html +=
+                `<label><input type="checkbox" class="${type}Chk" value="${v}" ${chk ? 'checked' : ''}> ${v}</label>`;
         });
 
         $(box).html(html);
@@ -164,7 +214,10 @@
             return;
         }
 
-        $.post('academics/get-classes.php', { slots, sessions }, res => {
+        $.post('academics/get-classes.php', {
+            slots,
+            sessions
+        }, res => {
 
             let html = '';
 
@@ -174,7 +227,7 @@
             if (!res || res.length === 0) {
 
                 slots.forEach(slot => {
-                    alert(slots + sessions);
+                    // alert(slots + sessions);
                     html += `<div class="mb-4"><h4>${slot}</h4>`;
 
                     sessions.forEach(session => {
@@ -376,7 +429,9 @@
                 $.ajax({
                     url: 'academics/update-section-order.php',
                     type: 'POST',
-                    data: { order: JSON.stringify(order) },
+                    data: {
+                        order: JSON.stringify(order)
+                    },
                     success: function (res) {
                         console.log(res);
                         showToast("success", "Re-arrange Sections Updated!");
@@ -401,33 +456,79 @@
 
     $(document).on('click', '.editArea', function () {
         let id = $(this).closest('.section-item').data('id');
-        $.post('academics/class-get.php', { id }, r => {
+        $.post('academics/class-get.php', {
+            id
+        }, r => {
             $('[name=mode]').val('edit');
             $('[name=id]').val(r.id);
             $('[name=areaname]').val(r.areaname);
             $('[name=subarea]').val(r.subarea);
             $('[name=slot]').val(r.slot);
             $('[name=sessionyear]').val(r.sessionyear);
+            $('[name=teacher]').val(r.classteacher);
             areaModal.show();
         }, 'json');
     });
 
     $('#areaForm').submit(function (e) {
         e.preventDefault();
-        $.post('academics/save-classes.php', $(this).serialize(), res => {
-            if (res.status === 'ok') {
-                areaModal.hide();
-                loadClasses();
-            } else alert(res.msg);
-        }, 'json');
+
+        // check if modal is visible
+        if (!$('#areaModal').hasClass('show')) {
+            console.log('Modal closed, submission cancelled');
+            return;
+        }
+
+        let formData = $(this).serializeArray();
+        let isEdit = $('[name=mode]').val() === 'edit';
+        let isSection = $('[name=subarea]').val().trim() !== '';
+
+        if (isEdit && !isSection) {
+            alert('Please provide a section name for editing');
+            return;
+        }
+
+        if (!isSection && !confirm('Are you sure you want to add a class without a section?')) {
+            return;
+        }
+
+        // disable submit button to prevent double click
+        let $btn = $(this).find('button[type=submit]');
+        $btn.prop('disabled', true);
+
+        $.ajax({
+            url: 'academics/save-classes.php',
+            type: 'POST',
+            data: formData,
+            dataType: 'json',
+            success: function (res) {
+                $btn.prop('disabled', false); // re-enable
+
+                if (res.status === 'ok') {
+                    areaModal.hide();
+                    $('#areaForm')[0].reset(); // reset form
+                    loadClasses();
+                    showToast("success", isEdit ? "Section updated successfully!" : "Class added successfully!");
+                } else {
+                    showToast("error", res.msg || "An error occurred while saving.");
+                }
+            },
+            error: function (xhr, status, error) {
+                $btn.prop('disabled', false);
+                showToast("error", "An error occurred while saving (XHR) : " + error);
+            }
+        });
     });
+
 
     /* ================= DELETE ================= */
 
     $(document).on('click', '.delArea', function () {
         let id = $(this).closest('.section-item').data('id');
         if (confirm('Delete section?'))
-            $.post('academics/class-delete.php', { id }, () => loadClasses(), 'json');
+            $.post('academics/class-delete.php', {
+                id
+            }, () => loadClasses(), 'json');
     });
 
     $(document).on('click', '.delClass', function () {

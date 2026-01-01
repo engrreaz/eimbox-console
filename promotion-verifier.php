@@ -1,5 +1,16 @@
 <?php require_once 'header.php'; ?>
 
+<?php
+$ax = $_COOKIE['a'] ?? '';
+$bx = $_COOKIE['b'] ?? '';
+$cx = $_COOKIE['c'] ?? '';
+$dx = $_COOKIE['d'] ?? '';
+$ex = $_COOKIE['e'] ?? '';
+$fx = $_COOKIE['f'] ?? '';
+$gx = $_COOKIE['g'] ?? '';
+
+?>
+
 <div class="container-xxl flex-grow-1 container-p-y">
     <div class="card mb-3">
 
@@ -14,7 +25,7 @@
                 <div class="col-md-2">
                     <label for="slotFilter" class="fs-small ps-1">Slot / Unit</label>
                     <select id="slotFilter" class="form-select form-select-sm">
-                        <option value="">Select Slot</option>
+                        <option value=""></option>
                         <?php
                         $slots = mysqli_query($conn, "SELECT DISTINCT slot FROM tabulatingsheet WHERE sccode='$sccode' ORDER BY slot");
                         while ($row = mysqli_fetch_assoc($slots)) {
@@ -26,7 +37,7 @@
                 <div class="col-md-2">
                     <label for="sessionFilter" class="fs-small ps-1">Session</label>
                     <select id="sessionFilter" class="form-select form-select-sm">
-                        <option value="">Select Session</option>
+                        <option value=""></option>
                         <?php
                         $sessions = mysqli_query($conn, "SELECT DISTINCT sessionyear FROM tabulatingsheet where sccode='$sccode' and (sessionyear !='' OR sessionyear IS NOT NULL) ORDER BY sessionyear");
                         while ($row = mysqli_fetch_assoc($sessions)) {
@@ -38,7 +49,7 @@
                 <div class="col-md-2">
                     <label for="examFilter" class="fs-small ps-1">Examination</label>
                     <select id="examFilter" class="form-select form-select-sm">
-                        <option value="">Select Exam</option>
+                        <option value=""></option>
                         <?php
                         $exams = mysqli_query($conn, "SELECT DISTINCT exam FROM tabulatingsheet  Where   sccode='$sccode' ORDER BY exam");
                         while ($row = mysqli_fetch_assoc($exams)) {
@@ -50,7 +61,7 @@
                 <div class="col-md-2">
                     <label for="classFilter" class="fs-small ps-1">Class</label>
                     <select id="classFilter" class="form-select form-select-sm">
-                        <option value="">Select Class</option>
+                        <option value=""></option>
                         <?php
                         $classes = mysqli_query($conn, "SELECT DISTINCT classname FROM tabulatingsheet Where  sccode='$sccode'  ORDER BY classname");
                         while ($row = mysqli_fetch_assoc($classes)) {
@@ -62,7 +73,7 @@
                 <div class="col-md-2">
                     <label for="sectionFilter" class="fs-small ps-1">Section</label>
                     <select id="sectionFilter" class="form-select form-select-sm">
-                        <option value="">Select Section</option>
+                        <option value=""></option>
                         <?php
                         $sections = mysqli_query($conn, "SELECT DISTINCT sectionname FROM tabulatingsheet  Where   sccode='$sccode'  ORDER BY sectionname");
                         while ($row = mysqli_fetch_assoc($sections)) {
@@ -79,7 +90,7 @@
                 <div class="col-md-2">
                     <label for="sessioninfoSlot" class="fs-small ps-1">Slot/Unit</label>
                     <select id="sessioninfoSlot" class="form-select form-select-sm">
-                        <option value="">Select Slot</option>
+                        <option value=""></option>
                         <?php
                         $siSlots = mysqli_query($conn, "SELECT DISTINCT slot FROM sessioninfo  Where   sccode='$sccode'  ORDER BY slot");
                         while ($row = mysqli_fetch_assoc($siSlots)) {
@@ -91,7 +102,7 @@
                 <div class="col-md-2">
                     <label for="sessioninfoSession" class="fs-small ps-1">Session</label>
                     <select id="sessioninfoSession" class="form-select form-select-sm">
-                        <option value="">Select Session</option>
+                        <option value=""></option>
                         <?php
                         $siSessions = mysqli_query($conn, "SELECT DISTINCT sessionyear FROM sessioninfo  Where   sccode='$sccode' ORDER BY sessionyear");
                         while ($row = mysqli_fetch_assoc($siSessions)) {
@@ -111,14 +122,14 @@
             </div>
         </div>
 
-
+        
         <!-- Result Table -->
         <div class="table-responsive">
             <table class="table table-bordered table-sm" id="resultTable">
                 <thead>
                     <tr>
-                        <th colspan="4">Result Data</th>
-                        <th colspan="3">Session Data</th>
+                        <th colspan="4"><b>Result Data</b></th>
+                        <th colspan="4"><b>Session Data</b></th>
                     </tr>
                     <tr>
                         <th>Merit (Combined)</th>
@@ -140,6 +151,16 @@
 </div>
 
 <?php require_once 'footer.php'; ?>
+
+<script>
+    $('#slotFilter').val(<?= json_encode($ax) ?>);
+    $('#sessionFilter').val(<?= json_encode($bx) ?>);
+    $('#examFilter').val(<?= json_encode($cx) ?>);
+    $('#classFilter').val(<?= json_encode($dx) ?>);
+    $('#sectionFilter').val(<?= json_encode($ex) ?>);
+    $('#sessioninfoSlot').val(<?= json_encode($fx) ?>);
+    $('#sessioninfoSession').val(<?= json_encode($gx) ?>);
+</script>
 
 <script>
     $(document).ready(function () {
@@ -218,15 +239,31 @@
 
         function loadResults() {
             syncSessionInfo();
-       $('#resultTable tbody').html('<div class="text-center text-small text-primary">Loading...</div>');
+            let slot = $('#slotFilter').val();
+            let session = $('#sessionFilter').val();
+            let exam = $('#examFilter').val();
+            let classname = $('#classFilter').val();
+            let sectionname = $('#sectionFilter').val();
+            let sessioninfoSlot = $('#sessioninfoSlot').val();
+            let sessioninfoSession = $('#sessioninfoSession').val();
+
+            setCookie('a', slot);
+            setCookie('b', session);
+            setCookie('c', exam);
+            setCookie('d', classname);
+            setCookie('e', sectionname);
+            setCookie('f', sessioninfoSlot);
+            setCookie('g', sessioninfoSession);
+
+            $('#resultTable tbody').html('<div class="text-center text-small text-primary">Loading...</div>');
             $.post('promotion/getMeritData.php', {
-                slot: $('#slotFilter').val(),
-                session: $('#sessionFilter').val(),
-                exam: $('#examFilter').val(),
-                classname: $('#classFilter').val(),
-                sectionname: $('#sectionFilter').val(),
-                sessioninfoSlot: $('#sessioninfoSlot').val(),
-                sessioninfoSession: $('#sessioninfoSession').val()
+                slot: slot,
+                session: session,
+                exam: exam,
+                classname: classname,
+                sectionname: sectionname,
+                sessioninfoSlot: sessioninfoSlot,
+                sessioninfoSession: sessioninfoSession
             }, function (res) {
                 $('#resultTable tbody').html(res);
                 $('#errCount').text($('#cnt').text());
@@ -270,6 +307,8 @@
     }
 
 </script>
+
+
 
 </body>
 

@@ -7,8 +7,8 @@ require_once '../core/global_values.php';
 $slot    = $_POST['slot'] ?? '';
 $session = $_POST['session'] ?? '';
 
-$examOpt = '<option value="">Select Exam</option>';
-$classOpt = '<option value="">Select Class</option>';
+$examOpt = '<option value=""></option>';
+$classOpt = '<option value=""></option>';
 
 $q1 = mysqli_query($conn,"
     SELECT DISTINCT exam 

@@ -4,14 +4,14 @@ require_once '../core/config.php';
 require_once '../core/db.php';
 require_once '../core/global_values.php';
 
-$slot      = $_POST['slot'] ?? '';
-$session   = $_POST['session'] ?? '';
-$exam      = $_POST['exam'] ?? '';
+$slot = $_POST['slot'] ?? '';
+$session = $_POST['session'] ?? '';
+$exam = $_POST['exam'] ?? '';
 $classname = $_POST['classname'] ?? '';
 
-$out = '<option value="">Select Section</option>';
+$out = '<option value=""></option>';
 
-$q = mysqli_query($conn,"
+$q = mysqli_query($conn, "
     SELECT DISTINCT sectionname 
     FROM tabulatingsheet 
     WHERE slot='$slot'
@@ -21,7 +21,7 @@ $q = mysqli_query($conn,"
     AND sccode='$sccode'
 ");
 
-while($r=mysqli_fetch_assoc($q)){
+while ($r = mysqli_fetch_assoc($q)) {
     $out .= "<option value='{$r['sectionname']}'>{$r['sectionname']}</option>";
 }
 

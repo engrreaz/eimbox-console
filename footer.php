@@ -1216,3 +1216,29 @@ $release_colors = [
     });
 
 </script>
+
+<script>
+    function addParams(params) {
+    const url = new URL(window.location);
+    Object.keys(params).forEach(key => {
+        url.searchParams.set(key, params[key]);
+    });
+    history.pushState({}, '', url);
+}
+
+// usage
+// addParams({
+//     id: 10,
+//     class: 'Eight',
+//     session: 2026
+// });
+
+function removeParams(params) {
+    const url = new URL(window.location.href);
+    params.forEach(p => url.searchParams.delete(p));
+    history.pushState({}, '', url);
+}
+
+// usage
+// removeParams(['id', 'session']);
+</script>

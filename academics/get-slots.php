@@ -7,8 +7,8 @@ require_once '../core/global_values.php';
 $sccode = $_SESSION['sccode'];
 
 $q = mysqli_query($conn,"
-    SELECT DISTINCT slot 
-    FROM areas
+    SELECT DISTINCT slotname as slot
+    FROM slots
     WHERE sccode='$sccode'
     ORDER BY slot
 ");
