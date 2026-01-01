@@ -88,6 +88,14 @@ while ($row = mysqli_fetch_assoc($res)) {
             Fix
         </button>';
 
+    } else if ($meritCombCheck == '' && $meritNumCheck != '') {
+
+        $btn = '<button 
+            class="btn btn-info btn-sm"
+            onclick="fixnow(' . $row['id'] . ', ' . $row['meritnumcomb']. ')">
+            Fix
+        </button>';
+
     } else {
         $errorIcon = '';
         $btn = '';
