@@ -83,17 +83,17 @@ while ($row = mysqli_fetch_assoc($res)) {
         $errorCount++;
         $clr = ' table-danger';
         $btn = '<button 
-            class="btn btn-warning btn-sm"
+            class="btn btn-outline-warning btn-sm"
             onclick="fixnow(' . $row['id'] . ', ' . $row['meritnum']. ')">
-            Fix
+            Fix Now
         </button>';
 
     } else if ($meritCombCheck == '' && $meritNumCheck != '') {
 
         $btn = '<button 
-            class="btn btn-info btn-sm"
+            class="btn btn-outline-info  btn-sm"
             onclick="fixnow(' . $row['id'] . ', ' . $row['meritnumcomb']. ')">
-            Fix
+            Move Now
         </button>';
 
     } else {
