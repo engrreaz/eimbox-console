@@ -218,7 +218,7 @@
 
         function loadResults() {
             syncSessionInfo();
-
+       $('#resultTable tbody').html('<div class="text-center text-small text-primary">Loading...</div>');
             $.post('promotion/getMeritData.php', {
                 slot: $('#slotFilter').val(),
                 session: $('#sessionFilter').val(),
