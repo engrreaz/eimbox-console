@@ -12,6 +12,7 @@ $chain = '';
 function parseChainParam(string $param): array
 {
     $out = [
+        'col' => '',
         'title' => '',
         'url' => false,
         'hidden' => [],
@@ -30,6 +31,9 @@ function parseChainParam(string $param): array
     }
 
     // -t Title
+    if (preg_match('/-c\s+([^-\n]+)/', $param, $m)) {
+        $out['col'] = trim($m[1]);
+    }
     if (preg_match('/-t\s+([^-\n]+)/', $param, $m)) {
         $out['title'] = trim($m[1]);
     }
@@ -54,6 +58,16 @@ $my_chain_params = parseChainParam($chain_param);
 
 $box_title = $my_chain_params['title'] ?? 'Choose Values';
 $chain_button_text = $my_chain_params['button'] ?? 'View';
+
+if ($my_chain_params['col'] <= 3) {
+    $chain_md = 12;
+} else if ($my_chain_params['col'] <= 5) {
+    $chain_md = 6;
+} else if ($my_chain_params['col'] <= 8) {
+    $chain_md = 4;
+} else {
+    $chain_md = 2;
+}
 
 if ($my_chain_params['url'] == true) {
     $chain .= ' url ';
@@ -188,7 +202,7 @@ if (strpos($chain, 'class') !== false) {
         <div class="row g-2 align-items-end">
 
             <!-- SLOT -->
-            <div class="col-md-2">
+            <div class="col-md-<?= $chain_md ?>">
                 <label class="form-label fs-small">Slot / Unit</label>
                 <select id="slot-main" class="form-select form-select-sm">
                     <option value="">Select Slot</option>
@@ -202,7 +216,7 @@ if (strpos($chain, 'class') !== false) {
             </div>
 
             <!-- SESSION -->
-            <div class="col-md-2">
+            <div class="col-md-<?= $chain_md ?>">
                 <label class="form-label fs-small">Session</label>
                 <select id="session-main" class="form-select form-select-sm">
                     <option value="">Select Session</option>
@@ -218,7 +232,7 @@ if (strpos($chain, 'class') !== false) {
             </div>
 
             <!-- CLASS -->
-            <div class="col-md-2">
+            <div class="col-md-<?= $chain_md ?>">
                 <label class="form-label fs-small">Class</label>
                 <select id="class-main" class="form-select form-select-sm">
                     <option value="">Select Class</option>
@@ -226,7 +240,7 @@ if (strpos($chain, 'class') !== false) {
             </div>
 
             <!-- SECTION -->
-            <div class="col-md-2">
+            <div class="col-md-<?= $chain_md ?>">
                 <label class="form-label fs-small">Section</label>
                 <select id="section-main" class="form-select form-select-sm">
                     <option value="">Select Section</option>
@@ -234,7 +248,7 @@ if (strpos($chain, 'class') !== false) {
             </div>
 
             <!-- ACTION -->
-            <div class="col-md-2">
+            <div class="col-md-<?= $chain_md ?>">
                 <button type="button" class="btn btn-sm btn-primary w-100 py-2 pt-3" id="btn-chain">
                     <div class="row">
                         <div class="col text-start">

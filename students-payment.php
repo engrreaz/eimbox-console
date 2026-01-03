@@ -28,7 +28,7 @@
     <div class="row">
         <div class="col-md-4">
             <?php
-            $chain_param = '-t Choose Values -u -r -b View List';
+            $chain_param = '-c 4 -t Choose Values -u -r -b View List';
             include 'components/slot-tree-ui.php';
             ?>
         </div>
@@ -468,7 +468,7 @@
     });
 
     $(document).on('click', '.btn-chain', function () {
-        getlist();
+         getlist();
     });
 </script>
 
