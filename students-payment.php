@@ -458,7 +458,7 @@
         }
 
         $('#class-main').on('change', function () {
-            setTimeout(tryGetList, 200);
+            setTimeout(tryGetList, 500);
         });
 
         $('#section-main').on('change', function () {
