@@ -124,7 +124,7 @@ $session = $_COOKIE['session'] ?? $_GET['session'] ?? '';
                             <li><a class="dropdown-item" href="#" onclick="openEdit(<?= $r['id'] ?>)">Edit</a></li>
                             <li><a class="dropdown-item" href="#" onclick="delItem(<?= $r['id'] ?>)">Delete</a></li>
                             <li><a class="dropdown-item" href="#"
-                                    onclick="openAmountModal(<?= $r['id'] ?>, '<?= $r['itemcode'] ?>')">Amount : ৳
+                                    onclick="openAmountModal(<?= $r['id'] ?>, '<?= $r['itemcode'] ?>', <?= $r['splitable'] ?>)">Amount : ৳
                                     <?= $valAmount ?></a></li>
                         </ul>
                     </div>
@@ -157,12 +157,31 @@ $session = $_COOKIE['session'] ?? $_GET['session'] ?? '';
                 <div class="row mb-2">
                     <div class="col-md-4"><label>Frequency</label>
                         <select id="mon" class="form-control">
+                            <!-- Months -->
+                            <option value="1">January</option>
+                            <option value="2">February</option>
+                            <option value="3">March</option>
+                            <option value="4">April</option>
+                            <option value="5">May</option>
+                            <option value="6">June</option>
+                            <option value="7">July</option>
+                            <option value="8">August</option>
+                            <option value="9">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+
+                            <!-- Separator -->
+                            <option disabled>────────────</option>
+
+                            <!-- Interval -->
                             <option value="0">Every Month</option>
                             <option value="22">2 Months</option>
                             <option value="33">3 Months</option>
                             <option value="44">4 Months</option>
                             <option value="66">6 Months</option>
                         </select>
+
                     </div>
                     <div class="col-md-8 d-flex align-items-end">
                         <label class="me-3"><input type="checkbox" id="new_only"> New Admission Only</label>
@@ -190,6 +209,7 @@ $session = $_COOKIE['session'] ?? $_GET['session'] ?? '';
                 <input type="hidden" id="aitemcode">
                 <input type="hidden" id="aclass">
                 <input type="hidden" id="asection">
+                <input type="hidden" id="splyn">
                 <div class="mb-2"><strong id="ainfo"></strong></div>
                 <div class="mb-2"><label>Amount</label><input type="number" id="aamount" class="form-control"
                         step="0.01"></div>
@@ -209,22 +229,71 @@ $session = $_COOKIE['session'] ?? $_GET['session'] ?? '';
 <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.3/themes/base/jquery-ui.css">
 <script src="https://code.jquery.com/ui/1.13.3/jquery-ui.min.js"></script>
 
+
 <script>
     const itemModal = new bootstrap.Modal('#itemModal');
     const amountModal = new bootstrap.Modal('#amountModal');
 
-    // ---------- Add/Edit ----------
+
+    // ---------- Slot/Session ----------
+    function applyFilter(slot, session) {
+        if (!slot || !session) return;
+
+        // Cookie set
+        setCookie('slot', slot);
+        setCookie('session', session);
+
+        // URL থেকে query parameters বের করা
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlSlot = urlParams.get('slot') || '';
+        const urlSession = urlParams.get('session') || '';
+
+        // Cookie এর সাথে compare
+        if (slot === urlSlot && session === urlSession) {
+            // মিলছে, reload প্রয়োজন নেই
+            return;
+        } else {
+            // না মিললে reload
+            window.location.href = '?slot=' + slot + '&session=' + session;
+        }
+    }
+
+
+
+    // Slot/Session change event
+    $('#slot-main,#session-main').off('change').on('change', function () {
+        let slot = $('#slot-main').val();
+        let session = $('#session-main').val();
+        applyFilter(slot, session);
+    });
+
+    // On page load, set from cookie but DON'T trigger change/reload
+    document.addEventListener('DOMContentLoaded', function () {
+        let slot = getCookie('slot');
+        let session = getCookie('session');
+        if (slot) $('#slot-main').val(slot);
+        if (session) $('#session-main').val(session);
+    });
+
+    // ---------- Add/Edit Item ----------
     function openAdd() {
-        $('#fid').val(0); $('#peng,#pben').val(''); $('#mon').val(0);
-        $('#new_only,#splitable').prop('checked', false); $('#itemMsg').html('');
+        $('#fid').val(0);
+        $('#peng,#pben').val('');
+        $('#mon').val(0);
+        $('#new_only,#splitable').prop('checked', false);
+        $('#itemMsg').html('');
         itemModal.show();
     }
 
     function openEdit(id) {
         $.post('payments/get-finance-item.php', { id }, function (res) {
             let d = JSON.parse(res);
-            $('#fid').val(d.id); $('#peng').val(d.particulareng); $('#pben').val(d.particularben);
-            $('#mon').val(d.month); $('#new_only').prop('checked', d.new_only == 1); $('#splitable').prop('checked', d.splitable == 1);
+            $('#fid').val(d.id);
+            $('#peng').val(d.particulareng);
+            $('#pben').val(d.particularben);
+            $('#mon').val(d.month);
+            $('#new_only').prop('checked', d.new_only == 1);
+            $('#splitable').prop('checked', d.splitable == 1);
             $('#itemMsg').html('');
             itemModal.show();
         });
@@ -232,8 +301,12 @@ $session = $_COOKIE['session'] ?? $_GET['session'] ?? '';
 
     function saveItem() {
         let data = {
-            id: $('#fid').val(), eng: $('#peng').val(), ben: $('#pben').val(), mon: $('#mon').val(),
-            new_only: $('#new_only').is(':checked') ? 1 : 0, splitable: $('#splitable').is(':checked') ? 1 : 0
+            id: $('#fid').val(),
+            eng: $('#peng').val(),
+            ben: $('#pben').val(),
+            mon: $('#mon').val(),
+            new_only: $('#new_only').is(':checked') ? 1 : 0,
+            splitable: $('#splitable').is(':checked') ? 1 : 0
         };
         $.post('payments/save-finance-item.php', data, function (res) {
             $('#itemMsg').html(res);
@@ -246,55 +319,45 @@ $session = $_COOKIE['session'] ?? $_GET['session'] ?? '';
         $.post('payments/delete-finance-item.php', { id }, () => location.reload());
     }
 
-    // ---------- Toggle & Load Classes ----------
-    function toggleItem(id, itemcode) {
-        let box = $('#itemBody' + id);
-        if (box.is(':visible')) { box.slideUp(150); return; }
-        if (box.data('loaded') === 1) { box.slideDown(150); return; }
-
-        box.html('<div class="text-muted">Loading classes...</div>').slideDown(100);
-        $.post('payments/load-item-classes.php', { fid: id, itemcode: itemcode, session: $('#session-main').val() }, function (res) {
-            box.html(res); box.data('loaded', 1);
-            // box.find('.pointer').click(function () { $(this).siblings('div').slideToggle(150); $(this).find('i').toggleClass('bi-chevron-right bi-chevron-down'); });
-        });
-    }
-
-    // class expand
-    $('.class-toggle').off('click').on('click', function () {
-        $(this).find('i').toggleClass('bi-chevron-right bi-chevron-down');
-        $(this).closest('.class-row').find('.section-wrap').first().slideToggle(150);
-    });
-
-    // class expand
-    $('.section-toggle').off('click').on('click', function () {
-        $(this).find('i').toggleClass('bi-chevron-right bi-chevron-down');
-        $(this).closest('.class-row').find('.section-wrap').first().slideToggle(150);
-    });
-
     // ---------- Amount ----------
-    function openAmountModal(fid, itemcode, cls = '', sec = '') {
-        $('#afid').val(fid); $('#aitemcode').val(itemcode); $('#aclass').val(cls); $('#asection').val(sec);
-        let text = 'Item #' + fid; if (cls) text += ' | ' + cls; if (sec) text += ' - ' + sec;
-        $('#ainfo').text(text); $('#aamount').val(''); $('#amountMsg').html('');
-        // alert(itemcode);
-        $.post('payments/get-amount.php', { fid: fid, itemcode: itemcode, class: cls, section: sec }, function (r) {
+    function openAmountModal(fid, itemcode, splitable, cls = '', sec = '') {
+        $('#afid').val(fid);
+        $('#aitemcode').val(itemcode);
+        $('#aclass').val(cls);
+        $('#asection').val(sec);
+
+        let text = 'Item #' + fid;
+        if (cls) text += ' | ' + cls;
+        if (sec) text += ' - ' + sec;
+        $('#ainfo').text(text);
+        $('#aamount').val('');
+        $('#amountMsg').html('');
+
+        $.post('payments/get-amount.php', { fid, itemcode, class: cls, section: sec , spl:splitable}, function (r) {
             if (!r) return;
-
+            // alert(JSON.stringify(r));
             let amt = JSON.parse(r).amount;
+            let spl = JSON.parse(r).splitable;
             $('#aamount').val(amt);
+            $('#splyn').val(spl);
 
-            // modal fully visible হলে focus + select
             $('#amountModal').one('shown.bs.modal', function () {
                 $('#aamount').focus().select();
             });
         });
+
         amountModal.show();
     }
 
     function saveAmount() {
-        let data = { fid: $('#afid').val(), fitemcode: $('#aitemcode').val(), class: $('#aclass').val(), section: $('#asection').val(), amount: $('#aamount').val() };
-
-        alert(JSON.stringify(data));
+        let data = {
+            fid: $('#afid').val(),
+            fitemcode: $('#aitemcode').val(),
+            class: $('#aclass').val(),
+            section: $('#asection').val(),
+            amount: $('#aamount').val(),
+            spl: $('#splyn').val()
+        };
 
         $.post('payments/save-amount.php', data, function (res) {
             $('#amountMsg').html(res);
@@ -302,18 +365,10 @@ $session = $_COOKIE['session'] ?? $_GET['session'] ?? '';
                 setTimeout(() => {
                     amountModal.hide();
                     let amt = parseFloat(data.amount).toFixed(2);
-                    let cls = data.class, sec = data.section;
-                    if (cls && sec) {
-                        let btn = $('.session-row').filter(function () { return $(this).find('span').text() === sec; }).find('button');
-                        btn.html('Set Amount (৳ ' + parseFloat(data.amount).toFixed(2) + ')');
-                    }
 
                     if (data.section) {
                         $('.sec-amount-btn').each(function () {
-                            if (
-                                $(this).data('class') === data.class &&
-                                $(this).data('section') === data.section
-                            ) {
+                            if ($(this).data('class') === data.class && $(this).data('section') === data.section) {
                                 $(this).html('Set Amount (৳ ' + amt + ')');
                             }
                         });
@@ -323,45 +378,38 @@ $session = $_COOKIE['session'] ?? $_GET['session'] ?? '';
         });
     }
 
+    // ---------- Toggle & Load Classes ----------
+    function toggleItem(id, itemcode) {
+        let box = $('#itemBody' + id);
+        if (box.is(':visible')) { box.slideUp(150); return; }
+        if (box.data('loaded') === 1) { box.slideDown(150); return; }
+
+        box.html('<div class="text-muted">Loading classes...</div>').slideDown(100);
+        $.post('payments/load-item-classes.php', { fid: id, itemcode, session: $('#session-main').val() }, function (res) {
+            box.html(res);
+            box.data('loaded', 1);
+        });
+    }
+
     // ---------- Drag & Drop ----------
-    const list = document.getElementById('itemlist'); let dragItem = null;
-    list.addEventListener('dragstart', e => { if (e.target.classList.contains('item')) { dragItem = e.target; e.target.classList.add('dragging'); } });
-    list.addEventListener('dragend', e => { if (dragItem) { dragItem.classList.remove('dragging'); dragItem = null; } });
-    list.addEventListener('dragover', e => { e.preventDefault(); const after = getAfterElement(list, e.clientY); if (after == null) { list.appendChild(dragItem); } else { list.insertBefore(dragItem, after); } });
-    function getAfterElement(container, y) {
-        const els = [...container.querySelectorAll('.item:not(.dragging)')];
-        return els.reduce((closest, child) => {
-            const box = child.getBoundingClientRect();
-            const offset = y - box.top - box.height / 2;
-            if (offset < 0 && offset > closest.offset) return { offset: offset, element: child };
-            return closest;
-        }, { offset: Number.NEGATIVE_INFINITY }).element;
-    }
-    function saveOrder() {
-        const ids = [...document.querySelectorAll('.item')].map((el, i) => el.dataset.id + '=' + (i + 1));
-        $.post('payments/save-item-order.php', { order: ids.join(',') }, function (res) { alert(res); location.reload(); });
-    }
-
-    // ---------- Slot/Session ----------
-    function applyFilter() {
-        alert('.');
-        let slot = $('#slot-main').val(), session = $('#session-main').val();
-        if (!slot || !session) { alert('Please select slot and session'); return; }
-        setCookie('slot', slot); setCookie('session', session);
-        window.location.href = '?slot=' + slot + '&session=' + session;
-    }
-
-    $('#slot-main,#session-main').on('change', () => applyFilter());
-    function setCookie(name, value) { document.cookie = name + '=' + value + ';path=/'; }
-    function getCookie(name) { let v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)'); return v ? v[2] : null; }
-    document.addEventListener('DOMContentLoaded', function () { let slot = getCookie('slot'), session = getCookie('session'); if (slot) $('#slot-main').val(slot); if (session) $('#session-main').val(session); });
-
-</script>
-
-
-<script>
+    const list = document.getElementById('itemlist');
+    let dragItem = null;
     let placeholder = document.createElement('div');
     placeholder.className = 'drag-placeholder';
+
+    list.addEventListener('dragstart', e => {
+        if (e.target.classList.contains('item')) {
+            dragItem = e.target;
+            e.target.classList.add('dragging');
+        }
+    });
+
+    list.addEventListener('dragend', e => {
+        if (dragItem) {
+            dragItem.classList.remove('dragging');
+            dragItem = null;
+        }
+    });
 
     list.addEventListener('dragover', e => {
         e.preventDefault();
@@ -380,50 +428,27 @@ $session = $_COOKIE['session'] ?? $_GET['session'] ?? '';
         }
     });
 
-</script>
+    function getAfterElement(container, y) {
+        const els = [...container.querySelectorAll('.item:not(.dragging)')];
+        return els.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+            if (offset < 0 && offset > closest.offset) return { offset: offset, element: child };
+            return closest;
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
 
-<script>
-    function watchSelectValue(selector, callback) {
-        const el = document.querySelector(selector);
-        if (!el) return;
-
-        let lastValue = el.value;
-
-        el.addEventListener('change', () => {
-            if (el.value !== lastValue) {
-                lastValue = el.value;
-                callback(el.value);
-            }
-        });
-
-        const observer = new MutationObserver(() => {
-            if (el.value !== lastValue) {
-                lastValue = el.value;
-                callback(el.value);
-            }
-        });
-
-        observer.observe(el, {
-            attributes: true,
-            childList: true,
-            subtree: true
+    function saveOrder() {
+        const ids = [...document.querySelectorAll('.item')].map((el, i) => el.dataset.id + '=' + (i + 1));
+        $.post('payments/save-item-order.php', { order: ids.join(',') }, function (res) {
+            alert(res);
+            location.reload();
         });
     }
 
-
-    watchSelectValue('#slot-main', function (newValue) {
-        console.log('slot changed to:', newValue);
-        applyFilter();
-    });
-
 </script>
+
 
 </body>
 
 </html>
-
-<!-- 
-১. সেট অ্যামাউন্ট টেক্সটবক্সে ফোকাট/সিলেক্ট
-2. ডায়নামি আপডেট ভ্যালূ
-3. 
--->

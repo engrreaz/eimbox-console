@@ -210,7 +210,13 @@
                             Current Package : <b><?= $ins['package_name'] ?></b> (<?= $ins['package_id'] ?>)
                         </div>
                         <div class="col text-end">
-                            <button class="btn btn-info btn-sm">Upgrade / Downgrade</button>
+                            <button 
+    class="btn btn-info btn-sm"
+    id="pkgBtn"
+    data-package="<?= $ins['package_id'] ?>"
+>
+    Upgrade / Downgrade
+</button>
 
                         </div>
                     </div>
@@ -477,6 +483,39 @@
 
 </div>
 
+
+
+
+
+
+
+
+
+<div class="modal fade" id="packageModal" tabindex="-1">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <form id="packageForm">
+                <div class="modal-header">
+                    <h5 class="modal-title">Change Package</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div id="packageList" class="list-group">
+                        <!-- packages will load here -->
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        Update Package
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <?php require_once 'footer.php'; ?>
 
 <script>
@@ -488,6 +527,43 @@
     }
     $("#dues").text("<?= $dues ?>.00");
 </script>
+
+
+
+
+<script>
+let pkgModal = new bootstrap.Modal(document.getElementById('packageModal'));
+
+$('#pkgBtn').on('click', function () {
+    let currentPkg = $(this).data('package');
+
+    $.post('settings/get-packages.php', { current: currentPkg }, function (html) {
+        $('#packageList').html(html);
+        pkgModal.show();
+    });
+});
+
+$('#packageForm').on('submit', function (e) {
+    e.preventDefault();
+
+    let pkg = $('input[name=package]:checked').val();
+    if (!pkg) {
+        alert('Please select a package');
+        return;
+    }
+
+    $.post('settings/update-package.php', { package: pkg }, function (res) {
+        if (res.status === 'ok') {
+            pkgModal.hide();
+            showToast('success', 'Package updated successfully');
+            location.reload();
+        } else {
+            showToast('error', res.msg);
+        }
+    }, 'json');
+});
+</script>
+
 </body>
 
 </html>

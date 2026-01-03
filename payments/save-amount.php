@@ -14,18 +14,23 @@ $aitemcode = $_POST['fitemcode'];
 $cls = $_POST['class'] ?? '';
 $sec = $_POST['section'] ?? '';
 $amt = floatval($_POST['amount']);
+$spl = $_POST['spl'];
 
 
 // Check existing
 $q = $conn->query("SELECT id FROM financesetupvalue WHERE itemcode='$aitemcode' AND classname='$cls' AND sectionname='$sec' AND sessionyear='$sy' AND slot='$slot' AND sccode='$sccode'");
-if($q->num_rows){
+if ($q->num_rows) {
     $id = $q->fetch_assoc()['id'];
-    $upd = $conn->query("UPDATE financesetupvalue SET amount='$amt' WHERE id='$id' and itemcode='$aitemcode'");
-    if($upd) echo "success: Amount updated";
-    else echo "error: Failed to update";
+    $upd = $conn->query("UPDATE financesetupvalue SET amount='$amt', splitable='$spl' WHERE id='$id' and itemcode='$aitemcode'");
+    if ($upd)
+        echo "success: Amount updated";
+    else
+        echo "error: Failed to update";
 } else {
-    $ins = $conn->query("INSERT INTO financesetupvalue(classname,sectionname,amount, sessionyear, slot, sccode, itemcode) VALUES('$cls','$sec','$amt', '$sy', '$slot', '$sccode', '$aitemcode')");
+    $ins = $conn->query("INSERT INTO financesetupvalue(classname,sectionname,amount, sessionyear, slot, sccode, itemcode, splitable) VALUES('$cls','$sec','$amt', '$sy', '$slot', '$sccode', '$aitemcode', '$spl')");
 
-    if($ins) echo "success: Amount saved";
-    else echo "error: Failed to save";
+    if ($ins)
+        echo "success: Amount saved";
+    else
+        echo "error: Failed to save";
 }

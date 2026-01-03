@@ -10,22 +10,33 @@ $sy = isset($_COOKIE['session']) ? $_COOKIE['session'] : (isset($_GET['session']
 $fid = intval($_POST['fid']);
 if (isset($_POST['itemcode'])) {
   $itemcode = $_POST['itemcode'];
+  $splitable = $_POST['spl'];
 } else {
 
-  $sql = "SELECT itemcode  FROM financesetup   WHERE id = ? AND sccode = ?  LIMIT 1";
+ $sql = "SELECT itemcode, splitable 
+        FROM financesetup 
+        WHERE id = ? AND sccode = ? 
+        LIMIT 1";
 
-  $stmt = $conn->prepare($sql);
-  $stmt->bind_param("is", $fid, $sccode);
-  $stmt->execute();
-  $stmt->bind_result($itemcode);
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("is", $fid, $sccode);
+$stmt->execute();
 
-  if ($stmt->fetch()) {
-    // echo $itemcode;
-  } else {
-    // echo '';
-  }
+/* দুইটা কলামের জন্য দুইটা ভ্যারিয়েবল */
+$stmt->bind_result($itemcode, $splitable);
 
-  $stmt->close();
+if ($stmt->fetch()) {
+    // ডেটা পাওয়া গেছে
+    // $itemcode
+    // $splitable
+} else {
+    // কোন রেকর্ড নাই
+    $itemcode  = '';
+    $splitable = '';
+}
+
+$stmt->close();
+
 
 }
 
@@ -36,7 +47,7 @@ $sec = $_POST['section'] ?? '';
 $ql = "SELECT amount FROM financesetupvalue WHERE itemcode='$itemcode' AND  classname='$cls' AND sectionname='$sec' and sccode='$sccode' and sessionyear='$sy' and slot='$slot'";
 $q = $conn->query($ql);
 if ($q->num_rows) {
-  echo json_encode(['amount' => $q->fetch_assoc()['amount']]);
+  echo json_encode(['amount' => $q->fetch_assoc()['amount'], 'splitable' => $splitable]);
 } else {
-  echo json_encode(['amount' => 0]);
+  echo json_encode(['amount' => 0, 'splitable' => 0]);
 }

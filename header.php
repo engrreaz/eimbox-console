@@ -126,10 +126,6 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
     <!--? Config: Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file. -->
     <script src="assets/js/config.js"></script>
 
-
-
-
-
     <script src="assets/vendor/libs/jquery/jquery.js"></script>
     <script src="assets/vendor/js/bootstrap.js"></script>
     <script src="https://cdn.datatables.net/2.3.5/js/dataTables.min.js"></script>
@@ -151,10 +147,6 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
 <body>
 
 
-    <noscript>
-        <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5DDHKGP" height="0" width="0"
-            style="display: none; visibility: hidden"></iframe>
-    </noscript>
 
     <div class="layout-wrapper layout-content-navbar  ">
         <div class="layout-container">

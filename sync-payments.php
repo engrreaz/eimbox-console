@@ -68,10 +68,11 @@ $total = $q->fetch_assoc()['c'];
                             </select>
                         </div>
                         <div class="col-md-1 col-2 ">
-                           
 
 
-                            <button type="button" class="btn btn-icon rounded-pill btn-label-github waves-effect"  id="openTree">
+
+                            <button type="button" class="btn btn-icon rounded-pill btn-label-github waves-effect"
+                                id="openTree">
                                 <i class="icon-base bi bi-stack icon-22px"></i>
                             </button>
                         </div>
@@ -185,6 +186,13 @@ $total = $q->fetch_assoc()['c'];
                 $('#prog').css('width', '100%').text('100%');
                 $('#log').prepend('<div class="text-success">Completed</div>');
             }
+
+            if ('<?= $type ?>' == 'stid') {
+
+                setCookie('payment-stid', '<?= $stid ?>');
+                window.history.back();
+            }
+
         });
     }
     $('#slot-main').val(<?= $slot ?>);
@@ -263,7 +271,7 @@ $total = $q->fetch_assoc()['c'];
         }
     });
 
-    
+
     $('#slot-main').on('change', function () {
         setCookie('chain-slot', $(this).val());
     });
@@ -272,6 +280,12 @@ $total = $q->fetch_assoc()['c'];
     $('#session-main').on('change', function () {
         setCookie('chain-session', $(this).val());
     });
+
+
+    if ('<?= $type ?>' == 'stid') {
+        ;
+        runSync();
+    }
 </script>
 
 

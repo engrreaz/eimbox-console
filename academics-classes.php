@@ -175,14 +175,14 @@
 
     function renderCheck(box, type, list, store) {
         let saved = JSON.parse(localStorage.getItem(store)) || [];
-        let html = `<label><input type="checkbox" class="${type}All"> All</label>`;
+        let html = `<label class="form-check form-check-danger "><input type="checkbox" class="${type}All form-check-input form-check-xl   "> All</label>`;
         let all = true;
 
         list.forEach(v => {
             let chk = saved.length === 0 || saved.includes(v);
             if (!chk) all = false;
             html +=
-                `<label><input type="checkbox" class="${type}Chk" value="${v}" ${chk ? 'checked' : ''}> ${v}</label>`;
+                `<label class="form-check form-check-info "><input type="checkbox" class="${type}Chk  form-check-input form-check-xl  " value="${v}" ${chk ? 'checked' : ''}> ${v}</label>`;
         });
 
         $(box).html(html);
@@ -228,16 +228,16 @@
 
                 slots.forEach(slot => {
                     // alert(slots + sessions);
-                    html += `<div class="mb-4"><h4>${slot}</h4>`;
+                    html += `<div class="mb-4"><h4 class="fw-bold text-primary text-center  ">${slot}dddd</h4>`;
 
                     sessions.forEach(session => {
                         html += `
                 <div class="ms-3 mb-3">
                     <h6 class="d-flex justify-content-between">
-                        ${session}
+                      Session :  ${session}
                         <button class="btn btn-sm btn-primary addClass"
                             data-slot="${slot}" data-session="${session}">
-                            + Class
+                            + Classddd
                         </button>
                     </h6>
                     <div class="session-row text-muted small">

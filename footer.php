@@ -97,7 +97,7 @@ $release_colors = [
 </style>
 
 
-<input type="hidden" id="selectedTree" >
+<input type="hidden" id="selectedTree">
 
 <!-- Modal -->
 <div class="modal fade" id="myModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
@@ -375,8 +375,7 @@ $release_colors = [
 
 <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
-<link rel="stylesheet"
-      href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
 
 
 
@@ -1219,26 +1218,131 @@ $release_colors = [
 
 <script>
     function addParams(params) {
-    const url = new URL(window.location);
-    Object.keys(params).forEach(key => {
-        url.searchParams.set(key, params[key]);
+        const url = new URL(window.location);
+        Object.keys(params).forEach(key => {
+            url.searchParams.set(key, params[key]);
+        });
+        history.pushState({}, '', url);
+    }
+
+    // usage
+    // addParams({
+    //     id: 10,
+    //     class: 'Eight',
+    //     session: 2026
+    // });
+
+    function removeParams(params) {
+        const url = new URL(window.location.href);
+        params.forEach(p => url.searchParams.delete(p));
+        history.pushState({}, '', url);
+    }
+
+    // usage
+    // removeParams(['id', 'session']);
+</script>
+
+
+
+<script>
+$(function () {
+    let isAutoLoad = true; // 🔐 only for first load
+    /* ===============================
+       1️⃣ Cookie → Select value set
+       =============================== */
+    const cookieMap = {
+        '#slot-main'    : <?= json_encode($_COOKIE['chain-slot'] ?? '') ?>,
+        '#session-main' : <?= json_encode($_COOKIE['chain-session'] ?? '') ?>,
+        '#exam-main'    : <?= json_encode($_COOKIE['chain-exam'] ?? '') ?>,
+        '#class-main'   : <?= json_encode($_COOKIE['chain-class'] ?? '') ?>,
+        '#section-main' : <?= json_encode($_COOKIE['chain-section'] ?? '') ?>,
+        '#subject-main' : <?= json_encode($_COOKIE['chain-subject'] ?? '') ?>
+    };
+
+    $.each(cookieMap, function (selector, value) {
+        if ($(selector).length && value) {
+            $(selector).val(value);
+        }
     });
-    history.pushState({}, '', url);
-}
 
-// usage
-// addParams({
-//     id: 10,
-//     class: 'Eight',
-//     session: 2026
-// });
+    /* ===============================
+       2️⃣ Session → Class
+       =============================== */
+    $('#session-main').on('change', function () {
 
-function removeParams(params) {
-    const url = new URL(window.location.href);
-    params.forEach(p => url.searchParams.delete(p));
-    history.pushState({}, '', url);
-}
+        let session = $(this).val();
+        if (!session) return;
 
-// usage
-// removeParams(['id', 'session']);
+        $('#class-main').html('<option value="">Loading...</option>');
+        $('#section-main').html('<option value="">Select class first</option>');
+
+        $.post('payments/get-class.php', { session }, function (res) {
+
+            $('#class-main').html(res);
+
+            // ✅ cookie only on first load
+            if (isAutoLoad && cookieMap['#class-main']) {
+                $('#class-main').val(cookieMap['#class-main']).trigger('change');
+            }
+        });
+    });
+
+    /* ===============================
+       3️⃣ Class → Section
+       =============================== */
+    $('#class-main').on('change', function () {
+
+        let cls = $(this).val();
+        if (!cls) return;
+
+        $('#section-main').html('<option value="">Loading...</option>');
+
+        $.post('payments/get-sections.php', { cls }, function (res) {
+
+            $('#section-main').html(res);
+
+            // ✅ cookie only on first load
+            if (isAutoLoad && cookieMap['#section-main']) {
+                $('#section-main').val(cookieMap['#section-main']);
+            }
+
+            isAutoLoad = false; // 🔓 auto-load finished
+        });
+
+        // 🔄 update cookie on manual change
+        document.cookie = "chain-class=" + cls + "; path=/";
+    });
+
+    /* ===============================
+       4️⃣ Section change → cookie save
+       =============================== */
+    $('#section-main').on('change', function () {
+        document.cookie = "chain-section=" + $(this).val() + "; path=/";
+    });
+
+    $('#session-main').on('change', function () {
+        document.cookie = "chain-session=" + $(this).val() + "; path=/";
+    });
+
+    $('#slot-main').on('change', function () {
+        document.cookie = "chain-slot=" + $(this).val() + "; path=/";
+    });
+
+    $('#exam-main').on('change', function () {
+        document.cookie = "chain-exam=" + $(this).val() + "; path=/";
+    });
+
+    $('#subject-main').on('change', function () {
+        document.cookie = "chain-subject=" + $(this).val() + "; path=/";
+    });
+
+    /* ===============================
+       5️⃣ Auto trigger only once
+       =============================== */
+    if ($('#session-main').val()) {
+        $('#session-main').trigger('change');
+    }
+
+   
+});
 </script>
