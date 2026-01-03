@@ -466,7 +466,13 @@
         });
 
     });
+
+    $(document).on('click', '.btn-chain', function () {
+        getlist();
+    });
 </script>
+
+
 
 <!-- ----------------------------------- -->
 </body>
