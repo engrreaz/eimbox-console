@@ -1,8 +1,10 @@
 <?php require_once 'header.php'; ?>
 
 <div class="container-xxl flex-grow-1 container-p-y">
-    <button id="btnCalcMerit" class="border-0 float-end text-danger"> <i class="bi bi-sort-numeric-down-alt icon-30px" title="Calculate Merit List"></i> </button>
-    <button id="printList" class="  border-0 float-end me-3 text-info"> <i class="bi bi-printer-fill icon-30px" title="Print Student List"></i> </button>
+    <button id="btnCalcMerit" class="border-0 float-end text-danger"> <i class="bi bi-sort-numeric-down-alt icon-30px"
+            title="Calculate Merit List"></i> </button>
+    <button id="printList" class="  border-0 float-end me-3 text-info"> <i class="bi bi-printer icon-30px"
+            title="Print Student List"></i> </button>
     <h4 class="mb-3">Submitted Admission Form</h4>
 
     <div class="card table-responsive">
@@ -139,15 +141,15 @@
 
 <script>
     $('#printList').on('click', function () {
-    // collect sccode if needed
-    const sccode = '<?= $sccode ?>'; 
+        // collect sccode if needed
+        const sccode = '<?= $sccode ?>';
 
-    // open new window for print
-    const printWin = window.open('admission-print-list.php?sccode=' + sccode, '_blank', 'width=900,height=1200');
+        // open new window for print
+        const printWin = window.open('admission-print-list.php?sccode=' + sccode, '_blank', 'width=900,height=1200');
 
-    // optional: focus
-    printWin.focus();
-});
+        // optional: focus
+        printWin.focus();
+    });
 
 </script>
 <!-- ----------------------------------- -->
