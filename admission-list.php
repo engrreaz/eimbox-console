@@ -28,6 +28,7 @@
                 $qry = $conn->query("SELECT * FROM registrations where sccode = '$sccode' ORDER BY meritplace ASC, roll_no ASC");
                 $i = 1;
                 while ($row = $qry->fetch_assoc()) {
+                    $clr = $row['stid'] != '' ? 'danger' : 'primary';
                     echo "<tr data-id='{$row['id']}'>
                                 <td>{$i}</td>
                                 <td><span class='badge badge-primary fs-tiny m-0 p-1'>{$row['admit_class']}</span></td>
@@ -42,7 +43,7 @@
                                 <td class='text-nowrap'>
                                     <button tabindex='-1' class='btn btn-sm btn-outline-success btnSaveMark'><i class='bi bi-floppy fs-8'></i></button>
                                     <button tabindex='-1' class='btn btn-sm btn-outline-info btnView'><i class='bi bi-display fs-8'></i></button>
-                                    <button tabindex='-1' class='btn btn-sm btn-outline-primary btnAdmit'><i class='bi bi-person-plus fs-8'></i></button>
+                                    <button tabindex='-1' class='btn btn-sm btn-outline-{$clr} btnAdmit'><i class='bi bi-person-plus fs-8'></i></button>
                                 </td>
                               </tr>";
                     $i++;
@@ -105,7 +106,7 @@
 
         // ✅ মেরিট নির্ধারণ
         $('#btnCalcMerit').on('click', function () {
-            if (confirm('মার্ক অনুযায়ী মেরিট নির্ধারণ করতে চাও?')) {
+            if (confirm('Want to calculate merit list depend on Marks entries?')) {
                 $.post('ajax/admission-calc-merit.php', {}, function (res) {
                     alert(res);
                     location.reload();
@@ -129,7 +130,7 @@
         // ✅ একক চূড়ান্ত ভর্তি
         $('.btnAdmit').on('click', function () {
             const id = $(this).closest('tr').data('id');
-            if (confirm('এই শিক্ষার্থীকে চূড়ান্তভাবে ভর্তি করতে চাও?')) {
+            if (confirm('Enroll this student finally?')) {
                 $.post('ajax/admission-single-final.php', { id }, function (res) {
                     alert(res);
                 });
