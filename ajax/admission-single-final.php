@@ -43,24 +43,34 @@ $sec = $d['admit_section'] ?? '';
 
 $stmt = $conn->prepare("INSERT INTO students (stid, stnameeng, stnameben, fname, mname, gender, bgroup, dob, sccode) 
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-$stmt->bind_param("sssssssss", $stid, $d['stnameeng'], $d['stnameben'], $d['fname'], $d['mname'], 
-                  $d['gender'], $d['bgroup'], $d['dob'], $d['sccode']);
+$stmt->bind_param(
+    "sssssssss",
+    $stid,
+    $d['stnameeng'],
+    $d['stnameben'],
+    $d['fname'],
+    $d['mname'],
+    $d['gender'],
+    $d['bgroup'],
+    $d['dob'],
+    $d['sccode']
+);
 
 if ($stmt->execute()) {
     $stmt = $conn->prepare("INSERT INTO sessioninfo (stid, sccode, sessionyear, classname, sectionname, rollno) 
                             VALUES (?, ?, ?, ?, ?, ?)");
     $stmt->bind_param("ssssss", $stid, $d['sccode'], $d['sessionyear'], $d['admit_class'], $sec, $d['meritplace']);
-    
+
     if ($stmt->execute()) {
         $stmt = $conn->prepare("UPDATE registrations SET stid = ? WHERE id = ?");
         $stmt->bind_param("ss", $stid, $id);
-        
+
         if ($stmt->execute()) {
             $chk_source = dirname(__DIR__) . "/uploads/photos/" . $d['photo'];
             $source = APP_PATH . "uploads/photos/" . $d['photo'];
             $dest = BASE_PATH . "students/{$stid}.jpg";
 
-            if (file_exists($chk_source) && copy($chk_source, $dest)) {
+            if (copy($chk_source, $dest)) {
                 echo "✅ শিক্ষার্থী চূড়ান্তভাবে ভর্তি করা হয়েছে";
             } else {
                 echo "⚠️ Image copy failed, but student admitted";
