@@ -58,7 +58,7 @@ if ($conn->query($sql)) {
             echo $source . "\n" . $dest . "\n";
  
             if (file_exists($chk_source)) {
-                if (copy($source, $dest)) {
+                if (copy($chk_source, $dest)) {
                     echo "Image copied successfully!";
                 } else {
                     echo "Failed to copy image.";
