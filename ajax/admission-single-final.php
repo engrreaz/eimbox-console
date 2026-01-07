@@ -50,12 +50,14 @@ if ($conn->query($sql)) {
         $regd = "UPDATE registrations set stid = '{$stid}' WHERE id = '{$id}'";
         if ($conn->query($regd)) {
 
+            $chk_source = dirname(__DIR__) . "/uploads/photos/" . $d['photo'];;
+
             $source = APP_PATH . "uploads/photos/" . $d['photo'];
             $dest = BASE_PATH . "students/" . $stid . ".jpg";
 
             echo $source . "\n" . $dest . "\n";
 
-            if (file_exists($source)) {
+            if (file_exists($chk_source)) {
                 if (copy($source, $dest)) {
                     echo "Image copied successfully!";
                 } else {
