@@ -7,7 +7,7 @@ require_once '../core/global_values.php';
 $q = $conn->query("SELECT id FROM registrations where sccode='$sccodex' ORDER BY adm_test_mark DESC, id ASC");
 $rank = 1;
 while($r = $q->fetch_assoc()){
-    $conn->query("UPDATE registrations SET meritplace='$rank' WHERE id='{$r['id']}'");
+    $conn->query("UPDATE registrations SET meritplace='$rank' WHERE id='{$r['id']}' and sccode='$sccode'");
     $rank++;
 }
 
