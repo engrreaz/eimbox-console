@@ -24,7 +24,7 @@ if ($qq->num_rows == 0) {
 }
 $dd = $qq->fetch_assoc();
 
-if($d['stid'] != '' && $d['stid'] != null) {
+if ($d['stid'] != '' && $d['stid'] != null) {
     echo "❌ Already Admitted";
     exit;
 }
@@ -51,16 +51,11 @@ if ($conn->query($sql)) {
         if ($conn->query($regd)) {
 
             $source = dirname(__DIR__) . "/uploads/photos/" . $d['photo'];
-            $dest = BASE_PATH . "students/" . $stid . ".jpg";
+            $dest = dirname(dirname(dirname(__DIR__))). "/students/" . $stid . ".jpg";
 
             echo $source . "\n" . $dest . "\n";
 
-
             if (file_exists($dest)) {
-                if (!is_dir(BASE_PATH . "students")) {
-                    mkdir(BASE_PATH . "students", 0777, true);
-                }
-
                 if (copy($source, $dest)) {
                     echo "Image copied successfully!";
                 } else {
