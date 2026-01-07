@@ -56,7 +56,7 @@ if ($conn->query($sql)) {
             $dest = BASE_PATH . "students/" . $stid . ".jpg";
 
             echo $source . "\n" . $dest . "\n";
-
+ 
             if (file_exists($chk_source)) {
                 if (copy($source, $dest)) {
                     echo "Image copied successfully!";
