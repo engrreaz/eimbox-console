@@ -50,8 +50,8 @@ if ($conn->query($sql)) {
         $regd = "UPDATE registrations set stid = '{$stid}' WHERE id = '{$id}'";
         if ($conn->query($regd)) {
 
-            $source = dirname(__DIR__) . "/uploads/photos/" . $d['photo'];
-            $dest = dirname(dirname(dirname(__DIR__))). "/students/" . $stid . ".jpg";
+            $source = APP_PATH . "uploads/photos/" . $d['photo'];
+            $dest = BASE_PATH . "students/" . $stid . ".jpg";
 
             echo $source . "\n" . $dest . "\n";
 
