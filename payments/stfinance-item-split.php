@@ -17,7 +17,7 @@ if ($tail == 1) {
 
 
   $sql = "INSERT INTO stfinance 
-            SELECT NULL, sccode, sessionyear, classname, sectionname, stid, rollno, partid, itemcode, particulareng, particularben, amount, month, idmon, '$cur', '$usr', payableamt, '$cur', '$usr', paid, paidx, dues, pr1, pr1no, pr1date, pr1by, cashbook1, pr2, pr2no, pr2date, pr2by, cashbook2, remark, extra, last_update, validate, validationtime,  deleteby, deletetime, splitid, scan_status
+            SELECT NULL, sccode, sessionyear, classname, sectionname, stid, rollno, partid, itemcode, particulareng, particularben, amount, month, idmon, '$cur', '$usr', payableamt, '$cur', '$usr', paid, paidx, dues, pr1, pr1no, pr1date, pr1by, cashbook1, pr2, pr2no, pr2date, pr2by, cashbook2, remark, extra, last_update, validate, validationtime,  deleteby, deletetime, splitid, splitid2, scan_status
             FROM stfinance 
             WHERE id = $id and sccode='$sccode'";
 
@@ -33,8 +33,10 @@ if ($tail == 1) {
 
   $query331 = "UPDATE stfinance set payableamt='$amt', dues='$amt', splitid='$newId' where id = '$id' and sccode='$sccode'";
   $conn->query($query331);
-  $query331 = "UPDATE stfinance set payableamt= payableamt-$amt, dues=dues-$amt, splitid=NULL where id = '$newId' and sccode='$sccode'";
-  $conn->query($query331);
+  $query332 = "UPDATE stfinance set payableamt= payableamt-$amt, dues=dues-$amt, splitid=NULL, splitid2='$id' where id = '$newId' and sccode='$sccode'";
+  $conn->query($query332);
+
+  // echo $query331 . $query332;
 
   echo '<div id="fin-stid">' . $stid . '</div>';
 

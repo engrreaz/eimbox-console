@@ -84,21 +84,21 @@ while ($row = $result->fetch_assoc()) {
 
     $datam = $cls2 . '_' . $sec2 . '_' . $row['rollno'] . '_' . $name . '_' . $nameb . '_' . $mno;
     ?>
-    <tr class="click-row" style="cursor:pointer" data-stid="<?=  $row['stid'] ?>" onclick="getdues(
+    <tr class="click-row" style="cursor:pointer" data-stid="<?= $row['stid'] ?>" onclick="getdues(
         <?= (int) $row['stid'] ?>,
         <?= (int) $lastpr ?>,
         '<?= addslashes($datam) ?>',
         '<?= $sy ?>', <?= $totaldues ?>
-    )">
+        )">
         <td class="text-center"><?= $row['rollno'] ?></td>
 
         <td><?= htmlspecialchars($name) ?></td>
 
-        <td class="text-end">
+        <td class="text-end fw-bold">
             <?= number_format($totaldues, 2) ?>
         </td>
 
-        <td class="text-center text-muted">
+        <td class="text-center text-muted fw-bold">
             <i class="bi bi-arrow-right"></i>
         </td>
     </tr>

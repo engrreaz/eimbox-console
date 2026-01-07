@@ -1,3 +1,7 @@
+window.isDeepSearch = false;
+let autoCompleteInstance = null;
+
+
 (window.isRtl = window.Helpers.isRtl()),
   (window.isDarkStyle = window.Helpers.isDarkStyle());
 let menu,
@@ -381,14 +385,20 @@ function loadSearchData() {
 }
 function initializeAutocomplete() {
   if (document.getElementById("autocomplete"))
-    return autocomplete({
+    autoCompleteInstance = autocomplete({
       ...SearchConfig,
       openOnFocus: !0,
       onStateChange({ state: e, setQuery: t }) {
         var a;
+        if (e.isOpen) {
+          injectDeepSearchToggle();
+        }
         e.isOpen
           ? ((document.body.style.overflow = "hidden"),
             (document.body.style.paddingRight = "var(--bs-scrollbar-width)"),
+
+
+
             (a = document.querySelector(".aa-DetachedCancelButton")) &&
             (a.innerHTML =
               '<span class="text-body-secondary">[esc]</span> <span class="icon-base icon-md ri ri-close-line text-heading"></span>'),
@@ -428,7 +438,7 @@ function initializeAutocomplete() {
                       ${t.map(
               (e) => n`
                           <a href="${e.url}" class="suggestion-item d-flex align-items-center">
-                            <i class="icon-base ri ${e.icon}"></i>
+                            <i class="icon-base bi ${e.icon}"></i>
                             <span>${e.name}</span>
                           </a>
                         `
@@ -471,7 +481,7 @@ function initializeAutocomplete() {
                 item({ item: e, html: t }) {
                   return t`
                   <a href="${e.url}" class="d-flex justify-content-between align-items-center">
-                    <span class="item-wrapper"><i class="icon-base ri ${e.icon}"></i>${e.name}</span>
+                    <span class="item-wrapper"><i class="icon-base bi ${e.icon}"></i>${e.name}</span>
                     <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
                       <path fill="currentColor" d="M16 13h-6v-3l-5 4l5 4v-3h7a1 1 0 0 0 1-1V5h-2z" />
                     </svg>
@@ -482,50 +492,61 @@ function initializeAutocomplete() {
             }))),
             t.push(...e),
             data.navigation.files &&
+
             t.push({
-              sourceId: "files",
-              getItems({ query: t }) {
-                var e = data.navigation.files;
-                return t
-                  ? e.filter((e) =>
-                    e.name.toLowerCase().includes(t.toLowerCase())
-                  )
-                  : e;
-              },
-              getItemUrl({ item: e }) {
-                return e.url;
-              },
-              templates: {
-                header({ items: e, html: t }) {
-                  return 0 === e.length
-                    ? null
-                    : t`<span class="search-headings">Files</span>`;
-                },
-                item({ item: e, html: t }) {
-                  return t`
-                  <a href="${e.url
-                    }" class="d-flex align-items-center position-relative px-4 py-2">
-                    <div class="file-preview me-2">
-                      <img src="${assetsPath}${e.src}" alt="${e.name
-                    }" class="rounded" width="42" />
-                    </div>
-                    <div class="flex-grow-1">
-                      <h6 class="mb-0">${e.name}</h6>
-                      <small class="text-body-secondary">${e.subtitle}</small>
-                    </div>
-                    ${e.meta
-                      ? t`
-                          <div class="position-absolute end-0 me-4">
-                            <span class="text-body-secondary small">${e.meta}</span>
-                          </div>
-                        `
-                      : ""
+              sourceId: "global-db",
+
+              getItems({ query }) {
+                if (!query || query.length < 2) return [];
+
+                const deepEnabled = isDeepSearchEnabled();
+
+                // STEP–1: Normal search (always)
+                return fetch("search/search-api.php?q=" + encodeURIComponent(query))
+                  .then(r => r.json())
+                  .then(normalResults => {
+
+                    // 👉 UI এখানেই normal result পেয়ে যাবে
+                    if (!deepEnabled) {
+                      return normalResults;
                     }
-                  </a>
-                `;
-                },
+
+                    // STEP–2: Deep search (after normal)
+                    return fetch("search/search-api-deep.php?q=" + encodeURIComponent(query))
+                      .then(r => r.json())
+                      .then(deepResults => {
+                        // 🔥 merge করে ফেরত
+                        return [...normalResults, ...deepResults];
+                      })
+                      .catch(() => normalResults);
+                  })
+                  .catch(() => []);
               },
-            }),
+
+
+
+              getItemUrl({ item }) {
+                return item.url;
+              },
+
+              templates: {
+                header({ html }) {
+                  return html`<span class="search-headings">Search Results</span>`;
+                },
+
+                item({ item, html }) {
+                  return html`
+          <a href="${item.url}" class="d-flex align-items-center">
+            <i class="icon-base bi ${item.icon} me-2"></i>
+            <span>${item.name}</span>
+             <small class="text-body-secondary fs-small">${item.subtitle}</small>
+             <span class="text-secondary fs-tiny float-end">${item.meta}</span>
+          </a>
+        `;
+                }
+              }
+            })
+            ,
             data.navigation.members) &&
           t.push({
             sourceId: "members",
@@ -566,6 +587,8 @@ function initializeAutocomplete() {
       },
     });
 }
+
+
 document.addEventListener("keydown", (e) => {
   (e.ctrlKey || e.metaKey) &&
     "k" === e.key &&
@@ -573,3 +596,75 @@ document.addEventListener("keydown", (e) => {
       document.querySelector(".aa-DetachedSearchButton").click());
 }),
   document.documentElement.querySelector("#autocomplete") && loadSearchData();
+
+
+
+
+
+
+
+
+
+
+// ------------------------------------------------------- DEEP SEARCH ---------------------------------------------
+function injectDeepSearchToggle() {
+  setTimeout(() => {
+    const form = document.querySelector(".aa-DetachedFormContainer");
+    if (!form || form.querySelector("#deepSearchToggle")) return;
+
+    const cancelBtn = form.querySelector(".aa-DetachedCancelButton");
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "form-check ms-3 d-flex align-items-center";
+
+    wrapper.innerHTML = `
+      <input class="form-check-input" type="checkbox" id="deepSearchToggle">
+      <label class="form-check-label small ms-1" for="deepSearchToggle">
+        Deep Search
+      </label>
+    `;
+
+    if (cancelBtn) {
+      form.insertBefore(wrapper, cancelBtn);
+    } else {
+      form.prepend(wrapper);
+    }
+
+    const checkbox = wrapper.querySelector("#deepSearchToggle");
+
+    // 🔹 Restore saved state
+    checkbox.checked = isDeepSearchEnabled();
+
+    // 🔹 Save + refresh on change
+    checkbox.addEventListener("change", () => {
+      setDeepSearchEnabled(checkbox.checked);
+      forceSearchRefresh();
+    });
+
+  }, 50);
+}
+
+
+
+function forceSearchRefresh() {
+  if (!autoCompleteInstance) return;
+
+  const state = autoCompleteInstance.getState();
+  const query = state.query || "";
+
+  // same query হলেও force re-search
+  autoCompleteInstance.setQuery(query);
+}
+
+
+
+
+const DEEP_SEARCH_KEY = "deep-search-enabled";
+
+function isDeepSearchEnabled() {
+  return localStorage.getItem('deepSearch') === '1';
+}
+
+function setDeepSearch(enabled) {
+  localStorage.setItem('deepSearch', enabled ? '1' : '0');
+}

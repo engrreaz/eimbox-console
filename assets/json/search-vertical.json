@@ -1,32 +1,59 @@
-[
-  {
-    "name": "Dashboard",
-    "icon": "ti ti-home",
-    "url": "dashboard.html",
-    "category": "Pages"
+{
+  "suggestions": {
+    "Quick Links": [
+      {
+        "name": "Dashboard",
+        "url": "/dashboard",
+        "icon": "bi-house"
+      },
+      {
+        "name": "Knowledge Base",
+        "url": "/dashboard",
+        "icon": "bi-question-circle"
+      }
+    ]
   },
-  {
-    "name": "Users",
-    "icon": "ti ti-users",
-    "url": "users-list.html",
-    "category": "Apps"
-  },
-  {
-    "name": "Settings",
-    "icon": "ti ti-settings",
-    "url": "settings.html",
-    "category": "Pages"
-  },
-  {
-    "name": "Profile",
-    "icon": "ti ti-user",
-    "url": "profile.html",
-    "category": "User"
-  },
-  {
-    "name": "Reports",
-    "icon": "ti ti-report",
-    "url": "reports.html",
-    "category": "Analytics"
+  "navigation": {
+    "Pages": [
+      {
+        "name": "Students",
+        "url": "/students",
+                "subtitle": "Annual Report",
+        "meta": "PDF",
+        "icon": "bi-check"
+      }
+    ],
+    "Modules": [
+      {
+        "name": "Payment",
+        "url": "/uploads/report.pdf",
+        "subtitle": "Annual Report",
+        "meta": "PDF",
+        "icon": "bi-sync"
+      },
+      {
+        "name": "bKash Student",
+        "url": "/uploads/report.pdf",
+        "subtitle": "Annual Report",
+        "meta": "PDF",
+        "icon": "bi-sync"
+      },
+      {
+        "name": "Data Duplicator",
+        "url": "data-duplicator.php",
+        "subtitle": "Duplicate your data from previous record",
+        "meta": "cloud",
+        "icon": "bi-copy"
+      }
+    ],
+    "files": [
+      {
+        "name": "Report.pdf",
+        "url": "/uploads/report.pdf",
+        "subtitle": "Annual Report",
+        "meta": "PDF",
+        "icon": "bi-sync"
+      }
+    ]
   }
-]
+}

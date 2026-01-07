@@ -39,6 +39,7 @@ require_once 'core-val.php';
 // ]);
 
 require_once 'functions.php';
+require_once 'search-functions.php';
 
 // if (session_status() === PHP_SESSION_NONE)
 //     session_start();

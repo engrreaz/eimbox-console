@@ -97,7 +97,7 @@ $finValues = [];
 $q = "SELECT itemcode,classname,sectionname,amount
       FROM financesetupvalue
       WHERE sccode='$sccode' AND sessionyear LIKE '%$sy%' AND amount >0
-      ORDER BY itemcode,classname DESC,sectionname DESC";
+      ORDER BY itemcode,classname DESC, sectionname DESC";
 $r = $conn->query($q);
 while ($row = $r->fetch_assoc())
     $finValues[] = $row;
@@ -129,10 +129,19 @@ function getMonthsFromRule(int $monthRule): array
 
     // interval logic (22,33,44,66...)
     if ($monthRule > 12) {
+        $startMonth = 1;
+        if ($monthRule == 442) {
+            $startMonth = 4;
+        } else if ($monthRule == 662) {
+            $startMonth = 5;
+        }
         $step = intval(substr((string) $monthRule, 0, 1));
         $months = [];
-        for ($m = 1; $m <= 12; $m += $step) {
+        for ($m = $startMonth; $m <= 12; $m += $step) {
             $months[] = $m;
+        }
+        if ($monthRule == 442) {
+            $months = [4, 8, 11];
         }
         return $months;
     }
@@ -156,21 +165,33 @@ foreach ($finSetup as $fs) {
        AMOUNT PRIORITY
     ====================== */
     $amt = 0;
-    foreach ($finValues as $fv) {
-        if ($fv['itemcode'] != $itemcode)
-            continue;
 
-        if ($fv['classname'] == $cls && $fv['sectionname'] == $sec) {
-            $amt = $fv['amount'];
-            break;
+    foreach ($finValues as $fv) {
+
+        if ($fv['itemcode'] != $itemcode || $fv['amount'] <= 0) {
+            continue;
         }
-        if ($fv['classname'] == $cls && $fv['sectionname'] == '') {
+
+        $fvClass = strtolower(trim($fv['classname']));
+        $fvSection = strtolower(trim($fv['sectionname']));
+
+        // 1️⃣ exact class + section (highest priority)
+        if ($fvClass === $cls && $fvSection === $sec) {
+            $amt = $fv['amount'];
+            break; // best match, আর দরকার নেই
+        }
+
+        // 2️⃣ class match, section empty
+        if ($fvClass === $cls && $fvSection === '' && $amt == 0) {
             $amt = $fv['amount'];
         }
-        if ($fv['classname'] == '' && $fv['sectionname'] == '') {
+
+        // 3️⃣ default (class + section empty)
+        if ($fvClass === '' && $fvSection === '' && $amt == 0) {
             $amt = $fv['amount'];
         }
     }
+
 
     if ($amt == 0)
         continue;
@@ -184,7 +205,7 @@ foreach ($finSetup as $fs) {
        MONTH RESOLUTION
     ====================== */
     $months = getMonthsFromRule($monthRule);
-
+    $item_repeat = count($months);
     foreach ($months as $z) {
 
         // existing finance detect
@@ -195,6 +216,8 @@ foreach ($finSetup as $fs) {
             if ($sf['itemcode'] == $itemcode && (int) $sf['month'] === $z) {
                 $stfinid = $sf['id'];
                 $paid = $sf['paid'];
+                $splitid_check = $sf['splitid'];
+                $splitid_check_2 = $sf['splitid2'];
                 break;
             }
         }

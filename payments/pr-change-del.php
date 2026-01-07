@@ -5,10 +5,12 @@ require_once '../core/db.php';
 require_once '../core/global_values.php';
 
 
-
 $p1 = $_POST['p1'];   //prno
 $p2 = $_POST['p2'];     // tail
 $date = $_POST['date'];     // date
+
+// Tail List : 1 = > Change Date; 2 = Delete PR; 3 => Increse PR-No; 5 => Mismatch (STID);
+
 
 if ($p2 == 1) {
     $query3g = "update stfinance set pr1date='$date' where sccode='$sccode' and pr1no='$p1';";
@@ -16,11 +18,13 @@ if ($p2 == 1) {
     $query3gx = "update stpr set prdate='$date' where sccode='$sccode' and prno='$p1';";
     $conn->query($query3gx);
 } else if ($p2 == 2) {
+
     $query3g = "update stfinance set dues=paid, paid=0, pr1=0, pr1no='', pr1date=NULL, pr1by=NULL where sccode='$sccode' and pr1no='$p1' and pr1date='$date';";
     echo $query3g . '///';
     $conn->query($query3g);
     $query3gx = "DELETE FROM  stpr  where sccode='$sccode' and prno='$p1' and prdate='$date';";
     $conn->query($query3gx);
+
 } else if ($p2 == 3) {
     // echo $p1 . '/' . $p2 . '/' . $date;
 

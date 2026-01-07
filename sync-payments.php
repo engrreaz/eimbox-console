@@ -81,18 +81,12 @@ $total = $q->fetch_assoc()['c'];
                         $chain = 'class -- reload'; // -- class (class/section omit), exam (+exam), subject (+subject)
                         include 'components/slot-tree-modal.php';
                         ?>
-
                     </div>
-
-
-
                 </div>
             </div>
         </div>
+
         <div class="card-body">
-
-
-
             <!-- PARAMETERS -->
             <?php include 'payments/six-parameters.php'; ?>
 
@@ -123,7 +117,6 @@ $total = $q->fetch_assoc()['c'];
             <!-- LOG -->
             <div id="log" class="small fst-italic" <?php if ($is_admin < 5)
                 echo 'hidden'; ?>></div>
-
         </div>
     </div>
 </div>

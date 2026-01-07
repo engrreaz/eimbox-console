@@ -48,7 +48,7 @@ $mpdf = new Mpdf([
     'fontDir' => array_merge($fontDirs, [__DIR__ . '/fonts']),
     'fontdata' => $fontData + [
         'solaimanlipi' => [
-            'R' => 'solaimanlipi.ttf',
+            'R' => 'SolaimanLipi.ttf',
             'useOTL' => 0xFF,
             'useKashida' => 75
         ]
@@ -63,7 +63,7 @@ $mpdf = new Mpdf([
 ]);
 
 // ফন্ট রেজিস্টার (যদি আগে না থাকে)
-$fontPath = 'fonts/solaimanlipi.ttf';
+$fontPath = 'fonts/SolaimanLipi.ttf';
 if (file_exists($fontPath)) {
     $mpdf->AddFontDirectory('fonts/');
     $mpdf->fontdata['solaimanlipi'] = [

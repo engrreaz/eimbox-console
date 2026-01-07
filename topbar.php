@@ -39,7 +39,7 @@
             </li>
 
 
-            <li class="nav-item dropdown-language dropdown me-2 me-xl-0">
+            <li class="nav-item dropdown-language dropdown me-2 me-xl-0 d-none d-md-block">
                 <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
                     <i class="icon-base bi bi-translate icon-22px"></i>
                 </a>
@@ -110,7 +110,7 @@
             </li>
 
             <!-- Style Switcher -->
-            <li class="nav-item dropdown me-sm-2 me-xl-0">
+            <li class="nav-item dropdown me-sm-2 me-xl-0 d-none d-md-block">
                 <a class="nav-link dropdown-toggle hide-arrow btn btn-icon btn-text-secondary rounded-pill"
                     id="nav-theme" href="javascript:void(0);" data-bs-toggle="dropdown">
                     <i class="icon-base ri ri-sun-line icon-22px theme-icon-active"></i>
@@ -428,3 +428,7 @@
         </div>
     </div>
 </div>
+
+<!-- 
+<div id="autocomplete"></div>
+<button class="aa-DetachedSearchButton d-none"></button> -->

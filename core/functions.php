@@ -197,6 +197,8 @@ function store_user_session($user, $school = [])
 
     $_SESSION['rootuser'] = $school['rootuser'];
     $_SESSION['scmobile'] = $school['mobile'];
+    $_SESSION['headname'] = $school['headname'];
+    $_SESSION['headtitle'] = $school['headtitle'];
     $_SESSION['sms_gateway'] = $school['sms_gateway'] ?? '';
 
     $_SESSION['valid_module'] = $school['valid_module'] ?? '';
@@ -236,6 +238,8 @@ function store_student_session($user, $school = [])
 
     $_SESSION['rootuser'] = $school['rootuser'];
     $_SESSION['scmobile'] = $school['mobile'];
+    $_SESSION['headname'] = $school['headname'];
+    $_SESSION['headtitle'] = $school['headtitle'];
     $_SESSION['sms_gateway'] = $school['sms_gateway'] ?? '';
 }
 
@@ -932,7 +936,7 @@ function pass_validation(
     };
 
     // Total Marks
-    $total_chk = ( (float) $sub + (float) $obj + (float) $pra );
+    $total_chk = ((float) $sub + (float) $obj + (float) $pra);
     $total = ((float) $ct + (float) $mt + (float) $sub + (float) $obj + (float) $pra + (float) $ca);
     $rate_chk = $calc($total_chk, $fm, $decimal);
     $rate = $calc($total, $fm, $decimal);
@@ -972,7 +976,7 @@ function pass_validation(
 }
 
 
-function get_GP_GL($mark, $fullmark, $slot='School', $decimal = 0)
+function get_GP_GL($mark, $fullmark, $slot = 'School', $decimal = 0)
 {
     global $conn, $sccode;
     if ($decimal == 0) {

@@ -366,6 +366,10 @@ $release_colors = [
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 
+<script src="https://cdn.jsdelivr.net/npm/@algolia/autocomplete-js"></script>
+<script src="https://cdn.jsdelivr.net/npm/perfect-scrollbar"></script>
+
+
 <script src="assets/js/eimbox.js"></script>
 
 <!-- Main JS -->
@@ -1245,104 +1249,126 @@ $release_colors = [
 
 
 <script>
-$(function () {
-    let isAutoLoad = true; // 🔐 only for first load
-    /* ===============================
-       1️⃣ Cookie → Select value set
-       =============================== */
-    const cookieMap = {
-        '#slot-main'    : <?= json_encode($_COOKIE['chain-slot'] ?? '') ?>,
-        '#session-main' : <?= json_encode($_COOKIE['chain-session'] ?? '') ?>,
-        '#exam-main'    : <?= json_encode($_COOKIE['chain-exam'] ?? '') ?>,
-        '#class-main'   : <?= json_encode($_COOKIE['chain-class'] ?? '') ?>,
-        '#section-main' : <?= json_encode($_COOKIE['chain-section'] ?? '') ?>,
-        '#subject-main' : <?= json_encode($_COOKIE['chain-subject'] ?? '') ?>
-    };
+    $(function () {
+        let isAutoLoad = true; // 🔐 only for first load
+        /* ===============================
+           1️⃣ Cookie → Select value set
+           =============================== */
+        const cookieMap = {
+            '#slot-main': <?= json_encode($_COOKIE['chain-slot'] ?? '') ?>,
+            '#session-main': <?= json_encode($_COOKIE['chain-session'] ?? '') ?>,
+            '#exam-main': <?= json_encode($_COOKIE['chain-exam'] ?? '') ?>,
+            '#class-main': <?= json_encode($_COOKIE['chain-class'] ?? '') ?>,
+            '#section-main': <?= json_encode($_COOKIE['chain-section'] ?? '') ?>,
+            '#subject-main': <?= json_encode($_COOKIE['chain-subject'] ?? '') ?>,
+            '#date-from-main': <?= json_encode($_COOKIE['chain-date-from'] ?? '') ?>,
+            '#date-to-main': <?= json_encode($_COOKIE['chain-date-to'] ?? '') ?>
+        };
 
-    $.each(cookieMap, function (selector, value) {
-        if ($(selector).length && value) {
-            $(selector).val(value);
+        $.each(cookieMap, function (selector, value) {
+            if ($(selector).length && value) {
+                $(selector).val(value);
+            }
+        });
+
+        /* ===============================
+           2️⃣ Session → Class
+           =============================== */
+        $('#session-main').on('change', function () {
+
+            let session = $(this).val();
+            if (!session) return;
+
+            $('#class-main').html('<option value="">Loading...</option>');
+            $('#section-main').html('<option value="">Select class first</option>');
+
+            $.post('payments/get-class.php', { session }, function (res) {
+
+                $('#class-main').html(res);
+
+                // ✅ cookie only on first load
+                if (isAutoLoad && cookieMap['#class-main']) {
+                    $('#class-main').val(cookieMap['#class-main']).trigger('change');
+                }
+            });
+        });
+
+        /* ===============================
+           3️⃣ Class → Section
+           =============================== */
+        $('#class-main').on('change', function () {
+
+            let cls = $(this).val();
+            if (!cls) return;
+
+            $('#section-main').html('<option value="">Loading...</option>');
+
+            $.post('payments/get-sections.php', { cls }, function (res) {
+
+                $('#section-main').html(res);
+
+                // ✅ cookie only on first load
+                if (isAutoLoad && cookieMap['#section-main']) {
+                    $('#section-main').val(cookieMap['#section-main']);
+                }
+
+                isAutoLoad = false; // 🔓 auto-load finished
+            });
+
+            // 🔄 update cookie on manual change
+            document.cookie = "chain-class=" + cls + "; path=/";
+        });
+
+        /* ===============================
+           4️⃣ Section change → cookie save
+           =============================== */
+        $('#section-main').on('change', function () {
+            document.cookie = "chain-section=" + $(this).val() + "; path=/";
+        });
+
+        $('#session-main').on('change', function () {
+            document.cookie = "chain-session=" + $(this).val() + "; path=/";
+        });
+
+        $('#slot-main').on('change', function () {
+            document.cookie = "chain-slot=" + $(this).val() + "; path=/";
+        });
+
+        $('#exam-main').on('change', function () {
+            document.cookie = "chain-exam=" + $(this).val() + "; path=/";
+        });
+
+        $('#subject-main').on('change', function () {
+            document.cookie = "chain-subject=" + $(this).val() + "; path=/";
+        });
+
+        $('#date-from-main').on('change', function () {
+            document.cookie = "chain-date-from=" + $(this).val() + "; path=/";
+        });
+
+        $('#date-to-main').on('change', function () {
+            document.cookie = "chain-date-to=" + $(this).val() + "; path=/";
+        });
+
+        /* ===============================
+           5️⃣ Auto trigger only once
+           =============================== */
+        if ($('#session-main').val()) {
+            $('#session-main').trigger('change');
         }
+
+
     });
-
-    /* ===============================
-       2️⃣ Session → Class
-       =============================== */
-    $('#session-main').on('change', function () {
-
-        let session = $(this).val();
-        if (!session) return;
-
-        $('#class-main').html('<option value="">Loading...</option>');
-        $('#section-main').html('<option value="">Select class first</option>');
-
-        $.post('payments/get-class.php', { session }, function (res) {
-
-            $('#class-main').html(res);
-
-            // ✅ cookie only on first load
-            if (isAutoLoad && cookieMap['#class-main']) {
-                $('#class-main').val(cookieMap['#class-main']).trigger('change');
-            }
-        });
-    });
-
-    /* ===============================
-       3️⃣ Class → Section
-       =============================== */
-    $('#class-main').on('change', function () {
-
-        let cls = $(this).val();
-        if (!cls) return;
-
-        $('#section-main').html('<option value="">Loading...</option>');
-
-        $.post('payments/get-sections.php', { cls }, function (res) {
-
-            $('#section-main').html(res);
-
-            // ✅ cookie only on first load
-            if (isAutoLoad && cookieMap['#section-main']) {
-                $('#section-main').val(cookieMap['#section-main']);
-            }
-
-            isAutoLoad = false; // 🔓 auto-load finished
-        });
-
-        // 🔄 update cookie on manual change
-        document.cookie = "chain-class=" + cls + "; path=/";
-    });
-
-    /* ===============================
-       4️⃣ Section change → cookie save
-       =============================== */
-    $('#section-main').on('change', function () {
-        document.cookie = "chain-section=" + $(this).val() + "; path=/";
-    });
-
-    $('#session-main').on('change', function () {
-        document.cookie = "chain-session=" + $(this).val() + "; path=/";
-    });
-
-    $('#slot-main').on('change', function () {
-        document.cookie = "chain-slot=" + $(this).val() + "; path=/";
-    });
-
-    $('#exam-main').on('change', function () {
-        document.cookie = "chain-exam=" + $(this).val() + "; path=/";
-    });
-
-    $('#subject-main').on('change', function () {
-        document.cookie = "chain-subject=" + $(this).val() + "; path=/";
-    });
-
-    /* ===============================
-       5️⃣ Auto trigger only once
-       =============================== */
-    if ($('#session-main').val()) {
-        $('#session-main').trigger('change');
-    }
-
-   
-});
 </script>
+
+
+
+
+
+
+<!-- ------------------------- last Function ------------------------------ -->
+<script>window.addEventListener('load', function () {
+        // পুরো পেজ load হলে backdrop remove
+        let bd = document.getElementById('pageBackdrop');
+        if (bd) bd.remove();
+    });</script>

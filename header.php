@@ -136,6 +136,14 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
         .elmoro-campaign {
             display: none !important;
         }
+
+        .swal-on-top {
+            z-index: 5000 !important;
+        }
+
+        .swal2-container {
+            z-index: 3000 !important;
+        }
     </style>
 
     <script>
@@ -145,7 +153,9 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
 </head>
 
 <body>
-
+    <div id="pageBackdrop">
+        <div class="loader"></div>
+    </div>
 
 
     <div class="layout-wrapper layout-content-navbar  ">

@@ -183,7 +183,7 @@ $mpdfConfig = [
     'fontDir' => array_merge($fontDirs, [dirname(__DIR__) . '/fonts']),
     'fontdata' => $fontData + [
         'solaimanlipi' => [
-            'R' => 'solaimanlipi.ttf',
+            'R' => 'SolaimanLipi.ttf',
             'useOTL' => 0xFF,
             'useKashida' => 75
         ]

@@ -63,3 +63,43 @@
  .fs-small {
      font-size: 0.8rem;
  }
+
+
+ .modal-dialog {
+     max-height: 90vh;
+ }
+
+ /* modal body scrollable */
+ .modal-body {
+     max-height: calc(90vh - 120px);
+     /* header + padding adjust */
+     overflow-y: auto;
+ }
+
+
+ #pageBackdrop {
+     position: fixed;
+     inset: 0;
+     background: rgba(0, 0, 0, .01);
+     /* হালকা কালো */
+     z-index: 99999;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+ }
+
+ /* optional loader */
+ #pageBackdrop .loader {
+     width: 60px;
+     height: 60px;
+     border: 1px solid darkviolet;
+     border-top-color: transparent;
+     border-radius: 50%;
+     animation: spin .8s linear infinite;
+ }
+
+ @keyframes spin {
+     to {
+         transform: rotate(360deg);
+     }
+ }

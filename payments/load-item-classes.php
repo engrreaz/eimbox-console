@@ -11,6 +11,22 @@ $selectedSession = $_POST['session'] ?? $session;
 
 $fid = intval($_POST['fid']);
 $itemcode = $_POST['itemcode'];
+$spl = $_POST['spl'];
+
+// read particulareng, particularben from financesetup where itemcode=$itemcode
+$sql = "SELECT particulareng, particularben FROM financesetup WHERE itemcode='$itemcode'";
+$rs = $conn->query($sql);
+if ($rs->num_rows) {
+    $row = $rs->fetch_assoc();
+    $particulareng = $row['particulareng'];
+    $particularben = $row['particularben'];
+} else {
+    $particulareng = '';
+    $particularben = '';
+}
+$itemText = $particulareng . ' | ' . $particularben;
+
+//
 
 
 // Fetch classes
@@ -40,17 +56,19 @@ while ($c = $classRs->fetch_assoc()) {
 
             <!-- RIGHT : AMOUNT + BUTTON -->
             <div class="d-flex align-items-center gap-2">
-                <span class="text-success fw-bold">
-                    ৳ <?= number_format($totalClassAmount, 2) ?>
-                </span>
+
 
                 <button class="btn btn-sm btn-outline-primary" onclick="openAmountModal(
                     <?= $fid ?>,
                     '<?= $itemcode ?>',
+                    '<?= $spl ?>',
+                    '<?= $itemText ?>',
                     '<?= $class ?>',
                     ''
                 )">
-                    Set
+                    Set Amount (<span class=" fw-bold">
+                        ৳ <?= number_format($totalClassAmount, 2) ?>)
+                    </span>
                 </button>
             </div>
 
@@ -76,6 +94,7 @@ while ($c = $classRs->fetch_assoc()) {
                 // Total amount per section
                 $amtRs = $conn->query("SELECT amount FROM financesetupvalue WHERE sccode='$sccode' AND sessionyear='$session' AND slot='$slot' AND classname='$class' AND sectionname='$section'  AND itemcode='$itemcode'");
                 $secAmount = ($amtRs->num_rows) ? $amtRs->fetch_assoc()['amount'] : 0;
+
                 ?>
                 <div
                     class="session-row border rounded mb-1 p-2 d-flex justify-content-between align-items-center ms-3 section-toggle">
@@ -84,6 +103,8 @@ while ($c = $classRs->fetch_assoc()) {
                         onclick="openAmountModal(
                         <?= $fid ?>,
                         '<?= $itemcode ?>',
+                         '<?= $spl ?>',
+                          '<?= $itemText ?>',
                         '<?= $class ?>',
                         '<?= $section ?>'
                     )">

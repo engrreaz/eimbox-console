@@ -43,7 +43,7 @@ $mpdf = new Mpdf([
     'fontDir' => array_merge($fontDirs, [__DIR__ . '/fonts']),
     'fontdata' => $fontData + [
         'solaimanlipi' => [
-            'R' => 'solaimanlipi.ttf',
+            'R' => 'SolaimanLipi.ttf',
             'useOTL' => 0xFF,
             'useKashida' => 75
         ]

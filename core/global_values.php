@@ -169,6 +169,8 @@ $admin_data = json_decode($json, true);
 $sccode_current_package = $_SESSION['package_id'] ?? 2;
 
 $rootuser = $_SESSION['rootuser'] ?? '';
+$headname = $_SESSION['headname'] ?? '';
+$headtitle = $_SESSION['headtitle'] ?? '';
 
 $sms_gateway = isset($_SESSION['sms_gateway']) ? explode(' | ', $_SESSION['sms_gateway']) : [];
 

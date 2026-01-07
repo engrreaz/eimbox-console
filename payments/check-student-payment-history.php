@@ -44,36 +44,51 @@ if ($result0xxtr->num_rows > 0) {
                 $prtaka += $f['pr1'] + $f['pr2'];
         }
         ?>
-        <div class="list-group-item mb-1 <?= $mismatch ? 'border border-danger' : '' ?>">
+        <div class="list-group-item mb-1 <?= $mismatch ? 'border border-danger  ' : 'border border-secondary' ?>">
             <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <strong><?= $prno ?></strong> - <?= date('d-m-Y', strtotime($prdate)) ?> -
-                    <?= number_format($amount, 2) ?>
-                    <?php if ($mismatch): ?>
-                        <span class="text-danger">(Mismatch)</span>
-                    <?php endif; ?>
+                <div class="flex-grow-1 row">
+                    <div class="col">
+                        <strong><?= $prno ?> </strong>
+                        <?php if ($stid_digit !== $prno_digit) { ?>
+                            <i onclick="changedate('<?php echo $prno; ?>', 5, '<?php echo $prdate; ?>');"
+                                class="bi bi-arrow-repeat text-warning ps-2 "></i>
+                        <?php } else { ?>
+                            <i onclick="changedate('<?php echo $prno; ?>', 3, '<?php echo $prdate; ?>');"
+                                class="bi bi-plus-square-fill text-info ps-2"></i>
+                        <?php } ?>
+                    </div>
+                    <div class="col">
+                        - <?= date('d F, Y', strtotime($prdate)) ?> -
+                        <i class="bi bi-calendar-day-fill text-warning ps-2 btn-change-date"
+                            data-prno="<?php echo $prno; ?>" data-type="1" data-prdate="<?php echo $prdate; ?>">
+                        </i>
+                    </div>
 
-                    <?php if ($stid_digit !== $prno_digit) { ?>
-                        <i onclick="changedate('<?php echo $prno; ?>', 5, '<?php echo $prdate; ?>');"
-                           class="bi bi-arrow-repeat text-muted ps-1 "></i>
-                    <?php } else { ?>
-                        <i onclick="changedate('<?php echo $prno; ?>', 3, '<?php echo $prdate; ?>');"
-                           class="bi bi-calendar-week-fill text-muted ps-1"></i>
-                    <?php } ?>
+                    <div class="col">
+                        <?= number_format($amount, 2) ?>
+
+
+                    </div>
+
+
                 </div>
-                <button class="btn btn-sm btn-outline-primary" type="button" onclick="toggleDetails('<?= $collapseId ?>')">
-                    <i class="bi bi-chevron-down"></i>
-                </button>
+                <span class="  btn-danger btn-sm me-3" type="button"
+                    onclick="delpr('<?php echo $prno; ?>', 2, '<?php echo $prdate; ?>')">
+                    <i class="bi bi-x text-danger icon-22px "></i>
+                </span>
+                <span class=" btn-primary btn-sm" type="button" onclick="toggleDetails('<?= $collapseId ?>')">
+                    <i class="bi bi-chevron-down text-primary"></i>
+                </span>
             </div>
 
             <div id="<?= $collapseId ?>" class="mt-2" style="display:none;">
                 <div class="table-responsive">
-                    <table class="table table-sm table-bordered mb-0">
+                    <table class="table table-sm table-borderedless table-condensed mb-0">
                         <thead>
                             <tr>
-                                <th>Particular</th>
-                                <th class="text-end">Amount</th>
-                                <th class="text-center">Action</th>
+                                <th class="p-0">Particular</th>
+                                <th class="text-end p-0">Amount</th>
+                                <th class="text-center p-0">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -90,15 +105,14 @@ if ($result0xxtr->num_rows > 0) {
                                                     class="text-danger"><?= number_format($second, 2) ?></span><?php endif; ?></td>
                                         <td class="text-center">
                                             <?php if ($second > 0): ?>
-                                                <button class="btn btn-warning btn-sm p-0"
+                                                <span class=" btn-warning btn-sm p-0"
                                                     onclick="rollback(<?= $idno ?>, <?= $second ?>, 2)">
-                                                    <i class="bi bi-arrow-down"></i>
-                                                </button>
+                                                    <i class="bi bi-arrow-down text-warning"></i>
+                                                </span>
                                             <?php else: ?>
-                                                <button class="btn btn-danger btn-sm p-0"
-                                                    onclick="rollback(<?= $idno ?>, <?= $pramt ?>, 1)">
-                                                    <i class="bi bi-trash2"></i>
-                                                </button>
+                                                <span class=" btn-danger btn-sm " onclick="rollback(<?= $idno ?>, <?= $pramt ?>, 1)">
+                                                    <i class="bi bi-trash2 text-danger"></i>
+                                                </span>
                                             <?php endif; ?>
                                         </td>
                                     </tr>

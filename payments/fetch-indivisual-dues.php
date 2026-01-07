@@ -12,7 +12,7 @@ $datam = $_POST['datam'];
 $sy = $_POST['year'];
 $tdues = $_POST['tdues'];
 
-
+$needSync = 0;
 // sessionyear can be 2025 or 2024-2025
 $sy_raw = $_POST['year'] ?? date('Y');
 
@@ -66,72 +66,34 @@ if ($month >= 10) {
     $month = 12;
 }
 
+$finValArr = [];
 
-$sql5 = "SELECT * FROM financesetupind where sessionyear LIKE '%$sy%' and sccode='$sccode' and stid='$stid' order by id";
-// echo $sql5; 
+$sql5 = "SELECT itemcode, modifieddate FROM financesetupvalue where sessionyear LIKE '%$sy%' and sccode='$sccode' and (classname='$ccc' or classname='') and (sectionname='$sss' or sectionname='')  order by itemcode, classname desc, sectionname desc , id";
+// echo $sql5;
 $result5rxx = $conn->query($sql5);
+if ($result5rxx->num_rows > 0) {
+    while ($row5 = $result5rxx->fetch_assoc()) {
+        $finValArr[] = $row5;
+    }
+}
+
+
+
+$ind_fin_value = 0;
+
+$sql55 = "SELECT * FROM financesetupind where sessionyear LIKE '%$sy%' and sccode='$sccode' and stid='$stid' order by id";
+// echo $sql5; 
+$result5rxx = $conn->query($sql55);
 if ($result5rxx->num_rows > 0) {
     $ind_fin_value = 1;
     $fill = '';
-} else {
-    $ind_fin_value = 0;
-    $fill = '-outline';
 }
 ?>
 
 
 
 
-<!-- Modal Structure -->
-<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <!-- Header -->
-            <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Payment Split Window</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <!-- Body -->
-            <div class="modal-body">
-                Enter the amount to be split from the selected item.<br>
-                <input type="text" class="form-control" id="spltid" placeholder="Enter ID" value="" hidden>
-                <input type="text" class="form-control" id="spltamtpre" placeholder="Enter Amount" value="" hidden>
-                <input type="text" class="form-control" id="spltamt" placeholder="Enter Amount" value="">
-                <span class="text-muted text-small">The remaining amount will stay as dues in the original item.</span>
-            </div>
-            <!-- Footer -->
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="mybtn" onclick="splitable();">Split Now</button>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- History Modal -->
-<div class="modal fade" id="historyModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-        <div class="modal-content">
-
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="bi bi-clock-history"></i> Payment History
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-
-            <div class="modal-body" id="historyContent">
-                <div class="text-center text-muted">
-                    Loading...
-                </div>
-            </div>
-
-        </div>
-    </div>
-</div>
-
-
-<!-- Modal Structure -->
 
 <style>
     .dues-row {
@@ -142,7 +104,7 @@ if ($result5rxx->num_rows > 0) {
 
 
 
-<div class="card shadow-sm mb-3">
+<div class="card  mb-3 border border-primary border-0 studentInfo">
     <div class="card-body p-3">
 
         <div class="d-flex justify-content-between align-items-start">
@@ -153,33 +115,39 @@ if ($result5rxx->num_rows > 0) {
                 <small class="text-muted"><?= htmlspecialchars($bbb) ?></small>
 
                 <p class="mb-1 mt-2">
-                    Class : <b><?= $ccc ?></b> (<?= $sss ?>) |
-                    Roll : <b><?= $rrr ?></b>
+                    Class : <span id="fin-cls" class="fw-bold"><?= htmlspecialchars($ccc) ?></span>
+                    (<span id="fin-sec" class="fw-bold"><?= htmlspecialchars($sss) ?></span>) |
+                    Roll : <b><span id="cur-roll"><?= $rrr ?></span></b>
                 </p>
 
                 <small class="text-info">
-                    ID: <?= $stid ?> | <i class="bi bi-telephone-fill"></i> <?= $mmm ?>
+                    ID: <span id="fin-stid" class="fw-bold"><?= $stid ?></span> | <i class="bi bi-telephone-fill"></i>
+                    <?= $mmm ?>
                 </small>
             </div>
 
             <div class="text-end">
-                <button class="btn btn-outline-info btn-sm mb-1" onclick="history('<?= $stid ?>')">
-                    <i class="bi bi-plus"></i> History
+                <button class="btn btn-outline-secondary btn-sm mb-1" onclick="openFineModal('<?= $stid ?>')">
+                    <i class="bi bi-currency-exchange icon-18px me-3"></i> Fine
                 </button>
 
-                <button class="btn btn<?= $fill ?>-danger btn-sm fw-bold"
+                <button class="btn btn-outline-info btn-sm mb-1" onclick="history('<?= $stid ?>')">
+                    <i class="bi bi-clock-history me-3"></i> History
+                </button>
+
+                <button class="btn btn-danger btn-sm fw-bold pb-1 fs-6"
                     onclick="preloads('stid','','','<?= $stid ?>','','',1);">
                     <?= number_format($tdues ?? 0, 2) ?>
                 </button>
-                <div class="text-danger text-tiny">Total Dues</div>
+
+                <div class="text-danger text-small me-1" style="font-size:12px;">Total Dues</div>
             </div>
         </div>
 
     </div>
 </div>
 
-<div id="history-end">dddd</div>
-<div id="history-end2">RRRR</div>
+<div id="history-end"></div>
 
 <div class="card mb-3">
     <div class="card-body p-2">
@@ -199,9 +167,9 @@ if ($result5rxx->num_rows > 0) {
             </div>
 
             <div class="col-md-3">
-                <button class="btn btn-success btn-sm w-100" id="bbttnn" onclick="save(<?= $stid ?>, <?= $sy ?>);"
-                    disabled>
-                    <i class="bi bi-coin"></i> Pay Now
+                <button class="btn btn-success btn-sm w-100 fs-6  fw-bold h-100" id="bbttnn"
+                    onclick="save(<?= $stid ?>, <?= $sy ?>);" disabled>
+                    <i class="bi bi-coin p-0 icon-18px me-5"></i> Pay Now
                 </button>
             </div>
 
@@ -216,7 +184,7 @@ if ($result5rxx->num_rows > 0) {
 
             <?php
             $upd = $ccc . '_update';
-            $sql5 = "SELECT id, $ccc, $upd, itemcode, splitable FROM financesetup where sessionyear LIKE '%$sy%' and sccode='$sccode'  order by id";
+            $sql5 = "SELECT id, $ccc, $upd, itemcode, splitable, modifieddate FROM financesetup where sessionyear LIKE '%$sy%' and sccode='$sccode'  order by id";
             // echo $sql5; 
             $result5r = $conn->query($sql5);
             if ($result5r->num_rows > 0) {
@@ -234,6 +202,7 @@ if ($result5rxx->num_rows > 0) {
                     $stfinance[] = $row5;
                 }
             }
+
             foreach ($stfinance as $row):
                 $fid = $row["id"];
                 $partid = $row["partid"];
@@ -242,12 +211,21 @@ if ($result5rxx->num_rows > 0) {
                 $icode = $row["itemcode"];
                 $splitid = $row["splitid"];
 
+                $finModify = $row["modifieddate"];
 
-                $src = array_search($partid, array_column($finset, 'id'));
+
+                $src = array_search($icode, array_column($finset, 'itemcode'));
                 $upddate = $finset[$src][$upd];
+                $itemModify = $finset[$src]['modifieddate'];
                 $updtaka = $finset[$src][$ccc];
                 $icode2 = $finset[$src]['itemcode'];
                 $splt = 0;
+
+                $indx = array_search($icode, array_column($finValArr, 'itemcode'));
+                $valModify = $cur;
+                if ($indx !== false && $indx > -1) {
+                    $valModify = $finValArr[$indx]['modifieddate'] ?? $cur;
+                }
 
                 if ($icode == $icode2) {
                     $splt = $finset[$src]['splitable'];
@@ -262,31 +240,48 @@ if ($result5rxx->num_rows > 0) {
 
                     <td>
                         <?= htmlspecialchars($row['particulareng']) ?>
+                    </td>
 
+                    <td width="40" class="p-0 text-end">
+                        <?php
+                        if ($finModify < $valModify) {
+                            $needSync++;
+
+                            ?>
+                            <span class="ms-2 text-danger" title="Need Update"
+                                onclick="event.stopPropagation(); preloads('stid','','','<?= $stid ?>','','',1);">
+                                <i class="bi bi-arrow-repeat  icon-22px fw-bold"></i>
+                            </span>
+                            <?php
+                        }
+                        ?>
+                    </td>
+
+                    <td width="40" class="p-0 text-end">
                         <?php if ($splt):
                             if ($splitid > 0) {
                                 ?>
                                 <span class="ms-2 text-info fw-bold"
                                     onclick="event.stopPropagation(); mergerow(<?php echo $fid; ?>, <?php echo $splitid; ?>, 2);"
                                     title="This item is already split. Click to rollback.">
-                                    <i class="bi bi-hr"></i>
+                                    <i class="bi bi-union icon-22px fw-bold"></i>
                                 </span>
                                 <?php
                             } else {
                                 ?>
                                 <span class="ms-2 text-warning"
                                     onclick="event.stopPropagation(); splitable0(<?= $fid ?>, <?= $dues ?>)">
-                                    <i class="bi bi-vr"></i>
+                                    <i class="bi bi-subtract  icon-22px fw-bold"></i>
                                 </span>
                                 <?php
                             }
 
                         endif; ?>
-                    </td>
 
-                    <td width="40">
-                        <?php if (str_contains($row['particulareng'], 'ST-Fine') && $userlevel !== 'User'): ?>
-                            <i class="bi bi-x text-danger" onclick="event.stopPropagation(); delitem(<?= $fid ?>);"></i>
+
+                        <?php if (str_contains($row['particulareng'], 'Fine') && $userlevel !== 'User'): ?>
+                            <i class="bi bi-x-circle-fill text-danger fw-bold icon-22px"
+                                onclick="event.stopPropagation(); delitem(<?= $fid ?>);"></i>
                         <?php endif; ?>
                     </td>
 
@@ -476,17 +471,17 @@ if ($result5rxx->num_rows > 0) {
         event.stopPropagation();
         var infor = "fid=" + id + "&amt=" + amt + "&tail=2";
         // alert(infor);
-        $("#history-end2").html("");
+        $("#history-end").html("");
         $.ajax({
             type: "POST",
             url: "payments/stfinance-item-split.php",
             data: infor,
             cache: false,
             beforeSend: function () {
-                $("#history-end2").html('<i class="bi bi-arrow-repeat"></i> Merging...');
+                $("#history-end").html('<i class="bi bi-arrow-repeat"></i> Merging...');
             },
             success: function (html) {
-                $("#history-end2").html(html);
+                $("#history-end").html(html);
                 let stid = $('#fin-stid-merge').text().trim();
                 // alert('stid=' + stid);
                 setCookie('payment-stid', stid);
@@ -515,6 +510,12 @@ if ($result5rxx->num_rows > 0) {
                 $("#bbttnn" + id).html(html);
             }
         });
+    }
+</script>
+
+<script>
+    if (<?= $needSync ?> > 0) {
+        $('.studentInfo').css('background-color', '#ffc107');
     }
 </script>
 

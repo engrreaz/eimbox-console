@@ -18,7 +18,7 @@
 <div class="container-xxl flex-grow-1 container-p-y">
 
     <h3 class="">Student's Payment System</h3>
-    <div id="eposlink">..............</div>
+    <div id="eposlink" hidden>..............</div>
 
 
 
@@ -35,16 +35,19 @@
 
         <div class="col-md-8 ">
             <div class="card h-100">
-
+                <div class="card-header">
+                    <h5 class="fw-bold  text-center text-info">Student Dues List</h5>
+                </div>
                 <div class="form-group row">
                     <div class="col-12 ">
-                        <div class=" table-responsive">
-                            <table class="table table-stripe">
+
+                        <div class=" table-responsive ">
+                            <table class="table table-stripe table-sm">
                                 <thead>
-                                    <tr>
-                                        <td class="text-right font-weight-bold">Roll</td>
+                                    <tr class="text-primary">
+                                        <td class="text-center font-weight-bold">Roll</td>
                                         <td class=" font-weight-bold">Name of Student</td>
-                                        <td class="text-right  font-weight-bold">Dues</td>
+                                        <td class="text-end ">Dues</td>
                                         <td class="text-right"></td>
                                     </tr>
                                 </thead>
@@ -62,20 +65,25 @@
         </div>
 
 
-
-
-
     </div>
 
 
 
 </div>
 
+<style>
+    #myModal1 {
+        z-index: 2000 !important;
+    }
 
+    #myModal1+.modal-backdrop {
+        z-index: 1999 !important;
+    }
+</style>
 
 <!-- --------------------------------------- MODALS ------------------ -->
 <div class="modal fade" id="myModal1" tabindex="-1" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
 
             <!-- Modal Header -->
@@ -86,8 +94,8 @@
             <form id="modalForm">
                 <div class="modal-body">
                     <!-- Hidden fields to hold param1 & param2 -->
-                    <input type="hidden" id="modalParam1">
-                    <input type="hidden" id="modalParam2">
+                    <input type="hidden" id="modalPrno">
+                    <input type="hidden" id="modalType">
 
                     <!-- Date input field -->
                     <label for="modalDate" class="form-label">Choose Date</label>
@@ -120,8 +128,92 @@
 </div>
 
 
+<!-- Modal Structure -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content  border border-primary border-3">
+            <!-- Header -->
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Payment Split Window</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <!-- Body -->
+            <div class="modal-body">
+                Enter the amount to be split from the selected item.<br>
+                <input type="text" class="form-control" id="spltid" placeholder="Enter ID" value="" hidden>
+                <input type="text" class="form-control" id="spltamtpre" placeholder="Enter Amount" value="" hidden>
+                <input type="text" class="form-control" id="spltamt" placeholder="Enter Amount" value="">
+                <span class="text-muted text-small">The remaining amount will stay as dues in the original item.</span>
+            </div>
+            <!-- Footer -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="mybtn" onclick="splitable();">Split Now</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- History Modal -->
+<div class="modal fade" id="historyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable  modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-clock-history"></i> Payment History
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body" id="historyContent">
+                <div class="text-center text-muted">
+                    Loading...
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="fineModal" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Add Fine / জরিমানা যোগ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <input type="hidden" id="fine_stid">
+
+                <div class="mb-3">
+                    <label class="form-label">Fine Amount</label>
+                    <input type="number" id="fine_amount" class="form-control" min="1">
+                </div>
+
+                <div class="mb-3" hidden>
+                    <label class="form-label">Note / Reason</label>
+                    <textarea id="fine_note" class="form-control" rows="2"></textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-danger btn-sm" onclick="saveFine()">Save Fine</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Modal Structure -->
+
 <?php require_once 'footer.php'; ?>
 
+<!-- <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> -->
 
 
 <script>
@@ -171,7 +263,12 @@
                 $('#getdata').html('<small>Processing...</small>');
             },
             success: function (html) {
-                let modal = new bootstrap.Modal(document.getElementById('duesModal'));
+                // let modal = new bootstrap.Modal(document.getElementById('duesModal'));
+                let modal = new bootstrap.Modal(document.getElementById('duesModal'), {
+                    backdrop: 'static',   // backdrop থাকবে
+                    keyboard: false       // ESC চাপলে বন্ধ হবে না
+                });
+
                 modal.show();
 
                 $("#getdata").html(html);
@@ -187,39 +284,53 @@
 
 <script>
 
-    const modal = document.getElementById('myModal1');
+    $(document).on('click', '.btn-change-date', function () {
 
-    // যখন মডাল ওপেন হবে
-    modal.addEventListener('show.bs.modal', function (event) {
-        const button = event.relatedTarget;
-        const param1 = button.getAttribute('data-param1');
-        const param2 = button.getAttribute('data-param2');
+        let prno = $(this).data('prno');
+        let type = $(this).data('type');
+        let prdate = $(this).data('prdate');
 
-        // hidden ইনপুটে সেট করা
-        document.getElementById('modalParam1').value = param1;
-        document.getElementById('modalParam2').value = param2;
+        $('#modalPrno').val(prno);
+        $('#modalType').val(type);
+        $('#modalDate').val(prdate);
+
+        let modalEl = document.getElementById('myModal1');
+        let modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
     });
+
+
 
     // মডাল ফর্ম সাবমিট
     document.getElementById('modalForm').addEventListener('submit', function (e) {
         e.preventDefault();
 
-        const param1 = document.getElementById('modalParam1').value;
-        const param2 = document.getElementById('modalParam2').value;
+        const param1 = document.getElementById('modalPrno').value;
+        const param2 = document.getElementById('modalType').value;
         const dateValue = document.getElementById('modalDate').value;
 
         // আপনি এখানেই API কল, Ajax, বা অন্য JS এক্সিকিউশন করতে পারেন
         changedate(param1, param2, dateValue);
 
         // মডাল বন্ধ করা
-        const modalInstance = bootstrap.Modal.getInstance(modal);
-        modalInstance.hide();
+        showToast('success', 'Date has been changed successfully.', 'Change Receipt Date');
+        let modalEl = document.getElementById('myModal1');
+        let modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.hide();
+
     });
 
+</script>
+
+
+
+
+<script>
     // এই ফাংশনেই সব ডেটা যাবে
     function changedate(p1, p2, date) {
 
         infor = "p1=" + p1 + "&date=" + date + "&p2=" + p2;
+
         $("#eposlink").html("");
 
         $.ajax({
@@ -228,7 +339,7 @@
             data: infor,
             cache: false,
             beforeSend: function () {
-                $("#eposlink").html('.....');
+                $("#eposlink").html('...');
             },
             success: function (html) {
                 $("#eposlink").html(html);
@@ -266,6 +377,66 @@
         });
     }
 </script>
+
+<script>
+    function openFineModal(stid) {
+
+        $('#fine_stid').val(stid);
+        $('#fine_amount').val('');
+        $('#fine_note').val('');
+
+        let modal = new bootstrap.Modal(document.getElementById('fineModal'));
+        modal.show();
+    }
+
+    function saveFine() {
+        let stid = $('#fine_stid').val();
+        let amount = $('#fine_amount').val();
+        let note = $('#fine_note').val();
+        let slot = $('#slot-main').val();
+        let session = $('#session-main').val();
+        let roll = $('#cur-roll').val();
+
+        if (!amount || amount <= 0) {
+            showToast('error', 'Fine amount is required.', 'Validation Error');
+            return;
+        }
+
+        $.post('payments/save-fine.php', {
+            slot: slot,
+            session: session,
+            stid: stid,
+            roll: roll,
+            amount: amount,
+            note: note
+        })
+            .done(function (res) {
+                if (res) {
+                    let modal = bootstrap.Modal.getInstance(document.getElementById('fineModal'));
+                    modal.hide();
+                    if (res.includes('Success')) {
+                        showToast('success', 'Student Fine Added Successfully.', 'Add Fine');
+                        setCookie('payment-stid', stid);
+                        setTimeout(function () {
+                            window.location.reload();
+                        }, 800);
+                    } else {
+                        showToast('error', res, 'Error');
+                    }
+
+                } else {
+                    showToast('error', res, 'Error');
+                }
+            })
+            .fail(function () {
+                showToast('error', 'An unexpected error occurred. Please try again.', 'Server Error');
+            });
+    }
+</script>
+
+
+
+
 <script>
     function save(stid, year) {
 
@@ -313,6 +484,9 @@
                     $('#item-list-table').html("");
                     showToast('success', 'BDT ' + aaa + ' has been paid to student', 'Payment Success');
 
+                    let modal = bootstrap.Modal.getInstance(document.getElementById('duesModal'));
+
+                    modal.hide();
                 }
             });
         }
@@ -361,16 +535,21 @@
 
 <script>
     function delpr(p1, p2, prno) {
+
         Swal.fire({
-            title: "Are you sure?",
-            text: "You won't be able to revert this!",
-            icon: "warning",
+            title: 'Delete?',
+            text: 'This action cannot be undone!',
+            icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: "#3085d6",
-            cancelButtonColor: "#d33",
-            confirmButtonText: "Yes, delete it!"
-        }).then((result) => {
-            if (result.isConfirmed) {
+            confirmButtonText: 'Delete',
+            cancelButtonText: 'Cancel',
+            backdrop: true,
+            allowOutsideClick: false,
+            customClass: {
+                popup: 'swal-on-top'
+            }
+        }).then((res) => {
+            if (res.isConfirmed) {
                 changedate(p1, p2, prno);
                 Swal.fire({
                     title: "Deleted!",
@@ -379,6 +558,8 @@
                 });
             }
         });
+
+
     }
 </script>
 
@@ -408,7 +589,7 @@
             data: infor,
             cache: false,
             beforeSend: function () {
-                $('#dues-body').html('<small>Retrieve Dues List ...</small>');
+                $('#dues-body').html('<tr><td colspan="4" class="text-center text-info pt-5">Retrieve Dues List ...</td></tr>');
             },
             success: function (html) {
                 $("#dues-body").html(html);
@@ -468,7 +649,7 @@
     });
 
     $(document).on('click', '.btn-chain', function () {
-         getlist();
+        getlist();
     });
 </script>
 

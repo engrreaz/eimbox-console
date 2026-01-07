@@ -111,10 +111,19 @@ $session = $_COOKIE['session'] ?? $_GET['session'] ?? '';
             ?>
             <div class="card mb-2 item" data-id="<?= $r['id']; ?>" draggable="true">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <div class="pointer" onclick="toggleItem(<?= $r['id'] ?>, '<?= $itemcode ?>')">
-                        <i class="bi bi-chevron-right me-2"></i>
-                        <strong><?= $r['particulareng']; ?></strong><br>
-                        <small class="text-muted"><?= $r['particularben']; ?></small>
+                    <div class="pointer d-flex "
+                        onclick="toggleItem(<?= $r['id'] ?>, '<?= $itemcode ?>', <?= $r['splitable'] ?? 0 ?>)">
+                        <div class="col-auto">
+                            <i class="bi bi-chevron-right me-4"></i>
+                        </div>
+                        <div class="col-auto">
+                            <strong class="text-info"><?= $r['particulareng']; ?></strong><br>
+                            <small class="text-muted"><?= $r['particularben']; ?></small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-subtract icon-22px text-seconday me-3"></i>
+                            <i class="bi bi-arrow-repeat icon-22px text-seconday me-3"></i>
+                        </div>
                     </div>
 
                     <div class="dropdown">
@@ -124,7 +133,8 @@ $session = $_COOKIE['session'] ?? $_GET['session'] ?? '';
                             <li><a class="dropdown-item" href="#" onclick="openEdit(<?= $r['id'] ?>)">Edit</a></li>
                             <li><a class="dropdown-item" href="#" onclick="delItem(<?= $r['id'] ?>)">Delete</a></li>
                             <li><a class="dropdown-item" href="#"
-                                    onclick="openAmountModal(<?= $r['id'] ?>, '<?= $r['itemcode'] ?>', <?= $r['splitable'] ?>)">Amount : ৳
+                                    onclick="openAmountModal(<?= $r['id'] ?>, '<?= $r['itemcode'] ?>', <?= $r['splitable'] ?? 0 ?>, '<?= $r['particulareng'] ?> | <?= $r['particularben'] ?>')">Amount
+                                    : ৳
                                     <?= $valAmount ?></a></li>
                         </ul>
                     </div>
@@ -144,19 +154,20 @@ $session = $_COOKIE['session'] ?? $_GET['session'] ?? '';
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Fee Item</h5><button class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title">Students Payable Fee Item</h5><button class="btn-close"
+                    data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <input type="text" id="fid" value="0">
+                <input type="hidden" id="fid" value="0">
                 <div class="row mb-2">
                     <div class="col-md-6"><label>Particular (English)</label><input type="text" id="peng"
-                            class="form-control"></div>
+                            class="form-control form-control-sm"></div>
                     <div class="col-md-6"><label>Particular (Bangla)</label><input type="text" id="pben"
-                            class="form-control"></div>
+                            class="form-control form-control-sm"></div>
                 </div>
                 <div class="row mb-2">
                     <div class="col-md-4"><label>Frequency</label>
-                        <select id="mon" class="form-control">
+                        <select id="mon" class="form-control form-control-sm">
                             <!-- Months -->
                             <option value="1">January</option>
                             <option value="2">February</option>
@@ -172,26 +183,31 @@ $session = $_COOKIE['session'] ?? $_GET['session'] ?? '';
                             <option value="12">December</option>
 
                             <!-- Separator -->
-                            <option disabled>────────────</option>
+                            <option disabled>─────────────────</option>
 
                             <!-- Interval -->
                             <option value="0">Every Month</option>
-                            <option value="22">2 Months</option>
-                            <option value="33">3 Months</option>
-                            <option value="44">4 Months</option>
-                            <option value="66">6 Months</option>
+                            <option value="22">2 Months Frequency</option>
+                            <option value="33">3 Months Frequency</option>
+                            <option value="44">January | May | September</option>
+                            <option value="442">April | August | November</option>
+                            <option value="66">January | July</option>
+                            <option value="662">May | November</option>
                         </select>
-
                     </div>
+
                     <div class="col-md-8 d-flex align-items-end">
-                        <label class="me-3"><input type="checkbox" id="new_only"> New Admission Only</label>
-                        <label><input type="checkbox" id="splitable"> Splitable</label>
+                        <label class="me-3"><input type="checkbox" class="form-check-input" id="new_only">
+                            New Admission Only</label>
+                        <label><input type="checkbox" class="form-check-input" id="splitable">
+                            Splitable</label>
                     </div>
                 </div>
                 <div id="itemMsg" class="small mt-2"></div>
             </div>
-            <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button class="btn btn-success" onclick="saveItem()">Save</button>
+            <div class="modal-footer"><button class="btn btn-secondary btn-sm px-5"
+                    data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-success btn-sm px-5" onclick="saveItem()">Save</button>
             </div>
         </div>
     </div>
@@ -210,7 +226,10 @@ $session = $_COOKIE['session'] ?? $_GET['session'] ?? '';
                 <input type="hidden" id="aclass">
                 <input type="hidden" id="asection">
                 <input type="hidden" id="splyn">
-                <div class="mb-2"><strong id="ainfo"></strong></div>
+
+                <span class="mb-2"><strong id="ainfo"></strong></span> <i class="bi bi-arrow-right"></i>
+                <span class="text-success"> <strong id="set-amount-title"></strong>
+                </span>
                 <div class="mb-2"><label>Amount</label><input type="number" id="aamount" class="form-control"
                         step="0.01"></div>
                 <div id="amountMsg" class="small mt-2"></div>
@@ -320,11 +339,12 @@ $session = $_COOKIE['session'] ?? $_GET['session'] ?? '';
     }
 
     // ---------- Amount ----------
-    function openAmountModal(fid, itemcode, splitable, cls = '', sec = '') {
+    function openAmountModal(fid, itemcode, splitable, itemText, cls = '', sec = '') {
         $('#afid').val(fid);
         $('#aitemcode').val(itemcode);
         $('#aclass').val(cls);
         $('#asection').val(sec);
+        $('#set-amount-title').text(itemText);
 
         let text = 'Item #' + fid;
         if (cls) text += ' | ' + cls;
@@ -333,7 +353,7 @@ $session = $_COOKIE['session'] ?? $_GET['session'] ?? '';
         $('#aamount').val('');
         $('#amountMsg').html('');
 
-        $.post('payments/get-amount.php', { fid, itemcode, class: cls, section: sec , spl:splitable}, function (r) {
+        $.post('payments/get-amount.php', { fid, itemcode, class: cls, section: sec, spl: splitable }, function (r) {
             if (!r) return;
             // alert(JSON.stringify(r));
             let amt = JSON.parse(r).amount;
@@ -358,6 +378,7 @@ $session = $_COOKIE['session'] ?? $_GET['session'] ?? '';
             amount: $('#aamount').val(),
             spl: $('#splyn').val()
         };
+        // alert(JSON.stringify(data));
 
         $.post('payments/save-amount.php', data, function (res) {
             $('#amountMsg').html(res);
@@ -379,13 +400,13 @@ $session = $_COOKIE['session'] ?? $_GET['session'] ?? '';
     }
 
     // ---------- Toggle & Load Classes ----------
-    function toggleItem(id, itemcode) {
+    function toggleItem(id, itemcode, spl) {
         let box = $('#itemBody' + id);
         if (box.is(':visible')) { box.slideUp(150); return; }
         if (box.data('loaded') === 1) { box.slideDown(150); return; }
 
         box.html('<div class="text-muted">Loading classes...</div>').slideDown(100);
-        $.post('payments/load-item-classes.php', { fid: id, itemcode, session: $('#session-main').val() }, function (res) {
+        $.post('payments/load-item-classes.php', { fid: id, itemcode, spl, session: $('#session-main').val() }, function (res) {
             box.html(res);
             box.data('loaded', 1);
         });
