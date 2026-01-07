@@ -10,67 +10,62 @@ if (!$id) {
     exit;
 }
 
-$q = $conn->query("SELECT * FROM registrations WHERE id='$id'");
+// Use prepared statements to prevent SQL injection
+$stmt = $conn->prepare("SELECT * FROM registrations WHERE id = ?");
+$stmt->bind_param("s", $id);
+$stmt->execute();
+$q = $stmt->get_result();
+
 if ($q->num_rows == 0) {
-    echo "❌ শিক্ষার্থী পাওয়া যায়নি";
+    echo "❌ শিক্ষার্থী পাওয়া যায়নি";
     exit;
 }
 $d = $q->fetch_assoc();
 
-$qq = $conn->query("SELECT stid FROM students WHERE sccode='$sccode' ORDER BY stid desc limit 1");
+$stmt = $conn->prepare("SELECT stid FROM students WHERE sccode = ? ORDER BY stid DESC LIMIT 1");
+$stmt->bind_param("s", $sccode);
+$stmt->execute();
+$qq = $stmt->get_result();
+
 if ($qq->num_rows == 0) {
-    echo "❌ শিক্ষার্থী পাওয়া যায়নি";
+    echo "❌ শিক্ষার্থী পাওয়া যায়নি";
     exit;
 }
 $dd = $qq->fetch_assoc();
 
-if ($d['stid'] != '' && $d['stid'] != null) {
+if (!empty($d['stid'])) {
     echo "❌ Already Admitted";
     exit;
 }
-// ফাইনাল ভর্তি ইনসার্ট students টেবিলে
-$stid = $dd['stid'] + 1 ?: $sccode . '0001';
 
+$stid = ($dd['stid'] ?? 0) + 1 ?: "{$sccode}0001";
 $sec = $d['admit_section'] ?? '';
 
+$stmt = $conn->prepare("INSERT INTO students (stid, stnameeng, stnameben, fname, mname, gender, bgroup, dob, sccode) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+$stmt->bind_param("sssssssss", $stid, $d['stnameeng'], $d['stnameben'], $d['fname'], $d['mname'], 
+                  $d['gender'], $d['bgroup'], $d['dob'], $d['sccode']);
 
-$sql = "INSERT INTO students (stid, stnameeng, stnameben, fname, mname, gender, bgroup, dob, sccode)
-        VALUES ('{$stid}', '{$d['stnameeng']}', '{$d['stnameben']}', '{$d['fname']}', '{$d['mname']}',
-                '{$d['gender']}', '{$d['bgroup']}', '{$d['dob']}', '{$d['sccode']}')";
-
-
-
-if ($conn->query($sql)) {
-
-    $sinfo = "INSERT INTO sessioninfo (stid, sccode, sessionyear, classname, sectionname, rollno)
-          VALUES ('{$stid}', '{$d['sccode']}', '{$d['sessionyear']}', '{$d['admit_class']}', '$sec', '{$d['meritplace']}')";
-
-    if ($conn->query($sinfo)) {
-
-        $regd = "UPDATE registrations set stid = '{$stid}' WHERE id = '{$id}'";
-        if ($conn->query($regd)) {
-
-            $chk_source = dirname(__DIR__) . "/uploads/photos/" . $d['photo'];;
-
+if ($stmt->execute()) {
+    $stmt = $conn->prepare("INSERT INTO sessioninfo (stid, sccode, sessionyear, classname, sectionname, rollno) 
+                            VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssssss", $stid, $d['sccode'], $d['sessionyear'], $d['admit_class'], $sec, $d['meritplace']);
+    
+    if ($stmt->execute()) {
+        $stmt = $conn->prepare("UPDATE registrations SET stid = ? WHERE id = ?");
+        $stmt->bind_param("ss", $stid, $id);
+        
+        if ($stmt->execute()) {
+            $chk_source = dirname(__DIR__) . "/uploads/photos/" . $d['photo'];
             $source = APP_PATH . "uploads/photos/" . $d['photo'];
-            $dest = BASE_PATH . "students/" . $stid . ".jpg";
+            $dest = BASE_PATH . "students/{$stid}.jpg";
 
-            echo $source . "\n" . $dest . "\n";
- 
-            if (file_exists($chk_source)) {
-                if (copy($chk_source, $dest)) {
-                    echo "Image copied successfully!";
-                } else {
-                    echo "Failed to copy image.";
-                }
+            if (file_exists($chk_source) && copy($chk_source, $dest)) {
+                echo "✅ শিক্ষার্থী চূড়ান্তভাবে ভর্তি করা হয়েছে";
             } else {
-                echo "Source image not found!";
+                echo "⚠️ Image copy failed, but student admitted";
             }
-
-
-            echo "✅ শিক্ষার্থী চূড়ান্তভাবে ভর্তি করা হয়েছে";
         }
-
     }
 } else {
     echo "⚠️ Database Error: " . $conn->error;
