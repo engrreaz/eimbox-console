@@ -178,162 +178,161 @@ while ($row = $q2->fetch_assoc()) {
 
         <div class="text-center fs-xlarge  fw-bold mt-4 mb-3">Class/Section Wise Item Collection</div>
         <div class="table-responsive">
-            <table class="table table-sm" cellspacing="0" cellpadding="5">
-                <tr class=" bg-gray">
+
+            <table class="table table-sm table-bordered" cellspacing="0" cellpadding="5">
+
+                <!-- HEADER -->
+                <tr class="bg-gray fw-bold">
                     <td>Class</td>
                     <td>Section</td>
-                    <?php
-                    $cnt = count($itemList);
-                    for ($i = 0; $i < $cnt; $i++) {
-                        echo "<td>" . chr(65 + $i) . "</td>";
-                        $var = 'item' . ($i + 1);
-                        $$var = 0;
-                    }
-                    ?>
 
-                    <td class="text-end">Total Amount</td>
+                    <?php foreach ($itemList as $i => $item): ?>
+                        <td><?= chr(65 + $i) ?></td>
+                    <?php endforeach; ?>
+
+                    <td class="text-end">Total</td>
                 </tr>
 
+                <!-- BODY -->
                 <?php foreach ($classList as $cls): ?>
+
                     <?php
                     $classname = $cls['areaname'];
                     $sectionname = $cls['subarea'];
 
-                    $clsAmount = 0;
-                    $x = 1;
+                    // row init
+                    $rowItems = array_fill(0, $itemCount, 0);
+                    $rowTotal = 0;
 
-                    // প্রথমে amount হিসাব
-                    foreach ($itemList as $item) {
-                        $itemcode = $item['itemcode'];
-                        $var = 'item' . ($x);
-                        $amount = 0;
+                    foreach ($dataList as $data) {
 
-                        foreach ($dataList as $data) {
-                            if (
-                                strtolower($data['itemcode']) == strtolower($itemcode) &&
-                                strtolower($data['classname']) == strtolower($classname) &&
-                                trim(strtolower($data['sectionname'])) == trim(strtolower($sectionname))
-                            ) {
-                                $amount = $data['taka'];
-                                $$var += $amount;
-                                break;
+                        if (
+                            strtolower($data['classname']) === strtolower($classname) &&
+                            strtolower(trim($data['sectionname'])) === strtolower(trim($sectionname))
+                        ) {
+                            if (isset($itemCodes[$data['itemcode']])) {
+
+                                $idx = $itemCodes[$data['itemcode']];
+                                $amount = (float) $data['taka'];
+
+                                $rowItems[$idx] += $amount;
+                                $rowTotal += $amount;
                             }
                         }
-
-                        $clsAmount += $amount;
-                        $x++;
                     }
 
-                    // যদি কোনো collection না থাকে, তাহলে skip
-                    if ($clsAmount == 0) {
+                    // skip empty rows
+                    if ($rowTotal == 0)
                         continue;
+
+                    // accumulate column & grand total
+                    foreach ($rowItems as $i => $val) {
+                        $colTotals[$i] += $val;
                     }
+                    $grandTotal += $rowTotal;
                     ?>
+
                     <tr>
                         <td><?= $classname ?></td>
                         <td><?= $sectionname ?></td>
-                        <?php
-                        $x = 1;
-                        foreach ($itemList as $item) {
-                            $var = 'item' . ($x);
-                            echo "<td style='text-align:right;'>" . number_format($$var, 0) . "</td>";
-                            $x++;
-                        }
-                        ?>
-                        <td style="text-align:right;"><?= number_format($clsAmount, 2) ?></td>
+
+                        <?php foreach ($rowItems as $val): ?>
+                            <td class="text-end"><?= number_format($val, 0) ?></td>
+                        <?php endforeach; ?>
+
+                        <td class="text-end fw-bold"><?= number_format($rowTotal, 2) ?></td>
                     </tr>
+
                 <?php endforeach; ?>
 
+                <!-- TOTAL ROW -->
                 <tr class="fw-bold text-primary">
                     <td colspan="2">Total</td>
 
-                    <?php
-                    $gtotal = 0;
-                    $cnt = count($itemList);
-                    for ($i = 0; $i < $cnt; $i++) {
-                        $var = 'item' . ($i + 1);
-                        echo "<td style='text-align:right;'>" . number_format($$var, 0) . "</td>";
-                        $gtotal += $$var;
-                    }
+                    <?php foreach ($colTotals as $val): ?>
+                        <td class="text-end"><?= number_format($val, 0) ?></td>
+                    <?php endforeach; ?>
+
+                    <td class="text-end"><?= number_format($grandTotal, 2) ?></td>
+                </tr>
+
+            </table>
+
+        </div>
+
+
+        <div class="text-center fs-4  fw-bold mt-4 mb-3">Item Wise Total Collection</div>
+
+        <div class="table-responsive">
+            <table class="table table-sm" cellspacing="0" cellpadding="5">
+                <tr class=" bg-gray text-white">
+                    <td>Item Code</td>
+                    <td>Item Name (English)</td>
+                    <td>Item Name (Bangla)</td>
+                    <td class="text-end">Total Amount</td>
+                </tr>
+
+                <?php $mot = 0;
+                foreach ($report2 as $r):
+                    $mot += $r['total'];
+                    $itemcode = chr(65 + array_search($r, $report2));
                     ?>
-                    <td style='text-align:right;'><?= number_format($gtotal, 2) ?></td>
+                    <tr>
+                        <td><?= $itemcode; ?></td>
+                        <td><?= $r['en'] ?></td>
+                        <td><?= $r['bn'] ?></td>
+                        <td style="text-align:right;"><?= number_format($r['total'], 2) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                <tr class="fw-bold text-primary">
+                    <td colspan="3">Total</td>
+                    <td style='text-align:right;'> <?= number_format($mot, 2) ?></td>
                 </tr>
             </table>
         </div>
 
-
-            <div class="text-center fs-4  fw-bold mt-4 mb-3">Item Wise Total Collection</div>
-
-            <div class="table-responsive">
-                <table class="table table-sm" cellspacing="0" cellpadding="5">
-                    <tr class=" bg-gray text-white">
-                        <td>Item Code</td>
-                        <td>Item Name (English)</td>
-                        <td>Item Name (Bangla)</td>
-                        <td class="text-end">Total Amount</td>
-                    </tr>
-
-                    <?php $mot = 0;
-                    foreach ($report2 as $r):
-                        $mot += $r['total'];
-                        $itemcode = chr(65 + array_search($r, $report2));
-                        ?>
-                        <tr>
-                            <td><?= $itemcode; ?></td>
-                            <td><?= $r['en'] ?></td>
-                            <td><?= $r['bn'] ?></td>
-                            <td style="text-align:right;"><?= number_format($r['total'], 2) ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                    <tr class="fw-bold text-primary">
-                        <td colspan="3">Total</td>
-                        <td style='text-align:right;'> <?= number_format($mot, 2) ?></td>
-                    </tr>
-                </table>
-            </div>
-
-        </div>
     </div>
+</div>
 
 
 
-    <div id="footer-block" hidden>
-        <?php
-        ob_start();
-        include "templete/letter-tail-01.php";
-        $letterTail = ob_get_clean();
-        ?>
-    </div>
+<div id="footer-block" hidden>
+    <?php
+    ob_start();
+    include "templete/letter-tail-01.php";
+    $letterTail = ob_get_clean();
+    ?>
+</div>
 
-    <?php include_once 'footer.php'; ?>
-
-
-
-    <script>
-        function loadDailyReport() {
-            let dfrom = document.getElementById('dfrom').value;
-            let dto = document.getElementById('dto').value;
-            window.location.href = "daily-collection-summery.php?dfrom=" + dfrom + "&dto=" + dto;
-        }
-    </script>
+<?php include_once 'footer.php'; ?>
 
 
 
-    <script>
-        function printBlock() {
-            var letterTail = <?= json_encode($letterTail, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE); ?>;
-            var letterHead = <?= json_encode($letterHead, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE); ?>;
+<script>
+    function loadDailyReport() {
+        let dfrom = document.getElementById('dfrom').value;
+        let dto = document.getElementById('dto').value;
+        window.location.href = "daily-collection-summery.php?dfrom=" + dfrom + "&dto=" + dto;
+    }
+</script>
 
-            var printTopData = `
+
+
+<script>
+    function printBlock() {
+        var letterTail = <?= json_encode($letterTail, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE); ?>;
+        var letterHead = <?= json_encode($letterHead, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE); ?>;
+
+        var printTopData = `
                 <div class="text-center fs-xlarge fw-bold mt-4">Daily Collection Report</div>
                 <div>Date from ${document.getElementById('dfrom').value} to ${document.getElementById('dto').value}</div>
             `;
 
-            var printContents = document.getElementById("print-block").innerHTML;
+        var printContents = document.getElementById("print-block").innerHTML;
 
-            var newWindow = window.open('', '', 'width=900,height=650');
+        var newWindow = window.open('', '', 'width=900,height=650');
 
-            newWindow.document.write(`
+        newWindow.document.write(`
                 <html>
                 <head>
                     <title>Print</title>
@@ -374,22 +373,22 @@ while ($row = $q2->fetch_assoc()) {
         </html>
     `);
 
-            newWindow.document.close();
+        newWindow.document.close();
 
-            // 👉 প্রিন্ট চালানোর জন্য DOM পুরো লোড হওয়া পর্যন্ত অপেক্ষা
-            newWindow.onload = function () {
-                newWindow.focus();
-                newWindow.print();
-                newWindow.onafterprint = function () {
-                    newWindow.close();
-                };
+        // 👉 প্রিন্ট চালানোর জন্য DOM পুরো লোড হওয়া পর্যন্ত অপেক্ষা
+        newWindow.onload = function () {
+            newWindow.focus();
+            newWindow.print();
+            newWindow.onafterprint = function () {
+                newWindow.close();
             };
-        }
-    </script>
+        };
+    }
+</script>
 
 
 
 
-    </body>
+</body>
 
-    </html>
+</html>
