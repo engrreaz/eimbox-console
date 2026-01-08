@@ -23,6 +23,7 @@
     <?php
     $chain_param = '-c 12 -t Payments Collection Report -u -r -b View List';
     include 'components/slot-tree-ui.php';
+
     ?>
 
     <div class="card mb-3 card-border-shadow-primary">
@@ -66,11 +67,11 @@
                             <div class="col">
                                 <button class="btn btn-sm btn-outline-primary border-0 p-0 shadow-none me-3"
                                     onclick="printSelected()" title="Print Receipt">
-                                    <i class="bi bi-printer icon-30px"></i>
+                                    <i class="bi bi-printer icon-24px"></i>
                                 </button>
                                 <button class="btn btn-sm btn-outline-danger border-0 p-0 shadow-none"
                                     onclick="downloadSelected()" title="Download Receipt">
-                                    <i class="bi bi-file-pdf icon-30px"></i>
+                                    <i class="bi bi-file-pdf icon-24px"></i>
                                 </button>
                             </div>
                         </div>
@@ -92,17 +93,43 @@
                             <div class="col">
                                 <button class="btn btn-sm btn-outline-secondary border-0 p-0 shadow-none me-3"
                                     onclick="printSelectedReport()" title="Print Collection Report">
-                                    <i class="bi bi-printer-fill icon-30px"></i>
+                                    <i class="bi bi-printer-fill icon-24px"></i>
                                 </button>
                                 <button class="btn btn-sm btn-outline-secondary border-0 p-0 shadow-none"
                                     onclick="downloadSelectedReport()" title="Download Collection Report">
-                                    <i class="bi bi-file-pdf-fill icon-30px"></i>
+                                    <i class="bi bi-file-pdf-fill icon-24px"></i>
                                 </button>
                             </div>
                         </div>
                         <div class="row mt-3 text-start">
                             <div class="col">
                                 Report
+                            </div>
+                        </div>
+                    </div>
+
+                      <!-- Divider -->
+                    <div class="col-auto d-flex justify-content-center">
+                        <div class="vr-full"></div>
+                    </div>
+
+                    <!-- Right -->
+                    <div class="col text-end d-flex flex-column justify-content-start">
+                        <div class="row text-start">
+                            <div class="col">
+                                <button class="btn btn-sm btn-outline-secondary border-0 p-0 shadow-none me-3"
+                                    onclick="printSelectedReport()" title="Print Collection Report">
+                                    <i class="bi bi-chat-square-text icon-24px"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary border-0 p-0 shadow-none"
+                                    onclick="downloadSelectedReport()" title="Download Collection Report">
+                                    <i class="bi bi-envelope icon-24px"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="row mt-3 text-start">
+                            <div class="col">
+                                Message
                             </div>
                         </div>
                     </div>
@@ -202,11 +229,11 @@
     }
 
     function printReceipt(stid, prno, prdate) {
-        window.open(`print-receipt.php?stid=${stid}&prno=${prno}&prdate=${prdate}`);
+         window.open(`payments/selected-receipts.php?prs=${prno}`);
     }
 
     function downloadReceipt(stid, prno, prdate) {
-        window.location.href = `download-receipt.php?stid=${stid}&prno=${prno}&prdate=${prdate}`;
+        window.open(`payments/selected-receipts.php?prs=${prno}&mode=pdf`);
     }
 
 

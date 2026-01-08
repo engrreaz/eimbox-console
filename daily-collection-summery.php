@@ -177,94 +177,89 @@ while ($row = $q2->fetch_assoc()) {
     <div class="card mt-3" id="print-block">
 
         <div class="text-center fs-xlarge  fw-bold mt-4 mb-3">Class/Section Wise Item Collection</div>
+        <div class="table-responsive">
+            <table class="table table-sm" cellspacing="0" cellpadding="5">
+                <tr class=" bg-gray">
+                    <td>Class</td>
+                    <td>Section</td>
+                    <?php
+                    $cnt = count($itemList);
+                    for ($i = 0; $i < $cnt; $i++) {
+                        echo "<td>" . chr(65 + $i) . "</td>";
+                        $var = 'item' . ($i + 1);
+                        $$var = 0;
+                    }
+                    ?>
 
-            <div class="table-responsive">
-                <table class="table table-sm" cellspacing="0" cellpadding="5">
-                    <tr class=" bg-gray">
-                        <td>Class</td>
-                        <td>Section</td>
-                        <?php
-                        $cnt = count($itemList);
-                        for ($i = 0; $i < $cnt; $i++) {
-                            echo "<td>" . chr(65 + $i) . "</td>";
-                            $var = 'item' . ($i + 1);
-                            $$var = 0;
-                        }
-                        ?>
+                    <td class="text-end">Total Amount</td>
+                </tr>
 
-                        <td class="text-end">Total Amount</td>
-                    </tr>
+                <?php foreach ($classList as $cls): ?>
+                    <?php
+                    $classname = $cls['areaname'];
+                    $sectionname = $cls['subarea'];
 
-                    <?php foreach ($classList as $cls): ?>
-                        <?php
-                        $classname = $cls['areaname'];
-                        $sectionname = $cls['subarea'];
+                    $clsAmount = 0;
+                    $x = 1;
 
-                        $clsAmount = 0;
-                        $x = 1;
+                    // প্রথমে amount হিসাব
+                    foreach ($itemList as $item) {
+                        $itemcode = $item['itemcode'];
+                        $var = 'item' . ($x);
+                        $amount = 0;
 
-                        // প্রথমে amount হিসাব
-                        foreach ($itemList as $item) {
-                            $itemcode = $item['itemcode'];
-                            $var = 'item' . ($x);
-                            $amount = 0;
-
-                            foreach ($dataList as $data) {
-                                if (
-                                    strtolower($data['itemcode']) == strtolower($itemcode) &&
-                                    strtolower($data['classname']) == strtolower($classname) &&
-                                    trim(strtolower($data['sectionname'])) == trim(strtolower($sectionname))
-                                ) {
-                                    $amount = $data['taka'];
-                                    $$var += $amount;
-                                    break;
-                                }
+                        foreach ($dataList as $data) {
+                            if (
+                                strtolower($data['itemcode']) == strtolower($itemcode) &&
+                                strtolower($data['classname']) == strtolower($classname) &&
+                                trim(strtolower($data['sectionname'])) == trim(strtolower($sectionname))
+                            ) {
+                                $amount = $data['taka'];
+                                $$var += $amount;
+                                break;
                             }
+                        }
 
-                            $clsAmount += $amount;
+                        $clsAmount += $amount;
+                        $x++;
+                    }
+
+                    // যদি কোনো collection না থাকে, তাহলে skip
+                    if ($clsAmount == 0) {
+                        continue;
+                    }
+                    ?>
+                    <tr>
+                        <td><?= $classname ?></td>
+                        <td><?= $sectionname ?></td>
+                        <?php
+                        $x = 1;
+                        foreach ($itemList as $item) {
+                            $var = 'item' . ($x);
+                            echo "<td style='text-align:right;'>" . number_format($$var, 0) . "</td>";
                             $x++;
                         }
-
-                        // যদি কোনো collection না থাকে, তাহলে skip
-                        if ($clsAmount == 0) {
-                            continue;
-                        }
                         ?>
-                        <tr>
-                            <td><?= $classname ?></td>
-                            <td><?= $sectionname ?></td>
-                            <?php
-                            $x = 1;
-                            foreach ($itemList as $item) {
-                                $var = 'item' . ($x);
-                                echo "<td style='text-align:right;'>" . number_format($$var, 0) . "</td>";
-                                $x++;
-                            }
-                            ?>
-                            <td style="text-align:right;"><?= number_format($clsAmount, 2) ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-
-
-                    <tr>
-                        <td colspan="2" class="fw-bold text-primary">Total</td>
-
-                        <?php
-                        $gtotal = 0;
-                        $cnt = count($itemList);
-                        for ($i = 0; $i < $cnt; $i++) {
-                            $var = 'item' . ($i + 1);
-                            echo "<td class='text-primary' style='text-align:right; font-weight: bold;;'>" . number_format($$var, 0) . "</td>";
-                            $gtotal += $$var;
-                        }
-                        ?>
-                        <td class='text-primary' style='text-align:right; font-weight: bold;; '>
-                            <?= number_format($gtotal, 2) ?>
-                        </td>
+                        <td style="text-align:right;"><?= number_format($clsAmount, 2) ?></td>
                     </tr>
-                </table>
+                <?php endforeach; ?>
 
-            </div>
+                <tr class="fw-bold text-primary">
+                    <td colspan="2">Total</td>
+
+                    <?php
+                    $gtotal = 0;
+                    $cnt = count($itemList);
+                    for ($i = 0; $i < $cnt; $i++) {
+                        $var = 'item' . ($i + 1);
+                        echo "<td style='text-align:right;'>" . number_format($$var, 0) . "</td>";
+                        $gtotal += $$var;
+                    }
+                    ?>
+                    <td style='text-align:right;'><?= number_format($gtotal, 2) ?></td>
+                </tr>
+            </table>
+        </div>
 
 
             <div class="text-center fs-4  fw-bold mt-4 mb-3">Item Wise Total Collection</div>
