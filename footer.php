@@ -544,12 +544,16 @@ $release_colors = [
 </script>
 
 <script>$(document).ready(function () {
-        $('.data-table').DataTable({
-            pageLength: 25,
-            ordering: true,
-            searching: true,
-            lengthChange: true
-        });
+        let table = document.querySelector("table.data-table");
+
+        if (table) {
+            $('.data-table').DataTable({
+                pageLength: 25,
+                ordering: true,
+                searching: true,
+                lengthChange: true
+            });
+        }
     });
 </script>
 
@@ -1153,15 +1157,30 @@ $release_colors = [
 
 
 <script>
-    let nodeTreeBlock = document.getElementById('nodeTreeModal');
-    if (!nodeTreeBlock) {
-        let modal = new bootstrap.Modal(document.getElementById('nodeTreeModal'));
-        $('#openTree').on('click', function () {
-            $('#treeRoot').html('');
-            modal.show();
-            loadNodes('slot', {}, $('#treeRoot'));
-        });
-    }
+    $(document).ready(function () {
+
+        let nodeTreeBlock = document.getElementById('nodeTreeModal');
+
+        if (nodeTreeBlock) {
+            let modal = new bootstrap.Modal(nodeTreeBlock);
+
+            $('#openTree').on('click', function () {
+                $('#treeRoot').html('');
+                modal.show();
+                loadNodes('slot', {}, $('#treeRoot'));
+            });
+
+        } else {
+            console.log('nodeTreeModal এখনো DOM এ নাই');
+        }
+
+    });
+
+</script>
+
+<script>
+
+
 
 
 
@@ -1346,7 +1365,9 @@ $release_colors = [
 
         $('#selectedTree').val(JSON.stringify(selected));
         console.log(selected);
-        modal.hide();
+        // let nodeTreeBlock = document.getElementById('nodeTreeModal');
+        // let modal = bootstrap.Modal(nodeTreeBlock);
+        // modal.hide();
     }
 
 

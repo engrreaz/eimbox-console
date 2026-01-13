@@ -216,35 +216,6 @@
 <!-- <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> -->
 
 
-<script>
-    var uri = window.location.href;
-    document.getElementById('defbtn').innerHTML = "Today's Collection";
-    document.getElementById('defmenu').innerHTML = '';
-    function defbtn() {
-        var cls = document.getElementById('cls').value;
-        var sec = document.getElementById('sec').value;
-        window.location.href = 'report-today-collection.php?&cls=' + cls + '&sec=' + sec;
-    }
-    function reload() {
-        window.location.href = uri;
-    }
-    function resultentry(roll) {
-        if (roll == 0) {
-            document.getElementById('boardroll').value = '';
-        } else {
-            document.getElementById('boardroll').value = roll;
-        }
-
-        document.getElementById('ren').style.display = 'block';
-        document.getElementById('boardroll').focus();
-    }
-
-
-
-</script>
-
-
-
 
 <script>
 

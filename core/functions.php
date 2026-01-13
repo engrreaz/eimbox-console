@@ -1026,3 +1026,35 @@ function get_GP_GL($mark, $fullmark, $slot = 'School', $decimal = 0)
         "qr" => $q
     ];
 }
+
+
+
+function formatMonthYearRange($dateFrom, $dateTo)
+{
+    $from = new DateTime($dateFrom);
+    $to   = new DateTime($dateTo);
+
+    $fromMonth = $from->format('M'); // Jan
+    $toMonth   = $to->format('M');
+
+    $fromMonthFull = $from->format('F'); // January
+    $toMonthFull   = $to->format('F');
+
+    $fromYear = $from->format('Y');
+    $toYear   = $to->format('Y');
+
+    // Same year
+    if ($fromYear == $toYear) {
+
+        // Same month
+        if ($from->format('m') == $to->format('m')) {
+            return $fromMonthFull . ", " . $fromYear;
+        }
+
+        // Different month, same year
+        return $fromMonth . "-" . $toMonth . ", " . $fromYear;
+    }
+
+    // Different year
+    return $fromMonth . " " . $fromYear . " - " . $toMonth . " " . $toYear;
+}
