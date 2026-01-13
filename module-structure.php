@@ -109,7 +109,7 @@ $files = array_filter(scandir(__DIR__), function ($f) {
 
 
     <?php
-    echo "<table id='permissionTable' class='table align-middle table-bordered table-hover table-sm'>";
+    echo "<table id='permissionTable' class='table align-middle table-bordered table-hover table-sm data-table'>";
     echo "<thead class='table-dark table-light sticky-top'>
         <tr class='table-sm'>
             <th style='min-width:70px;'></th>
@@ -179,20 +179,22 @@ $files = array_filter(scandir(__DIR__), function ($f) {
             $bgc = 'black';
         } else if ($module_name == 'Authority') {
             $bgc = 'darkteal';
+        } else if ($module_name == 'Unnecessary') {
+            $bgc = 'black';
+        } else if ($module_name == 'Invalid') {
+            $bgc = 'orange';
         } else {
             $bgc = 'transparent';
         }
 
         // $bgc = 'transparent';
-        echo "<td class='input-group-sm p-0'><select style='background:$bgc' class='form-select inline-select' data-field='module_name' data-id='{$file}' $dsbl>";
+        echo "<td class='input-group-sm p-0'><select style='background:$bgc' class='form-control  from-control-sm inline-select' data-field='module_name' data-id='{$file}' $dsbl>";
         echo "<option style='background:$bgc' value='' {$selected}></option>";
         foreach ($modules as $mod) {
             $selected = ($mod == $module_name) ? "selected" : "";
             echo "<option value='{$mod}' {$selected}>{$mod}</option>";
         }
         echo "</select></td>";
-
-
 
 
         echo "<td class='input-group-sm p-0'><input type='text' class='form-control inline-input' 
@@ -231,7 +233,7 @@ $files = array_filter(scandir(__DIR__), function ($f) {
                 $tooltip = 'Read';
             } elseif ($perm_val === '2') {
                 $cssClass = 'perm-2';
-                $tooltip = 'Write';
+                $tooltip = 'Partial';
             } elseif ($perm_val === '3') {
                 $cssClass = 'perm-3';
                 $tooltip = 'Full';
@@ -241,7 +243,7 @@ $files = array_filter(scandir(__DIR__), function ($f) {
                 $not_assign++;
             }
 
-            if ($module_name == 'Core' || $module_name == 'Backend' || $module_name == 'Orion' || $module_name == 'Seed' || $module_name == 'Authority') {
+            if ($module_name == 'Core' || $module_name == 'Backend' || $module_name == 'Orion' || $module_name == 'Seed' || $module_name == 'Authority' || $module_name == 'Invalid' || $module_name == 'Unnecessary') {
                 $block_dis = 'disabled';
                 $not_assign--;
             } else {

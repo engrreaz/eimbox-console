@@ -6,16 +6,6 @@
     </div>
 
 
-    <input id="subject-main">
-    <button class="btn btn-primary" id="openTree">Select Slot / Session / Class / Section</button>
-    <?php
-    $chain = 'class'; // -- class (class/section omit), exam (+exam), subject (+subject)
-    include 'components/slot-tree-modal.php';
-    ?>
-
-
-
-
 
     <!-- Card Border Shadow -->
     <div class="row g-6">

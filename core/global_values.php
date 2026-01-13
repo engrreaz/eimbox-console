@@ -199,7 +199,7 @@ $chain = ''; // Slot -> Session -> Class -> Section chain holder
 
 // echo $usr;
 
-
+$eimbox_panels = ['Admin', 'Teacher', 'Gurardian', 'Student', 'Guest', 'SMC'];
 
 
 

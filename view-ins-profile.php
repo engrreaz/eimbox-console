@@ -1,5 +1,34 @@
 <?php require_once 'header.php'; ?>
 
+<style>
+    .package-card{
+    transition: .2s;
+    border-radius: 6px;
+}
+
+.package-card:hover{
+    background:#f8f9fa;
+}
+
+.package-header{
+    user-select:none;
+}
+
+.tier-box{
+    cursor:pointer;
+    transition:.15s;
+}
+
+.tier-box:hover{
+    background:#f3f6fa;
+}
+
+.collapse{
+    transition:.2s;
+}
+
+</style>
+
 <div class="container-xxl flex-grow-1 container-p-y">
 
     <?php
@@ -31,6 +60,23 @@
         }
 
 
+        if (isset($_POST['action']) && $_POST['action'] == 'update_panels_info') {
+
+            $valid_panel = isset($_POST['valid_panel']) ? implode(' | ', $_POST['valid_panel']) : '';
+            $active_panel = isset($_POST['active_panel']) ? implode(' | ', $_POST['active_panel']) : '';
+
+            $sql = "UPDATE scinfo SET 
+                valid_panel='$valid_panel',
+                active_panel='$active_panel'
+            WHERE sccode='$current_sccode'";
+
+            if ($conn->query($sql)) {
+                echo "<div class='alert alert-success'>Panels updated successfully</div>";
+            } else {
+                echo "<div class='alert alert-danger'>" . $conn->error . "</div>";
+            }
+        }
+
 
         // ইনভয়েস আপডেট
         if (isset($_POST['update_invoice'])) {
@@ -51,6 +97,10 @@
 
     $valid_arr = explode(' | ', $ins['valid_module']);
     $active_arr = explode(' | ', $ins['active_module']);
+
+    $valid_panel_arr = array_filter(explode(' | ', $ins['valid_panel'] ?? ''));
+    $active_panel_arr = array_filter(explode(' | ', $ins['active_panel'] ?? ''));
+
 
     // ================= মডিউল তালিকা =================
     $modules_q = $conn->query("SELECT * FROM modulelist where is_public=1 order by slno");
@@ -207,19 +257,19 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col">
-                            Current Package : <b><?= $ins['package_name'] ?></b> (<?= $ins['package_id'] ?>)
+                            <b><?= $ins['package_name'] ?></b> (<?= $ins['package_id'] ?>) | <?= $ins['tier'] ?>
+                            <br>
+                            <sapn class="fs-tiny">Current package | Tier</sapn>
                         </div>
                         <div class="col text-end">
-                            <button 
-    class="btn btn-info btn-sm"
-    id="pkgBtn"
-    data-package="<?= $ins['package_id'] ?>"
->
-    Upgrade / Downgrade
-</button>
+                            <button class="btn btn-info btn-sm" id="pkgBtn" data-package="<?= $ins['package_id'] ?>"
+                                data-tier="<?= $ins['tier'] ?>">
+                                Upgrade / Downgrade
+                            </button>
 
                         </div>
                     </div>
+                    <hr class="m-0 mt-3" />
 
                     <div class="row mt-3">
                         <h5>Billing Info</h5>
@@ -301,12 +351,13 @@
 
     <!-- মডিউল তালিকা -->
     <div class="card mb-4 mt-4">
-        <div class="card-header fs-4 fw-bold">
-            <button type="submit" class="btn btn-primary float-end">Update Modules</button>
-            Modules
-        </div>
-
         <form method="post">
+            <div class="card-header fs-4 fw-bold">
+                <button type="submit" class="btn btn-primary float-end">Update Modules</button>
+                Modules
+            </div>
+
+
             <input type="hidden" name="action" value="update_modules_info">
 
             <div class="card-body">
@@ -344,6 +395,48 @@
             <div class="card-footer text-start">
 
             </div>
+        </form>
+    </div>
+
+
+    <div class="card mb-4 mt-4">
+        <form method="post">
+
+            <div class="card-header fs-4 fw-bold">
+                <button type="submit" class="btn btn-primary float-end">Update Panels</button>
+                EIMBOX Panels
+            </div>
+
+            <input type="hidden" name="action" value="update_panels_info">
+
+            <div class="card-body">
+                <div class="row">
+
+                    <?php foreach ($eimbox_panels as $panel):
+
+                        $is_valid = in_array($panel, $valid_panel_arr) ? 'checked' : '';
+                        $is_active = in_array($panel, $active_panel_arr) ? 'checked' : '';
+                        ?>
+
+                        <div class="col-md-3 mb-3">
+
+                            <!-- VALID -->
+                            <input class="form-check-input" type="checkbox" name="valid_panel[]" value="<?= $panel ?>"
+                                <?= $is_valid ?>>
+
+                            <!-- ACTIVE -->
+                            <input class="form-check-input ms-1" type="checkbox" name="active_panel[]" value="<?= $panel ?>"
+                                <?= $is_active ?>>
+
+                            <label class="fw-bold ms-1"><?= $panel ?></label>
+
+                        </div>
+
+                    <?php endforeach; ?>
+
+                </div>
+            </div>
+
         </form>
     </div>
 
@@ -433,7 +526,7 @@
                     Last Scanned @ <?= date('d/m/y') ?>
 
                     <?php
-                    
+
                     $dbname = $conn->query("SELECT DATABASE()")->fetch_row()[0];
 
                     // সব টেবিল বের করা
@@ -501,6 +594,9 @@
                 </div>
 
                 <div class="modal-body">
+                    <input type="hidden" name="valid_module" id="valid_module">
+                    <input type="hidden" name="valid_panel" id="valid_panel">
+
                     <div id="packageList" class="list-group">
                         <!-- packages will load here -->
                     </div>
@@ -532,37 +628,117 @@
 
 
 <script>
-let pkgModal = new bootstrap.Modal(document.getElementById('packageModal'));
+    let pkgModal = new bootstrap.Modal(document.getElementById('packageModal'));
 
-$('#pkgBtn').on('click', function () {
-    let currentPkg = $(this).data('package');
+    $('#pkgBtn').on('click', function () {
+        let currentPkg = $(this).data('package');
+        let currentTier = $(this).data('tier');
 
-    $.post('settings/get-packages.php', { current: currentPkg }, function (html) {
-        $('#packageList').html(html);
-        pkgModal.show();
+
+        $.post('settings/get-packages.php', { current: currentPkg, tier: currentTier }, function (html) {
+            $('#packageList').html(html);
+            pkgModal.show();
+        });
+    });
+
+    $('#packageForm').on('submit', function (e) {
+        e.preventDefault();
+
+        let pkg = $('input[name=package]:checked').val();
+        let tier = $('input[name=tier]:checked').val();
+        let mods = $('#valid_module').val();
+        let pans = $('#valid_panel').val();
+        // let pkgName = $('#valid_panel').val();
+
+        if (!pkg || !tier) {
+            alert('Select package & tier');
+            return;
+        }
+
+        $.post('settings/update-package.php', {
+            package: pkg,
+            tier: tier,
+            valid_module: mods,
+            valid_panel: pans
+        }, function (res) {
+
+            if (res.status == 'ok') {
+                location.reload();
+            } else {
+                alert(res.msg);
+            }
+
+        }, 'json');
+    });
+
+
+
+
+    $(document).on('change', 'input[name=tier]', function () {
+
+        let pkgId = $(this).data('package');
+        let mods = $(this).data('modules');
+        let pans = $(this).data('panels');
+
+        // Auto select parent package
+        $('input[name=package][value="' + pkgId + '"]').prop('checked', true);
+
+        // Hidden inputs set
+        $('#valid_module').val(mods);
+        $('#valid_panel').val(pans);
+    });
+
+
+
+</script>
+
+<script>
+document.querySelectorAll('input[name="package"]').forEach(radio => {
+    radio.addEventListener('change', function () {
+
+        let pkgId = this.value;
+
+        // Close all packages
+        document.querySelectorAll('.collapse').forEach(el => {
+            el.classList.remove('show');
+        });
+
+        // Open selected one
+        let target = document.getElementById('pkg-' + pkgId);
+        if (target) {
+            target.classList.add('show');
+        }
     });
 });
 
-$('#packageForm').on('submit', function (e) {
-    e.preventDefault();
+// Click anywhere on header = select radio
 
-    let pkg = $('input[name=package]:checked').val();
-    if (!pkg) {
-        alert('Please select a package');
-        return;
-    }
+</script>
+<script>
+document.querySelectorAll('.package-header').forEach(header => {
+    header.addEventListener('click', function (e) {
 
-    $.post('settings/update-package.php', { package: pkg }, function (res) {
-        if (res.status === 'ok') {
-            pkgModal.hide();
-            showToast('success', 'Package updated successfully');
-            location.reload();
-        } else {
-            showToast('error', res.msg);
+        let pkgCard = this.closest('.package-card');
+        let pkgId   = pkgCard.getAttribute('data-pkg');
+        let target  = document.getElementById('pkg-' + pkgId);
+
+        // সব collapse বন্ধ করো
+        document.querySelectorAll('.collapse').forEach(el => {
+            if (el !== target) el.classList.remove('show');
+        });
+
+        // টার্গেট toggle করো
+        if (target) {
+            target.classList.toggle('show');
         }
-    }, 'json');
+
+        // Radio sync
+        let radio = pkgCard.querySelector('input[name="package"]');
+        if (radio) radio.checked = true;
+    });
 });
 </script>
+
 
 </body>
 

@@ -20,6 +20,8 @@ $log_id = $stmt->insert_id; // পরবর্তী আপডেটের জ�
 
 ?>
 
+
+
 <script>
     window.addEventListener("beforeunload", function () {
         let startTime = window.performance.timing.navigationStart;

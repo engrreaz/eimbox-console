@@ -113,7 +113,6 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
     <link rel="stylesheet" href="assets/vendor/libs/notyf/notyf.css" />
 
 
-
     <link rel="stylesheet" href="assets/css/eimbox.css" />
 
     <!-- Helpers -->

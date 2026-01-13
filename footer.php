@@ -3,7 +3,6 @@ include_once('dev-log/feedback.php');
 include_once('core/page_status_access.php');
 
 
-
 // Sample icons (DB থেকে আসবে)
 $icons = [
     ['related_pages' => 'page1.php', 'nav_icon' => 'book', 'nav_title' => 'Books', 'status_name' => 'active'],
@@ -99,6 +98,116 @@ $release_colors = [
 
 <input type="hidden" id="selectedTree">
 
+<!-- ------------------ LIMIT MONITOR PANEL ------------------------------ -->
+<style>
+    .limit-monitor {
+        position: fixed;
+        bottom: 15px;
+        left: 15px;
+        width: 260px;
+        background: #fff;
+        border-radius: 10px;
+        padding: 12px;
+        box-shadow: 0 0 15px rgba(0, 0, 0, .15);
+        font-size: 12px;
+        z-index: 99999;
+    }
+
+    .lm-title {
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: #0d6efd;
+    }
+
+    .lm-item {
+        margin-bottom: 8px;
+    }
+
+    .lm-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        margin-bottom: 3px;
+    }
+
+    .progress {
+        height: 6px;
+        border-radius: 5px;
+    }
+
+    .lm-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+    }
+
+    .lm-close {
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+        color: #999;
+    }
+
+    .lm-close:hover {
+        color: #dc3545;
+    }
+</style>
+
+<?php if ($monitorPanel === true) { ?>
+
+    <div class="limit-monitor" id="limitMonitor">
+
+        <div class="lm-header">
+            <span class="lm-title">Usage Monitor</span>
+            <span class="lm-close" id="closeLimit">×</span>
+        </div>
+
+        <!-- Page Stay -->
+        <div class="lm-item">
+            <div class="lm-label">
+                Page Time
+                <span><?= gmdate("H:i:s", $totalDurationPage) ?> / <?= gmdate("H:i:s", $total_time_limit * 60) ?></span>
+            </div>
+            <div class="progress">
+                <div class="progress-bar <?= $pagePercent >= 100 ? 'bg-danger' : 'bg-warning' ?>"
+                    style="width:<?= $pagePercent ?>%"></div>
+            </div>
+        </div>
+
+        <!-- Total Time -->
+        <div class="lm-item">
+            <div class="lm-label">
+                Total Time
+                <span><?= gmdate("i:s", $totalDurationAll) ?> / <?= gmdate("i:s", $total_time_limit_all * 60) ?></span>
+            </div>
+            <div class="progress">
+                <div class="progress-bar <?= $totalPercent >= 100 ? 'bg-danger' : 'bg-success' ?>"
+                    style="width:<?= $totalPercent ?>%"></div>
+            </div>
+        </div>
+
+
+
+
+        <!-- Access Count -->
+        <div class="lm-item">
+            <div class="lm-label">
+                Access Count
+                <span><?= $totalRecordsPage ?> / <?= $access_count_limit ?></span>
+            </div>
+            <div class="progress">
+                <div class="progress-bar <?= $accessPercent >= 100 ? 'bg-danger' : 'bg-info' ?>"
+                    style="width:<?= $accessPercent ?>%"></div>
+            </div>
+        </div>
+
+
+    </div>
+<?php } ?>
+
+<!-- ------------------ LIMIT MONITOR PANEL ------------------------------ -->
+
 <!-- Modal -->
 <div class="modal fade" id="myModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog">
@@ -141,9 +250,11 @@ $release_colors = [
 
             <div class="row">
                 <div class="col-12">
-                    <?php
-                    if ($is_admin >= 0) {
 
+                    <?php
+
+                    echo '/' . $package_check . '/';
+                    if ($package_check === true) {
                         include_once('logbook.php');
                     }
                     ?>
@@ -305,12 +416,20 @@ $release_colors = [
 
 
 
-<footer class="content-footer footer bg-footer-theme" hidden>
+<footer class="content-footer footer bg-footer-theme">
     <div class="container-xxl">
         <div class="footer-container d-flex align-items-center justify-content-between py-4 flex-md-row flex-column">
             <div class="mb-2 mb-md-0">
                 <button onclick="requestPermission(101)">Enable Notifications</button>
-                <input id="max-limit" type="text" value="<?php echo $_SESSION['max_limit'] ?? 0; ?>" />
+
+                <input id="max-limit" type="text" style="width:50px;"
+                    value="<?php echo $_SESSION['max_limit'] ?? 0; ?>" />
+                <input id="total-time-limit" type="text" style="width:50px;" value="<?php echo $total_time_limit; ?>" />
+                <input id="entry-limit" type="text" style="width:50px;" value="<?php echo $entry_limit; ?>" />
+                <input id="access-count-limit" type="text" style="width:50px;"
+                    value="<?php echo $access_count_limit; ?>" />
+
+
                 &#169; <span id="footer-year"></span>
                 <script>document.querySelector("#footer-year").textContent = new Date().getFullYear();</script>
                 , made with ❤️ by
@@ -370,10 +489,20 @@ $release_colors = [
 <script src="https://cdn.jsdelivr.net/npm/perfect-scrollbar"></script>
 
 
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.5/main.min.css">
+
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.5/main.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.5/locales-all.min.js"></script>
+
+
 <script src="assets/js/eimbox.js"></script>
 
 <!-- Main JS -->
 <script src="assets/js/main.js"></script>
+
+
+
 
 <!-- Custom JS -->
 
@@ -383,6 +512,46 @@ $release_colors = [
 
 
 
+<script>
+    $(document).ready(function () {
+
+        // page load এ একবার call
+        $.post('ajax/page-access.php', {
+            action: 'access', page: '<?= $currentFile ?>'
+        });
+
+        // প্রতি 15 সেকেন্ড পর stay update
+        setInterval(function () {
+            $.post('ajax/page-access.php', {
+                action: 'stay', page: '<?= $currentFile ?>'
+            });
+        }, 15000);
+
+    });
+
+</script>
+
+<script>
+    const monitor = document.getElementById('limitMonitor');
+    const closeBtn = document.getElementById('closeLimit');
+
+    if (monitor && closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            monitor.style.display = 'none';
+        });
+    }
+
+</script>
+
+<script>$(document).ready(function () {
+        $('.data-table').DataTable({
+            pageLength: 25,
+            ordering: true,
+            searching: true,
+            lengthChange: true
+        });
+    });
+</script>
 
 <script>
 
@@ -496,6 +665,9 @@ $release_colors = [
         // Circular Timer
         // ===========================
         const maxInput = document.getElementById("max-limit");
+        if (<?= $package_check ?> === false) {
+            maxInput = 0;
+        }
         let maxTime = parseInt(maxInput?.value) || 0;
         if (maxTime > 0) {
             let timeLeft = maxTime * 60;
@@ -981,15 +1153,17 @@ $release_colors = [
 
 
 <script>
-    let modal = new bootstrap.Modal(document.getElementById('nodeTreeModal'));
+    let nodeTreeBlock = document.getElementById('nodeTreeModal');
+    if (!nodeTreeBlock) {
+        let modal = new bootstrap.Modal(document.getElementById('nodeTreeModal'));
+        $('#openTree').on('click', function () {
+            $('#treeRoot').html('');
+            modal.show();
+            loadNodes('slot', {}, $('#treeRoot'));
+        });
+    }
 
-    $('#openTree').on('click', function () {
 
-        $('#treeRoot').html('');
-
-        modal.show();
-        loadNodes('slot', {}, $('#treeRoot'));
-    });
 
     function loadNodes(type, context, container) {
 
@@ -1357,18 +1531,14 @@ $release_colors = [
             $('#session-main').trigger('change');
         }
 
-
     });
 </script>
 
-
-
-
-
-
 <!-- ------------------------- last Function ------------------------------ -->
-<script>window.addEventListener('load', function () {
+<script>
+    window.addEventListener('load', function () {
         // পুরো পেজ load হলে backdrop remove
         let bd = document.getElementById('pageBackdrop');
         if (bd) bd.remove();
-    });</script>
+    });
+</script>

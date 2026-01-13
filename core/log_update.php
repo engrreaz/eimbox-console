@@ -5,14 +5,12 @@ require_once 'db.php';
 // -------------------------
 // Get POST data safely
 // -------------------------
-$data = [];
-
-// Check JSON POST
-$contentType = $_SERVER['CONTENT_TYPE'] ?? '';
-if (stripos($contentType, 'application/json') !== false) {
-    $data = json_decode(file_get_contents('php://input'), true);
-    if (!is_array($data)) $data = [];
+$raw = file_get_contents('php://input');
+$data = json_decode($raw, true);
+if (!is_array($data)) {
+    $data = [];
 }
+
 
 // Fallback to normal POST
 $data = array_merge($data, $_POST);

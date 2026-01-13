@@ -7,6 +7,36 @@ $action = $_POST['action'] ?? '';
 /* ==========================
    1️⃣ ADD PACKAGE
    ========================== */
+// GET PACKAGE
+if ($action == 'get_package') {
+    $id = intval($_POST['id']);
+    $r = $conn->query("SELECT * FROM packages WHERE id=$id")->fetch_assoc();
+    echo json_encode($r);
+    exit;
+}
+
+// UPDATE PACKAGE
+if ($action == 'update_package') {
+    $stmt = $conn->prepare("UPDATE packages SET 
+        serial=?,package_name=?,package_code=?,description=?,status=?
+        WHERE id=?");
+    $stmt->bind_param(
+        "issssi",
+        $_POST['serial'],
+        $_POST['package_name'],
+        $_POST['package_code'],
+        $_POST['description'],
+        $_POST['status'],
+        $_POST['id']
+    );
+    $stmt->execute();
+    echo "Package updated";
+    exit;
+}
+
+
+
+
 if ($action == 'add_package') {
 
     $serial = $_POST['serial'];
@@ -64,124 +94,125 @@ if ($action == 'load_packages') {
    ========================== */
 if ($action == 'save_settings') {
 
-    $id = $_POST['data_id'];
-    $package_id = $_POST['package_id'];
-    $ins_cat = $_POST['ins_cat'];
+    $id = intval($_POST['id'] ?? 0);
+    $package_id = intval($_POST['package_id']);
+    $ins_tier = $_POST['ins_tier'];
     $billing = $_POST['billing_cycle'];
     $payment = $_POST['payment_model'];
     $status = $_POST['status'];
+    $price = floatval($_POST['price']);
 
-    $pA = $_POST['price_cat_a'] ?? 0;
-    $pB = $_POST['price_cat_b'] ?? 0;
-    $pC = $_POST['price_cat_c'] ?? 0;
-    $pD = $_POST['price_cat_d'] ?? 0;
-    $pE = $_POST['price_cat_e'] ?? 0;
+    $total_uses_limit = intval($_POST['total_uses_limit'] ?? 0);
+    $photo_upload = intval($_POST['photo_upload'] ?? 0);
+    $print_limit = intval($_POST['print'] ?? 0);
 
-    // চেক করো আগেই সেটিং আছে কিনা
-    $check = $conn->prepare("SELECT id FROM package_settings WHERE package_id=? AND ins_cat=?");
-    $check->bind_param("is", $package_id, $ins_cat);
+    $modulesArr = $_POST['module'] ?? [];
+    $modules = implode(',', $modulesArr);
+    $panelsArr = $_POST['panel'] ?? [];
+    $panels = implode(',', $panelsArr);
+
+ 
+
+    // check existing row
+    $check = $conn->prepare("
+        SELECT id FROM package_settings 
+        WHERE package_id=? AND ins_tier=? AND billing_cycle=?
+    ");
+    $check->bind_param("iss", $package_id, $ins_tier, $billing);
     $check->execute();
     $check->store_result();
 
     if ($check->num_rows > 0) {
-        // 🔹 Update existing
-        $stmt = $conn->prepare("UPDATE package_settings SET 
-            price_cat_a=?, price_cat_b=?, price_cat_c=?, price_cat_d=?, price_cat_e=?,
-            billing_cycle=?, payment_model=?, status=?
-            WHERE package_id=? AND ins_cat=? AND id=?");
+
+        // UPDATE
+        $stmt = $conn->prepare("
+            UPDATE package_settings SET
+                price=?,
+                payment_model=?,
+                status=?,
+                total_uses_limit=?,
+                photo_upload=?,
+                print=?,
+                module=?, panel=?
+            WHERE package_id=? AND ins_tier=? AND billing_cycle=? AND id=?
+        ");
+
         $stmt->bind_param(
-            "dddddsssisi",
-            $pA,
-            $pB,
-            $pC,
-            $pD,
-            $pE,
-            $billing,
+            "dssiiississi",
+            $price,
             $payment,
             $status,
+            $total_uses_limit,
+            $photo_upload,
+            $print_limit,
+            $modules,
+            $panels,
             $package_id,
-            $ins_cat,
+            $ins_tier,
+            $billing,
             $id
         );
 
-        if ($stmt->execute()) {
-            echo "✅ Settings updated successfully!";
-        } else {
-            echo "❌ Error: " . $stmt->error;
-        }
-        $stmt->close();
+        $stmt->execute();
+        echo "Settings updated successfully";
 
     } else {
-        // 🔹 Insert new
-        $stmt = $conn->prepare("INSERT INTO package_settings 
-            (package_id, ins_cat, price_cat_a, price_cat_b, price_cat_c, price_cat_d, price_cat_e, billing_cycle, payment_model, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+        // INSERT
+        $stmt = $conn->prepare("
+            INSERT INTO package_settings
+            (package_id, ins_tier, price, billing_cycle, payment_model, status,
+             total_uses_limit, photo_upload, print, module, panel)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?)
+        ");
+
         $stmt->bind_param(
-            "isddddssss",
+            "isdsssiiiss",
             $package_id,
-            $ins_cat,
-            $pA,
-            $pB,
-            $pC,
-            $pD,
-            $pE,
+            $ins_tier,
+            $price,
             $billing,
             $payment,
-            $status
+            $status,
+            $total_uses_limit,
+            $photo_upload,
+            $print_limit,
+            $modules,
+            $panels
         );
 
-        if ($stmt->execute()) {
-            echo "✅ New settings added successfully!";
-        } else {
-            echo "❌ Error: " . $stmt->error;
-        }
-        $stmt->close();
+        $stmt->execute();
+        echo "New setting added successfully";
     }
 
-    $check->close();
     exit;
 }
+
+
 
 // ==============================
 // LOAD $settings
 // ===============================
 
 if ($action == 'load_settings') {
-    $package_id = $_POST['package_id'];
-    $query = "SELECT * FROM package_settings WHERE package_id='$package_id' ORDER BY ins_cat ASC";
-    $result = mysqli_query($conn, $query);
+    $package_id = intval($_POST['package_id']);
+    $q = $conn->query("SELECT * FROM package_settings 
+                       WHERE package_id=$package_id 
+                       ORDER BY ins_tier,billing_cycle");
 
-    if (mysqli_num_rows($result) == 0) {
-        echo "<tr><td colspan='9' class='text-center text-muted'>No settings found for this package</td></tr>";
-        exit;
-    }
-
-    while ($r = mysqli_fetch_assoc($result)) {
-        echo "
-        <tr>
-          <td>{$r['ins_cat']}</td>
+    while ($r = $q->fetch_assoc()) {
+        echo "<tr>
+          <td>{$r['ins_tier']}</td>
           <td>{$r['billing_cycle']}</td>
           <td>{$r['payment_model']}</td>
+          <td>{$r['price']}</td>
           <td>{$r['status']}</td>
-          <td>{$r['price_cat_a']}</td>
-          <td>{$r['price_cat_b']}</td>
-          <td>{$r['price_cat_c']}</td>
-          <td>{$r['price_cat_d']}</td>
-          <td>{$r['price_cat_e']}</td>
           <td>
-            <button class='btn btn-sm btn-outline-primary btn-edit-setting' 
-                data-id='{$r['id']}'
-                data-inscat='{$r['ins_cat']}'
-                data-billing='{$r['billing_cycle']}'
-                data-payment='{$r['payment_model']}'
-                data-status='{$r['status']}'
-                data-pa='{$r['price_cat_a']}'
-                data-pb='{$r['price_cat_b']}'
-                data-pc='{$r['price_cat_c']}'
-                data-pd='{$r['price_cat_d']}'
-                data-pe='{$r['price_cat_e']}'>
-              <i class='bi bi-pencil'></i>
-            </button>
+            <button class='btn btn-sm btn-edit-setting'
+             data-package-id='{$r['package_id']}'
+             data-ins-tier='{$r['ins_tier']}'
+             data-billing='{$r['billing_cycle']}'>
+            ✏</button>
           </td>
         </tr>";
     }

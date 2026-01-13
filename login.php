@@ -1,6 +1,7 @@
 <?php
 require_once 'core/init.php';
 
+
 // var_dump($_SESSION);
 
 $reg = $_SESSION['student_reg'] ?? null;

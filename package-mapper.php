@@ -14,19 +14,20 @@ $files = array_filter(scandir(__DIR__), function ($f) {
             <table class="table table-striped align-middle mb-0">
                 <thead class="table-light ">
                     <tr>
-                        <th>#</th>
-                        <th>Module</th>
-                        <th>Page</th>
-                        <th>Nav Title</th>
+                        <th class="p-0 py-2 text-center" colspan="3">#</th>
+                        <th class="p-0 py-2">Module</th>
+                        <th class="p-0 py-2">Page</th>
+                        <th class="p-0 py-2">Nav Title</th>
                         <?php
 
                         $pkgQ = $conn->query("SELECT id, package_name FROM packages ORDER BY serial ASC");
                         $packages = [];
                         while ($p = $pkgQ->fetch_assoc()) {
                             $packages[] = $p;
-                            echo "<th class='text-center'>{$p['package_name']}</th>";
+                            echo "<th class='p-0 py-2 text-center'>{$p['package_name']}</th>";
                         }
                         ?>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -35,7 +36,7 @@ $files = array_filter(scandir(__DIR__), function ($f) {
                     $not_assign = 1;
                     foreach ($files as $page) {
 
-                        $modStmt = $conn->prepare("SELECT module_name, nav_title FROM modulemanager WHERE related_pages=?");
+                        $modStmt = $conn->prepare("SELECT module_name, nav_icon, nav_title FROM modulemanager WHERE related_pages=?");
                         $modStmt->bind_param("s", $page);
                         $modStmt->execute();
                         $modRes = $modStmt->get_result();
@@ -44,11 +45,15 @@ $files = array_filter(scandir(__DIR__), function ($f) {
                         $moduleName = $mod ? $mod['module_name'] : '—';
                         $navTitle = $mod ? $mod['nav_title'] : '—';
 
+                        $navIcon = $mod ? $mod['nav_icon'] : 'three-dots-vertical';
+
                         echo "<tr>
-                        <td>{$i}</td>
-                        <td>{$moduleName}</td>
-                        <td>{$page}</td>
-                        <td>{$navTitle}</td>";
+                        <td class='ps-5'></td>
+                        <td class='p-0'>{$i}</td>
+                        <td class='ps-5'><i class='bi bi-{$navIcon}'></i></td>
+                        <td class='ps-5'>{$moduleName}</td>
+                        <td class='ps-5'>{$page}</td>
+                        <td class='ps-5'>{$navTitle}</td>";
 
 
                         foreach ($packages as $pkg) {
@@ -97,7 +102,7 @@ $files = array_filter(scandir(__DIR__), function ($f) {
                                 $not_assign--;
                             }
                             ?>
-                            <td class='text-center'>
+                            <td class='text-center p-0'>
                                 <button type="button" class="btn btn-sm <?= $btnClass ?> editMap"
                                     data-page="<?= htmlspecialchars($page) ?>" data-pkg="<?= $pkg['id'] ?>"
                                     data-name="<?= htmlspecialchars($pkg['package_name']) ?>" data-bs-toggle="popover"
@@ -115,13 +120,15 @@ $files = array_filter(scandir(__DIR__), function ($f) {
                                     <?= $btnLabel ?>
                                 </button>
                             </td>
+
                             <?php
                         }
 
-
+                        echo '<td class="pe-5"></td>';
                         echo "</tr>";
                         $i++;
                     }
+
                     ?>
                 </tbody>
             </table>
@@ -133,7 +140,7 @@ $files = array_filter(scandir(__DIR__), function ($f) {
 
 <!-- SETTINGS MODAL -->
 <div class="modal fade" id="mapSettingsModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-md modal-dialog-centered">
         <div class="modal-content">
             <form id="mapSettingsForm">
                 <div class="modal-header border-bottom pb-3 fw-bold text-danger">
@@ -144,49 +151,55 @@ $files = array_filter(scandir(__DIR__), function ($f) {
                     <input type="hidden" name="page_name" id="page_name">
                     <input type="hidden" name="package_id" id="package_id">
 
-                    <div class="col-md-3">
-                        <label class="form-label">Access</label>
-                        <select name="access" class="form-select">
+                    <div class="col-md-4">
+                        <label class="form-label">Accessible</label>
+                        <select name="access" class="form-control form-control-sm">
                             <option value="Yes">Yes</option>
                             <option value="No">No</option>
                         </select>
                     </div>
 
-                    <div class="col-md-3">
-                        <label class="form-label">Entry Limit</label>
-                        <input type="number" name="entry_limit" class="form-control">
+                    <div class="col-md-4">
+                        <label class="form-label">Entry Limit (Times)</label>
+                        <input type="number" name="entry_limit" class="form-control form-control-sm">
                     </div>
 
-                    <div class="col-md-3">
-                        <label class="form-label">Display Limit</label>
-                        <input type="number" name="view_limit" class="form-control">
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label">Total Time Limit</label>
-                        <input type="number" name="total_time_limit" class="form-control">
-                    </div>
-
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label class="form-label">Access Count Limit</label>
-                        <input type="number" name="access_count_limit" class="form-control">
+                        <input type="number" name="access_count_limit" class="form-control form-control-sm">
                     </div>
 
-                    <div class="col-md-3">
-                        <label class="form-label">Max Stay Limit</label>
-                        <input type="number" name="max_stay_limit" class="form-control">
+
+                    <div class="col-md-3" >
+                        <label class="form-label">Display Limit (Times)</label>
+                        <input type="number" name="view_limit" class="form-control form-control-sm">
                     </div>
 
-                    <div class="col-md-3">
+
+                    <div class="col-md-4">
+                        <label class="form-label">Max Stay Limit (Min)</label>
+                        <input type="number" name="max_stay_limit" class="form-control form-control-sm">
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label class="form-label">Total Time Limit </label>
+                        <input type="number" name="total_time_limit" class="form-control form-control-sm">
+                    </div>
+
+                    
+
+                    
+
+                    <div class="col-md-4">
                         <label class="form-label">Print</label>
-                        <select name="print" class="form-select">
+                        <select name="print" class="form-control form-control-sm">
                             <option value="Yes">Yes</option>
                             <option value="No">No</option>
                         </select>
                     </div>
                 </div>
-                <div class="modal-footer pt-3 border-top mb-0 pb-0">
-                    <button type="submit" class="btn btn-success"><i class="bi bi-save"></i> &nbsp;&nbsp; Update
+                <div class="modal-footer pt-3 border-top mb-3 pb-0">
+                    <button type="submit" class="btn btn-success btn-sm"><i class="bi bi-save"></i> &nbsp;&nbsp; Update
                         Setting</button>
                 </div>
             </form>
@@ -232,7 +245,10 @@ $files = array_filter(scandir(__DIR__), function ($f) {
             }
 
             const modalEl = document.getElementById('mapSettingsModal');
-            const mapModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            const mapModal = bootstrap.Modal.getOrCreateInstance(modalEl, {
+                backdrop: 'static', // বাইরে ক্লিক করলে বন্ধ হবে না
+                keyboard: false     // ESC চাপলে বন্ধ হবে না
+            });
             mapModal.show();
         });
     });

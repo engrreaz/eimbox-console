@@ -14,6 +14,8 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     ]);
 
     session_start();
+
+   
 }
 
 
@@ -44,6 +46,10 @@ require_once 'search-functions.php';
 // if (session_status() === PHP_SESSION_NONE)
 //     session_start();
 
+
+ if (!isset($_SESSION['user_id']) && isset($_COOKIE['remember_me'])) {
+        verify_remember_token($conn);
+    }
 
 if (isset($_SESSION['locked']) && $_SESSION['locked'] === true) {
     header("Location: lock.php");
@@ -105,10 +111,10 @@ if (!in_array($currentFile, $publicPages)) {
 
         require_once 'global_values.php';
         // require_once 'billing_checker.php';
-   
+
         require_once 'permissions.php';
         require_once 'package_checker.php';
-       
+
 
     }
 }
