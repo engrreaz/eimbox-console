@@ -132,13 +132,36 @@ while ($row = $q2->fetch_assoc()) {
     <div class="card">
         <div class="card-body">
             <div class="row g-3">
-                <div class="col-md-3">
+                
+            <div class="col-md-2">
+    <label for="session" class="form-label">Session</label>
+
+    <select id="session" name="session" class="form-control form-control-sm">
+        <option value="">-- Select Session --</option>
+
+        <?php
+        $sql = "SELECT syear FROM sessionyear WHERE active = 1 ORDER BY syear DESC";
+        $res = mysqli_query($conn, $sql);
+
+        while ($row = mysqli_fetch_assoc($res)) {
+            $syear = $row['syear'];
+
+            $selected = ($syear == $y_v2) ? 'selected' : '';
+
+            echo "<option value=\"$syear\" $selected>$syear</option>";
+        }
+        ?>
+    </select>
+</div>
+
+
+                <div class="col-md-2">
                     <label for="dfrom" class="form-label">From Date</label>
                     <input type="date" id="dfrom" name="dfrom" class="form-control  form-control-sm"
                         value="<?= $dtf ?>">
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label for="dto" class="form-label">To Date</label>
                     <input type="date" id="dto" name="dto" class="form-control form-control-sm" value="<?= $dtt ?>">
                 </div>
@@ -331,7 +354,9 @@ while ($row = $q2->fetch_assoc()) {
     function loadDailyReport() {
         let dfrom = document.getElementById('dfrom').value;
         let dto = document.getElementById('dto').value;
-        window.location.href = "daily-collection-summery.php?dfrom=" + dfrom + "&dto=" + dto;
+        let sy = document.getElementById('session').value;
+
+        window.location.href = "daily-collection-summery.php?$sy=" + $sy + "&dfrom=" + dfrom + "&dto=" + dto;
     }
 </script>
 
