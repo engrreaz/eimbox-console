@@ -10,6 +10,7 @@ $letterHead = ob_get_clean();
 
 $dtf = $_GET['dfrom'] ?? date('Y-m-d');
 $dtt = $_GET['dto'] ?? date('Y-m-d');
+$y_v2 = $_GET['sy'] ?? $y_v2;
 
 // $dtf = "2025-11-01";
 // $dtt = "2025-11-19";

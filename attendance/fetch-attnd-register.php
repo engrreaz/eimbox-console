@@ -15,7 +15,6 @@ $collector = $_POST['collector'] ?? '';
 
 $month = formatMonthYearRange($datefrom, $dateto);
 
-echo 'Ready';
 /* ================= STUDENT MASTER ================= */
 $stprofile = [];
 $q = mysqli_query($conn, "SELECT stid, stnameeng FROM students WHERE sccode='$sccode'");
@@ -79,15 +78,26 @@ while ($r = mysqli_fetch_assoc($q)) {
 }
 ?>
 
+<style>
+    #head-table td {
+        text-align: center;
+    }
+</style>
 
-
-<table style="width:80%; margin:0 10%;" border="1">
+<table style="width:80%; margin:auto ;" border="0" id="head-table">
     <tr>
         <td><?= $slot ?></td>
         <td><?= $session ?></td>
         <td><?= $cls ?></td>
         <td><?= $sec ?></td>
-        <td><?= $month ?></td>
+        <td><?= $month . ' (' . $datefrom . ' &mdash; ' . $dateto . ') ' ?></td>
+    </tr>
+    <tr>
+        <td class="fs-tiny">Slot</td>
+        <td class="fs-tiny">Session</td>
+        <td class="fs-tiny">Class</td>
+        <td class="fs-tiny">Section</td>
+        <td class="fs-tiny">Month</td>
     </tr>
 </table>
 
@@ -179,6 +189,3 @@ while ($start <= $end) {
         <?php } ?>
     </tbody>
 </table>
-
-
-
