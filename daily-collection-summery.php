@@ -140,7 +140,7 @@ while ($row = $q2->fetch_assoc()) {
         <option value="">-- Select Session --</option>
 
         <?php
-        $sql = "SELECT syear FROM sessionyear WHERE active = 1 ORDER BY syear DESC";
+        $sql = "SELECT syear FROM sessionyear WHERE active = 1 and sccode='$sccode' ORDER BY syear DESC";
         $res = mysqli_query($conn, $sql);
 
         while ($row = mysqli_fetch_assoc($res)) {
