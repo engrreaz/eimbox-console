@@ -356,7 +356,7 @@ while ($row = $q2->fetch_assoc()) {
         let dto = document.getElementById('dto').value;
         let sy = document.getElementById('session').value;
 
-        window.location.href = "daily-collection-summery.php?$sy=" + $sy + "&dfrom=" + dfrom + "&dto=" + dto;
+        window.location.href = "daily-collection-summery.php?sy=" + sy + "&dfrom=" + dfrom + "&dto=" + dto;
     }
 </script>
 
