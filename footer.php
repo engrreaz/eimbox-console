@@ -531,6 +531,32 @@ $release_colors = [
 
 </script>
 
+
+
+<script>
+    function removeBackdrop() {
+        let bd = document.getElementById('pageBackdrop');
+        if (bd) bd.remove();
+    }
+
+    // Page load হলে
+    window.addEventListener('load', function () {
+        removeBackdrop();
+    });
+
+    // JS error হলে
+    window.addEventListener('error', function () {
+        removeBackdrop();
+    });
+
+    // Promise / async error হলে
+    window.addEventListener('unhandledrejection', function () {
+        removeBackdrop();
+    });
+</script>
+
+
+
 <script>
     const monitor = document.getElementById('limitMonitor');
     const closeBtn = document.getElementById('closeLimit');
@@ -1556,10 +1582,3 @@ $release_colors = [
 </script>
 
 <!-- ------------------------- last Function ------------------------------ -->
-<script>
-    window.addEventListener('load', function () {
-        // পুরো পেজ load হলে backdrop remove
-        let bd = document.getElementById('pageBackdrop');
-        if (bd) bd.remove();
-    });
-</script>
