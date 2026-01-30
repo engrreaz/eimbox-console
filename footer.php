@@ -533,27 +533,6 @@ $release_colors = [
 
 
 
-<script>
-    function removeBackdrop() {
-        let bd = document.getElementById('pageBackdrop');
-        if (bd) bd.remove();
-    }
-
-    // Page load হলে
-    window.addEventListener('load', function () {
-        removeBackdrop();
-    });
-
-    // JS error হলে
-    window.addEventListener('error', function () {
-        removeBackdrop();
-    });
-
-    // Promise / async error হলে
-    window.addEventListener('unhandledrejection', function () {
-        removeBackdrop();
-    });
-</script>
 
 
 
