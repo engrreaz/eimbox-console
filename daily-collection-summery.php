@@ -167,7 +167,7 @@ while ($row = $q2->fetch_assoc()) {
                 </div>
 
                 <div class="col-md-3 d-flex align-items-end">
-                    <button type="button" class="btn btn-primary p-2 w-100" onclick="loadDailyReport()">Load
+                    <button type="button" class="btn btn-primary p-2 w-100" onclick="loadDailyReport()">Show
                         Report</button>
                 </div>
 
