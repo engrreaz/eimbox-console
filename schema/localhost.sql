@@ -25,7 +25,7 @@ SET @@SESSION.SQL_LOG_BIN= 0;
 -- GTID state at the beginning of the backup 
 --
 
-SET @@GLOBAL.GTID_PURGED=/*!80000 '+'*/ 'ecffe173-fe25-11f0-9c1b-80fa5b4a79c5:1-10344';
+SET @@GLOBAL.GTID_PURGED=/*!80000 '+'*/ 'ecffe173-fe25-11f0-9c1b-80fa5b4a79c5:1-10360';
 
 --
 -- Table structure for table `accesslevel`
@@ -36,13 +36,13 @@ DROP TABLE IF EXISTS `accesslevel`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `accesslevel` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `permission` varchar(255) COLLATE utf8mb3_unicode_ci NOT NULL,
+  `permission` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `platinum` int NOT NULL,
   `gold` int NOT NULL,
   `silver` int NOT NULL,
   `bronge` int NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -119,14 +119,14 @@ DROP TABLE IF EXISTS `accounts`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `accounts` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `sccode` varchar(20) COLLATE utf8mb3_unicode_ci NOT NULL,
-  `company` varchar(100) COLLATE utf8mb3_unicode_ci NOT NULL,
-  `descn` varchar(100) COLLATE utf8mb3_unicode_ci NOT NULL,
+  `sccode` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `company` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `descn` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   `amount` decimal(11,2) NOT NULL,
   `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `sms` int NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -193,10 +193,10 @@ DROP TABLE IF EXISTS `achievements_category`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `achievements_category` (
   `sl` int NOT NULL DEFAULT '0',
-  `created_by` varchar(100) COLLATE utf8mb3_unicode_ci DEFAULT NULL,
+  `created_by` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `category` varchar(25) COLLATE utf8mb3_unicode_ci DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+  `category` varchar(25) COLLATE utf8mb4_unicode_ci DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -387,7 +387,7 @@ CREATE TABLE `auth_logs` (
   `action` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=400 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=401 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -400,17 +400,17 @@ DROP TABLE IF EXISTS `bankinfo`;
 CREATE TABLE `bankinfo` (
   `id` int NOT NULL AUTO_INCREMENT,
   `sccode` int DEFAULT NULL,
-  `slot` varchar(20) COLLATE utf8mb3_unicode_ci DEFAULT NULL,
-  `accno` varchar(20) COLLATE utf8mb3_unicode_ci DEFAULT NULL,
-  `acctype` varchar(20) COLLATE utf8mb3_unicode_ci DEFAULT NULL,
-  `bankname` varchar(30) COLLATE utf8mb3_unicode_ci DEFAULT NULL,
-  `branch` varchar(150) COLLATE utf8mb3_unicode_ci DEFAULT NULL,
+  `slot` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `accno` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `acctype` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `bankname` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `branch` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `openingdate` date DEFAULT NULL,
   `closingdate` date DEFAULT NULL,
   `status` int NOT NULL DEFAULT '1',
   `modifieddate` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -497,26 +497,26 @@ CREATE TABLE `banktrans` (
   `id` int NOT NULL AUTO_INCREMENT,
   `sccode` int DEFAULT NULL,
   `accid` int DEFAULT NULL,
-  `accno` varchar(20) COLLATE utf8mb3_unicode_ci DEFAULT NULL,
+  `accno` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `slno` int NOT NULL DEFAULT '0',
   `date` date DEFAULT NULL,
   `transopening` double DEFAULT '0',
-  `transtype` varchar(50) COLLATE utf8mb3_unicode_ci DEFAULT NULL,
+  `transtype` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `partid` int DEFAULT NULL,
-  `particulareng` varchar(200) COLLATE utf8mb3_unicode_ci DEFAULT NULL,
-  `particularben` varchar(200) COLLATE utf8mb3_unicode_ci DEFAULT NULL,
-  `chqno` varchar(20) COLLATE utf8mb3_unicode_ci DEFAULT NULL,
+  `particulareng` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `particularben` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `chqno` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `amount` double DEFAULT '0',
   `balance` double DEFAULT '0',
-  `refno` varchar(20) COLLATE utf8mb3_unicode_ci DEFAULT NULL,
-  `entryby` varchar(150) COLLATE utf8mb3_unicode_ci DEFAULT NULL,
+  `refno` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `entryby` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `entrytime` datetime DEFAULT NULL,
   `verified` int NOT NULL DEFAULT '0',
-  `verifyby` varchar(150) COLLATE utf8mb3_unicode_ci DEFAULT NULL,
+  `verifyby` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `verifytime` datetime DEFAULT NULL,
   `modifieddate` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=314 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=314 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -674,12 +674,12 @@ CREATE TABLE `bkash_token_list` (
   `id` int NOT NULL AUTO_INCREMENT,
   `sccode` int DEFAULT NULL,
   `date` date DEFAULT NULL,
-  `token` varchar(2500) COLLATE utf8mb3_unicode_ci DEFAULT NULL,
-  `refresh_token` varchar(2500) COLLATE utf8mb3_unicode_ci DEFAULT NULL,
+  `token` varchar(2500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `refresh_token` varchar(2500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `generate_time` datetime DEFAULT NULL,
   `expire_time` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=60 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=60 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -692,19 +692,19 @@ DROP TABLE IF EXISTS `calendar`;
 CREATE TABLE `calendar` (
   `id` int NOT NULL AUTO_INCREMENT,
   `date` date DEFAULT NULL,
-  `day` varchar(10) COLLATE utf8mb3_unicode_ci NOT NULL,
+  `day` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
   `sccode` int DEFAULT '0',
-  `descrip` varchar(150) COLLATE utf8mb3_unicode_ci DEFAULT NULL,
-  `category` varchar(30) COLLATE utf8mb3_unicode_ci DEFAULT NULL,
+  `descrip` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `category` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `work` int NOT NULL DEFAULT '1',
   `class` int NOT NULL DEFAULT '1',
   `dateto` date DEFAULT NULL,
   `day_count` int NOT NULL DEFAULT '1',
-  `icon` varchar(20) COLLATE utf8mb3_unicode_ci NOT NULL DEFAULT 'calendar3-event-fill',
-  `color` varchar(20) COLLATE utf8mb3_unicode_ci NOT NULL DEFAULT 'lightgray',
+  `icon` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'calendar3-event-fill',
+  `color` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'lightgray',
   `modifieddate` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -840,25 +840,25 @@ CREATE TABLE `cashbook` (
   `sessionyear` int DEFAULT NULL,
   `month` int NOT NULL DEFAULT '0',
   `year` int NOT NULL DEFAULT '0',
-  `slots` varchar(15) COLLATE utf8mb3_unicode_ci DEFAULT NULL,
+  `slots` varchar(15) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `date` date DEFAULT NULL,
-  `type` varchar(20) COLLATE utf8mb3_unicode_ci DEFAULT NULL,
-  `refno` varchar(20) COLLATE utf8mb3_unicode_ci DEFAULT '0',
+  `type` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `refno` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT '0',
   `partid` int DEFAULT NULL,
-  `category` varchar(100) COLLATE utf8mb3_unicode_ci DEFAULT NULL,
+  `category` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `memono` int DEFAULT '0',
-  `particulars` varchar(200) COLLATE utf8mb3_unicode_ci DEFAULT NULL,
+  `particulars` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `income` double NOT NULL DEFAULT '0',
   `expenditure` double NOT NULL DEFAULT '0',
   `amount` double NOT NULL DEFAULT '0',
-  `entryby` varchar(150) COLLATE utf8mb3_unicode_ci DEFAULT NULL,
+  `entryby` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `entrytime` datetime DEFAULT NULL,
   `ongoing` int NOT NULL DEFAULT '0',
-  `module` varchar(20) COLLATE utf8mb3_unicode_ci DEFAULT '' COMMENT 'bank/voucher/',
+  `module` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT 'bank/voucher/',
   `status` int DEFAULT NULL,
   `modifieddate` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=191 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=191 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -1900,7 +1900,7 @@ CREATE TABLE `logbook` (
   KEY `idx_time` (`entrytime`),
   KEY `idx_logbook_email_entry` (`email`,`entrytime`),
   KEY `idx_logbook_page` (`pagename`)
-) ENGINE=InnoDB AUTO_INCREMENT=16984 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16987 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -4979,4 +4979,4 @@ SET @@SESSION.SQL_LOG_BIN = @MYSQLDUMP_TEMP_LOG_BIN;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-01-31 13:08:13
+-- Dump completed on 2026-01-31 23:05:14
