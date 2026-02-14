@@ -840,10 +840,16 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
                 const enroll_action = "<?php echo $enroll_action; ?>";
 
                 if (enroll_action === "next") {
-                    let stid = parseInt($("#rollno").val());
-                    $("#rollno").val(stid + 1);
-                    $("#btnFetch").trigger("click");
-                } else if (enroll_action === "back") {
+
+                    let nextRoll = parseInt($("#rollno").val()) + 1;
+
+                    // next roll store for after reload
+                    sessionStorage.setItem("next_roll", nextRoll);
+
+                    // reload page
+                    location.reload();
+                }
+                else if (enroll_action === "back") {
                     window.history.back();
                 } else {
                     $("input, select").each(function () {
@@ -995,6 +1001,26 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
     }
 </script>
 
+<script>
+
+    // ===========================
+    // AUTO LOAD NEXT ROLL AFTER RELOAD
+    // ===========================
+    let autoRoll = sessionStorage.getItem("auto_next_roll");
+
+    if (autoRoll) {
+
+        $("#rollno").val(autoRoll);
+        sessionStorage.removeItem("auto_next_roll");
+
+        // wait dropdown restore then fetch
+        setTimeout(function () {
+            $("#btnFetch").trigger("click");
+        }, 500);
+    }
+
+
+</script>
 
 </body>
 
