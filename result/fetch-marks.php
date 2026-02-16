@@ -39,7 +39,7 @@ $ca_max = $setup['ca'] ?? 0;
 $alg = $setup['pass_algorithm'] ?? 0;
 
 
-echo $q_str;
+
 // ---------------------------
 // 1. sessioninfo থেকে রোল + stid আনবো
 // ---------------------------
@@ -51,7 +51,7 @@ $q1 = "SELECT rollno, stid
        AND sectionname='$section'
        AND slot='$slot'
        ORDER BY rollno ASC";
-echo $q1;
+
 $r1 = mysqli_query($conn, $q1);
 
 $roll_list = [];
@@ -64,11 +64,12 @@ while ($row = mysqli_fetch_assoc($r1)) {
     $stid_list[] = $stid;
 }
 
+echo $q1;
 if (count($stid_list) == 0) {
     echo "<p class='text-danger'>No students found!</p>";
     exit;
 }
-
+echo $q1;
 // স্টুডেন্ট আইডিগুলোকে CSV বানানো
 $stid_csv = implode(",", $stid_list);
 
