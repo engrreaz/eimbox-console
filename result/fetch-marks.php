@@ -64,12 +64,12 @@ while ($row = mysqli_fetch_assoc($r1)) {
     $stid_list[] = $stid;
 }
 
-echo $q1;
+
 if (count($stid_list) == 0) {
     echo "<p class='text-danger'>No students found!</p>";
     exit;
 }
-echo $q1;
+
 // স্টুডেন্ট আইডিগুলোকে CSV বানানো
 $stid_csv = implode(",", $stid_list);
 
@@ -110,6 +110,7 @@ while ($m = mysqli_fetch_assoc($r3)) {
     $marks[$m['stid']] = $m;
 }
 
+var_dump($stid_list );
 // var_dump($marks[1031870001]);
 // ---------------------------
 // 4. এখন এক লুপে সব টেবিল তৈরি
@@ -135,6 +136,7 @@ echo '
     </thead>
     <tbody>
 ';
+
 
 // $sub_max = 70;
 foreach ($stid_list as $stid) {
