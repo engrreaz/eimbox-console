@@ -73,7 +73,7 @@ if (count($stid_list) == 0) {
 // স্টুডেন্ট আইডিগুলোকে CSV বানানো
 $stid_csv = implode(",", $stid_list);
 
-
+var_dump($stid_list );
 // ---------------------------
 // 2. students টেবিল থেকে bulk student info আনবো
 // ---------------------------
@@ -110,7 +110,7 @@ while ($m = mysqli_fetch_assoc($r3)) {
     $marks[$m['stid']] = $m;
 }
 
-var_dump($stid_list );
+
 // var_dump($marks[1031870001]);
 // ---------------------------
 // 4. এখন এক লুপে সব টেবিল তৈরি
