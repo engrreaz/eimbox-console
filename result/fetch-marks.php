@@ -12,7 +12,7 @@ $class = $_POST['class'];
 $section = $_POST['section'];
 $subject = $_POST['subject'];
 
-echo $exam;
+// echo $exam;
 
 // ---------------------------
 // 0. subsetup থেকে distribution আনবো
@@ -39,7 +39,7 @@ $ca_max = $setup['ca'] ?? 0;
 $alg = $setup['pass_algorithm'] ?? 0;
 
 
-
+echo $q_str;
 // ---------------------------
 // 1. sessioninfo থেকে রোল + stid আনবো
 // ---------------------------
@@ -51,7 +51,7 @@ $q1 = "SELECT rollno, stid
        AND sectionname='$section'
        AND slot='$slot'
        ORDER BY rollno ASC";
-
+echo $q1;
 $r1 = mysqli_query($conn, $q1);
 
 $roll_list = [];
