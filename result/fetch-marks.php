@@ -73,7 +73,7 @@ if (count($stid_list) == 0) {
 // স্টুডেন্ট আইডিগুলোকে CSV বানানো
 $stid_csv = implode(",", $stid_list);
 
-var_dump($stid_list );
+// var_dump($stid_list );
 // ---------------------------
 // 2. students টেবিল থেকে bulk student info আনবো
 // ---------------------------
@@ -87,7 +87,7 @@ $students = [];
 while ($row = mysqli_fetch_assoc($r2)) {
     $students[$row['stid']] = $row;
 }
-var_dump($students);
+// var_dump($students);
 
 //
 // var_dump($stid_csv);
