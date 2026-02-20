@@ -954,9 +954,9 @@ function pass_validation(
     $obj_pass = $calc($obj, $fm_obj, $decimal);
     $pra_pass = $calc($pra, $fm_pra, $decimal);
 
-    // echo '//' . $fm_sub . '/' . $fm_obj . '/' . $fm_pra . '/' . $decimal . '//';
-    // echo '//' . $sub . '/' . $obj . '/' . $pra .  '//';
-    // echo '//' . $sub_pass . '/' . $obj_pass . '/' . $pra_pass . '/' . $min . '//';
+    echo '//' . $fm_sub . '/' . $fm_obj . '/' . $fm_pra . '/' . $decimal . '//';
+    echo '//' . $sub . '/' . $obj . '/' . $pra .  '//';
+    echo '//' . $sub_pass . '/' . $obj_pass . '/' . $pra_pass . '/' . $min . '//';
     // One fail = total fail
 
 
