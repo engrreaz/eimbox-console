@@ -176,7 +176,7 @@ foreach ($stid_list as $stid) {
     echo "<td class='p-1'><input type='number' class='form-control form-control-sm p-0 text-center mark ct' data-stid='$stid' value='" . ($mq['ctest'] ?? '') . "' $ct_dis></td>";
     echo "<td class='p-1'><input type='number' class='form-control form-control-sm p-0 text-center mark mt' data-stid='$stid' value='" . ($mq['mtest'] ?? '') . "' $mt_dis></td>";
     echo "<td class='p-1'><input type='number' class='form-control form-control-sm p-0 text-center mark sub' data-stid='$stid' value='" . ($mq['subj'] ?? '') . "' $sub_dis></td>";
-    echo "<td class='p-1'><input type='number' class='form-control form-control-sm p-0 text-center mark obj' data-stid='$stid' value='" . ($mq['obj'] ?? '') . "' $obj_dis></td>";
+    echo "<td class='p-1'><input type='number' step='0.01' class='form-control form-control-sm p-0 text-center mark obj' data-stid='$stid' value='" . ($mq['obj'] ?? '') . "' $obj_dis></td>";
     echo "<td class='p-1'><input type='number' class='form-control form-control-sm p-0 text-center mark pra' data-stid='$stid' value='" . ($mq['pra'] ?? '') . "' $pra_dis></td>";
     echo "<td class='p-1'><input type='number' class='form-control form-control-sm p-0 text-center mark ca' data-stid='$stid' value='" . ($mq['ca'] ?? '') . "' $ca_dis></td>";
 
