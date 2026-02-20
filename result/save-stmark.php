@@ -77,7 +77,7 @@ mysqli_query($conn, $chk);
 $p = pass_validation($ct, $mt, $sub, $obj, $pra, $ca, $sub_full, $obj_full, $pra_full, $full_full, $alg, $min, $decimal);
 
 
-// echo $p;
+echo $p;
 if ($p === false || $p == 0) {
 
     $gp = 0;
