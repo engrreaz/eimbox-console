@@ -73,12 +73,12 @@ $chk = "DELETE FROM stmark WHERE sccode='$sccode' AND stid='$stid' AND sessionye
         AND exam='$exam' AND subject='$subject' AND classname='$class' AND sectionname='$section'";
 mysqli_query($conn, $chk);
 
-echo $ct . '-' . $mt . '-' . $sub . '-' . $obj . '-' . $pra . '-' . $ca . '-' . $total . '***' ;
-echo $sub_full . '-' . $obj_full . '-' . $pra_full . '-' . $full_full . '***' ;
+// echo $ct . '-' . $mt . '-' . $sub . '-' . $obj . '-' . $pra . '-' . $ca . '-' . $total . '***' ;
+// echo $sub_full . '-' . $obj_full . '-' . $pra_full . '-' . $full_full . '***' ;
 $p = pass_validation($ct, $mt, $sub, $obj, $pra, $ca, $sub_full, $obj_full, $pra_full, $full_full, $alg, $min, $decimal);
 
 
-echo $p;
+// echo $p;
 if ($p === false || $p == 0) {
 
     $gp = 0;
