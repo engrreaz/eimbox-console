@@ -96,7 +96,7 @@ $ins = "INSERT INTO stmark (slot, sccode, stid, sessionyear, exam, subject, clas
         VALUES ('$slot', '$sccode', '$stid', '$session', '$exam', '$subject', '$class', '$section',
         '$full_full', '$ct', '$mt', '$sub', '$obj', '$pra', '$ca', '$sub', '$obj', '$pra', '$total', 0, '$gp', '$gl', '$cur', '$usr', '$cur')";
 
-// echo $ins;
+echo $ins;
 mysqli_query($conn, $ins);
 
 echo "<span class='text-success fw-bold'>$gp | $gl</span>";
