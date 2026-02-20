@@ -94,7 +94,7 @@ if ($p === false || $p == 0) {
 $ins = "INSERT INTO stmark (slot, sccode, stid, sessionyear, exam, subject, classname, sectionname,
         fullmark, ctest, mtest, subj, obj, pra, ca, sub_final, obj_final, pra_final, markobt, on100, gp, gl, entrydate, entryby, modifieddate)
         VALUES ('$slot', '$sccode', '$stid', '$session', '$exam', '$subject', '$class', '$section',
-        '$full_full', '$ct', '$mt', '$sub', '$obj', '$pra', '$ca', 0, 0, 0, '$total', 0, '$gp', '$gl', '$cur', '$usr', '$cur')";
+        '$full_full', '$ct', '$mt', '$sub', '$obj', '$pra', '$ca', '$sub', '$obj', '$pra', '$total', 0, '$gp', '$gl', '$cur', '$usr', '$cur')";
 
 // echo $ins;
 mysqli_query($conn, $ins);
