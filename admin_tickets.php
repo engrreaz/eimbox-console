@@ -20,14 +20,38 @@
     </div>
 
     <!-- Chat Panel -->
-    <div class="col-lg-8 d-flex flex-column" style="height:80vh;">
+    <div class="col-lg-8 d-flex flex-column" style="height:70vh;">
       <div id="admin-ticket-header" class="border-bottom p-3 d-none">
         <div class="d-flex justify-content-between align-items-center">
-          <h6 id="admin-ticket-subject" class="mb-0"></h6>
+          <h6 id="admin-ticket-subject" class="mb-0 flex-grow-1"></h6>
+          <div class="me-3">
+            <select id="ticket-category" class="form-select form-select-sm d-inline-block w-auto">
+              <option value="General">General</option>
+              <option value="Technical">Technical</option>
+              <option value="Billing">Billing</option>
+              <option value="Bug Fix">Bug Fix</option>
+              <option value="Knowledge Base">Knowledge Base</option>
+              <option value="Request">Request</option>
+
+            </select>
+          </div>
+          <div class="me-3">
+            <select id="ticket-priority" class="form-select form-select-sm d-inline-block w-auto">
+              <option value="Low">Low</option>
+              <option value="Medium">Medium</option>
+              <option value="High">High</option>
+              <option value="Critical">Critical</option>
+              <option value="Hot_fix">Hot Fix</option>
+            </select>
+          </div>
           <div>
             <select id="ticket-status-select" class="form-select form-select-sm d-inline-block w-auto">
               <option value="open">Open</option>
+              <option value="waiting">Waiting</option>
+              <option value="replied">Replied</option>
               <option value="in_progress">In Progress</option>
+              <option value="hold">Hold</option>
+              <option value="resolved">Resolved</option>
               <option value="closed">Closed</option>
             </select>
           </div>
@@ -56,6 +80,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
+        <input type="hidden" id="msgid" class="form-control" readonly>
         <textarea id="modalMessageText" class="form-control" rows="8"></textarea>
       </div>
       <div class="modal-footer">
@@ -70,7 +95,7 @@
 
 <script>
   let admin_id = <?= json_encode($_SESSION['user_id']); ?>;
-  let is_admin = <?= json_encode($_SESSION['is_admin']); ?>;
+  let is_admin = <?= $is_admin; ?>;
   let ticket_id = null;
   let ticketLimit = 5;
   let refreshTimer = null;
@@ -94,11 +119,16 @@
   $(document).on("click", ".ticket-item", function () {
     ticket_id = $(this).data("id");
     let status = $(this).data("status");
-    let subject = $(this).find(".ticket-subject").text().trim();
+    let category = $(this).data("category");
+    let priority = $(this).data("priority");
+    let subject = $(this).data("subject");
+
 
     $("#admin-ticket-subject").text(subject);
     $("#admin-ticket-header, #admin-ticket-footer").removeClass("d-none");
     $("#ticket-status-select").val(status);
+    $("#ticket-category").val(category);
+    $("#ticket-priority").val(priority);
     loadAdminMessages();
 
     clearInterval(refreshTimer);
@@ -143,7 +173,35 @@
     if (!ticket_id) return;
 
     $.post("tickets/admin_update_status.php",
-      { ticket_id, status: newStatus },
+      { ticket_id, status: newStatus, tail: 'status' },
+      function (res) {
+        if (res === "updated") {
+          loadAdminTickets();
+        }
+      }
+    );
+  });
+
+  $("#ticket-category").change(function () {
+    let newStatus = $(this).val();
+    if (!ticket_id) return;
+
+    $.post("tickets/admin_update_status.php",
+      { ticket_id, status: newStatus, tail: 'category' },
+      function (res) {
+        if (res === "updated") {
+          loadAdminTickets();
+        }
+      }
+    );
+  });
+
+  $("#ticket-priority").change(function () {
+    let newStatus = $(this).val();
+    if (!ticket_id) return;
+
+    $.post("tickets/admin_update_status.php",
+      { ticket_id, status: newStatus, tail: 'priority' },
       function (res) {
         if (res === "updated") {
           loadAdminTickets();
@@ -158,7 +216,15 @@
   $(document).on("click", ".message-item", function (e) {
     e.stopPropagation(); // prevent bubbling
     const msg = $(this).data("message") || "";
+    const ticket_id = $(this).data("id");
+    const dev_sub = $(this).data("dev");
+
+    if (dev_sub == 1) {
+      alert('Note already submitted to developer.');
+      return;
+    }
     $("#modalMessageText").val(msg);
+    $("#msgid").val(ticket_id);
     messageModal.show();
   });
 
@@ -173,10 +239,12 @@
 <script>
   $(document).on("click", ".btn-primary[data-bs-dismiss='modal']", function () {
     let notes = $("#modalMessageText").val().trim();
+    let msgid = $("#msgid").val();
+
     if (!notes) return alert("Please write something before submitting.");
 
     $.post("tickets/save_devnote.php",
-      { ticket_id: ticket_id, notes: notes },
+      { ticket_id: ticket_id, notes: notes, msgid: msgid },
       function (res) {
         if (res === "success") {
           alert("Dev Note saved successfully!");

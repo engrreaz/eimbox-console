@@ -33,54 +33,26 @@ $total = $q->fetch_assoc()['c'];
 ?>
 
 <div class="container-xxl py-4">
+
+    <?php
+                        $chain_param = '-c 10 -t Choose Values -u -r -b View Students';
+                        include 'components/slot-tree-ui.php';
+                        ?>
+
+
     <div class="card shadow-sm">
         <div class="card-header ">
+
+    
+
             <div class="row">
                 <div class="col-md-8">
                     <h5 class="mb-3">Payment Sync</h5>
                 </div>
-                <div class="col-md-4">
+                <div class="col-12">
 
                     <div class="row align-items-end g-2">
-                        <div class="col-md-5">
-                            <select id="slot-main" class="form-select form-select-sm">
-                                <option value="">Select Slot</option>
-                                <?php
-                                $q = $conn->query("SELECT slotname FROM slots WHERE sccode='$sccode' ORDER BY slotname");
-                                while ($r = $q->fetch_assoc()) {
-                                    $sel = ($slot == $r['slotname']) ? 'selected' : '';
-                                    echo "<option value='{$r['slotname']}' $sel>{$r['slotname']}</option>";
-                                }
-                                ?>
-                            </select>
-                        </div>
-
-                        <div class="col-md-5">
-                            <select id="session-main" class="form-select form-select-sm">
-                                <option value="">Select Session</option>
-                                <?php
-                                $q = $conn->query("SELECT syear FROM sessionyear WHERE sccode='$sccode' AND active=1 ORDER BY syear DESC");
-                                while ($r = $q->fetch_assoc()) {
-                                    $sel = ($r['syear'] == $sy) ? 'selected' : '';
-                                    echo "<option value='{$r['syear']}' $sel>{$r['syear']}</option>";
-                                }
-                                ?>
-                            </select>
-                        </div>
-                        <div class="col-md-1 col-2 ">
-
-
-
-                            <button type="button" class="btn btn-icon rounded-pill btn-label-github waves-effect"
-                                id="openTree">
-                                <i class="icon-base bi bi-stack icon-22px"></i>
-                            </button>
-                        </div>
-
-                        <?php
-                        $chain = 'class -- reload'; // -- class (class/section omit), exam (+exam), subject (+subject)
-                        include 'components/slot-tree-modal.php';
-                        ?>
+                        
                     </div>
                 </div>
             </div>

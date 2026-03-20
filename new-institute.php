@@ -90,8 +90,10 @@
                                 <option value="">Select Category</option>
                                 <option value="School">School</option>
                                 <option value="College">College</option>
+                                <option value="College">School-College</option>
                                 <option value="Madrasa">Madrasa</option>
                                 <option value="Technical">Technical</option>
+                                <option value="Technical">Non-Govt</option>
                             </select>
                         </div>
 
@@ -335,7 +337,7 @@
                         tab2Btn.removeAttribute('disabled'); // যদি disabled থাকে
                         const tab2 = new bootstrap.Tab(tab2Btn);
                         tab2.show();
-                        $("#step2").load("ajax/load_settings.php?sccode=" + encodeURIComponent(sccode));
+                        $("#step2").load("ajax/load_settings.php?new_sccode=" + encodeURIComponent(sccode));
 
                     } else if (res.status === "notfound") {
 
@@ -405,7 +407,7 @@
             for (let [key, value] of formData.entries()) {
                 output += `${key}: ${value}\n`;
             }
-            alert(output);
+            // alert(output);
 
 
             fetch('ajax/update_settings.php', {

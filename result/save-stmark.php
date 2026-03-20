@@ -13,14 +13,14 @@ $class = $_POST['class'];
 $section = $_POST['section'];
 $subject = $_POST['subject'];
 
-$ct = $_POST['ct'] ?? 0;
-$mt = $_POST['mt'] ?? 0;
-$sub = $_POST['sub'] ?? 0;
-$obj = $_POST['obj'] ?? 0;
-$pra = $_POST['pra'] ?? 0;
-$ca = $_POST['ca'] ?? 0;
-$total = $_POST['total'] ?? 0;
-$alg = $_POST['alg'] ?? 0;
+$ct = (float)$_POST['ct'] ?? 0;
+$mt = (float)$_POST['mt'] ?? 0;
+$sub = (float)$_POST['sub'] ?? 0;
+$obj = (float)$_POST['obj'] ?? 0;
+$pra = (float)$_POST['pra'] ?? 0;
+$ca = (float)$_POST['ca'] ?? 0;
+$total = (float)$_POST['total'] ?? 0;
+$alg = (int)$_POST['alg'] ?? 0;
 
 
 $sql = "SELECT maxvalues FROM gpa 

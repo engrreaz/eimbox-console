@@ -31,8 +31,8 @@
 
             <!-- Header -->
             <div class="text-center mb-4">
-                <div class="upgrade-icon mb-2">🚀</div>
-                <h2 class="fw-bold text-primary">Upgrade Required</h2>
+                <div class="upgrade-icon" style="font-size:60px;"><i class="bi bi-box-arrow-up"></i></div>
+                <h2 class="fw-bold text-muted">Upgrade Required</h2>
                 <p class="text-muted">
                     Your current plan has reached its usage limit
                 </p>
@@ -45,8 +45,8 @@
                     <div class="row align-items-center">
                         <div class="col-md-6 mb-3 mb-md-0">
                             <h6 class="mb-1">Current Package</h6>
-                            <span class="badge bg-label-primary fs-6">
-                                <?= htmlspecialchars($sccode_current_package )  . $sccode_current_package_name ?>
+                            <span class="badge bg-label-primary fs-6 border-primary ">
+                                <?= $sccode_current_package_name . ' (' . $sccode_current_package_tier . ')' ?>
                             </span>
                         </div>
 
@@ -58,7 +58,7 @@
                     </div>
 
                     <!-- Progress -->
-                    <div class="progress mt-3" style="height: 10px;">
+                    <div class="progress mt-3" style="height: 5px;">
                         <div class="progress-bar progress-bar-striped progress-bar-animated
                              <?= $isExceeded ? 'bg-danger' : 'bg-success' ?>" style="width: <?= $usagePercent ?>%">
                         </div>
@@ -72,7 +72,7 @@
             </div>
 
             <!-- Pricing -->
-            <div class="row g-4">
+            <div class="row g-4" hidden>
 
                 <!-- BASIC -->
                 <div class="col-md-4">

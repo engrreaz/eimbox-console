@@ -128,6 +128,8 @@ if ($result && $result->num_rows > 0) {
                             $val = $sccode;
                         if ($col == 'sectionname')
                             $val = $ss;
+                        if($cik == 'fullmarks')
+                            $val = (int)$val;
 
                         $cols[] = "`$col`";
                         $vals[] = "'" . $conn->real_escape_string($val) . "'";

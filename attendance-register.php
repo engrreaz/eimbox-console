@@ -37,50 +37,14 @@
                     <label class="form-label text-small" for="date-to-main">Date To</label>
                     <input type="date" class="form-control form-control-sm" id="date-to-main">
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label text-small" for="collector-main">Collected By</label>
-                    <select class="form-select form-select-sm" id="collector-main">
-                        <option value="">Select Collector</option>
-                        <?php
-                        $query = "SELECT email, profilename FROM usersapp WHERE sccode = '$sccode'";
-                        $result = mysqli_query($conn, $query);
-                        while ($row = mysqli_fetch_assoc($result)) {
-                            echo '<option class="text-danger fw-bold" value="' . htmlspecialchars($row['email']) . '">' . htmlspecialchars($row['profilename'] ?? $row['email']) . '</option>';
-                        }
-                        ?>
-                    </select>
-                </div>
 
-                <div class="col-md-2">
-                    <label class="form-label text-small" for="date-from-main">Total Collection</label>
-                    <input type="text"
-                        class="form-control form-control-sm text-center  text-white fs-6 fw-bold "
-                        id="totalAmont" style="font-size:24px; padding:0; background:teal;" disabled>
-                </div>
+
+
 
 
                 <div class="col-md-4 text-center row pt-2 full-height">
 
-                    <!-- Left -->
-                    <div class="col text-end d-flex flex-column justify-content-end">
-                        <div class="row text-end">
-                            <div class="col">
-                                <button class="btn btn-sm btn-outline-primary border-0 p-0 shadow-none me-3"
-                                    onclick="printSelected()" title="Print Receipt">
-                                    <i class="bi bi-printer icon-24px"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger border-0 p-0 shadow-none"
-                                    onclick="downloadSelected()" title="Download Receipt">
-                                    <i class="bi bi-file-pdf icon-24px"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="row mt-3 text-end">
-                            <div class="col">
-                                Receipt
-                            </div>
-                        </div>
-                    </div>
+                  
 
                     <!-- Divider -->
                     <div class="col-auto d-flex justify-content-center">
@@ -91,7 +55,7 @@
                     <div class="col text-end d-flex flex-column justify-content-start">
                         <div class="row text-start">
                             <div class="col">
-                                <button class="btn btn-sm btn-outline-secondary border-0 p-0 shadow-none me-3"
+                                <button class="btn btn-sm btn-outline-info border-0 p-0 shadow-none me-3"
                                     onclick="printSelectedReport()" title="Print Collection Report">
                                     <i class="bi bi-printer-fill icon-24px"></i>
                                 </button>
@@ -108,7 +72,7 @@
                         </div>
                     </div>
 
-                      <!-- Divider -->
+                    <!-- Divider -->
                     <div class="col-auto d-flex justify-content-center">
                         <div class="vr-full"></div>
                     </div>
@@ -151,8 +115,8 @@
                 </div>
                 <div class="form-group row">
                     <div class="col-12 ">
-                        <div class=" table-responsive "  id="data-body-main">
-                         
+                        <div class=" table-responsive " id="data-body-main">
+
                         </div>
                     </div>
                 </div>
@@ -163,75 +127,10 @@
 
 
 
-<!-- --------------------------------------- MODALS ------------------ -->
-<!-- Modal -->
-<div class="modal fade" id="receiptModal" tabindex="-1" backdrop="static">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Receipt Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="modalBody">
-                <!-- Content loaded via AJAX -->
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Structure -->
 
 
 <?php require_once 'footer.php'; ?>
 
-<!-- <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> -->
-
-
-
-<script>
-
-
-    function viewReceipt(stid, prno, prdate) {
-        let syd = $('#session-main').val();
-
-        fetch('payments/get-receipt.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `stid=${stid}&prno=${prno}&prdate=${prdate}&session=${syd}`
-        })
-            .then(r => r.text())
-            .then(data => {
-                document.getElementById('modalBody').innerHTML = data;
-                new bootstrap.Modal(document.getElementById('receiptModal')).show();
-            })
-            .catch(error => console.error('Error:', error));
-    }
-
-    function printReceipt(stid, prno, prdate) {
-         window.open(`payments/selected-receipts.php?prs=${prno}`);
-    }
-
-    function downloadReceipt(stid, prno, prdate) {
-        window.open(`payments/selected-receipts.php?prs=${prno}&mode=pdf`);
-    }
-
-
-
-    function printSelected() {
-        const selected = [...document.querySelectorAll('.row-checkbox:checked')].map(cb => cb.value);
-        if (!selected.length) return alert('কোনো রেকর্ড নির্বাচন করুন');
-        window.open(`payments/selected-receipts.php?prs=${selected.join(',')}`);
-    }
-
-    function downloadSelected() {
-        const selected = [...document.querySelectorAll('.row-checkbox:checked')].map(cb => cb.value);
-        if (!selected.length) return alert('কোনো রেকর্ড নির্বাচন করুন');
-        window.open(`payments/selected-receipts.php?prs=${selected.join(',')}&mode=pdf`);
-    }
-</script>
-
-
-<!-- ---------------------------- CHAIN -------------- -->
 <script>
 
     function defaultLoadScript() {
@@ -252,8 +151,7 @@
             cls: cls,
             sec: sec,
             dateFrom: dateFrom,
-            dateTo: dateTo,
-            collector: collector
+            dateTo: dateTo
         };
 
 
@@ -323,9 +221,46 @@
     });
 </script>
 
+<script>
+    function chainBtnFunc() {
+        window.location.reload();
+    }
+</script>
+
 <!-- ---------------------------- CHAIN -------------- -->
 
+<script>
+    function getReportUrl(type) {
+    let slot = $('#slot-main').val();
+    let year = $('#session-main').val();
+    let cls = $('#class-main').val();
+    let sec = $('#section-main').val();
+    let dateFrom = $('#date-from-main').val();
+    let dateTo = $('#date-to-main').val();
 
+    // প্যারামিটার তৈরি করা
+    let params = `?slot=${slot}&year=${year}&cls=${cls}&sec=${sec}&dateFrom=${dateFrom}&dateTo=${dateTo}&type=${type}`;
+    return "attendance/attendance-report-print.php" + params;
+}
+
+function printSelectedReport() {
+    let url = getReportUrl('print');
+    window.open(url, '_blank');
+}
+
+function downloadSelectedReport() {
+    let url = getReportUrl('pdf');
+    
+    // একটি অদৃশ্য লিঙ্ক তৈরি করে ক্লিক করানো
+    let link = document.createElement('a');
+    link.href = url;
+    link.target = '_blank'; // যদি নতুন ট্যাবে চান
+    link.download = 'Attendance_Report.pdf'; // ডাউনলোডের জন্য সাজেস্টেড নাম
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+</script>
 
 <!-- ----------------------------------- -->
 </body>

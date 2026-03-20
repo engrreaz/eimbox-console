@@ -192,6 +192,8 @@ function store_user_session($user, $school = [])
     $_SESSION['sccategory'] = $school['sccategory'] ?? '';
     $_SESSION['admin_data'] = $school['admin_data'] ?? '';
     $_SESSION['package_id'] = $school['package_id'] ?? 2;
+    $_SESSION['package_name'] = $school['package_name'] ?? 2;
+    $_SESSION['package_tier'] = $school['tier'] ?? '';
     $_SESSION['scaddress_top'] = $school['ps'] . ', ' . $school['dist'];
     $_SESSION['scaddress_top_full'] = str_replace(', ,', ', ', $school['scadd1'] . ', ' . $school['scadd2'] . ', ' . $school['ps'] . ', ' . $school['dist']);
 
@@ -233,6 +235,8 @@ function store_student_session($user, $school = [])
     $_SESSION['sccategory'] = $school['sccategory'] ?? '';
     $_SESSION['admin_data'] = $school['admin_data'] ?? '';
     $_SESSION['package_id'] = $school['package_id'] ?? 2;
+    $_SESSION['package_name'] = $school['package_name'] ?? '';
+    $_SESSION['package_tier'] = $school['tier'] ?? '';
     $_SESSION['scaddress_top'] = $school['ps'] . ', ' . $school['dist'];
     $_SESSION['scaddress_top_full'] = $school['po'] . $school['ps'] . ', ' . $school['dist'];
 
@@ -1032,16 +1036,16 @@ function get_GP_GL($mark, $fullmark, $slot = 'School', $decimal = 0)
 function formatMonthYearRange($dateFrom, $dateTo)
 {
     $from = new DateTime($dateFrom);
-    $to   = new DateTime($dateTo);
+    $to = new DateTime($dateTo);
 
     $fromMonth = $from->format('M'); // Jan
-    $toMonth   = $to->format('M');
+    $toMonth = $to->format('M');
 
     $fromMonthFull = $from->format('F'); // January
-    $toMonthFull   = $to->format('F');
+    $toMonthFull = $to->format('F');
 
     $fromYear = $from->format('Y');
-    $toYear   = $to->format('Y');
+    $toYear = $to->format('Y');
 
     // Same year
     if ($fromYear == $toYear) {
@@ -1057,4 +1061,47 @@ function formatMonthYearRange($dateFrom, $dateTo)
 
     // Different year
     return $fromMonth . " " . $fromYear . " - " . $toMonth . " " . $toYear;
+}
+
+
+
+function student_profile_image_path($student_id)
+{
+    global $BASE_PATH_URL_FILE, $BASE_PATH_URL;
+
+    $possible_extensions = ['jpg'];
+    foreach ($possible_extensions as $ext) {
+        $file_path = BASE_ROOT . 'students/' . $student_id . '.' . $ext;
+        if (file_exists($file_path)) {
+            return BASE_PATH . 'students/' . $student_id . '.' . $ext;
+        }
+    }
+    return BASE_PATH . 'students/noimg.jpg';
+}
+
+
+function teacher_profile_image_path($teacher_id)
+{
+
+    $possible_extensions = ['jpg', 'jpeg', 'png', 'gif'];
+    foreach ($possible_extensions as $ext) {
+        $file_path = BASE_ROOT . 'teacher/' . $teacher_id . '.' . $ext;
+        if (file_exists($file_path)) {
+            return BASE_PATH . 'teacher/' . $teacher_id . '.' . $ext;
+        }
+    }
+    return BASE_PATH . 'teacher/no-img.jpg';
+}
+
+
+function institute_logo($sccode)
+{
+    $possible_extensions = ['png'];
+    foreach ($possible_extensions as $ext) {
+        $file_path = BASE_ROOT . 'logo/' . $sccode . '.' . $ext;
+        if (file_exists($file_path)) {
+            return BASE_PATH . 'logo/' . $sccode . '.' . $ext;
+        }
+    }
+    return BASE_PATH . 'logo/logo.png';
 }

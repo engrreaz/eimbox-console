@@ -245,6 +245,20 @@ function statusBadge($status)
 
             <div class="tab-pane fade " id="navs-justified-home-pre" role="tabpanel">
                 <div class="col-lg-12 p-0">
+
+                    <div class="d-flex bd-highlight mt-2 mb-1">
+
+                        <div class="py-3 flex-grow-1">Permission</div>
+                        <i class="bi bi-shield-fill-check text-success fs-3 m-2 mx-3" onclick="perm(3);"></i>
+                        <i class="bi bi-shield-fill-exclamation text-primary fs-3 m-2 mx-3" onclick="perm(2);"></i>
+                        <i class="bi bi-shield-slash-fill text-warning fs-3 m-2 mx-3" onclick="perm(1);"></i>
+                        <i class="bi bi-shield-fill-x text-danger fs-3 m-2 mx-3" onclick="perm(0);"></i>
+                        <i class="bi bi-shield text-black fs-3 m-2 mx-3" onclick="perm(4);"></i>
+
+                    </div>
+                    <div style="height:1px; background-color: gray;;"></div>
+
+
                     <div class="row mt-3">
 
 
@@ -326,7 +340,7 @@ function statusBadge($status)
                         </div>
 
                         <div class="col">
-                            <button class="btn btn-primary btn-sm mb-3  float-end" onclick="openModal()">+ Add
+                            <button class="btn btn-primary btn-sm mb-3 float-end" onclick="openDevModal()">+ Add
                                 Feature</button>
                         </div>
 
@@ -347,7 +361,7 @@ function statusBadge($status)
                                         </div>
                                         <div class="col-3 pt-6">
 
-                                            <span class="cursor-pointer" onclick="openModal(<?= $row['id'] ?>)"><i
+                                            <span class="cursor-pointer" onclick="openDevModal(<?= $row['id'] ?>)"><i
                                                     class="bi bi-pencil-square text-warning fs-5"></i></span>
 
                                             <span class="ms-2 cursor-pointer" onclick="deleteEntry(<?= $row['id'] ?>)"><i
@@ -469,11 +483,11 @@ function statusBadge($status)
 
 
 <!-- Modal -->
-<div class="modal fade" id="insListModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
+<div class="modal fade " id="insListModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content ">
             <div class="modal-header">
-                <h5 class="modal-title" >Institution List</h5>
+                <h5 class="modal-title">Institution List</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
@@ -946,5 +960,46 @@ function statusBadge($status)
             $(btn).html('<i class="bi bi-clock-history p-1 ps-2 pe-2"></i>');
             container.addClass("d-none");
         }
+    }
+</script>
+
+
+<script>
+    function openDevModal(id = 0) {
+        const modalEl = document.getElementById("devModal");
+        const modal = new bootstrap.Modal(modalEl);
+
+        // Reset form
+        $('#devForm')[0].reset();
+        $('#entry_id').val(id);
+        $('#feature_new').addClass('d-none');
+
+        if (id) {
+            $.post('dev-log/ajax.php', { id: id }, function (data) {
+                if (data) {
+                    $('#feature_select').val(data.feature_name);
+                    $('#action_type').val(data.action_type);
+                    $('#status').val(data.status);
+                    $('#notes').val(data.description);
+                }
+                modal.show();
+            }, 'json');
+        } else {
+            modal.show();
+        }
+    }
+</script>
+
+<script>
+    function perm(p) {
+        let url = new URL(window.location.href);
+
+        if (p === 4) {
+            url.searchParams.delete('perm');
+        } else {
+            url.searchParams.set('perm', p);
+        }
+        window.history.replaceState({}, '', url);
+        location.reload();
     }
 </script>

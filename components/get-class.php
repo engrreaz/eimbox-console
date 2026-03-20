@@ -7,7 +7,7 @@ require_once '../core/global_values.php';
 $slot = $_GET['slot'];
 $session = $_GET['session'];
 
-$q = mysqli_query($conn, "SELECT areaname FROM areas 
+$q = mysqli_query($conn, "SELECT MAX(idno) as idno, areaname FROM areas 
     WHERE sccode='$sccode' AND slot='$slot' AND sessionyear='$session' 
     GROUP BY areaname order by idno");
 

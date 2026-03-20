@@ -67,6 +67,7 @@ if ($action === 'fetch') {
         echo json_encode(['ok' => false, 'msg' => 'Invalid CSRF']);
         exit;
     }
+    
     $page = max(1, intval($params['page'] ?? 1));
     $per_page = max(1, intval($params['per_page'] ?? 20));
     $filter_date = trim($params['date'] ?? '');
@@ -161,15 +162,17 @@ if ($action === 'remove_by_index') {
 
 
 // Remove all 
-if ($action === 'remove_all_by_file'){
+if ($action === 'remove_all_by_file') {
     $csrf = $params['csrf'] ?? '';
     $file = trim($params['file'] ?? '');
 
     if (!csrf_ok($csrf)) {
-        echo json_encode(['ok'=>false,'msg'=>'Invalid CSRF']); exit;
+        echo json_encode(['ok' => false, 'msg' => 'Invalid CSRF']);
+        exit;
     }
     if ($file === '') {
-        echo json_encode(['ok'=>false,'msg'=>'File empty']); exit;
+        echo json_encode(['ok' => false, 'msg' => 'File empty']);
+        exit;
     }
 
     $lines = read_lines($LOG_FILE);
@@ -177,14 +180,15 @@ if ($action === 'remove_all_by_file'){
 
     foreach ($lines as $ln) {
         if (preg_match('/in\s+(.*?)\s+on\s+line/', $ln, $m)) {
-            if (basename($m[1]) === $file) continue;  // remove
+            if (basename($m[1]) === $file)
+                continue;  // remove
         }
         $new[] = $ln; // keep
     }
 
     file_put_contents($LOG_FILE, implode("\n", $new));
 
-    echo json_encode(['ok'=>true,'removed'=>true]);
+    echo json_encode(['ok' => true, 'removed' => true]);
     exit;
 }
 

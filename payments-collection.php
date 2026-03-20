@@ -23,7 +23,6 @@
     <?php
     $chain_param = '-c 12 -t Payments Collection Report -u -r -b View List';
     include 'components/slot-tree-ui.php';
-
     ?>
 
     <div class="card mb-3 card-border-shadow-primary">

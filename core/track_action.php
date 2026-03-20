@@ -2,6 +2,8 @@
 session_start();
 require_once 'config.php';
 require_once 'db.php';
+require_once 'global_values.php';
+// require_once 'functions.php';
 
 $data = json_decode(file_get_contents('php://input'), true);
 
@@ -12,7 +14,8 @@ $url = $data['url'] ?? basename($_SERVER['PHP_SELF']);;
 $page = $data['page'];
 $action = $data['action'];
 $point = $data['point'] ?? 0;
-$timestamp = $data['timestamp'];
+// $timestamp = $data['timestamp'];
+$timestamp = $cur;
 $ip = $_SERVER['REMOTE_ADDR'];
 $browser = $_SERVER['HTTP_USER_AGENT'];
 

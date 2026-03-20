@@ -1,19 +1,21 @@
+<?php 
+require_once('../core/core-val.php');
+require_once('../core/global_values.php');
+require_once('../core/functions.php');
+?>
+
+
 <form id="settingsForm" class="row g-3" enctype="multipart/form-data">
-    <input type="hidden" name="sccode" value="<?= htmlspecialchars($sccode) ?>">
+    <input type="hidden" name="sccode" value="<?= htmlspecialchars($new_sccode) ?>">
 
     <!-- Logo -->
-    <div class="col-md-3">
+    <div class="col-md-6">
         <label class="form-label">Institution Logo</label>
         <div class="d-flex align-items-center mb-2">
-            <?php if ($logo_exists): ?>
-                <img id="currentLogo" src="/logo/<?= $sccode ?>.png"
+
+                <img id="currentLogo" src="<?= institute_logo($new_sccode) ?>"
                     style="max-width:100px; max-height:100px; display:block; margin-right:10px;">
-            <?php else: ?>
-                <div id="currentLogo" class="text-muted"
-                    style="width:100px; height:100px; line-height:100px; text-align:center; border:1px solid #ccc; margin-right:10px;">
-                    No logo
-                </div>
-            <?php endif; ?>
+          
 
             <input type="file" name="logo" id="logoInput" class="form-control" style="flex:1; margin-right:5px;">
             <button type="button" id="uploadLogoBtn" class="btn btn-success">Upload</button>
@@ -22,7 +24,7 @@
     </div>
 
     <!-- Administrators -->
-    <div class="col-md-9">
+    <div class="col-md-6">
         <label class="form-label ms-8 fw-bold text-warning">Administrators</label>
         <?php if (!empty($admins)): ?>
             <ul>
@@ -68,7 +70,7 @@
             // $setting_titles = ['Medium', 'Version', 'Module', 'Weekends', 'Collection', 'Profile Entry', 'Panel'];
             // $setting_def = ['Bengali', 'Bengali', 'Result.Attendance.Payment', 'Friday.Saturday', 'Administrator.Class Teacher', 'Administrator.Class Teacher', 'Admin.Teacher.Student'];
             
-            $sql = "SELECT setting_title, settings_value  FROM settings  GROUP BY setting_title  ORDER BY setting_title ASC";
+            $sql = "SELECT setting_title, max(settings_value) as settings_value  FROM settings  GROUP BY setting_title  ORDER BY setting_title ASC";
             $result = $conn->query($sql);
             $setting_titles = [];
             $setting_def = [];
@@ -118,7 +120,7 @@
 
         const formData = new FormData();
         formData.append('logo', fileInput.files[0]);
-        formData.append('sccode', '<?= $sccode ?>'); // PHP থেকে পাস করা
+        formData.append('sccode', '<?= $new_sccode ?>'); // PHP থেকে পাস করা
 
         msgDiv.textContent = "Uploading...";
         msgDiv.className = "text-muted";
@@ -135,13 +137,13 @@
                     // নতুন লোগো দেখানো
                     const logoImg = document.getElementById('currentLogo');
                     if (logoImg.tagName === "IMG") {
-                        logoImg.src = "../../logo/<?= $sccode ?>.png?" + new Date().getTime();
+                        logoImg.src = "<?= institute_logo($new_sccode) ?>?v=" + new Date().getTime();
                     } else {
                         logoImg.innerHTML = '';
                         logoImg.style.background = 'none';
                         logoImg.textContent = '';
                         const newImg = document.createElement('img');
-                        newImg.src = "../../logo/<?= $sccode ?>.png?" + new Date().getTime();
+                        newImg.src = "<?= institute_logo($new_sccode) ?>?v=" + new Date().getTime();
                         newImg.style.maxWidth = "100px";
                         newImg.style.maxHeight = "100px";
                         logoImg.replaceWith(newImg);

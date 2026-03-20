@@ -152,10 +152,11 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
 </head>
 
 <body>
+    <?php if($currentFile != 'result-processor.php') {?>
     <div id="pageBackdrop">
         <div class="loader"></div>
     </div>
-
+  <?php } ?>
 
 
     <div class="layout-wrapper layout-content-navbar  ">
@@ -206,7 +207,7 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
                     ?>
 
 
-                    <div class=" container pt-0 pb-0">
+                    <div class=" container pt-0 pb-0 no-print">
                         <div class="divider divider-primary m-0 p-0"
                             style="--bs-divider-color:<?php echo $release_colors[$page_status]; ?>;">
                             <div class="divider-text fs-5 fw-bold " id="page_link_title"
@@ -239,7 +240,7 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
                     <?php
                     $stmt = $conn->prepare("
                                         SELECT 
-                                            id, module_name, nav_icon, descrip, root_page, nav_title, related_pages
+                                            id, module_name, nav_icon, descrip, root_page, nav_title, related_pages, ytlink
                                         FROM 
                                             modulemanager
                                         WHERE 
@@ -269,6 +270,8 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
                                             $root_page = htmlspecialchars($row['root_page']);
                                             $title = htmlspecialchars($row['nav_title']);
                                             $pageURI = htmlspecialchars($row['related_pages']);
+                                            $ytlink = htmlspecialchars($row['ytlink']);
+
 
                                             $act = '';
                                             if ($currentFile == $pageURI) {
@@ -310,7 +313,6 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
 
 
                     <?php
-
                     if (!$package_check) {
                         include_once('core/upgrade-plan.php');
                         include_once('footer.php');

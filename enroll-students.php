@@ -6,7 +6,7 @@
 setcookie("enroll_save", "next", time() + (86400 * 30), "/");
 $enroll_action = $_COOKIE['enroll_save'] ?? "blank";
 
-echo $enroll_action;
+// echo $enroll_action;
 $sql = "SELECT st_entry_fld FROM usersapp 
         WHERE email='$usr' AND sccode='$sccode' 
         LIMIT 1";
@@ -39,12 +39,26 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
 
 
     <div class="modal fade" id="optionsModal" tabindex="-1">
-        <div class="modal-dialog modal-xl">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content">
 
-                <div class="modal-header bg-dark text-white">
-                    <h5 class="modal-title">Options : Entry Field</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <div class="modal-header d-flex align-items-center justify-content-between">
+
+                    <h5 class="modal-title mb-0">Options : Entry Field</h5>
+
+                    <div class="d-flex align-items-center gap-2">
+                        <label for="entry_action" class="fs-tiny"> After Submit</label>
+
+                        <select id="entry_action" class="form-select form-select-sm">
+                            <option value="blank">No Action</option>
+                            <option value="next">Next Roll</option>
+                            <option value="back">Go Back</option>
+                        </select>
+
+                        <button type="button" class="btn-close " data-bs-dismiss="modal">
+                        </button>
+                    </div>
+
                 </div>
 
                 <div class="modal-body">
@@ -60,7 +74,7 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
                                             if (str_contains($st_entry_fld, $disp))
                                                 continue;
                                             ?>
-                                            <li class="nav col-md-2  mb-1 pe-1 badge badge-priamry">
+                                            <li class="nav col m-2 p-1 px-3 badge badge-dark">
                                                 <?php echo $disp; ?>
                                             </li>
                                         <?php } ?>
@@ -90,19 +104,27 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
                 </div>
 
                 <div class="modal-footer">
-                    <div class="row">
-                        <div class="col-md-8">
-                            <div id="output" class="mt-1" style="font-weight: 500; color: orange; font-size:10px;">
-                                <?php echo $st_entry_fld; ?>
+                    <div class="container-fluid px-0">
+                        <div class="row align-items-center g-2">
+
+                            <div class="col-md-8">
+                                <div id="output" class="mt-1 fw-semibold text-warning" style="font-size:10px;">
+                                    <?php echo $st_entry_fld; ?>
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-2">
-                            <button class="btn btn-sm btn-primary w-100" onclick="showRightListAsText();">
-                                Update Sequence
-                            </button>
-                        </div>
-                        <div class="col-2">
-                            <button class="btn btn-secondary btn-sm w-100" data-bs-dismiss="modal">Close</button>
+
+                            <div class="col-md-2">
+                                <button class="btn btn-sm btn-primary w-100" onclick="showRightListAsText();">
+                                    Update Sequence
+                                </button>
+                            </div>
+
+                            <div class="col-md-2">
+                                <button class="btn btn-secondary btn-sm w-100" data-bs-dismiss="modal">
+                                    Close
+                                </button>
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -120,8 +142,9 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
                     Enrollment – Session Info
                 </div>
                 <div class="col text-end">
-                    <button id="btnToggle" class="btn btn-secondary text-white btn-sm p-0" data-bs-toggle="modal"
-                        data-bs-target="#optionsModal"> <i class="bi bi-chevron-expand fs-5"></i> </button>
+                    <button id="btnToggle" class="btn btn-outline-link text-white btn-sm p-0 px-2"
+                        data-bs-toggle="modal" data-bs-target="#optionsModal"> Options <i
+                            class="bi bi-chevron-expand fs-5 ms-3"></i> </button>
                 </div>
             </div>
 
@@ -194,8 +217,10 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
                     </div>
 
                     <div class="col-md-2 d-flex align-items-end">
-                        <button id="btnFetch" class="btn btn-primary  w-100 py-2">
-                            <i class="bi bi-search"></i> Load
+                        <button id="btnFetch" class="btn btn-primary  w-100 py-2 d-flex">
+
+                            <i class="bi bi-search"></i>
+                            <span class="text-end">View</span>
                         </button>
                     </div>
                 </div>
@@ -203,7 +228,7 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
 
             <div class="col-md-2 text-end p-3">
                 <div id="photobox p-3">
-                    <img id="stphoto" src="<?= BASE_PATH ?>students/noimg.jpg"
+                    <img id="stphoto" src="<?= student_profile_image_path($stid) ?>"
                         style="height:130px; width:103px; border-radius:5px; border:1px solid gray;" />
                 </div>
 
@@ -569,7 +594,8 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
                 </div>
 
                 <div class="col-md-3">
-                    <img id="photoPreview" src="placeholder.png" class="img-thumbnail" style="height:180px;">
+                    <img id="photoPreview" src="<?= student_profile_image_path($stid) ?>" class="img-thumbnail"
+                        style="height:40px;">
                 </div>
 
 
@@ -599,11 +625,62 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
 <script>
     const currentPage = "<?php echo basename($_SERVER['PHP_SELF'], '.php'); ?>";
 
+    $('#entry_action').val('<?= $enroll_action ?>');
+
+
+
+</script>
+
+<script>
+    // 1️⃣ trigger function
+    function triggerAltCtrlV() {
+        const e = new KeyboardEvent('keydown', {
+            key: 'v',
+            code: 'KeyV',
+            ctrlKey: true,
+            altKey: true,
+            bubbles: true
+        });
+        document.dispatchEvent(e);
+    }
+
+    // 2️⃣ focus / blur listeners
+    document.getElementById('stnameben').addEventListener('focus', function () {
+        console.log('ben focus');
+        triggerAltCtrlV();
+    });
+
+    document.getElementById('stnameben').addEventListener('blur', function () {
+        console.log('ben blur');
+        triggerAltCtrlV();
+    });
+
+    // 3️⃣ shortcut catcher
+    document.addEventListener('keydown', function (e) {
+        if (e.ctrlKey && e.altKey && e.key.toLowerCase() === 'v') {
+            console.log('ALT+CTRL+V detected');
+
+            // visible proof it worked
+            document.body.style.background = '#ffe6e6';
+        }
+    });
+</script>
+
+<script>
+
+    document.getElementById('entry_action').addEventListener('change', function () {
+        const action = this.value;
+        console.log(action);
+        setCookie('enroll_save', action, 1);
+        window.location.reload();
+    });
+
     $("#stid").on("change keyup click", function () {
         let st = $(this).val();
         if (!st) return;
-        let imgPath = "<?= BASE_PATH ?>students/" + st + ".jpg";
-        $("#stphoto").attr("src", imgPath);
+        $.post('student/get-student-photo.php', { id: st }, function (imgPath) {
+            $("#stphoto").attr("src", imgPath);
+        });
     });
     // ===========================
     // UNIVERSAL SAVE/LOAD (localStorage)
@@ -728,15 +805,15 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
         $.post("student/fetch-student.php", {
             slot, session, class: className, section, rollno: roll, medium, version
         }, function (res) {
-            $("#btnFetch").html('Load');
+            $("#btnFetch").html(' <i class="bi bi-search"></i> View ');
 
             if (res.status === "found" && res.new == 0) {
                 // Fill Form
                 Object.keys(res.data).forEach(id => {
                     $("#" + id).val(res.data[id]);
                 });
-                showToast('success', 'Student Found ' + res.data['stnameeng'], 'Found');
-                $("#stphoto").attr("src", "<?= BASE_PATH ?>students/" + res.data['stid'] + '.jpg');
+                showToast('info', 'Student Found ' + res.data['stnameeng'], 'Found');
+                $("#stphoto").attr("src", "<?= student_profile_image_path($stid) ?>");
             } else {
                 // New student
                 generateStid();
@@ -749,7 +826,12 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
                     }
                 });
 
-                $("#photoPreview").attr("src", "placeholder.png");
+
+
+                $("#photoPreview").attr("src", <?= student_profile_image_path($stid) ?>);
+
+
+
                 showToast("warning", "New profile. Fill and Save.", "Student Not Found");
             }
             if (activeFields.length > 0) {
@@ -1018,6 +1100,16 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
             $("#btnFetch").trigger("click");
         }, 500);
     }
+
+    $roll = sessionStorage.getItem("next_roll") || 0;
+    $('#rollno').val($roll);
+    setTimeout(function () {
+        $("#btnFetch").trigger("click");
+        sessionStorage.setItem("next_roll", '');
+    }, 500);
+
+
+
 
 
 </script>

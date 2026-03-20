@@ -9,9 +9,8 @@ $slot = $_POST['slot'] ?? $sctype;
 $session = $_POST['session'] ?? $y_v4;
 $cls = $_POST['cls'] ?? '';
 $sec = $_POST['sec'] ?? '';
-$datefrom = $_POST['dateFrom'] ?? $td;
-$dateto = $_POST['dateTo'] ?? $td;
-$collector = $_POST['collector'] ?? '';
+$datefrom = $_POST['dateFrom'] ?? date('Y-m-d');
+$dateto = $_POST['dateTo'] ?? date('Y-m-d');
 
 $month = formatMonthYearRange($datefrom, $dateto);
 
@@ -21,6 +20,8 @@ $q = mysqli_query($conn, "SELECT stid, stnameeng FROM students WHERE sccode='$sc
 while ($r = mysqli_fetch_assoc($q)) {
     $stprofile[] = $r;
 }
+
+
 
 
 /* ================= SESSION STUDENTS ================= */
@@ -34,11 +35,11 @@ $q = mysqli_query($conn, "
       AND sectionname='$sec'
     ORDER BY rollno
 ");
+
 while ($r = mysqli_fetch_assoc($q)) {
     $sessioninfo[] = $r;
 }
 $stcnt = count($sessioninfo);
-
 
 /* ================= CALENDAR (HOLIDAY / EVENTS) ================= */
 $datam = [];
@@ -148,8 +149,8 @@ while ($start <= $end) {
             $working = 0;
             ?>
             <tr>
-                <td><?= $st['rollno'] ?></td>
-                <td style="text-align:left"><?= $name ?></td>
+                <td class="px-3 text-end"><?= $st['rollno'] ?></td>
+                <td class="p-1" style="text-align:left"><?= $name ?></td>
 
                 <?php foreach ($dates as $d):
 

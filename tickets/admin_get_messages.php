@@ -13,9 +13,16 @@ $query = "
 $result = $conn->query($query);
 
 while ($row = $result->fetch_assoc()) {
+    $dev_sub = $row['dev_sub'] ?? 0;
     $class = ($row['admin_response'] == 1) ? 'text-end text-primary' : 'text-start text-body';
+    if($dev_sub == 1){
+        $class = 'text-end text-danger';
+        $dsb = 'disabled';
+    }else{
+        $dsb = '';
+    }
     $msgText = htmlspecialchars($row['message'], ENT_QUOTES);
-    echo "<div class='mb-2 $class message-item' data-id='{$row['id']}' data-message='{$msgText}'>
+    echo "<div class='mb-2 $class message-item' data-id='{$row['id']}' data-message='{$msgText}' data-dev='{$dev_sub}' >
             <strong>{$row['profilename']}:</strong> {$row['message']}
           </div>";
 }

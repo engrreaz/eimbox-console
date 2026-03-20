@@ -43,7 +43,7 @@ while ($r = mysqli_fetch_assoc($q)) {
 }
 // var_dump($examArr);
 if (empty($examArr)) {
-    echo "<div class='alert alert-warning'>No Active Exam Found</div>";
+    // echo "<div class='alert alert-warning'>No Active Exam Found</div>";
     exit;
 }
 
@@ -95,27 +95,33 @@ $percent = number_format($percent, 2);
 // 7️⃣ HTML আউটপুট
 // -------------------------------
 ?>
-<div class="p-3 border rounded mb-3 ">
-    <h5 class="mb-3">Exam Statistics</h5>
 
-    <table class="table table-sm table-bordered">
-        <tr>
-            <th>Total Required Entries</th>
-            <td><?php echo $totalClassCount; ?></td>
-        </tr>
+<div class="card-bodyx">
 
-        <tr>
-            <th>Total Mark Entries</th>
-            <td><?php echo $totalMarkRows; ?></td>
-        </tr>
+    <div class="p-3 border rounded mb-3 ">
+        <h5 class="mb-3">Exam Statistics</h5>
 
-        <tr>
-            <th>Completed (%)</th>
-            <td><?php echo $percent; ?>%</td>
-        </tr>
-    </table>
+        <table class="table table-sm table-bordered">
+            <tr>
+                <th>Total Required Entries</th>
+                <td><?php echo $totalClassCount; ?></td>
+            </tr>
+
+            <tr>
+                <th>Total Mark Entries</th>
+                <td><?php echo $totalMarkRows; ?></td>
+            </tr>
+
+            <tr>
+                <th>Completed (%)</th>
+                <td><?php echo $percent; ?>%</td>
+            </tr>
+        </table>
+    </div>
+
+    <button class="btn btn-info btn-sm me-3 details" id="detailExamclssec" data-type="clssec">Details (Class | Section)
+    </button>
+    <button class="btn btn-primary btn-sm me-3 details" id="detailExamStat" data-type="subject">Details (Subjects Level)
+    </button>
+    <button class="btn btn-danger btn-sm details" id="detailExamteacher" data-type="teacher">Teacher's Progress</button>
 </div>
-
-<button class="btn btn-info btn-sm me-3 details" id="detailExamclssec" data-type="clssec">Details (Class | Section) </button>
-<button class="btn btn-primary btn-sm me-3 details" id="detailExamStat" data-type="subject">Details (Subjects Level) </button>
-<button class="btn btn-danger btn-sm details" id="detailExamteacher"  data-type="teacher">Teacher's Progress</button>

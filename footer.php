@@ -154,7 +154,9 @@ $release_colors = [
     }
 </style>
 
-<?php if ($monitorPanel === true) { ?>
+<?php
+$monitorPanel = false;
+if ($monitorPanel === true) { ?>
 
     <div class="limit-monitor" id="limitMonitor">
 
@@ -356,6 +358,9 @@ $release_colors = [
                     </ul>
                 </div>
             </div>
+
+
+
             <div class="row" style="height:50px;">
 
             </div>
@@ -416,7 +421,7 @@ $release_colors = [
 
 
 
-<footer class="content-footer footer bg-footer-theme">
+<footer class="content-footer footer bg-footer-theme" hidden>
     <div class="container-xxl">
         <div class="footer-container d-flex align-items-center justify-content-between py-4 flex-md-row flex-column">
             <div class="mb-2 mb-md-0">
@@ -1494,10 +1499,51 @@ $release_colors = [
         /* ===============================
            2️⃣ Session → Class
            =============================== */
+
+
+        function get_exam_list(slot, session) {
+            // কুয়েরি প্যারামিটার তৈরি
+            const params = new URLSearchParams({
+                slot: slot,
+                session: session
+            });
+
+            fetch(`payments/get-exam-list.php?${params.toString()}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Exam List Received:", data);
+
+                    // উদাহরণ: আইডি 'exam_id' নামের একটি ড্রপডাউন আপডেট করা
+                    const examSelect = document.getElementById('exam-main');
+                    if (examSelect) {
+                        examSelect.innerHTML = '<option value="">Select Exam</option>';
+                        data.forEach(exam => {
+                            examSelect.innerHTML += `<option value="${exam}">${exam}</option>`;
+                        });
+                    }
+                       $('#exam-main').val(cookieMap['#exam-main']);
+
+
+                })
+                .catch(error => console.error('Error fetching exam list:', error));
+        }
+
+
         $('#session-main').on('change', function () {
 
             let session = $(this).val();
+            let slot = $('#slot-main').val();
+            if (!slot) return;
+
             if (!session) return;
+
+
+            if ($('#exam-main').length) {
+                console.log('Exam Trigger');
+                get_exam_list(slot, session);
+             
+
+            }
 
             $('#class-main').html('<option value="">Loading...</option>');
             $('#section-main').html('<option value="">Select class first</option>');
@@ -1521,9 +1567,12 @@ $release_colors = [
             let cls = $(this).val();
             if (!cls) return;
 
+            let session = $('#session-main').val();
+            if (!session) return;
+
             $('#section-main').html('<option value="">Loading...</option>');
 
-            $.post('payments/get-sections.php', { cls }, function (res) {
+            $.post('payments/get-sections.php', { cls, session }, function (res) {
 
                 $('#section-main').html(res);
 
@@ -1580,4 +1629,20 @@ $release_colors = [
     });
 </script>
 
+
 <!-- ------------------------- last Function ------------------------------ -->
+
+<script>
+    function triggerAltCtrlV() {
+        console.log('Trigger Ready');
+        const e = new KeyboardEvent('keydown', {
+            key: 'v',
+            code: 'KeyV',
+            ctrlKey: true,
+            altKey: true,
+            bubbles: true
+        });
+        document.dispatchEvent(e);
+
+    }
+</script>

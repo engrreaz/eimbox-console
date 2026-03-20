@@ -167,6 +167,8 @@ $admin_data = json_decode($json, true);
 
 
 $sccode_current_package = $_SESSION['package_id'] ?? 2;
+$sccode_current_package_name = $_SESSION['package_name'] ?? '&mdash;';
+$sccode_current_package_tier = $_SESSION['tier'] ?? 'A';
 
 $rootuser = $_SESSION['rootuser'] ?? '';
 $headname = $_SESSION['headname'] ?? '';

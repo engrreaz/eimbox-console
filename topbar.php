@@ -306,13 +306,14 @@
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="youtubeModalLabel">Video Tutorial</h5>
+                <h5 class="modal-title" id="youtubeModalLabel">Video Tutorial <?php echo $ytlink; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body" >
                 <div class="ratio ratio-16x9">
-                    <iframe id="youtubeIframe" src="https://www.youtube.com/embed/Cn4G2lZ_g2I"
+                    <iframe id="youtubeIframe" src="https://www.youtube.com/embed/<?php echo $ytlink; ?>"
                         title="YouTube video player" frameborder="0"
+                        
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                         allowfullscreen>
                     </iframe>

@@ -5,9 +5,10 @@ $status_name = 0;
 $page_title = 'EIMBox';
 $page_icon = 'app';
 $cur_page_module = '&mdash;';
+$ytlink='';
 
 $stmt = $conn->prepare("
-            SELECT module_name, nav_title, nav_icon, status_name, root_page 
+            SELECT module_name, nav_title, nav_icon, status_name, root_page , ytlink
             FROM modulemanager 
             WHERE FIND_IN_SET(?, related_pages)
             ORDER BY id DESC 
@@ -23,6 +24,7 @@ if ($stmt) {
         $page_icon = $row['nav_icon'] ?? 'app';
         $cur_page_module = $row['module_name'] ?? '';
         $MUL_PATA = $row['root_page'] ?? '';
+        $ytlink = $row['ytlink'] ?? '';
     }
 }
 $stmt->close();

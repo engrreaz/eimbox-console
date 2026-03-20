@@ -1,8 +1,8 @@
 <?php
 require_once 'header.php';
 
-$slot = $_COOKIE['slot'] ?? $_GET['slot'] ?? '';
-$session = $_COOKIE['session'] ?? $_GET['session'] ?? '';
+$slot = $_COOKIE['chain-slot'] ?? $_GET['slot'] ?? '';
+$session = $_COOKIE['chain-session'] ?? $_GET['session'] ?? '';
 ?>
 
 <style>
@@ -34,42 +34,17 @@ $session = $_COOKIE['session'] ?? $_GET['session'] ?? '';
     </div>
 
     <div class="row align-items-end g-2">
-        <div class="col-md-2">
-            <label class="form-label">Slot</label>
-            <select id="slot-main" class="form-select form-select-sm">
-                <option value="">Select Slot</option>
-                <?php
-                $q = $conn->query("SELECT slotname FROM slots WHERE sccode='$sccode' ORDER BY slotname");
-                while ($r = $q->fetch_assoc()) {
-                    $sel = ($slot == $r['slotname']) ? 'selected' : '';
-                    echo "<option value='{$r['slotname']}' $sel>{$r['slotname']}</option>";
-                }
-                ?>
-            </select>
-        </div>
+      
 
-        <div class="col-md-2">
-            <label class="form-label">Session</label>
-            <select id="session-main" class="form-select form-select-sm">
-                <option value="">Select Session</option>
-                <?php
-                $q = $conn->query("SELECT syear FROM sessionyear WHERE sccode='$sccode' AND active=1 ORDER BY syear DESC");
-                while ($r = $q->fetch_assoc()) {
-                    $sel = ($session == $r['syear']) ? 'selected' : '';
-                    echo "<option value='{$r['syear']}' $sel>{$r['syear']}</option>";
-                }
-                ?>
-            </select>
-        </div>
-        <div class="col-md-1 col-3 ">
-            <button type="button" class="btn btn-icon rounded-pill btn-label-github waves-effect" id="openTree">
-                <i class="icon-base bi bi-stack icon-22px"></i>
-            </button>
-        </div>
+        
 
         <?php
-        $chain = 'class'; // -- class (class/section omit), exam (+exam), subject (+subject)
-        include 'components/slot-tree-modal.php';
+        // $chain = 'class'; // -- class (class/section omit), exam (+exam), subject (+subject)
+        // include 'components/slot-tree-modal.php';
+        
+
+        $chain_param = '-c 10 -t Choose Values -u -r -b View Settings -h class exam';
+        include 'components/slot-tree-ui.php';
         ?>
 
         <div class="col-md-2 col-9">
@@ -111,12 +86,15 @@ $session = $_COOKIE['session'] ?? $_GET['session'] ?? '';
             ?>
             <div class="card mb-2 item" data-id="<?= $r['id']; ?>" draggable="true">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <div class="pointer d-flex "
+                    <div class="pointer d-flex flex-grow-1 align-items-center"
                         onclick="toggleItem(<?= $r['id'] ?>, '<?= $itemcode ?>', <?= $r['splitable'] ?? 0 ?>)">
+                        <div class="col-auto">
+                            <i class="bi bi-grip-vertical me-4"></i>
+                        </div>
                         <div class="col-auto">
                             <i class="bi bi-chevron-right me-4"></i>
                         </div>
-                        <div class="col-auto">
+                        <div class="col-4 flex-grow-2">
                             <strong class="text-info"><?= $r['particulareng']; ?></strong><br>
                             <small class="text-muted"><?= $r['particularben']; ?></small>
                         </div>
@@ -467,6 +445,10 @@ $session = $_COOKIE['session'] ?? $_GET['session'] ?? '';
         });
     }
 
+
+  function chainBtnFunc() {
+        window.location.reload();
+    }
 </script>
 
 

@@ -28,9 +28,10 @@
 
 
 <div class="modal fade" id="gpaModal">
-    <div class="modal-dialog">
-        <form id="gpaForm">
-            <div class="modal-content">
+    <div class="modal-dialog modal-dialog-centered ">
+
+        <div class="modal-content">
+            <form id="gpaForm">
                 <div class="modal-header">
                     <h5 class="modal-title">GPA Entry</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -41,45 +42,45 @@
                     <input type="hidden" name="id" id="id">
                     <input type="hidden" name="mode" id="mode"> <!-- add | edit -->
                     <input type="hidden" name="base_sccode" id="base_sccode">
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            <label>Min</label>
+                            <input type="number" name="minv" id="minv" class="form-control form-control-sm" step="0.01">
+                        </div>
 
-                    <div class="mb-2">
-                        <label>Min</label>
-                        <input type="number" name="minv" id="minv" class="form-control form-control-sm">
+                        <div class="col-md-6 mb-2">
+                            <label>Max</label>
+                            <input type="number" name="maxv" id="maxv" class="form-control form-control-sm" step="0.01">
+                        </div>
+
+                        <div class="col-md-6 mb-2">
+                            <label>GP</label>
+                            <input type="text" name="gp" id="gp" class="form-control form-control-sm" step="0.01">
+                        </div>
+
+                        <div class="col-md-6 mb-2">
+                            <label>GL</label>
+                            <input type="text" name="gl" id="gl" class="form-control form-control-sm">
+                        </div>
+
+                        <div class="col-md-6 mb-2">
+                            <label>Remark</label>
+                            <input type="text" name="remark" id="remark" class="form-control form-control-sm">
+                        </div>
+
+                        <div class="col-md-6 mb-2">
+                            <label>Color Code</label>
+                            <input type="color" name="color" id="color" class="form-control form-control-sm">
+                        </div>
                     </div>
-
-                    <div class="mb-2">
-                        <label>Max</label>
-                        <input type="number" name="maxv" id="maxv" class="form-control form-control-sm">
-                    </div>
-
-                    <div class="mb-2">
-                        <label>GP</label>
-                        <input type="text" name="gp" id="gp" class="form-control form-control-sm">
-                    </div>
-
-                    <div class="mb-2">
-                        <label>GL</label>
-                        <input type="text" name="gl" id="gl" class="form-control form-control-sm">
-                    </div>
-
-                    <div class="mb-2">
-                        <label>Remark</label>
-                        <input type="text" name="remark" id="remark" class="form-control form-control-sm">
-                    </div>
-
-                    <div class="mb-2">
-                        <label>Color Code</label>
-                        <input type="color" name="color" id="color" class="form-control form-control-sm">
-                    </div>
-
                 </div>
 
                 <div class="modal-footer">
                     <button class="btn btn-primary btn-sm" type="submit">Save</button>
                 </div>
+            </form>
+        </div>
 
-            </div>
-        </form>
     </div>
 </div>
 
@@ -117,7 +118,7 @@
             block.style.fontSize = "12px";
             block.style.textAlign = "center";
             block.style.lineHeight = "30px";
-          
+
             block.innerText = item.gl;
 
             meter.appendChild(block);
@@ -134,7 +135,7 @@
             valueBlock.style.fontSize = "11px";
             valueBlock.style.textAlign = "center";
             valueBlock.style.lineHeight = "25px";
-     
+
 
             valueBlock.innerText = `${min}–${max}`;
 
@@ -168,7 +169,7 @@
             $("#id").val("");
             $("#base_sccode").val("");
             $("#gpaForm")[0].reset();
-            $("#gpaModal").modal("show");
+            modal.show();
         });
 
         $(document).on("click", ".editBtn", function () {

@@ -84,8 +84,8 @@ $uid = $_POST['uniqueid'];
 
 $fnameben = $_POST['fnameben'];
 $mnameben = $_POST['mnameben'];
-$falive = $_POST['falive'];
-$malive = $_POST['malive'];
+$falive = (int)$_POST['falive'] ;
+$malive = (int)$_POST['malive'];
 $guarnameben = $_POST['guarnameben'];
 $guaremail = $_POST['guaremail'];
 $guarmobile2 = $_POST['guarmobile2'];

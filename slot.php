@@ -6,7 +6,7 @@ $slotCount = mysqli_num_rows($slotQ);
 
 <div class="container-xxl flex-grow-1 container-p-y">
     <div class="d-flex justify-content-between mb-2">
-        
+
         <?php if ($slotCount == 0) { ?>
             <button class="btn btn-warning btn-sm" onclick="setDefault()">Set Default</button>
         <?php } else { ?>
@@ -18,34 +18,36 @@ $slotCount = mysqli_num_rows($slotQ);
     <?php } ?>
 
     <div class="card">
-            <table class="table table-bordered table-sm">
-        <thead class="table-dark">
-            <tr>
-                <th>#</th>
-                <th>Slot Name</th>
-                <th>Merit</th>
-                <th>Parents</th>
-                <th width="100">Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php
-            $i = 1;
-            while ($row = mysqli_fetch_assoc($slotQ)) {
-                ?>
+        <table class="table table-bordered table-sm">
+            <thead class="table-dark">
                 <tr>
-                    <td><?= $i++ ?></td>
-                    <td><?= $row['slotname'] ?></td>
-                    <td><?= $row['merit'] == 1 ? 'GPA' : 'Total' ?></td>
-                    <td><?= $row['parents'] ?></td>
-                    <td class="d-flex ">
-                        <button class="btn btn-sm btn-info me-2" onclick='openEdit(<?= json_encode($row) ?>)'><i class="bi bi-pencil"></i></button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteSlot(<?= $row['id'] ?>)"><i class="bi bi-trash"></i></button>
-                    </td>
+                    <th>#</th>
+                    <th>Slot Name</th>
+                    <th>Merit</th>
+                    <th>Parents</th>
+                    <th width="100">Action</th>
                 </tr>
-            <?php } ?>
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                <?php
+                $i = 1;
+                while ($row = mysqli_fetch_assoc($slotQ)) {
+                    ?>
+                    <tr>
+                        <td><?= $i++ ?></td>
+                        <td><?= $row['slotname'] ?></td>
+                        <td><?= $row['merit'] == 1 ? 'GPA' : 'Total' ?></td>
+                        <td><?= $row['parents'] ?></td>
+                        <td class="d-flex ">
+                            <button class="btn btn-sm btn-info me-2" onclick='openEdit(<?= json_encode($row) ?>)'><i
+                                    class="bi bi-pencil"></i></button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteSlot(<?= $row['id'] ?>)"><i
+                                    class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>
+                <?php } ?>
+            </tbody>
+        </table>
     </div>
 
 
@@ -54,8 +56,8 @@ $slotCount = mysqli_num_rows($slotQ);
 
 <!-- MODAL -->
 <div class="modal fade" id="slotModal">
-    <div class="modal-dialog">
-        <div class="modal-content">
+    <div class="modal-dialog modal-dialog-centered ">
+        <div class="modal-content  ">
             <form id="slotForm">
                 <div class="modal-header">
                     <h5 class="modal-title">Slot</h5>
@@ -67,34 +69,34 @@ $slotCount = mysqli_num_rows($slotQ);
                     <input type="hidden" name="id" id="id">
                     <input type="hidden" name="sccode" value="<?= $sccode ?>">
 
-                    <div class="mb-2">
-                        <label>Slot Name</label>
-                        <input type="text" class="form-control form-control-sm" name="slotname" id="slotname" required>
+                    <div class="row">
+                        <div class="col-md-6 mb-2"><label>Slot Name</label>
+                            <input type="text" class="form-control form-control-sm" name="slotname" id="slotname"
+                                required>
+                        </div>
+                        <div class="col-md-6 mb-2"><label>Merit</label>
+                            <select class="form-select form-select-sm" name="merit" id="merit">
+                                <option value="0">Total Marks</option>
+                                <option value="1">GPA</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-2"> <label>Decimal</label>
+                            <select class="form-select form-select-sm" name="decimal" id="decimal">
+                                <option value="0">Nearest Top Integer</option>
+                                <option value="1">Deciaml</option>
+                                <option value="2">Round</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-2"><label>Parents</label>
+                            <select class="form-select form-select-sm" name="parents" id="parents">
+                                <option value="DOSO">DOSO (Doughter Of / Son of)</option>
+                                <option value="FM">FM (Father / Mother)</option>
+                            </select>
+                        </div>
                     </div>
 
-                    <div class="mb-2">
-                        <label>Merit</label>
-                        <select class="form-select form-select-sm" name="merit" id="merit">
-                            <option value="0">Total Marks</option>
-                            <option value="1">GPA</option>
-                        </select>
-                    </div>
-                    <div class="mb-2">
-                        <label>Decimal</label>
-                        <select class="form-select form-select-sm" name="decimal" id="decimal">
-                            <option value="0">Nearest Top Int</option>
-                            <option value="1">Deciaml</option>
-                            <option value="2">Round</option>
-                        </select>
-                    </div>
 
-                    <div class="mb-2">
-                        <label>Parents</label>
-                        <select class="form-select form-select-sm" name="parents" id="parents">
-                            <option value="DOSO">DOSO</option>
-                            <option value="FM">FM</option>
-                        </select>
-                    </div>
+
 
                 </div>
 
@@ -107,7 +109,7 @@ $slotCount = mysqli_num_rows($slotQ);
     </div>
 </div>
 
-<?php include 'footer.php';?>
+<?php include 'footer.php'; ?>
 
 <script>
     // Create
@@ -171,7 +173,7 @@ $slotCount = mysqli_num_rows($slotQ);
         })
             .then(res => res.text())
             .then(res => {
-    
+
                 showToast("success", "Default Slot Implemented", "Include Default");
                 location.reload();
             });

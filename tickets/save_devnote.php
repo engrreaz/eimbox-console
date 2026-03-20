@@ -9,6 +9,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $admin_id = intval($_SESSION['user_id']);
     $notes = trim($_POST['notes']);
     $status = $_POST['status'] ?? 'New';
+    $msgid = intval($_POST['msgid']);
+
+
 
     if (!$sccode || !$notes) {
         echo "missing";
@@ -45,6 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $stmt->close();
     $updateRefStmt->close();
+
+    $conn->query("UPDATE ticket_messages set dev_sub='1' where id='$msgid'");
 
 
     // এখন চাইলে প্রথম রেকর্ডের ref_id নিজেই নিজের আইডি হিসেবে আপডেট করা যেতে পারে:

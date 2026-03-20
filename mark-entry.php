@@ -62,10 +62,16 @@
                 </div>
 
 
-                <div class="col-md-3 mb-3">
+                <div class="col-md-3 mb-3 d-flex mt-2 ">
 
-                    <input type="checkbox" style="transform: scale(1.5);" class="form-check mt-2 " id="saveMode" /> Save
-                    on Every Student (Fill All Inputs)
+                    <input type="checkbox" style="transform: scale(1.5);" class="form-check mt-2 " id="saveMode" /> 
+                    <div class="fs-tiny pt-4 ms-4">
+                        Save on Every Student <br>
+                        (Fill All Inputs)
+                    </div>
+                    
+                    
+                     
                 </div>
 
 

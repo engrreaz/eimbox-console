@@ -8,6 +8,7 @@ $mapQ->execute();
 $mapR = $mapQ->get_result();
 $map = $mapR->fetch_assoc();
 
+$totalDurationPage = $totalDurationAll = $totalRecordsPage = 0;
 
 $access = $map ? $map['access'] : 'No';
 $entry_limit = $map ? $map['entry_limit'] : '0';
@@ -96,10 +97,13 @@ if ($is_admin >= 4 || $cur_page_module == 'Core' || $cur_page_module == 'Support
 
 
 
-function percent_safe($used, $limit){
-    if ($limit <= 0) return 0;   // avoid division by zero
+function percent_safe($used, $limit)
+{
+
+    if ($used == 0 || $limit <= 0)
+        return 0;
     return min(100, round(($used / $limit) * 100));
 }
-$pagePercent   = percent_safe($totalDurationPage,$total_time_limit );
-$totalPercent  = percent_safe($totalDurationAll, $total_time_limit_all);
-$accessPercent = percent_safe($totalRecordsPage,    $access_count_limit);
+$pagePercent = percent_safe($totalDurationPage, $total_time_limit);
+$totalPercent = percent_safe($totalDurationAll, $total_time_limit_all);
+$accessPercent = percent_safe($totalRecordsPage, $access_count_limit);

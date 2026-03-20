@@ -231,25 +231,40 @@ if (strpos($chain, 'class') !== false) {
                 </select>
             </div>
 
-            <!-- CLASS -->
-            <div class="col-md-<?= $chain_md ?>">
-                <label class="form-label fs-small">Class</label>
-                <select id="class-main" class="form-select form-select-sm">
-                    <option value="">Select Class</option>
-                </select>
-            </div>
+            <?php  if (strpos($chain, 'exam') !== false) { ?>
+                <div class="col-md-<?= $chain_md ?>">
+                    <label class="form-label fs-small">Examination</label>
+                    <select id="exam-main" class="form-select form-select-sm">
+                        <option value="">Select Exam</option>
+                    </select>
+                </div>
+            <?php }?>
 
-            <!-- SECTION -->
-            <div class="col-md-<?= $chain_md ?>">
-                <label class="form-label fs-small">Section</label>
-                <select id="section-main" class="form-select form-select-sm">
-                    <option value="">Select Section</option>
-                </select>
-            </div>
 
+
+            <?php if (strpos($chain, 'class') === false) {
+                ?>
+
+                <!-- CLASS -->
+                <div class="col-md-<?= $chain_md ?>">
+                    <label class="form-label fs-small">Class</label>
+                    <select id="class-main" class="form-select form-select-sm">
+                        <option value="">Select Class</option>
+                    </select>
+                </div>
+
+                <!-- SECTION -->
+                <div class="col-md-<?= $chain_md ?>">
+                    <label class="form-label fs-small">Section</label>
+                    <select id="section-main" class="form-select form-select-sm">
+                        <option value="">Select Section</option>
+                    </select>
+                </div>
+            <?php } ?>
             <!-- ACTION -->
             <div class="col-md-<?= $chain_md ?>">
-                <button type="button" class="btn btn-sm btn-primary w-100 py-2 pt-3" id="btn-chain">
+                <button type="button" class="btn btn-sm btn-primary w-100 py-2 pt-3" id="btn-chain"
+                    onclick="chainBtnFunc();">
                     <div class="row">
                         <div class="col text-start">
                             <?= $chain_button_text ?>

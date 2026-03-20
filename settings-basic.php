@@ -8,11 +8,12 @@ $refdate = date('Y-m-d');
 
 // session year
 $sylist = [];
-$sql = "SELECT * FROM sessionyear WHERE sccode='$sccode' AND active=1 ORDER BY id";
+$sql = "SELECT syear,active FROM sessionyear WHERE sccode='$sccode'  ORDER BY id";
 $res = $conn->query($sql);
 while ($row = $res->fetch_assoc()) {
     $sylist[] = $row;
 }
+
 
 // settings
 
@@ -52,7 +53,7 @@ $module = $admin_data['module'] ?? [];
                 <?php } ?>
 
                 <div class="col-md-12 mt-2">
-                    <button id="week" class="btn btn-inverse-success" onclick="updateWeekends()">Update</button>
+                    <button id="week" class="btn btn-outline-success  " onclick="updateWeekends()">Update</button>
 
                 </div>
             </div>
@@ -89,7 +90,7 @@ $module = $admin_data['module'] ?? [];
                         </div>
 
                         <div class="col-md-12 pt-2">
-                            <button id="med" class="btn btn-inverse-success" onclick="updateMedium()">Update</button>
+                            <button id="med" class="btn btn-outline-success" onclick="updateMedium()">Update</button>
                         </div>
                     </div>
                 </div>
@@ -104,7 +105,7 @@ $module = $admin_data['module'] ?? [];
     $versions = $indVersion !== false ? $sett[$indVersion]['settings_value'] : '';
     ?>
 
-    <div class="row d-print-none">
+    <div class="row d-print-none mt-3">
         <div class="col-12 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
@@ -134,7 +135,7 @@ $module = $admin_data['module'] ?? [];
                         </div>
 
                         <div class="col-md-12 pt-2">
-                            <button id="ver" class="btn btn-inverse-success" onclick="updateVersion()">Update</button>
+                            <button id="ver" class="btn btn-outline-success" onclick="updateVersion()">Update</button>
                         </div>
                     </div>
                 </div>
@@ -155,6 +156,8 @@ $module = $admin_data['module'] ?? [];
 
                     <div class="row pt-2">
                         <?php
+
+                        // var_dump($sylist);
                         $years = [
                             date('Y') - 1 . '-' . date('y'),
                             date('Y'),
@@ -164,9 +167,12 @@ $module = $admin_data['module'] ?? [];
                             $years[] = date('Y') + 1;
                         }
 
+                        $sylistYears = array_column($sylist, 'syear');
+                        $years = array_unique(array_merge($years, $sylistYears));
+
                         foreach ($years as $i => $yr) {
                             $ind = array_search($yr, array_column($sylist, 'syear'));
-                            $checked = ($ind !== false) ? 'checked' : '';
+                            $checked = ($ind !== false && $sylist[$ind]['active'] == 1) ? 'checked' : '';
                             ?>
                             <div class="col-md-2">
                                 <div class="form-check form-check-primary">
@@ -178,7 +184,7 @@ $module = $admin_data['module'] ?? [];
                         <?php } ?>
 
                         <div class="col-md-12 pt-2">
-                            <button class="btn btn-inverse-success" id="sy"
+                            <button class="btn btn-outline-success" id="sy"
                                 onclick="updateSessionYear()">Update</button>
                         </div>
                     </div>
@@ -188,9 +194,9 @@ $module = $admin_data['module'] ?? [];
     </div>
 
 
-    <div class="card mb-3">
+    <div class="card my-3">
         <div class="card-header">
-            <h6 class="mb-0">Classes</h6>
+            <h4 class="mb-0">Classes</h4>
         </div>
 
         <div class="card-body">
@@ -221,7 +227,10 @@ $module = $admin_data['module'] ?? [];
                     'Seven',
                     'Eight',
                     'Nine',
-                    'Ten'
+                    'Ten',
+                    'SSC',
+                    'Eleven',
+                    'Twelve'
                 ];
 
                 echo "<div class='row'>";
@@ -237,7 +246,7 @@ $module = $admin_data['module'] ?? [];
                             <?= $cls ?>
                         </label>
                     </div>
-                <?php } 
+                <?php }
                 echo "</div>";
                 ?>
 
@@ -245,7 +254,7 @@ $module = $admin_data['module'] ?? [];
             </div>
 
             <div class="mt-3">
-                <button class="btn btn-inverse-success btn-sm" onclick="updateClasses()">
+                <button id="klass" class="btn btn-outline-success btn-sm" onclick="updateClasses()">
                     Update
                 </button>
                 <span id="clsmsg" class="ms-2"></span>
@@ -279,7 +288,17 @@ $module = $admin_data['module'] ?? [];
             weekends: days.join(',')
         }, function (res) {
             $('#defbtn').html(res);
+            $('#week').css('background', 'green');
+            $('#week').css('color', 'white');
+            $('#week').html('Weekend Information Updated');
         });
+
+        setTimeout(function () {
+            $('#week').css({
+                background: '',
+                color: ''
+            }).html('Update');
+        }, 2000); // 2 seconds
     }
 </script>
 
@@ -292,6 +311,16 @@ $module = $admin_data['module'] ?? [];
         $.post('settings/save-medium.php', {
             medium: data.join(',')
         }, res => $('#defbtn').html(res));
+        $('#med').css('background', 'green');
+        $('#med').css('color', 'white');
+        $('#med').html('Medium Information Updated');
+
+        setTimeout(function () {
+            $('#med').css({
+                background: '',
+                color: ''
+            }).html('Update');
+        }, 2000); // 2 seconds
     }
 </script>
 
@@ -305,6 +334,16 @@ $module = $admin_data['module'] ?? [];
         $.post('settings/save-version.php', {
             version: data.join(',')
         }, res => $('#defbtn').html(res));
+        $('#ver').css('background', 'green');
+        $('#ver').css('color', 'white');
+        $('#ver').html('Version Information Updated');
+
+        setTimeout(function () {
+            $('#ver').css({
+                background: '',
+                color: ''
+            }).html('Update');
+        }, 2000); // 2 seconds
     }
 </script>
 
@@ -322,12 +361,20 @@ $module = $admin_data['module'] ?? [];
         $.post('settings/save-sessionyear.php', { years: years }, function (res) {
 
             if (res.status === 'success') {
-                $('#sy').html('Updated');
-                $('#sy').css('color', 'green');
+                $('#sy').html('Session Year Updated');
+                $('#sy').css('background', 'green');
+                $('#sy').css('color', 'white');
+
             } else {
                 $('#sy').html('Error Updating');
                 $('#sy').css('color', 'red');
             }
+            setTimeout(function () {
+                $('#sy').css({
+                    background: '',
+                    color: ''
+                }).html('Update');
+            }, 2000); // 2 seconds
 
         }, 'json'); // response JSON হলে
     }
@@ -350,6 +397,16 @@ $module = $admin_data['module'] ?? [];
             classes: classes
         }, function (res) {
             $('#clsmsg').html(res);
+            $('#klass').css('background', 'green');
+            $('#klass').css('color', 'white');
+            $('#klass').html('Class Information Updated');
+            setTimeout(function () {
+                $('#klass').css({
+                    background: '',
+                    color: ''
+                }).html('Update');$('#clsmsg').html('');
+            }, 2000); // 2 seconds
+
         });
     }
 </script>

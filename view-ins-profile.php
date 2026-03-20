@@ -32,7 +32,7 @@
 <div class="container-xxl flex-grow-1 container-p-y">
 
     <?php
-    $current_sccode = isset($_GET['sccode']) ? $_GET['sccode'] : '';
+    $current_sccode = isset($_GET['sccode']) ? $_GET['sccode'] : $sccode;
 
     // ================= SCINFO আপডেট =================
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -132,7 +132,7 @@
     ?>
     <div class="row ">
         <div class="col-auto">
-            <img src="<?= BASE_PATH ?>logo/<?= $current_sccode ?>.png" style="height:80px;">
+            <img src="<?= institute_logo($ins['sccode']) ?>" style="height:80px;">
         </div>
 
         <div class="col-auto ms-2">

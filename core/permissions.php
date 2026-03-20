@@ -29,7 +29,7 @@ while ($row = $result->fetch_assoc()) {
         $orion_page_list[] = $row['related_pages'];
     } else if ($md == 'Seed') {
         $seed_page_list[] = $row['related_pages'];
-    } else if ($md == '' || $md == NULL){
+    } else if ($md == '' || $md == NULL) {
         $restrict_page_list[] = $row['related_pages'];
     }
 
@@ -97,8 +97,11 @@ if ($usr == 'engrreaz@gmail.com') {
     $permission = 3;
 }
 
-// echo "%%" . $userlevel;
-// echo ".........." . $permission;
+
+if (isset($_GET['perm'])) {
+    $permission = $_GET['perm'];
+    $is_admin = 0;
+}
 
 include_once('page_load_query.php');
 

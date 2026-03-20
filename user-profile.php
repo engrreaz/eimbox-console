@@ -1,509 +1,254 @@
-<?php require_once 'header.php'; ?>
+<?php
+require_once 'header.php';
 
-<!-- Content -->
+/** * ডাটা ফেচ করা 
+ * মনে রাখবেন: আপনার SQL ডাম্প অনুযায়ী $usr যদি প্রাইমারি key 'id' হয়, তবে কুয়েরি হবে id = ?
+ * আর যদি 'email' দিয়ে চেক করতে চান তবে bind_param এ "si" হবে।
+ */
+$stmt = $conn->prepare("SELECT * FROM usersapp WHERE email = ? AND sccode = ?");
+$stmt->bind_param("ii", $usr, $sccode);
+$stmt->execute();
+$userData = $stmt->get_result()->fetch_assoc();
+
+if (!$userData) {
+  echo "<div class='alert alert-danger m-3'>User record not found!</div>";
+  exit;
+}
+
+// প্রোফাইল আপডেট হ্যান্ডলিং
+if (isset($_POST['update_profile'])) {
+  $p_name = $_POST['profilename'];
+  $mobile = $_POST['mobile'];
+  $theme = $_POST['theme'];
+
+  // শুধুমাত্র আপডেটযোগ্য ফিল্ডগুলো কুয়েরিতে রাখা হয়েছে
+  $up_stmt = $conn->prepare("UPDATE usersapp SET profilename = ?, mobile = ?, theme = ? WHERE id = ?");
+  $up_stmt->bind_param("sssi", $p_name, $mobile, $theme, $usr);
+
+  if ($up_stmt->execute()) {
+    echo "<script>alert('Profile Updated Successfully!'); window.location.href='user-profile.php';</script>";
+  }
+}
+
+// পাসওয়ার্ড পরিবর্তন হ্যান্ডলিং (Argon2id)
+if (isset($_POST['change_password'])) {
+  $current_pass = $_POST['current_password'];
+  $new_pass = $_POST['new_password'];
+  $confirm_pass = $_POST['confirm_password'];
+
+  if (password_verify($current_pass, $userData['password_hash'])) {
+    if ($new_pass === $confirm_pass) {
+      $new_hash = password_hash($new_pass, PASSWORD_ARGON2ID);
+      $pass_stmt = $conn->prepare("UPDATE usersapp SET password_hash = ? WHERE id = ?");
+      $pass_stmt->bind_param("si", $new_hash, $usr);
+      if ($pass_stmt->execute()) {
+        echo "<script>alert('Password Changed Successfully!');</script>";
+      }
+    } else {
+      echo "<script>alert('New Passwords do not match!');</script>";
+    }
+  } else {
+    echo "<script>alert('Current Password is incorrect!');</script>";
+  }
+}
+?>
+
 <div class="container-xxl flex-grow-1 container-p-y">
+  <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">User /</span> Account Settings</h4>
 
-  <!-- Header -->
   <div class="row">
-    <div class="col-12">
-      <div class="card mb-6">
-        <div class="user-profile-header-banner">
-          <img
-            src="https://demos.themeselection.com/materio-bootstrap-html-admin-template/assets/img/pages/profile-banner.png"
-            alt="Banner image" class="rounded-top  " style="width:100%; height:100px;" />
-        </div>
-        <div style="margin-top:-30px;"
-          class="user-profile-header d-flex flex-column flex-lg-row text-sm-start text-center mb-4">
-          <div class="flex-shrink-0 mt-n2 mx-sm-0 mx-auto">
-            <img src="<?php echo $pth; ?>" alt="user image"
-              class="d-block h-auto ms-0 ms-sm-5 rounded user-profile-img" />
-          </div>
-          <div class="flex-grow-1 mt-3 mt-lg-5">
-            <div
-              class="d-flex align-items-md-end align-items-sm-start align-items-center justify-content-md-between justify-content-start mx-5 flex-md-row flex-column gap-4">
-              <div class="user-profile-info">
-                <h4 class="mb-0 mt-lg-6"><?php echo $fullname; ?></h4>
-                <ul
-                  class="list-inline mt-0 mb-0 d-flex align-items-center flex-wrap justify-content-sm-start justify-content-center gap-4">
-                  <li class="list-inline-item text-small"><i class="icon-base bi bi-person me-2 icon-16px"></i><span
-                      class="fw-medium"> <?php echo str_replace('%', '', $userlevel); ?> </span></li>
-
-                </ul>
+    <div class="col-xl-4 col-lg-5 col-md-5 order-1 order-md-0">
+      <div class="card mb-4 border-0 shadow-sm">
+        <div class="card-body">
+          <div class="user-avatar-section">
+            <div class="d-flex align-items-center flex-column">
+              <img class="img-fluid rounded mb-3 pt-1"
+                src="<?= $userData['photourl'] ?: 'https://via.placeholder.com/150' ?>" height="100" width="100"
+                alt="User avatar" style="object-fit: cover; border: 3px solid #eee;">
+              <div class="user-info text-center">
+                <h4 class="mb-2"><?= $userData['profilename'] ?></h4>
+                <span class="badge bg-label-primary mt-1"><?= $userData['userlevel'] ?></span>
               </div>
-              <!-- <a href="javascript:void(0)" class="btn btn-primary"> <i
-                  class="icon-base ri ri-user-follow-line icon-16px me-1_5"></i>Connected </a> -->
             </div>
+          </div>
+          <div class="d-flex justify-content-around flex-wrap mt-3 py-3 border-bottom border-top">
+            <div class="d-flex align-items-start me-4 mt-3 gap-2">
+              <span class="badge bg-label-primary p-2 rounded"><i class="bi bi-shield-check"></i></span>
+              <div>
+                <h5 class="mb-0">Admin</h5>
+                <small>Level <?= $userData['admin'] ?></small>
+              </div>
+            </div>
+            <div class="d-flex align-items-start mt-3 gap-2">
+              <span class="badge bg-label-success p-2 rounded"><i class="bi bi-person-badge"></i></span>
+              <div>
+                <h5 class="mb-0">Chief</h5>
+                <small><?= $userData['is_chief'] ? 'Verified' : 'Regular' ?></small>
+              </div>
+            </div>
+          </div>
+          <p class="mt-4 small text-uppercase text-muted">Account Details</p>
+          <div class="info-container">
+            <ul class="list-unstyled">
+              <li class="mb-2">
+                <span class="fw-bold me-1">Email:</span>
+                <span><?= $userData['email'] ?></span>
+              </li>
+              <li class="mb-2">
+                <span class="fw-bold me-1">Status:</span>
+                <span
+                  class="badge bg-<?= $userData['active'] ? 'success' : 'danger' ?>"><?= $userData['active'] ? 'Active' : 'Inactive' ?></span>
+              </li>
+              <li class="mb-2">
+                <span class="fw-bold me-1">Last Login:</span>
+                <span class="small"><?= $userData['lastlogin'] ?></span>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
     </div>
-  </div>
-  <!--/ Header -->
 
-  <!-- Navbar pills -->
-  <div class="row">
-    <div class="col-md-12">
-      <div class="nav-align-top">
-        <ul class="nav nav-pills flex-column flex-sm-row mb-6 gap-2 gap-lg-0">
+    <div class="col-xl-8 col-lg-7 col-md-7 order-0 order-md-1">
+      <div class="nav-align-top mb-4">
+        <ul class="nav nav-tabs border-bottom-0 shadow-sm bg-white rounded-top" role="tablist">
           <li class="nav-item">
-            <a class="nav-link active" href="javascript:void(0);"><i
-                class="icon-base ri ri-user-3-line icon-sm me-1_5"></i>Profile</a>
+            <button type="button" class="nav-link active" role="tab" data-bs-toggle="tab"
+              data-bs-target="#navs-profile">
+              <i class="bi bi-person me-1"></i> Profile & System Info
+            </button>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#"><i class="icon-base ri ri-team-line icon-sm me-1_5"></i>Security</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#"><i class="icon-base ri ri-computer-line icon-sm me-1_5"></i>Settings</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#"><i class="icon-base ri ri-link-m icon-sm me-1_5"></i>Activity Log</a>
+            <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#navs-security">
+              <i class="bi bi-lock me-1"></i> Security
+            </button>
           </li>
         </ul>
+        <div class="tab-content bg-white shadow-sm rounded-bottom p-4">
+
+          <div class="tab-pane fade show active" id="navs-profile" role="tabpanel">
+            <form method="POST">
+              <div class="row">
+                <div class="col-12 mb-3">
+                  <h6 class="fw-bold text-primary border-bottom pb-2">Editable Information</h6>
+                </div>
+                <div class="mb-3 col-md-6">
+                  <label class="form-label fw-semibold text-dark">Full Name</label>
+                  <input class="form-control" type="text" name="profilename" value="<?= $userData['profilename'] ?>"
+                    required>
+                </div>
+                <div class="mb-3 col-md-6">
+                  <label class="form-label fw-semibold text-dark">Mobile Number</label>
+                  <input class="form-control" type="text" name="mobile" value="<?= $userData['mobile'] ?>">
+                </div>
+                <div class="mb-3 col-md-6">
+                  <label class="form-label fw-semibold text-dark">System Theme</label>
+                  <select name="theme" class="form-select">
+                    <option value="light" <?= $userData['theme'] == 'light' ? 'selected' : '' ?>>Light Mode</option>
+                    <option value="dark" <?= $userData['theme'] == 'dark' ? 'selected' : '' ?>>Dark Mode</option>
+                  </select>
+                </div>
+
+                <div class="col-12 mt-4 mb-3">
+                  <h6 class="fw-bold text-muted border-bottom pb-2">Read-Only System Data</h6>
+                </div>
+                <div class="mb-3 col-md-4">
+                  <label class="form-label small text-muted">User ID</label>
+                  <input class="form-control bg-light text-muted" type="text" value="<?= $userData['userid'] ?>"
+                    readonly>
+                </div>
+                <div class="mb-3 col-md-4">
+                  <label class="form-label small text-muted">Admin Privilege</label>
+                  <input class="form-control bg-light text-muted fw-bold" type="text"
+                    value="Level <?= $userData['admin'] ?>" readonly>
+                </div>
+                <div class="mb-3 col-md-4">
+                  <label class="form-label small text-muted">Chief Access</label>
+                  <div class="form-control bg-light text-muted fw-bold">
+                    <?= $userData['is_chief'] ? '<i class="bi bi-check-circle text-success me-1"></i>Yes' : '<i class="bi bi-x-circle text-danger me-1"></i>No' ?>
+                  </div>
+                </div>
+                <div class="mb-3 col-md-6">
+                  <label class="form-label small text-muted">Active Session</label>
+                  <input class="form-control bg-light text-muted" type="text" value="<?= $userData['session'] ?>"
+                    readonly>
+                </div>
+                <div class="mb-3 col-md-6">
+                  <label class="form-label small text-muted">User Level</label>
+                  <input class="form-control bg-light text-muted" type="text" value="<?= $userData['userlevel'] ?>"
+                    readonly>
+                </div>
+              </div>
+              <div class="mt-3 text-end border-top pt-3">
+                <button type="submit" name="update_profile" class="btn btn-primary px-4 shadow-sm">Save Profile
+                  Changes</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="tab-pane fade" id="navs-security" role="tabpanel">
+            <form method="POST">
+              <div class="row">
+                <div class="mb-3 col-12">
+                  <label class="form-label fw-semibold text-dark">Current Password</label>
+                  <input class="form-control" type="password" name="current_password" required
+                    placeholder="············">
+                </div>
+                <div class="mb-3 col-md-6">
+                  <label class="form-label fw-semibold text-dark">New Password</label>
+                  <input class="form-control" type="password" name="new_password" required placeholder="············">
+                </div>
+                <div class="mb-3 col-md-6">
+                  <label class="form-label fw-semibold text-dark">Confirm New Password</label>
+                  <input class="form-control" type="password" name="confirm_password" required
+                    placeholder="············">
+                </div>
+              </div>
+              <div class="alert alert-warning border-0 bg-light-warning py-2 mt-2">
+                <small><i class="bi bi-shield-lock me-1 text-warning"></i> Password is secured with high-entropy
+                  <strong>Argon2id</strong> hashing.</small>
+              </div>
+              <div class="mt-3 text-end border-top pt-3">
+                <button type="submit" name="change_password" class="btn btn-danger px-4 shadow-sm">Update
+                  Password</button>
+              </div>
+            </form>
+          </div>
+
+        </div>
       </div>
     </div>
   </div>
-  <!--/ Navbar pills -->
-
-  <!-- User Profile Content -->
-  <div class="row">
-    <div class="col-xl-4 col-lg-5 col-md-5">
-      <!-- About User -->
-      <div class="card mb-6" hidden>
-        <div class="card-body">
-          <small class="card-text text-uppercase text-body-secondary small">About</small>
-          <ul class="list-unstyled my-3 py-1">
-            <li class="d-flex align-items-center mb-4"><i class="icon-base ri ri-user-3-line icon-24px"></i><span
-                class="fw-medium mx-2">Full Name:</span> <span>John Doe</span></li>
-            <li class="d-flex align-items-center mb-4"><i class="icon-base ri ri-check-line icon-24px"></i><span
-                class="fw-medium mx-2">Status:</span> <span>Active</span></li>
-            <li class="d-flex align-items-center mb-4"><i class="icon-base ri ri-star-smile-line icon-24px"></i><span
-                class="fw-medium mx-2">Role:</span> <span>Developer</span></li>
-            <li class="d-flex align-items-center mb-4"><i class="icon-base ri ri-flag-2-line icon-24px"></i><span
-                class="fw-medium mx-2">Country:</span> <span>USA</span></li>
-            <li class="d-flex align-items-center mb-2"><i class="icon-base ri ri-translate-2 icon-24px"></i><span
-                class="fw-medium mx-2">Languages:</span> <span>English</span></li>
-          </ul>
-          <small class="card-text text-uppercase text-body-secondary small">Contacts</small>
-          <ul class="list-unstyled my-3 py-1">
-            <li class="d-flex align-items-center mb-4"><i class="icon-base ri ri-phone-line icon-24px"></i><span
-                class="fw-medium mx-2">Contact:</span> <span>(123) 456-7890</span></li>
-            <li class="d-flex align-items-center mb-4"><i class="icon-base ri ri-wechat-line icon-24px"></i><span
-                class="fw-medium mx-2">Skype:</span> <span>john.doe</span></li>
-            <li class="d-flex align-items-center mb-2"><i class="icon-base ri ri-mail-open-line icon-24px"></i><span
-                class="fw-medium mx-2">Email:</span> <span>john.doe@example.com</span></li>
-          </ul>
-          <small class="card-text text-uppercase text-body-secondary small">Teams</small>
-          <ul class="list-unstyled mb-0 mt-3 pt-1">
-            <li class="d-flex align-items-center mb-4">
-              <i class="icon-base ri ri-github-line icon-24px text-body me-2"></i>
-              <div class="d-flex flex-wrap"><span class="fw-medium me-2">Backend Developer</span><span>(126
-                  Members)</span></div>
-            </li>
-            <li class="d-flex align-items-center">
-              <i class="icon-base ri ri-reactjs-line icon-24px text-body me-2"></i>
-              <div class="d-flex flex-wrap"><span class="fw-medium me-2">React Developer</span><span>(98 Members)</span>
-              </div>
-            </li>
-          </ul>
-        </div>
-      </div>
-      <!--/ About User -->
-      <!-- Profile Overview -->
-      <div class="card mb-6" hidden>
-        <div class="card-body">
-          <small class="card-text text-uppercase text-body-secondary small">Overview</small>
-          <ul class="list-unstyled mb-0 mt-3 pt-1">
-            <li class="d-flex align-items-center mb-4"><i class="icon-base ri ri-check-line icon-24px"></i><span
-                class="fw-medium mx-2">Task Compiled:</span> <span>13.5k</span></li>
-            <li class="d-flex align-items-center mb-4"><i class="icon-base ri ri-user-3-line icon-24px"></i><span
-                class="fw-medium mx-2">Projects Compiled:</span> <span>146</span></li>
-            <li class="d-flex align-items-center"><i class="icon-base ri ri-star-smile-line icon-24px"></i><span
-                class="fw-medium mx-2">Connections:</span> <span>897</span></li>
-          </ul>
-        </div>
-      </div>
-      <!--/ Profile Overview -->
-    </div>
-    <div class="col-xl-8 col-lg-7 col-md-7">
-      <!-- Activity Timeline -->
-      <div class="card card-action mb-6" hidden>
-        <div class="card-header align-items-center">
-          <h5 class="card-action-title mb-0"><i
-              class="icon-base ri ri-bar-chart-2-line icon-24px text-body me-4"></i>Activity Timeline</h5>
-        </div>
-        <div class="card-body pt-3">
-          <ul class="timeline card-timeline mb-0">
-            <li class="timeline-item timeline-item-transparent">
-              <span class="timeline-point timeline-point-primary"></span>
-              <div class="timeline-event">
-                <div class="timeline-header mb-3">
-                  <h6 class="mb-0">12 Invoices have been paid</h6>
-                  <small class="text-body-secondary">12 min ago</small>
-                </div>
-                <p class="mb-2">Invoices have been paid to the company</p>
-                <div class="d-flex align-items-center mb-1">
-                  <div class="badge bg-lightest">
-                    <img
-                      src="https://demos.themeselection.com/materio-bootstrap-html-admin-template/assets//img/icons/misc/pdf.png"
-                      alt="img" width="15" class="me-2" />
-                    <span class="h6 mb-0">invoices.pdf</span>
-                  </div>
-                </div>
-              </div>
-            </li>
-            <li class="timeline-item timeline-item-transparent">
-              <span class="timeline-point timeline-point-success"></span>
-              <div class="timeline-event">
-                <div class="timeline-header mb-3">
-                  <h6 class="mb-0">Client Meeting</h6>
-                  <small class="text-body-secondary">45 min ago</small>
-                </div>
-                <p class="mb-2">Project meeting with john @10:15am</p>
-                <div class="d-flex justify-content-between flex-wrap gap-2">
-                  <div class="d-flex flex-wrap align-items-center">
-                    <div class="avatar avatar-sm me-2">
-                      <img
-                        src="https://demos.themeselection.com/materio-bootstrap-html-admin-template/assets/img/avatars/1.png"
-                        alt="Avatar" class="rounded-circle" />
-                    </div>
-                    <div>
-                      <p class="mb-0 small fw-medium">Lester McCarthy (Client)</p>
-                      <small>CEO of ThemeSelection</small>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </li>
-            <li class="timeline-item timeline-item-transparent">
-              <span class="timeline-point timeline-point-info"></span>
-              <div class="timeline-event">
-                <div class="timeline-header mb-3">
-                  <h6 class="mb-0">Create a new project for client</h6>
-                  <small class="text-body-secondary">2 Day Ago</small>
-                </div>
-                <p class="mb-2">6 team members in a project</p>
-                <ul class="list-group list-group-flush">
-                  <li
-                    class="list-group-item d-flex justify-content-between align-items-center flex-wrap border-top-0 p-0">
-                    <div class="d-flex flex-wrap align-items-center">
-                      <ul class="list-unstyled users-list d-flex align-items-center avatar-group m-0 me-2">
-                        <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top"
-                          title="Vinnie Mostowy" class="avatar pull-up">
-                          <img class="rounded-circle"
-                            src="https://demos.themeselection.com/materio-bootstrap-html-admin-template/assets/img/avatars/5.png"
-                            alt="Avatar" />
-                        </li>
-                        <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top"
-                          title="Allen Rieske" class="avatar pull-up">
-                          <img class="rounded-circle"
-                            src="https://demos.themeselection.com/materio-bootstrap-html-admin-template/assets/img/avatars/12.png"
-                            alt="Avatar" />
-                        </li>
-                        <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top"
-                          title="Julee Rossignol" class="avatar pull-up">
-                          <img class="rounded-circle"
-                            src="https://demos.themeselection.com/materio-bootstrap-html-admin-template/assets/img/avatars/6.png"
-                            alt="Avatar" />
-                        </li>
-                        <li class="avatar">
-                          <span class="avatar-initial rounded-circle pull-up text-heading" data-bs-toggle="tooltip"
-                            data-bs-placement="bottom" title="3 more">+3</span>
-                        </li>
-                      </ul>
-                    </div>
-                  </li>
-                </ul>
-              </div>
-            </li>
-          </ul>
-        </div>
-      </div>
-      <!--/ Activity Timeline -->
-      <div class="row" hidden>
-        <!-- Connections -->
-        <div class="col-lg-12 col-xl-6">
-          <div class="card card-action mb-6">
-            <div class="card-header align-items-center">
-              <h5 class="card-action-title mb-0">Connections</h5>
-              <div class="card-action-element">
-                <div class="dropdown">
-                  <button type="button" class="btn dropdown-toggle hide-arrow p-0" data-bs-toggle="dropdown"
-                    aria-expanded="false"><i
-                      class="icon-base ri ri-more-2-line icon-22px text-body-secondary"></i></button>
-                  <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="javascript:void(0);">Share connections</a></li>
-                    <li><a class="dropdown-item" href="javascript:void(0);">Suggest edits</a></li>
-                    <li>
-                      <hr class="dropdown-divider" />
-                    </li>
-                    <li><a class="dropdown-item" href="javascript:void(0);">Report bug</a></li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-            <div class="card-body">
-              <ul class="list-unstyled mb-0">
-                <li class="mb-4">
-                  <div class="d-flex align-items-center">
-                    <div class="d-flex align-items-center">
-                      <div class="avatar me-2">
-                        <img
-                          src="https://demos.themeselection.com/materio-bootstrap-html-admin-template/assets/img/avatars/2.png"
-                          alt="Avatar" class="rounded-circle" />
-                      </div>
-                      <div class="me-2">
-                        <h6 class="mb-1">Cecilia Payne</h6>
-                        <small>45 Connections</small>
-                      </div>
-                    </div>
-                    <div class="ms-auto">
-                      <button class="btn btn-outline-primary btn-icon"><i
-                          class="icon-base ri ri-user-add-line icon-22px"></i></button>
-                    </div>
-                  </div>
-                </li>
-                <li class="mb-4">
-                  <div class="d-flex align-items-center">
-                    <div class="d-flex align-items-center">
-                      <div class="avatar me-2">
-                        <img
-                          src="https://demos.themeselection.com/materio-bootstrap-html-admin-template/assets/img/avatars/3.png"
-                          alt="Avatar" class="rounded-circle" />
-                      </div>
-                      <div class="me-2">
-                        <h6 class="mb-1">Curtis Fletcher</h6>
-                        <small>1.32k Connections</small>
-                      </div>
-                    </div>
-                    <div class="ms-auto">
-                      <button class="btn btn-primary btn-icon"><i
-                          class="icon-base ri ri-user-3-line icon-22px"></i></button>
-                    </div>
-                  </div>
-                </li>
-                <li class="mb-4">
-                  <div class="d-flex align-items-center">
-                    <div class="d-flex align-items-center">
-                      <div class="avatar me-2">
-                        <img
-                          src="https://demos.themeselection.com/materio-bootstrap-html-admin-template/assets/img/avatars/12.png"
-                          alt="Avatar" class="rounded-circle" />
-                      </div>
-                      <div class="me-2">
-                        <h6 class="mb-1">Alice Stone</h6>
-                        <small>125 Connections</small>
-                      </div>
-                    </div>
-                    <div class="ms-auto">
-                      <button class="btn btn-primary btn-icon"><i
-                          class="icon-base ri ri-user-3-line icon-22px"></i></button>
-                    </div>
-                  </div>
-                </li>
-                <li class="mb-4">
-                  <div class="d-flex align-items-center">
-                    <div class="d-flex align-items-center">
-                      <div class="avatar me-2">
-                        <img
-                          src="https://demos.themeselection.com/materio-bootstrap-html-admin-template/assets/img/avatars/7.png"
-                          alt="Avatar" class="rounded-circle" />
-                      </div>
-                      <div class="me-2">
-                        <h6 class="mb-1">Darrell Barnes</h6>
-                        <small>456 Connections</small>
-                      </div>
-                    </div>
-                    <div class="ms-auto">
-                      <button class="btn btn-outline-primary btn-icon"><i
-                          class="icon-base ri ri-user-add-line icon-22px"></i></button>
-                    </div>
-                  </div>
-                </li>
-
-                <li class="mb-4">
-                  <div class="d-flex align-items-center">
-                    <div class="d-flex align-items-center">
-                      <div class="avatar me-2">
-                        <img
-                          src="https://demos.themeselection.com/materio-bootstrap-html-admin-template/assets/img/avatars/8.png"
-                          alt="Avatar" class="rounded-circle" />
-                      </div>
-                      <div class="me-2">
-                        <h6 class="mb-1">Eugenia Moore</h6>
-                        <small>1.2k Connections</small>
-                      </div>
-                    </div>
-                    <div class="ms-auto">
-                      <button class="btn btn-outline-primary btn-icon"><i
-                          class="icon-base ri ri-user-add-line icon-22px"></i></button>
-                    </div>
-                  </div>
-                </li>
-                <li class="text-center">
-                  <a href="javascript:;" class="btn btn-text-primary fw-normal">View all connections</a>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-        <!--/ Connections -->
-        <!-- Teams -->
-        <div class="col-lg-12 col-xl-6">
-          <div class="card card-action mb-6">
-            <div class="card-header align-items-center">
-              <h5 class="card-action-title mb-0">Teams</h5>
-              <div class="card-action-element">
-                <div class="dropdown">
-                  <button type="button" class="btn dropdown-toggle hide-arrow p-0" data-bs-toggle="dropdown"
-                    aria-expanded="false"><i
-                      class="icon-base ri ri-more-2-line icon-22px text-body-secondary"></i></button>
-                  <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="javascript:void(0);">Share teams</a></li>
-                    <li><a class="dropdown-item" href="javascript:void(0);">Suggest edits</a></li>
-                    <li>
-                      <hr class="dropdown-divider" />
-                    </li>
-                    <li><a class="dropdown-item" href="javascript:void(0);">Report bug</a></li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-            <div class="card-body">
-              <ul class="list-unstyled mb-0">
-                <li class="mb-4">
-                  <div class="d-flex align-items-center">
-                    <div class="d-flex align-items-center">
-                      <div class="avatar me-2">
-                        <img
-                          src="https://demos.themeselection.com/materio-bootstrap-html-admin-template/assets/img/icons/brands/react-label.png"
-                          alt="Avatar" class="rounded-circle" />
-                      </div>
-                      <div class="me-2">
-                        <h6 class="mb-1">React Developers</h6>
-                        <small>72 Members</small>
-                      </div>
-                    </div>
-                    <div class="ms-auto">
-                      <a href="javascript:;"><span class="badge bg-label-danger rounded-pill">Developer</span></a>
-                    </div>
-                  </div>
-                </li>
-                <li class="mb-4">
-                  <div class="d-flex align-items-center">
-                    <div class="d-flex align-items-center">
-                      <div class="avatar me-2">
-                        <img
-                          src="https://demos.themeselection.com/materio-bootstrap-html-admin-template/assets/img/icons/brands/support-label.png"
-                          alt="Avatar" class="rounded-circle" />
-                      </div>
-                      <div class="me-2">
-                        <h6 class="mb-1">Support Team</h6>
-                        <small>122 Members</small>
-                      </div>
-                    </div>
-                    <div class="ms-auto">
-                      <a href="javascript:;"><span class="badge bg-label-primary rounded-pill">Support</span></a>
-                    </div>
-                  </div>
-                </li>
-                <li class="mb-4">
-                  <div class="d-flex align-items-center">
-                    <div class="d-flex align-items-center">
-                      <div class="avatar me-2">
-                        <img
-                          src="https://demos.themeselection.com/materio-bootstrap-html-admin-template/assets/img/icons/brands/figma-label.png"
-                          alt="Avatar" class="rounded-circle" />
-                      </div>
-                      <div class="me-2">
-                        <h6 class="mb-1">UI Designers</h6>
-                        <small>7 Members</small>
-                      </div>
-                    </div>
-                    <div class="ms-auto">
-                      <a href="javascript:;"><span class="badge bg-label-info rounded-pill">Designer</span></a>
-                    </div>
-                  </div>
-                </li>
-                <li class="mb-4">
-                  <div class="d-flex align-items-center">
-                    <div class="d-flex align-items-center">
-                      <div class="avatar me-2">
-                        <img
-                          src="https://demos.themeselection.com/materio-bootstrap-html-admin-template/assets/img/icons/brands/vue-label.png"
-                          alt="Avatar" class="rounded-circle" />
-                      </div>
-                      <div class="me-2">
-                        <h6 class="mb-1">Vue.js Developers</h6>
-                        <small>289 Members</small>
-                      </div>
-                    </div>
-                    <div class="ms-auto">
-                      <a href="javascript:;"><span class="badge bg-label-danger rounded-pill">Developer</span></a>
-                    </div>
-                  </div>
-                </li>
-                <li class="mb-4">
-                  <div class="d-flex align-items-center">
-                    <div class="d-flex align-items-center">
-                      <div class="avatar me-2">
-                        <img
-                          src="https://demos.themeselection.com/materio-bootstrap-html-admin-template/assets/img/icons/brands/twitter-label.png"
-                          alt="Avatar" class="rounded-circle" />
-                      </div>
-                      <div class="me-w">
-                        <h6 class="mb-1">Digital Marketing</h6>
-                        <small>24 Members</small>
-                      </div>
-                    </div>
-                    <div class="ms-auto">
-                      <a href="javascript:;"><span class="badge bg-label-secondary rounded-pill">Marketing</span></a>
-                    </div>
-                  </div>
-                </li>
-                <li class="text-center">
-                  <a href="javascript:;" class="btn btn-text-primary fw-normal">View all teams</a>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-        <!--/ Teams -->
-      </div>
-
-      <!-- Project table -->
-      <div class="card mb-4" hidden>
-        <div class="card-datatable pb-0 mb-n4">
-          <table class="table datatable-projects table-border-bottom-0">
-            <thead>
-              <tr>
-                <th></th>
-                <th></th>
-                <th>Project</th>
-                <th>leader</th>
-                <th>teams</th>
-                <th>Progress</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-          </table>
-        </div>
-      </div>
-      <!-- /Project table -->
-    </div>
-  </div>
-  <!--/ User Profile Content -->
-
 </div>
-<!-- / Content -->
-
-
-
 
 <?php require_once 'footer.php'; ?>
 
-<!-- ----------------------------------- -->
-<script></script>
-<!-- ----------------------------------- -->
+<style>
+  /* অতিরিক্ত কিছু কাস্টম স্টাইল */
+  .bg-label-primary {
+    background-color: #e7e7ff;
+    color: #696cff;
+  }
+
+  .bg-label-success {
+    background-color: #e8fadf;
+    color: #71dd37;
+  }
+
+  .nav-tabs .nav-link.active {
+    border-bottom: 3px solid #696cff !important;
+    color: #696cff !important;
+    font-weight: bold;
+  }
+
+  .tab-content {
+    border: 1px solid #eee;
+  }
+</style>
+
+<script>
+  console.log("Account Settings Interface Loaded.");
+</script>
 </body>
 
 </html>

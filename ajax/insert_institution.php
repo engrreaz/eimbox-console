@@ -20,6 +20,11 @@ $headtitle = trim($_POST['headtitle'] ?? '');
 $rootuser = trim($_POST['rootuser'] ?? '');
 $entryby = $_SESSION['user'] ?? 'system';
 
+$tier = 'A';
+$billing_data = '';
+$valid_module = $active_module = 'Student | Result | Payment';
+$valid_panel = $active_panel = 'Administrator | Chief | Teacher';
+
 // Validation
 if (!$sccode || !$scname) {
     exit('Error: sccode and scname are required.');
@@ -39,8 +44,8 @@ $check->close();
 
 // ইনসার্ট
 $sql = "INSERT INTO scinfo 
-(sccode, scname, sccategory, scadd1, scadd2, ps, dist, mobile, scmail, headname, headtitle, rootuser)
-VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
+(sccode, scname, sccategory, scadd1, scadd2, ps, dist, mobile, scmail, headname, headtitle, rootuser, tier, billing_data, valid_module, active_module, valid_panel, active_panel )
+VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
 $stmt = $conn->prepare($sql);
 $ok = $stmt->execute([
@@ -55,7 +60,13 @@ $ok = $stmt->execute([
     $scmail,
     $headname,
     $headtitle,
-    $rootuser
+    $rootuser,
+    $tier,
+    $billing_data,
+    $valid_module,
+    $active_module,
+    $valid_panel,
+    $active_panel
 ]);
 
 if ($ok) {
@@ -63,3 +74,38 @@ if ($ok) {
 } else {
     echo "Register Failure";
 }
+
+
+
+$pin = $password = rand(100000, 999999);
+$hashedPassword = password_hash($password, PASSWORD_ARGON2ID);
+$ulv = 'Administrator';
+$uid = $sccode . '9999';
+$pid = '';
+
+$actv = 0;
+
+
+$rt = $token = uniqid();
+
+$now = date('Y-m-d H:i:s');
+$stmt = $conn->prepare("INSERT INTO usersapp 
+        (sccode, email, password_hash, created_at, userlevel, userid, photourl, status, fixedpin, reset_token_hash, reset_token_expires, token, password_salt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+$stmt->bind_param(
+    "sssssssisssss",
+    $sccode,
+    $scmail,
+    $hashedPassword,
+    $now,
+    $ulv,
+    $uid,
+    $pid,
+    $actv,
+    $pin, $rt, $now, $token, $password
+);
+if (!$stmt->execute()) {
+    throw new Exception('Administrator registration failed.');
+}
+$stmt->close();
+echo $password;

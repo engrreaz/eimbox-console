@@ -4,33 +4,36 @@ require_once '../core/config.php';
 require_once '../core/db.php';
 require_once '../core/global_values.php';
 
-$slots    = $_POST['slots'] ?? [];
+$slots = $_POST['slots'] ?? [];
 $sessions = $_POST['sessions'] ?? [];
 
-if(empty($slots) || empty($sessions)){
+if (empty($slots) || empty($sessions)) {
     echo json_encode([]);
     exit;
 }
 
-$slotIn    = "'" . implode("','", $slots) . "'";
+$slotIn = "'" . implode("','", $slots) . "'";
 $sessionIn = "'" . implode("','", $sessions) . "'";
 
 $sql = "
 SELECT DISTINCT
+    MAX(idno) as idno,
     slot,
     sessionyear,
     areaname
-FROM areas
-WHERE sccode='$sccode'
-AND slot IN ($slotIn)
-AND sessionyear IN ($sessionIn)
-ORDER BY slot, sessionyear, idno
-";
+    FROM areas
+    WHERE sccode='$sccode'
+    AND slot IN ($slotIn)
+    AND sessionyear IN ($sessionIn)
+    GROUP BY slot, sessionyear, areaname
+    ORDER BY slot, sessionyear, idno
+    ";
+// echo $sql;
 
-$q = mysqli_query($conn,$sql);
+$q = mysqli_query($conn, $sql);
 
 $data = [];
-while($r=mysqli_fetch_assoc($q)){
+while ($r = mysqli_fetch_assoc($q)) {
     $data[] = $r;
 }
 

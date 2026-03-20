@@ -1,7 +1,5 @@
 <?php require_once 'header.php'; ?>
 
-
-
 <style>
     /* Drag handle cursor */
 
@@ -65,7 +63,7 @@
 
 <!-- ADD / EDIT MODAL -->
 <div class="modal fade" id="areaModal">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered ">
         <form id="areaForm" class="modal-content">
 
             <div class="modal-header">
@@ -74,7 +72,7 @@
             </div>
 
             <div class="modal-body">
-                <input type="text" name="mode" value="add">
+                <input type="hidden" name="mode" value="add">
                 <input type="hidden" name="id">
                 <input type="hidden" name="slot">
                 <input type="hidden" name="sessionyear">
@@ -141,7 +139,6 @@
             <div class="modal-footer">
                 <button class="btn btn-primary btn-sm">Save</button>
             </div>
-
         </form>
     </div>
 </div>
@@ -228,22 +225,22 @@
 
                 slots.forEach(slot => {
                     // alert(slots + sessions);
-                    html += `<div class="mb-4"><h4 class="fw-bold text-primary text-center  ">${slot}dddd</h4>`;
+                    html += `<div class="mb-4"><h4 class="fw-bold text-primary text-center  ">${slot}</h4>`;
 
                     sessions.forEach(session => {
                         html += `
-                <div class="ms-3 mb-3">
-                    <h6 class="d-flex justify-content-between">
-                      Session :  ${session}
-                        <button class="btn btn-sm btn-primary addClass"
-                            data-slot="${slot}" data-session="${session}">
-                            + Classddd
-                        </button>
-                    </h6>
-                    <div class="session-row text-muted small">
-                        No class added yet
-                    </div>
-                </div>`;
+                        <div class="ms-3 mb-3">
+                            <h6 class="d-flex justify-content-between">
+                            Session :  ${session}
+                                <button class="btn btn-sm btn-primary addClass"
+                                    data-slot="${slot}" data-session="${session}">
+                                    + Class
+                                </button>
+                            </h6>
+                            <div class="session-row text-muted small">
+                                No class added yet
+                            </div>
+                        </div>`;
                     });
 
                     html += `</div>`;
@@ -285,7 +282,8 @@
                     data-class="${cls}" data-slot="${slot}" data-session="${session}">
                     <div class="card h-100">
                         <div class="card-header d-flex justify-content-between">
-                            <strong>${cls}</strong>
+                        <i class="bi bi-grip-horizontal" style="cursor: grabbing;"></i> 
+                            <strong class="flex-grow-1 ms-3">${cls}</strong>
                             <div>
                                 <button class="btn btn-sm btn-outline-primary addSection"
                                     data-class="${cls}" data-slot="${slot}" data-session="${session}">+</button>
@@ -382,13 +380,26 @@
                 <div class="border p-2 mb-2 section-item"
                      data-id="${r.id}">
                     <div class="d-flex justify-content-between">
-                        <div>
+                    <div>
+                        <i class="bi bi-grip-vertical" style="cursor: grabbing;"></i>
+                    </div>
+                        <div class="flex-grow-1 ms-3">
                             <strong>${r.subarea}</strong><br>
-                            <small>👨‍🏫 ${r.teacher_name ?? '-'} | 👥 ${r.student_count}</small>
+                            <small>
+                            <img src="${r.photourl}" style="height:24px; width:24px; border-radius:50%; object-fit:cover; margin-right:10px; margin-top:6px;" />
+                        <span style="padding-top:10px;">
+                            ${r.classteacher ?? '-'} | 👥 ${r.student_count}
+                        </span>    
+                        
+                            
+                            
+                            </small>
                         </div>
-                        <div>
-                            <button class="btn btn-sm btn-outline-primary editArea">✎</button>
-                            <button class="btn btn-sm btn-outline-danger delArea">🗑</button>
+                        <div class="pt-3">
+                            <button class="btn btn-sm btn-outline-primary editArea py-1 px-2">
+                            <i class="bi bi-pencil-square fs-5"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger delArea py-1 px-2"><i class="bi bi-trash fs-5"></i></button>
                         </div>
                     </div>
                 </div>`;
