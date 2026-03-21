@@ -152,7 +152,7 @@ $files = array_filter(scandir(__DIR__), function ($f) {
         echo "<td class='p-0' style='min-width:165px;'>
        
         <div class='input-group input-group-sm d-inline-flex'>
-    <a href='{$file}' style='width:50px; text-align:center;' target='_blank'> <span class='input-group-text'><i class='bi bi-$icon'></i></span></a>
+    <a href='{$file}' style='width:50px; text-align:center; z-index:1000;' target='_blank'> <span class='input-group-text'><i class='bi bi-$icon'></i></span></a>
     <input type='text' class='form-control inline-input' style='min-width:115px;'
                      data-field='nav_icon' data-id='{$file}' value='{$icon}'  /></div></td>";
         echo "<td class='input-group-sm p-0' style='min-width:120px;'><input type='text' class='form-control inline-input' 
