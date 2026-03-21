@@ -1098,7 +1098,7 @@ function institute_logo($sccode)
 {
     $possible_extensions = ['png'];
     foreach ($possible_extensions as $ext) {
-        $file_path = BASE_ROOT . 'logo/' . $sccode . '.' . $ext;
+        $file_path = BASE_PATH . 'logo/' . $sccode . '.' . $ext;
         if (file_exists($file_path)) {
             return BASE_PATH . 'logo/' . $sccode . '.' . $ext;
         }
