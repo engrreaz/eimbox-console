@@ -322,20 +322,4 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
 
 
 
-                    $q = $conn->query("SHOW STATUS LIKE 'Threads_connected'");
-                    $row = $q->fetch_assoc();
-                    echo " -- Open connections: " . $row['Value'];
-
-                    $q = $conn->query("SHOW VARIABLES LIKE 'max_connections'");
-                    $row = $q->fetch_assoc();
-                    echo " -- Max connections: " . $row['Value'];
-
-                    $q = $conn->query("SHOW STATUS LIKE 'Max_used_connections'");
-                    $row = $q->fetch_assoc();
-                    echo " -- Max Limit: " . $row['Value'];
-
-                    $q = $conn->query("SHOW FULL PROCESSLIST");
-                    $row = $q->fetch_assoc();
-                    echo " -- Full Process: " . $row['Value'];
-
                     ?>

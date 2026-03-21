@@ -455,7 +455,26 @@ if ($monitorPanel === true) { ?>
     </div>
 </footer>
 
-<?php $conn->close(); ?>
+<?php
+
+
+$q = $conn->query("SHOW STATUS LIKE 'Threads_connected'");
+$row = $q->fetch_assoc();
+echo " -- Open connections: " . $row['Value'];
+
+$q = $conn->query("SHOW VARIABLES LIKE 'max_connections'");
+$row = $q->fetch_assoc();
+echo " -- Max connections: " . $row['Value'];
+
+$q = $conn->query("SHOW STATUS LIKE 'Max_used_connections'");
+$row = $q->fetch_assoc();
+echo " -- Max Limit: " . $row['Value'];
+
+$q = $conn->query("SHOW FULL PROCESSLIST");
+$row = $q->fetch_assoc();
+echo " -- Full Process: " . $row['Value'];
+
+$conn->close(); ?>
 
 
 <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 2000"></div>
@@ -1522,7 +1541,7 @@ if ($monitorPanel === true) { ?>
                             examSelect.innerHTML += `<option value="${exam}">${exam}</option>`;
                         });
                     }
-                       $('#exam-main').val(cookieMap['#exam-main']);
+                    $('#exam-main').val(cookieMap['#exam-main']);
 
 
                 })
@@ -1542,7 +1561,7 @@ if ($monitorPanel === true) { ?>
             if ($('#exam-main').length) {
                 console.log('Exam Trigger');
                 get_exam_list(slot, session);
-             
+
 
             }
 
