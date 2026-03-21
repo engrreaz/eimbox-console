@@ -1097,9 +1097,8 @@ function teacher_profile_image_path($teacher_id)
 function institute_logo($sccode)
 {
     $possible_extensions = ['png'];
-    echo BASE_ROOT;
     foreach ($possible_extensions as $ext) {
-        $file_path = BASE_PATH . 'logo/' . $sccode . '.' . $ext;
+        $file_path = BASE_ROOT . 'logo/' . $sccode . '.' . $ext;
         if (file_exists($file_path)) {
             return BASE_PATH . 'logo/' . $sccode . '.' . $ext;
         }
