@@ -185,19 +185,27 @@ $log_res->close();
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title text-center" id="statusModalLabel">Page Status Descriptions</h5>
+                <h5 class="modal-title text-center flex-grow-1" id="statusModalLabel">Page Status Descriptions</h5>
+                <button type="button" class="btn btn-outline-info" onclick="show_all_desc();">Show All
+                    Descriptions</button>
+
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <ul>
                     <?php
+               
                     for ($i = 0; $i <= 8; $i++) {
+                        if ($i == $page_status) {
+                            $hid = '';
+                        } else {
+                            $hid = 'hidden';
+                        }
                         ?>
-                        <li style="color:<?php echo $page_status_colors[$i]; ?>">
+                        <li style="color:<?= $page_status_colors[$i]; ?>" class="status-<?= $i ?>" <?= $hid ? 'hidden' : '' ?>>
                             <strong><?php echo $page_status_names[$i]; ?></strong> <br>
                             <small><?php echo $status_desc_en[$i]; ?></small> <br>
                             <small><?php echo $status_desc_bn[$i]; ?></small>
-
                             <hr class="m-0 mt-1 mb-1">
 
 
@@ -345,4 +353,9 @@ $log_res->close();
         var statusModal = new bootstrap.Modal(document.getElementById('statusModal'));
         statusModal.show();
     });
+
+
+    function show_all_desc() {
+        $('[class^="status-"]').removeAttr('hidden');
+    }
 </script>
