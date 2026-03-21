@@ -1,5 +1,5 @@
 <?php require_once 'header.php'; ?>
-<?php 
+<?php
 
 // --- Account Head (Add/Update/Delete) ---
 if (isset($_POST['save_head'])) {
@@ -56,22 +56,139 @@ while ($row = $sub_heads_res->fetch_assoc()) {
 ?>
 
 <style>
-    .account-card { padding: 16px; margin-bottom: 16px; border: 1px solid #f0f0f0; border-radius:8px; }
-    .sub-head-item {
-        display: flex; align-items: center; justify-content: space-between;
-        padding: 10px 12px; background: var(--m3-tonal-surface);
-        border-radius: 8px; margin-bottom: 6px;
+    .account-card {
+        padding: 16px;
+        margin-bottom: 16px;
+        border: 1px solid #f0f0f0;
+        border-radius: 8px;
     }
-    .badge-m3 { font-size: 0.6rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; margin-left: 4px; }
-    .badge-inc { background: #E8F5E9; color: #2E7D32; }
-    .badge-exp { background: #FFEBEE; color: #B3261E; }
-    
-    .m3-modal-content { border-radius: 8px; padding: 20px; border: none; }
+
+    .sub-head-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 12px;
+        background: var(--m3-tonal-surface);
+        border-radius: 8px;
+        margin-bottom: 6px;
+    }
+
+    .badge-m3 {
+        font-size: 0.6rem;
+        font-weight: 800;
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-left: 4px;
+    }
+
+    .badge-inc {
+        background: #E8F5E9;
+        color: #2E7D32;
+    }
+
+    .badge-exp {
+        background: #FFEBEE;
+        color: #B3261E;
+    }
+
+    .tonal-icon-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 20px;
+        border-radius: 12px;
+        font-weight: 600;
+        border: 1px solid transparent;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .tonal-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 20px;
+        border-radius: 50%;
+        font-weight: 600;
+        border: 1px solid transparent;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .c-info {
+        background-color: #eef2ff;
+        /* অতি হালকা নীল */
+        color: #4361ee;
+        /* গাঢ় নীল */
+        border-color: rgba(67, 97, 238, 0.1);
+    }
+
+    .c-info:hover {
+        background-color: #4361ee;
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(67, 97, 238, 0.2);
+    }
+
+    /* c-exit: টোনাল রেড/রোজ (সাধারণত Expense বা Exit-এর জন্য) */
+    .c-exit {
+        background-color: #fff1f2;
+        /* অতি হালকা লাল */
+        color: #e11d48;
+        /* গাঢ় লাল */
+        border-color: rgba(225, 29, 72, 0.1);
+    }
+
+    .c-exit:hover {
+        background-color: #e11d48;
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(225, 29, 72, 0.2);
+    }
+
+
+    .c-success {
+        background-color: #f1fff6;
+        /* অতি হালকা লাল */
+        color: #1e8f07;
+        /* গাঢ় লাল */
+        border-color: rgba(32, 150, 77, 0.1);
+    }
+
+    .c-success:hover {
+        background-color: #0da019;
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(34, 158, 9, 0.2);
+    }
+
+    .m3-modal-content {
+        border-radius: 8px;
+        padding: 20px;
+        border: none;
+    }
+
     .m3-fab-add {
-        position: fixed; bottom: 85px; right: 20px; width: 56px; height: 56px;
-        border-radius: 16px; background: var(--m3-primary-gradient); color: white;
-        display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
-        box-shadow: 0 4px 12px rgba(103, 80, 164, 0.3); border: none; z-index: 1000;
+        position: fixed;
+        bottom: 85px;
+        right: 20px;
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        background: darkcyan;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        box-shadow: 0 4px 12px rgba(103, 80, 164, 0.3);
+        border: none;
+        z-index: 1000;
     }
 </style>
 
@@ -80,61 +197,75 @@ while ($row = $sub_heads_res->fetch_assoc()) {
 <div class="container-xxl flex-grow-1 container-p-y">
 
 
-        <?php while($h = $heads->fetch_assoc()): ?>
-            <div class="m3-card account-card shadow-sm">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <div class="icon-box c-inst" style="width: 40px; height: 40px; font-size: 1.1rem;"><i class="bi bi-folder2-open"></i></div>
-                        <div>
-                            <div style="font-size: 1rem; font-weight: 900; color: #1C1B1F;"><?php echo $h['account_head']; ?></div>
-                            <div style="font-size: 0.7rem; color: #777; font-weight: 700;">HEAD ID: #<?php echo $h['id']; ?></div>
+    <?php while ($h = $heads->fetch_assoc()): ?>
+        <div class="card account-card shadow-sm">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div class="icon-box c-inst text-primary" style="width: 40px; height: 40px; font-size: 1.75rem;"><i
+                            class="bi bi-folder2-open"></i></div>
+                    <div class="text-primary">
+                        <div style="font-size: 1rem; font-weight: 900; "><?php echo $h['account_head']; ?>
+                        </div>
+                        <div style="font-size: 0.7rem; color: #777; font-weight: 700;">HEAD ID: #<?php echo $h['id']; ?>
                         </div>
                     </div>
-                    <div class="d-flex gap-1">
-                        <button class="tonal-icon-btn c-info" style="width: 32px; height: 32px; font-size: 0.8rem;" 
-                                onclick="editHead('<?php echo $h['id']; ?>', '<?php echo $h['account_head']; ?>')"><i class="bi bi-pencil"></i></button>
-                        <button class="tonal-icon-btn c-exit" style="width: 32px; height: 32px; font-size: 0.8rem;" 
-                                onclick="deleteItem('accounts-manager.php?del_head=<?php echo $h['id']; ?>')"><i class="bi bi-trash3"></i></button>
-                    </div>
                 </div>
+                <div class="d-flex gap-1">
+                    <button class="tonal-icon-btn c-success"
+                        onclick="addSub('<?php echo $h['id']; ?>', '<?php echo $h['account_head']; ?>')">
+                        <i class="bi bi-plus-lg me-1"></i>
+                    </button>
 
-                <div style="border-top: 1px dashed #eee; padding-top: 12px;">
-                    <?php 
-                    if (isset($sub_heads[$h['id']])): 
-                        foreach($sub_heads[$h['id']] as $sh):
-                    ?>
+
+                    <button class="tonal-icon-btn c-info" style="width: 32px; height: 32px; font-size: 0.8rem;"
+                        onclick="editHead('<?php echo $h['id']; ?>', '<?php echo $h['account_head']; ?>')"><i
+                            class="bi bi-pencil"></i></button>
+                    <button class="tonal-icon-btn c-exit" style="width: 32px; height: 32px; font-size: 0.8rem;"
+                        onclick="deleteItem('accounts-manager.php?del_head=<?php echo $h['id']; ?>')"><i
+                            class="bi bi-trash3"></i></button>
+                </div>
+            </div>
+
+            <div style="border-top: 1px dashed #eee; padding-top: 12px; padding-left:50px;">
+                <?php
+                if (isset($sub_heads[$h['id']])):
+                    foreach ($sub_heads[$h['id']] as $sh):
+                        ?>
                         <div class="sub-head-item">
                             <div style="overflow: hidden;">
-                                <div style="font-size: 0.85rem; font-weight: 700; color: #444;" class="text-truncate"><?php echo $sh['sub_head']; ?></div>
+                                <div style="font-size: 0.85rem; font-weight: 700; color: #444;" class="text-truncate">
+                                    <?php echo $sh['sub_head']; ?>
+                                </div>
                                 <div style="display: flex; gap: 4px; margin-top: 2px;">
-                                    <?php if($sh['income']) echo '<span class="badge-m3 badge-inc">INCOME</span>'; ?>
-                                    <?php if($sh['expenditure']) echo '<span class="badge-m3 badge-exp">EXPENSE</span>'; ?>
+                                    <?php if ($sh['income'])
+                                        echo '<span class="badge-m3 badge-inc">INCOME</span>'; ?>
+                                    <?php if ($sh['expenditure'])
+                                        echo '<span class="badge-m3 badge-exp">EXPENSE</span>'; ?>
                                 </div>
                             </div>
                             <div class="d-flex gap-2 ms-2">
-                                <i class="bi bi-pencil-square text-primary" style="cursor:pointer;" 
-                                   onclick="editSub('<?php echo $sh['id']; ?>', '<?php echo $sh['sub_head']; ?>', '<?php echo $sh['income']; ?>', '<?php echo $sh['expenditure']; ?>', '<?php echo $h['id']; ?>', '<?php echo $h['account_head']; ?>')"></i>
-                                <i class="bi bi-x-circle text-danger" style="cursor:pointer;" onclick="deleteItem('accounts-manager.php?del_sub=<?php echo $sh['id']; ?>')"></i>
+                                <i class="bi bi-pencil-square text-primary tonal-icon  c-info" style="cursor:pointer;"
+                                    onclick="editSub('<?php echo $sh['id']; ?>', '<?php echo $sh['sub_head']; ?>', '<?php echo $sh['income']; ?>', '<?php echo $sh['expenditure']; ?>', '<?php echo $h['id']; ?>', '<?php echo $h['account_head']; ?>')"></i>
+                                <i class="bi bi-x-circle text-danger tonal-icon  c-exit" style="cursor:pointer;"
+                                    onclick="deleteItem('accounts-manager.php?del_sub=<?php echo $sh['id']; ?>')"></i>
                             </div>
                         </div>
                     <?php endforeach; else: ?>
-                        <div style="font-size: 0.75rem; color: #aaa; text-align: center; font-style: italic;">No sub-sectors defined</div>
-                    <?php endif; ?>
+                    <div style="font-size: 0.75rem; color: #aaa; text-align: center; font-style: italic;">No sub-sectors defined
+                    </div>
+                <?php endif; ?>
 
-                    <button class="btn btn-sm w-100 mt-2" style="background: var(--m3-tonal-container); color: var(--m3-primary); border-radius: 8px; font-weight: 800; font-size: 0.7rem;" 
-                            onclick="addSub('<?php echo $h['id']; ?>', '<?php echo $h['account_head']; ?>')">
-                        <i class="bi bi-plus-lg me-1"></i> ADD SUB SECTOR
-                    </button>
-                </div>
+
             </div>
-        <?php endwhile; ?>
+        </div>
+    <?php endwhile; ?>
 
 </div>
-    <button class="m3-fab-add shadow-lg" onclick="addHead()"><i class="bi bi-plus-lg"></i></button>
+<button class="m3-fab-add shadow-lg" style="z-index:9999;" onclick="addHead()"><i class="bi bi-plus-lg"></i></button>
 
 
 
-    
+
 
 <div class="modal fade" id="headModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
@@ -143,13 +274,19 @@ while ($row = $sub_heads_res->fetch_assoc()) {
             <form method="post">
                 <input type="hidden" name="head_id" id="head_id">
                 <div class="m3-floating-group">
-                    <i class="bi bi-folder2 m3-field-icon"></i>
-                    <input type="text" name="head_name" id="head_name" class="m3-input-floating" placeholder=" " required>
-                    <label class="m3-floating-label">HEAD NAME (E.G. ACADEMIC FEE)</label>
+                    <i class="bi bi-folder2 m3-field-icon"></i> <label class=" form-label ">HEAD NAME (E.G. ACADEMIC FEE)</label>
+                    <input type="text" name="head_name" id="head_name" class="form-control " placeholder=" "
+                        required>
+                    
                 </div>
                 <div class="d-flex gap-2 mt-4">
-                    <button type="button" class="btn btn-light flex-fill py-2" style="border-radius:12px; font-weight:700;" data-bs-dismiss="modal">CANCEL</button>
-                    <button type="submit" name="save_head" class="btn btn-primary flex-fill py-2" style="border-radius:12px; font-weight:700;">SAVE HEAD</button>
+                    <button type="button" class="btn btn-light flex-fill py-2"
+                         data-bs-dismiss="modal">CANCEL</button>
+                         <div class="flex-fill"></div>
+
+                         <div class="flex-fill"></div>
+                    <button type="submit" name="save_head" class="btn btn-primary flex-fill py-2"
+                        >SAVE HEAD</button>
                 </div>
             </form>
         </div>
@@ -165,11 +302,11 @@ while ($row = $sub_heads_res->fetch_assoc()) {
                 <input type="hidden" name="sub_id" id="sub_id">
                 <input type="hidden" name="h_id" id="h_id">
                 <input type="hidden" name="h_name" id="h_name">
-                
+
                 <div class="m3-floating-group">
-                    <i class="bi bi-tag m3-field-icon"></i>
-                    <input type="text" name="sub_name" id="sub_name" class="m3-input-floating" placeholder=" " required>
-                    <label class="m3-floating-label">SUB SECTOR NAME</label>
+                    <i class="bi bi-tag m3-field-icon"></i> <label class="form-label">SUB SECTOR NAME</label>
+                    <input type="text" name="sub_name" id="sub_name" class="form-control" placeholder=" " required>
+                    
                 </div>
 
                 <div style="background: var(--m3-tonal-surface); padding: 12px; border-radius: 12px;">
@@ -184,8 +321,10 @@ while ($row = $sub_heads_res->fetch_assoc()) {
                 </div>
 
                 <div class="d-flex gap-2 mt-4">
-                    <button type="button" class="btn btn-light flex-fill py-2" style="border-radius:12px; font-weight:700;" data-bs-dismiss="modal">CANCEL</button>
-                    <button type="submit" name="save_sub" class="btn btn-primary flex-fill py-2" style="border-radius:12px; font-weight:700;">SAVE SUB-HEAD</button>
+                    <button type="button" class="btn btn-light flex-fill py-2"
+                        style="border-radius:12px; font-weight:700;" data-bs-dismiss="modal">CANCEL</button>
+                    <button type="submit" name="save_sub" class="btn btn-primary flex-fill py-2"
+                        style="border-radius:12px; font-weight:700;">SAVE SUB-HEAD</button>
                 </div>
             </form>
         </div>

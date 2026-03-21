@@ -152,11 +152,11 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
 </head>
 
 <body>
-    <?php if($currentFile != 'result-processor.php') {?>
-    <div id="pageBackdrop">
-        <div class="loader"></div>
-    </div>
-  <?php } ?>
+    <?php if ($currentFile != 'result-processor.php') { ?>
+        <div id="pageBackdrop">
+            <div class="loader"></div>
+        </div>
+    <?php } ?>
 
 
     <div class="layout-wrapper layout-content-navbar  ">
@@ -318,5 +318,24 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
                         include_once('footer.php');
                         exit;
                     }
+
+
+
+
+                    $q = $conn->query("SHOW STATUS LIKE 'Threads_connected'");
+                    $row = $q->fetch_assoc();
+                    echo " -- Open connections: " . $row['Value'];
+
+                    $q = $conn->query("SHOW VARIABLES LIKE 'max_connections'");
+                    $row = $q->fetch_assoc();
+                    echo " -- Max connections: " . $row['Value'];
+
+                    $q = $conn->query("SHOW STATUS LIKE 'Max_used_connections'");
+                    $row = $q->fetch_assoc();
+                    echo " -- Max Limit: " . $row['Value'];
+
+                    $q = $conn->query("SHOW FULL PROCESSLIST");
+                    $row = $q->fetch_assoc();
+                    echo " -- Full Process: " . $row['Value'];
 
                     ?>
