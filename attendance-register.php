@@ -44,7 +44,7 @@
 
                 <div class="col-md-4 text-center row pt-2 full-height">
 
-                  
+
 
                     <!-- Divider -->
                     <div class="col-auto d-flex justify-content-center">
@@ -143,6 +143,13 @@
         let dateFrom = $('#date-from-main').val();
         let dateTo = $('#date-to-main').val();
         let collector = $('#collector-main').val();
+        if (dateFrom == null || dateFrom == '') {
+            dateFrom = date('Y-m-d');
+        }
+        if (dateTo == null || dateTo == '') {
+            dateTo = date('Y-m-d');
+        }
+
 
         // Use object instead of query string
         let infor = {
@@ -231,35 +238,35 @@
 
 <script>
     function getReportUrl(type) {
-    let slot = $('#slot-main').val();
-    let year = $('#session-main').val();
-    let cls = $('#class-main').val();
-    let sec = $('#section-main').val();
-    let dateFrom = $('#date-from-main').val();
-    let dateTo = $('#date-to-main').val();
+        let slot = $('#slot-main').val();
+        let year = $('#session-main').val();
+        let cls = $('#class-main').val();
+        let sec = $('#section-main').val();
+        let dateFrom = $('#date-from-main').val();
+        let dateTo = $('#date-to-main').val();
 
-    // প্যারামিটার তৈরি করা
-    let params = `?slot=${slot}&year=${year}&cls=${cls}&sec=${sec}&dateFrom=${dateFrom}&dateTo=${dateTo}&type=${type}`;
-    return "attendance/attendance-report-print.php" + params;
-}
+        // প্যারামিটার তৈরি করা
+        let params = `?slot=${slot}&year=${year}&cls=${cls}&sec=${sec}&dateFrom=${dateFrom}&dateTo=${dateTo}&type=${type}`;
+        return "attendance/attendance-report-print.php" + params;
+    }
 
-function printSelectedReport() {
-    let url = getReportUrl('print');
-    window.open(url, '_blank');
-}
+    function printSelectedReport() {
+        let url = getReportUrl('print');
+        window.open(url, '_blank');
+    }
 
-function downloadSelectedReport() {
-    let url = getReportUrl('pdf');
-    
-    // একটি অদৃশ্য লিঙ্ক তৈরি করে ক্লিক করানো
-    let link = document.createElement('a');
-    link.href = url;
-    link.target = '_blank'; // যদি নতুন ট্যাবে চান
-    link.download = 'Attendance_Report.pdf'; // ডাউনলোডের জন্য সাজেস্টেড নাম
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
+    function downloadSelectedReport() {
+        let url = getReportUrl('pdf');
+
+        // একটি অদৃশ্য লিঙ্ক তৈরি করে ক্লিক করানো
+        let link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank'; // যদি নতুন ট্যাবে চান
+        link.download = 'Attendance_Report.pdf'; // ডাউনলোডের জন্য সাজেস্টেড নাম
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
 </script>
 
 <!-- ----------------------------------- -->
