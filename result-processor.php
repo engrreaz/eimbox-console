@@ -1,4 +1,6 @@
-<?php require_once 'header.php'; ?>
+<?php require_once 'header.php';
+echo microtime(true) . '<br>';
+$sttime = microtime(true); ?>
 
 <script>
     function chainBtnFunc() { window.location.href = 'result-processor.php'; }
@@ -28,14 +30,32 @@
     // -------------------- CONTEXT --------------------
     $slot = $_COOKIE['chain-slot'] ?? 'School';
     $sessionyear = $_COOKIE['chain-session'] ?? date('Y');
-    $classname = $_COOKIE['chain-class'] ?? '';
-    $sectionname = $_COOKIE['chain-section'] ?? '';
-    $exam = $_COOKIE['chain-exam'] ?? '';
+    $classname = $_COOKIE['chain-class'] ?? '-';
+    $sectionname = $_COOKIE['chain-section'] ?? '-';
+    $exam = $_COOKIE['chain-exam'] ?? '-';
     $process_on = $_COOKIE['Result-process'] ?? 'off';
     // $process_on = 'on';
     
 
+    // --------------------- FETCH MIN Values && DECImal Style ---------------------------------
+    $sql = "SELECT maxvalues FROM gpa 
+        WHERE (sccode='$sccode' OR sccode = '0') 
+        AND (slot IS NULL OR slot = '$slot')
+        AND gp=0
+        ORDER BY  sccode DESC, slot DESC LIMIT 1";
 
+    $res = mysqli_query($conn, $sql);
+    $row = mysqli_fetch_assoc($res);
+    $min = $row['maxvalues'] ?? null;
+    $min = floor($min) + 1;
+
+
+    $sqly = "SELECT decimal_mark FROM slots   WHERE sccode='$sccode'    AND slotname = '$slot'  LIMIT 1";
+    $resy = mysqli_query($conn, $sqly);
+    $rowy = mysqli_fetch_assoc($resy);
+    $decimal = $rowy['decimal_mark'] ?? 0;
+    // -------------------------------------------
+    
 
     $single_stid = isset($_GET['stid']) ? (int) $_GET['stid'] : 0;
     $limit_n = isset($_GET['limit']) ? (int) $_GET['limit'] : 0;
@@ -55,8 +75,6 @@
         $ids = implode(',', $stid_list);
         $where .= " AND stid IN ($ids)";
     }
-
-
 
 
 
@@ -83,7 +101,7 @@
             <div class="row">
                 <div class="col-md-8">
                     <h6 class="py-0 my-0">Process for - <?= $total_students ?> students</h6>
-                    <div class="text-info small py-0">It will take <?= $total_students*5 ?> seconds to complete.</div>
+                    <div class="text-info small py-0">It will take <?= $total_students * 5 ?> seconds to complete.</div>
                 </div>
                 <div class="col-md-2"><button class="btn btn-outline-dark w-100 px-0" id="st-list-modal">
                         Students List</button></div>
@@ -144,7 +162,7 @@
                         </form>
                     </div>
 
-                    <div class="modal-footer">
+                    <div class="modal-footer border-top">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         <button type="button" class="btn btn-success" id="applyStudentFilter">Process
                             Selected</button>
@@ -245,7 +263,8 @@
             <div class="progress mb-2" style="height:20px;">
                 <div id="p_student" class="progress-bar bg-success" style="width:0%; height:20px;">0%</div>
             </div>
-            <pre id="log" style="height:100px;overflow:auto;background:#0b1220;color:#d1e7ff;padding:12px; border-radius:8px;"></pre>
+            <pre id="log"
+                style="height:100px;overflow:auto;background:#0b1220;color:#d1e7ff;padding:12px; border-radius:8px;"></pre>
         </div>
     </div>
 
@@ -274,12 +293,16 @@
         return ($q && $q->num_rows) ? $q->fetch_assoc() : ['gp' => 0, 'gl' => 'F', 'remark' => 'Fail', 'colorcode' => 'ff0000'];
     }
 
-    function grade_from_gpa($conn, $gpa)
+    function grade_from_gpa($conn,  $gpa)
     {
+        global $sccode, $slot;
         $gpa = (float) $gpa;
         $q = $conn->query("SELECT gl FROM gpa
-        WHERE gp<=$gpa
-        ORDER BY gp DESC LIMIT 1");
+        WHERE (sccode='$sccode' OR sccode = '0') 
+        AND (slot IS NULL OR slot = '$slot')
+        AND gp<=$gpa
+        ORDER BY  sccode DESC, slot DESC LIMIT 1
+        ");
         return ($q && $q->num_rows) ? $q->fetch_assoc() : ['gl' => 'F'];
     }
 
@@ -329,21 +352,22 @@
 
     <?php
     // -------------------- AUTO INSERT TAB SHEET --------------------
+    echo microtime(true) . '<br>';
     foreach ($students as $st) {
         $stid = $st['stid'];
         $roll = $st['rollno'] ?? 0;
         $gender = $st['gender'] ?? '';
 
-        $chk = $conn->query("SELECT id FROM tabulatingsheet WHERE stid='$stid' AND exam='$exam' and sessionyear='$sessionyear' and classname='$classname' and sectionname='$sectionname'");
+        $chk = $conn->query("SELECT id FROM tabulatingsheet WHERE stid='$stid' AND exam='$exam' and sessionyear='$sessionyear' and classname='$classname' and sectionname='$sectionname' AND slot='$slot' AND sccode='$sccode'");
         if (!$chk->num_rows) {
             $conn->query("INSERT INTO tabulatingsheet
         (sessionyear,sccode,slot,exam,classname,sectionname,stid,rollno,gender)
         VALUES('$sessionyear','$sccode','$slot','$exam','$classname','$sectionname','$stid','$roll', '$gender')");
         }
     }
-
+    echo microtime(true) . '<br>';
     // ------------------------ FETCH LAST UPDATE TIME ------------------------------]..
-    $q = $conn->query("SELECT MAX(last_update) AS last_update FROM tabulatingsheet");
+    $q = $conn->query("SELECT MAX(last_update) AS last_update FROM tabulatingsheet WHERE sccode='$sccode' AND slot='$slot' AND exam='$exam' AND sessionyear='$sessionyear' AND classname='$classname' AND sectionname='$sectionname'");
     $last_update = null;
     if ($q && $q->num_rows > 0) {
         $row = $q->fetch_assoc();
@@ -357,7 +381,7 @@
         $code = $subject_codes[$i] ?? 'NULL';
         $setParts[] = "sub_" . ($i + 1) . "=" . (($code) ? (int) $code : 'NULL');
     }
-    $conn->query("UPDATE tabulatingsheet SET " . implode(',', $setParts) . " WHERE exam='$exam' AND sessionyear='$sessionyear' AND classname='$classname' AND sectionname='$sectionname'");
+    $conn->query("UPDATE tabulatingsheet SET " . implode(',', $setParts) . " WHERE exam='$exam' AND sessionyear='$sessionyear' AND classname='$classname' AND sectionname='$sectionname' AND sccode='$sccode' AND slot='$slot'");
 
 
     // echo '<pre>';
@@ -365,6 +389,7 @@
     // echo '</pre>';
     
     // -------------------- PROCESS STUDENTS --------------------
+    echo microtime(true) . '<br>';
     $si = 0;
     foreach ($students as $st) {
         $all_subject_string = '';
@@ -384,7 +409,7 @@
     
         // load marks
         $marks = [];
-        $mr = $conn->query("SELECT * FROM stmark WHERE stid='$stid' AND exam='$exam' AND sessionyear='$sessionyear' AND classname='$classname' AND sectionname='$sectionname'");
+        $mr = $conn->query("SELECT * FROM stmark WHERE stid='$stid' AND exam='$exam' AND sccode='$sccode' AND slot='$slot' AND sessionyear='$sessionyear' AND classname='$classname' AND sectionname='$sectionname'  ");
         while ($mr && $m = $mr->fetch_assoc())
             $marks[(int) $m['subject']] = $m;
 
@@ -396,6 +421,7 @@
         $fail_list = [];
         $processed_combined = [];
 
+        $bar = 1;
         foreach ($sublist_arr as $code) {
 
             // echo $code . ' => ' . $subsetupmap[$code]['fullmarks'] . ' | ';
@@ -403,6 +429,7 @@
             $sub_fm = (int) $subsetupmap[$code]['subj'];
             $obj_fm = (int) $subsetupmap[$code]['obj'];
             $pra_fm = (int) $subsetupmap[$code]['pra'];
+            $pass_algorithm = (int) $subsetupmap[$code]['pass_algorithm'];
 
 
             // if (!$code || !isset($marks[$code]))
@@ -476,10 +503,10 @@
                     }
                 }
 
-        
+
                 $on100 = ($obt > 0 && $fm > 0) ? ($obt * 100 / $fm) : 0;
 
-                $pass = pass_validation($ct, $mt, $sub, $obj, $pra, $ca, $sub_fm, $obj_fm, $pra_fm, $fm);
+                $pass = pass_validation($ct, $mt, $sub, $obj, $pra, $ca, $sub_fm, $obj_fm, $pra_fm, $fm, $pass_algorithm, $min, $decimal);
                 $grade = get_GP_GL($obt, $fm, $slot);
                 $gp = $pass ? $grade['gp'] : 0;
                 $gl = $pass ? $grade['gl'] : 'F';
@@ -561,11 +588,15 @@
                 $subject_taken++;
             }
 
+            echo "<script>setBar('p_student',$bar*5);</script>";
+            flush_now();
+            $bar++;
+
         }
 
         // ---------- TOTAL ----------
         $gpa = $subject_taken ? round($total_gp / $subject_taken, 2) : 0;
-        $glrow = grade_from_gpa_table($conn, $gpa * 20, $slot, $sccode);
+        $glrow = '-'; // grade_from_gpa_table($conn, $gpa * 20, $slot, $sccode);
 
         $gl = $fail_count ? 'F' : $glrow['gl'];
         if ($fail_count)
@@ -610,7 +641,7 @@
         last_update=NOW()
     ";
 
-        $full_sql = "UPDATE tabulatingsheet SET " . implode(',', $updates) . " WHERE stid='$stid' AND exam='$exam' AND sessionyear='$sessionyear' AND classname='$classname' ";
+        $full_sql = "UPDATE tabulatingsheet SET " . implode(',', $updates) . " WHERE stid='$stid' AND exam='$exam' AND sessionyear='$sessionyear' AND classname='$classname' AND sccode='$sccode' AND slot='$slot' AND sectionname='$sectionname'";
         $conn->query($full_sql);
 
         echo "<script>setBar('p_student',100);</script>";
@@ -619,7 +650,7 @@
         flush_now();
 
     }
-
+    echo microtime(true) . '<br>';
     // -------------------- MERIT --------------------
     $conn->query("SET @r=0");
 
@@ -628,7 +659,7 @@
         JOIN(
             SELECT stid,(@r:=@r+1) rn
             FROM tabulatingsheet
-            WHERE exam='$exam' and slot='$slot' and sessionyear='$ssessionyear' and classname='$classname' and sectionname='$sectionname'
+            WHERE exam='$exam' and slot='$slot' and sessionyear='$ssessionyear' and classname='$classname' and sectionname='$sectionname' AND sccode='$sccode'
             ORDER BY totalmarks DESC, gpa DESC, rollno ASC
         ) x USING(stid)
 
@@ -663,6 +694,8 @@
 
     echo "<script>setBar('p_overall',100);log('Processing Complete');</script>";
     flush_now();
+    echo microtime(true) . '<br>';
+    echo '<br><br>Time: ' . (microtime(true) - $sttime) . ' seconds';
     ?>
 
 </div>

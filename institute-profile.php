@@ -1220,8 +1220,7 @@ function toggleVisibility(id) {
                 preview.src = e.target.result;
             }
             reader.readAsDataURL(file);
-            
-            // ফাইল ইনফো দেখানো
+
             fileInfo.classList.remove('d-none');
             fileNameDisp.textContent = file.name;
         }

@@ -13,14 +13,14 @@ $class = $_POST['class'];
 $section = $_POST['section'];
 $subject = $_POST['subject'];
 
-$ct = (float)$_POST['ct'] ?? 0;
-$mt = (float)$_POST['mt'] ?? 0;
-$sub = (float)$_POST['sub'] ?? 0;
-$obj = (float)$_POST['obj'] ?? 0;
-$pra = (float)$_POST['pra'] ?? 0;
-$ca = (float)$_POST['ca'] ?? 0;
-$total = (float)$_POST['total'] ?? 0;
-$alg = (int)$_POST['alg'] ?? 0;
+$ct = (float) $_POST['ct'] ?? 0;
+$mt = (float) $_POST['mt'] ?? 0;
+$sub = (float) $_POST['sub'] ?? 0;
+$obj = (float) $_POST['obj'] ?? 0;
+$pra = (float) $_POST['pra'] ?? 0;
+$ca = (float) $_POST['ca'] ?? 0;
+$total = (float) $_POST['total'] ?? 0;
+$alg = (int) $_POST['alg'] ?? 0;
 
 
 $sql = "SELECT maxvalues FROM gpa 
@@ -64,8 +64,13 @@ if (mysqli_num_rows($q) > 0) {
     $sub_full = 0;
     $obj_full = 0;
     $pra_full = 0;
+    $full_full = 0;
 }
 
+$on100 = 0;
+if ($total > 0) {
+    $on100 = $total * 100 / $full_full;
+}
 
 // echo $sub_full . '-' . $obj_full . '-' . $pra_full . '-' . $full_full . '***' ;
 // delete old if exists
@@ -95,7 +100,7 @@ if ($p === false || $p == 0) {
 $ins = "INSERT INTO stmark (slot, sccode, stid, sessionyear, exam, subject, classname, sectionname,
         fullmark, ctest, mtest, subj, obj, pra, ca, sub_final, obj_final, pra_final, markobt, on100, gp, gl, entrydate, entryby, modifieddate)
         VALUES ('$slot', '$sccode', '$stid', '$session', '$exam', '$subject', '$class', '$section',
-        '$full_full', '$ct', '$mt', '$sub', '$obj', '$pra', '$ca', '$sub', '$obj', '$pra', '$total', 0, '$gp', '$gl', '$cur', '$usr', '$cur')";
+        '$full_full', '$ct', '$mt', '$sub', '$obj', '$pra', '$ca', '$sub', '$obj', '$pra', '$total', '$on100', '$gp', '$gl', '$cur', '$usr', '$cur')";
 
 // echo $ins;
 mysqli_query($conn, $ins);

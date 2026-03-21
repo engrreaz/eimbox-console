@@ -257,6 +257,7 @@ $students = fetch_all($conn, "
       AND classname='$cn'
       AND sectionname='$secname'
       AND sessionyear='$sessionyear'
+      AND slot='$slot'
     ORDER BY rollno $tail
 ");
 
