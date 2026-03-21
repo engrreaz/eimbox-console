@@ -38,7 +38,7 @@
                                         <i class="bi bi-person icon-24px"></i>
                                     </span>
                                 </div>
-                                <h4 class="mb-0">30</h4>
+                                <h4 class="mb-0" id="student-bunk">30</h4>
                             </div>
                             <h6 class="mb-0 fw-normal">Absent Last 3 Days</h6>
                             <p class="mb-0">
@@ -59,7 +59,7 @@
                                         <i class="bi bi-person-badge icon-24px"></i>
                                     </span>
                                 </div>
-                                <h4 class="mb-0">50</h4>
+                                <h4 class="mb-0" id="teacher-attnd">50</h4>
                             </div>
                             <h6 class="mb-0 fw-normal">Teacher's Attendance</h6>
                             <p class="mb-0">
@@ -77,7 +77,7 @@
                                         <i class="bi bi-person-badge icon-24px"></i>
                                     </span>
                                 </div>
-                                <h4 class="mb-0">1</h4>
+                                <h4 class="mb-0" id="techer-cl" >1</h4>
                             </div>
                             <h6 class="mb-0 fw-normal">Teacher Absent | CL</h6>
                             <p class="mb-0">
@@ -98,7 +98,7 @@
                                         <i class="bi bi-cash-stack icon-24px"></i>
                                     </span>
                                 </div>
-                                <h4 class="mb-0">৳ 12,500</h4>
+                                <h4 class="mb-0" id="st-payment">৳ 12,500</h4>
                             </div>
                             <h6 class="mb-0 fw-normal">Collection Today</h6>
                             <p class="mb-0">
@@ -116,7 +116,7 @@
                                         <i class="bi bi-wallet icon-24px"></i>
                                     </span>
                                 </div>
-                                <h4 class="mb-0">৳ 7,800</h4>
+                                <h4 class="mb-0" id="spend-amount">৳ 7,800</h4>
                             </div>
                             <h6 class="mb-0 fw-normal">Expanse Today</h6>
                             <p class="mb-0">
@@ -282,6 +282,11 @@
         $.post("index/dashboard-stat.php", {}, function (res) {
             $("#today-date").text(res.today);
             $("#present-count").text(res.present);
+            $("#student-bunk").text(res.bunk);
+            $("#teacher-attnd").text(res.teacher);
+            $("#teacher-cl").text(res.cl);
+            $("#st-payment").text(res.collection);
+            $("#spend-amount").text(res.expense);
         }, "json");
 
 
