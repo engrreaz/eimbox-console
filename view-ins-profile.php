@@ -34,7 +34,6 @@
     <?php
     $current_sccode = isset($_GET['sccode']) ? $_GET['sccode'] : $sccode;
 
-    echo $current_sccode;
     // ================= SCINFO আপডেট =================
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
@@ -52,7 +51,6 @@
                 valid_module='$valid_module',
                 active_module='$active_module'
             WHERE sccode='$current_sccode' ";
-            echo $sql;
 
             if ($conn->query($sql)) {
                 echo "<div class='alert alert-success'>Modules updated successfully</div>";
