@@ -4,20 +4,36 @@ $GLOBALS['script_end'] = microtime(true);
 $GLOBALS['execution_time'] = round(($GLOBALS['script_end'] - $GLOBALS['script_start']), 4);
 
 echo "Queries: {$GLOBALS['queries_count']}, Time: {$GLOBALS['execution_time']}s";
-// var_dump($GLOBALS['query_text']);
 
 $ipaddr = $_SERVER['REMOTE_ADDR'];
-$platform = $_SERVER['HTTP_USER_AGENT']; // চাইলে OS ডিটেক্টর লাইব্রেরি ব্যবহার করতে পারেন
+$platform = $_SERVER['HTTP_USER_AGENT'];
 $browser = $_SERVER['HTTP_USER_AGENT'];
-$location = ''; // চাইলে GeoIP ব্যবহার করতে পারেন
+$location = '';
+
+
+// --------------- mySQL Connection -------------------------
+$q = $conn->query("SHOW STATUS LIKE 'Threads_connected'");
+$row = $q->fetch_assoc();
+echo " -- Open connections: " . $row['Value'];
+
+$q = $conn->query("SHOW VARIABLES LIKE 'max_connections'");
+$row = $q->fetch_assoc();
+echo " -- Max connections: " . $row['Value'];
+
+$q = $conn->query("SHOW STATUS LIKE 'Max_used_connections'");
+$row = $q->fetch_assoc();
+echo " -- Max Limit: " . $row['Value'];
+
+$q = $conn->query("SHOW FULL PROCESSLIST");
+$row = $q->fetch_assoc();
+echo " -- Full Process: " . $row['Value'];
+// --------------- mySQL Connection -------------------------
 
 $stmt = $conn->prepare("INSERT INTO logbook (email, sccode, pagename, ipaddr, platform, browser, entrytime) 
 VALUES (?, ?, ?, ?, ?, ?, ?)");
 $stmt->bind_param("sisssss", $usr, $sccode, $currentFile, $ipaddr, $platform, $browser, $cur);
 $stmt->execute();
-$log_id = $stmt->insert_id; // পরবর্তী আপডেটের জন্য কাজে লাগবে
-// echo $log_id;
-
+$log_id = $stmt->insert_id;
 ?>
 
 
