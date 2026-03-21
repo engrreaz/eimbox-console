@@ -32,7 +32,7 @@
 <div class="container-xxl flex-grow-1 container-p-y">
 
     <?php
-    $current_sccode =  isset($_POST['sccode']) ? $_POST['sccode'] : isset($_GET['sccode']) ? $_GET['sccode'] : $sccode;
+    $current_sccode = isset($_GET['sccode']) ? $_GET['sccode'] : $sccode;
 
     echo $current_sccode;
     // ================= SCINFO আপডেট =================
