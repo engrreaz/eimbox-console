@@ -91,6 +91,7 @@ if (in_array($currentFile, $access_page_list)) {
 
 }
 echo $permission;
+echo $_SESSION["permission_message"];
 
 if ($usr == 'engrreaz@gmail.com') {
     // $permission = 3;
