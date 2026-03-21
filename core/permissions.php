@@ -88,6 +88,12 @@ if (in_array($currentFile, $access_page_list)) {
     $permission = $permission_data['permission'] ?? 0;
     $_SESSION["permission_message"] = "Role&mdash;Institute&mdash;User Based";
 
+    if($is_admin>=4){
+    $permission = 3;
+    $_SESSION["permission_message"] = "Developer Priviliges";
+    echo $permission;
+}
+
 
 }
 echo $permission;
