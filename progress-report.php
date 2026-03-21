@@ -66,7 +66,7 @@ $exam = gv('exam');
 $color = $_GET['clr'] ?? 0;
 
 if (!$sessionyear || !$cn || !$secname || !$exam) {
-    echo "<script>location.href='result-repo-select.php'</script>";
+    echo "<script>location.href='result-report-manager.php'</script>";
     exit;
 }
 
