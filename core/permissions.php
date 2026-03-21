@@ -36,11 +36,7 @@ while ($row = $result->fetch_assoc()) {
 }
 
 
-if($is_admin>=4){
-    $permission = 3;
-    $_SESSION["permission_message"] = "Developer Priviliges";
-    echo $permission;
-}
+
 
 if (in_array($currentFile, $access_page_list)) {
     $permission = 3; // Full access
@@ -88,16 +84,16 @@ if (in_array($currentFile, $access_page_list)) {
     $permission = $permission_data['permission'] ?? 0;
     $_SESSION["permission_message"] = "Role&mdash;Institute&mdash;User Based";
 
-    if($is_admin>=4){
-    $permission = 3;
-    $_SESSION["permission_message"] = "Developer Priviliges";
-    echo $permission;
-}
+    if ($is_admin >= 4) {
+        $permission = 3;
+        $_SESSION["permission_message"] = "Developer Priviliges";
+        // echo $permission;
+    }
 
 
 }
-echo $permission;
-echo $_SESSION["permission_message"];
+// echo $permission;
+// echo $_SESSION["permission_message"];
 
 if ($usr == 'engrreaz@gmail.com') {
     // $permission = 3;
