@@ -36,7 +36,11 @@ while ($row = $result->fetch_assoc()) {
 }
 
 
-
+if($is_admin>=4){
+    $permission = 3;
+    $_SESSION["permission_message"] = "Developer Priviliges";
+    echo $permission;
+}
 
 if (in_array($currentFile, $access_page_list)) {
     $permission = 3; // Full access
