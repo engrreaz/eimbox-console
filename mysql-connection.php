@@ -22,7 +22,7 @@ while ($row = $q->fetch_assoc()) {
 <h3>MySQL Connection Monitor</h3>
     <div class="card p-2">
         
-        <canvas id="connChart" height="90"></canvas>
+        <canvas id="connChart" height="200"></canvas>
     </div>
 
 
