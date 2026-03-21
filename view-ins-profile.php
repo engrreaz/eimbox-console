@@ -1,39 +1,39 @@
 <?php require_once 'header.php'; ?>
 
 <style>
-    .package-card{
-    transition: .2s;
-    border-radius: 6px;
-}
+    .package-card {
+        transition: .2s;
+        border-radius: 6px;
+    }
 
-.package-card:hover{
-    background:#f8f9fa;
-}
+    .package-card:hover {
+        background: #f8f9fa;
+    }
 
-.package-header{
-    user-select:none;
-}
+    .package-header {
+        user-select: none;
+    }
 
-.tier-box{
-    cursor:pointer;
-    transition:.15s;
-}
+    .tier-box {
+        cursor: pointer;
+        transition: .15s;
+    }
 
-.tier-box:hover{
-    background:#f3f6fa;
-}
+    .tier-box:hover {
+        background: #f3f6fa;
+    }
 
-.collapse{
-    transition:.2s;
-}
-
+    .collapse {
+        transition: .2s;
+    }
 </style>
 
 <div class="container-xxl flex-grow-1 container-p-y">
 
     <?php
-    $current_sccode = isset($_GET['sccode']) ? $_GET['sccode'] : $sccode;
-
+    $current_sccode = isset($_POST['sccode'])
+        ? $_POST['sccode']
+        : (isset($_GET['sccode']) ? $_GET['sccode'] : $sccode);
     // ================= SCINFO আপডেট =================
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
@@ -693,50 +693,50 @@
 </script>
 
 <script>
-document.querySelectorAll('input[name="package"]').forEach(radio => {
-    radio.addEventListener('change', function () {
+    document.querySelectorAll('input[name="package"]').forEach(radio => {
+        radio.addEventListener('change', function () {
 
-        let pkgId = this.value;
+            let pkgId = this.value;
 
-        // Close all packages
-        document.querySelectorAll('.collapse').forEach(el => {
-            el.classList.remove('show');
+            // Close all packages
+            document.querySelectorAll('.collapse').forEach(el => {
+                el.classList.remove('show');
+            });
+
+            // Open selected one
+            let target = document.getElementById('pkg-' + pkgId);
+            if (target) {
+                target.classList.add('show');
+            }
         });
-
-        // Open selected one
-        let target = document.getElementById('pkg-' + pkgId);
-        if (target) {
-            target.classList.add('show');
-        }
     });
-});
 
-// Click anywhere on header = select radio
+    // Click anywhere on header = select radio
 
 </script>
 <script>
-document.querySelectorAll('.package-header').forEach(header => {
-    header.addEventListener('click', function (e) {
+    document.querySelectorAll('.package-header').forEach(header => {
+        header.addEventListener('click', function (e) {
 
-        let pkgCard = this.closest('.package-card');
-        let pkgId   = pkgCard.getAttribute('data-pkg');
-        let target  = document.getElementById('pkg-' + pkgId);
+            let pkgCard = this.closest('.package-card');
+            let pkgId = pkgCard.getAttribute('data-pkg');
+            let target = document.getElementById('pkg-' + pkgId);
 
-        // সব collapse বন্ধ করো
-        document.querySelectorAll('.collapse').forEach(el => {
-            if (el !== target) el.classList.remove('show');
+            // সব collapse বন্ধ করো
+            document.querySelectorAll('.collapse').forEach(el => {
+                if (el !== target) el.classList.remove('show');
+            });
+
+            // টার্গেট toggle করো
+            if (target) {
+                target.classList.toggle('show');
+            }
+
+            // Radio sync
+            let radio = pkgCard.querySelector('input[name="package"]');
+            if (radio) radio.checked = true;
         });
-
-        // টার্গেট toggle করো
-        if (target) {
-            target.classList.toggle('show');
-        }
-
-        // Radio sync
-        let radio = pkgCard.querySelector('input[name="package"]');
-        if (radio) radio.checked = true;
     });
-});
 </script>
 
 
