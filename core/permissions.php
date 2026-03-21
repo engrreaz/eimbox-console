@@ -90,7 +90,7 @@ if (in_array($currentFile, $access_page_list)) {
 
 
 }
-
+echo $permission;
 
 if ($usr == 'engrreaz@gmail.com') {
     // $permission = 3;
