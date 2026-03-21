@@ -66,7 +66,7 @@ $log_res->close();
 
 <!-- Features & Feedback Modal -->
 <div class="modal fade" id="featuresModal" tabindex="-1">
-    <div class="modal-dialog modal-xl">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Features & Feedback</h5>
@@ -221,7 +221,7 @@ $log_res->close();
 
 <!-- Feedback Modal -->
 <div class="modal fade" id="feedbackModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <form id="feedbackForm" class="modal-content" method="post">
             <div class="modal-header">
                 <h5 class="modal-title">Submit Feedback / Feature Request</h5>
