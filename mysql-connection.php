@@ -6,9 +6,16 @@ $threads = [];
 $maxUsed = [];
 $maxLimit = [];
 
-$q = $conn->query("SELECT created_at, threads_connected, max_used_connections, max_connections 
-                   FROM connection_log 
-                   ORDER BY created_at ASC");
+$q = $conn->query("
+    SELECT created_at, threads_connected, max_used_connections, max_connections
+    FROM (
+        SELECT created_at, threads_connected, max_used_connections, max_connections
+        FROM connection_log
+        ORDER BY created_at DESC
+        LIMIT 300
+    ) t
+    ORDER BY created_at ASC
+");
 
 while ($row = $q->fetch_assoc()) {
     $labels[] = date('H:i', strtotime($row['created_at']));
@@ -19,9 +26,9 @@ while ($row = $q->fetch_assoc()) {
 ?>
 
 <div class="container-xxl flex-grow-1 container-p-y">
-<h3>MySQL Connection Monitor</h3>
+    <h3>MySQL Connection Monitor</h3>
     <div class="card p-2">
-        
+
         <canvas id="connChart" height="200"></canvas>
     </div>
 
