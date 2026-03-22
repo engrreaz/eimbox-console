@@ -25,7 +25,8 @@ $res = $stmt->get_result();
 <div class="container p-3">
     <h4>Logs from <?= htmlspecialchars($from) ?> to <?= htmlspecialchars($to) ?></h4>
 
-    <table class="table table-sm table-bordered">
+    <div class="table-responsive">
+          <table class="table table-sm table-bordered">
         <tr>
             <th>Time</th>
             <th>Platform</th>
@@ -46,6 +47,8 @@ $res = $stmt->get_result();
         <?php endwhile; ?>
 
     </table>
+    </div>
+  
 </div>
 
 <?php $stmt->close();
