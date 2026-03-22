@@ -47,7 +47,7 @@ $sql = "SELECT mm.id AS module_id,
         ON pm.page_name = mm.related_pages
         LEFT JOIN modulelist ml ON ml.module_name = mm.module_name
         WHERE mm.module_name NOT IN ('Core')
-        ORDER BY ml.slno ASC, ml.module_name ASC, mm.nav_title ASC;";
+        ORDER BY ml.slno ASC, ml.module_name ASC, mm.slno ASC, mm.nav_title ASC;";
 
 $stmt = $conn->prepare($sql);
 $stmt->bind_param(

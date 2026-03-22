@@ -24,9 +24,9 @@ $q = $conn->query("SHOW STATUS LIKE 'Max_used_connections'");
 $row = $q->fetch_assoc();
 echo " -- Max Limit: " . $row['Value'];
 
-$q = $conn->query("SHOW FULL PROCESSLIST");
-$row = $q->fetch_assoc();
-echo " -- Full Process: " . $row['Value'];
+// $q = $conn->query("SHOW FULL PROCESSLIST");
+// $row = $q->fetch_assoc();
+// echo " -- Full Process: " . $row['Value'];
 // --------------- mySQL Connection -------------------------
 
 $stmt = $conn->prepare("INSERT INTO logbook (email, sccode, pagename, ipaddr, platform, browser, entrytime) 

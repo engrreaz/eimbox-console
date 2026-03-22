@@ -313,6 +313,7 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
 
 
                     <?php
+              
                     if (!$package_check) {
                         include_once('core/upgrade-plan.php');
                         include_once('footer.php');

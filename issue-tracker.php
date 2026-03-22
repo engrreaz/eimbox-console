@@ -31,10 +31,10 @@
     ];
 
     // modulemanager থেকে ডেটা ফেচ করা
-    $sql = "SELECT id, module_name, module_topic, status_name, nav_icon, crud, ui, image, perm, error, feature, doc, youtube, ytlink
+    $sql = "SELECT id, slno, module_name, module_topic, status_name, nav_icon, crud, ui, image, perm, error, feature, doc, youtube, ytlink
             FROM modulemanager
             WHERE module_topic IS NOT NULL AND module_topic != ''
-            ORDER BY module_name";
+            ORDER BY module_name, slno";
     $result = $conn->query($sql);
 
     $modules = [];
@@ -92,6 +92,7 @@
                         <table class="table table-bordered">
                             <thead>
                                 <tr>
+                                    <th></th>
                                     <th>Topic</th>
                                     <th>Status</th>
                                     <th>CRUD</th>
@@ -105,10 +106,14 @@
                                     <th>Link</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                           <tbody class="sortable-body">
                                 <?php foreach ($items as $item): ?>
-                                    <tr>
+                                    <tr data-id="<?= $item['id'] ?>">
+                                        <td class="text-center">
+    <i class="bi bi-grip-vertical drag-handle" style="cursor:grab"></i>
+</td>
                                         <td><?php echo htmlspecialchars($item['module_topic']); ?></td>
+                                        
                                         <td style="color:<?= $page_status_colors[$item['status_name']]; ?>;">
                                             <?php echo htmlspecialchars($page_status_names[$item['status_name']]); ?>
                                         </td>
@@ -240,4 +245,36 @@
                 else alert(msg);
             });
     }
+</script>
+
+<script>
+document.querySelectorAll('.sortable-body').forEach(function(tbody){
+
+    new Sortable(tbody, {
+        animation: 150,
+        handle: '.drag-handle',
+        ghostClass: 'table-warning',
+
+        onEnd: function () {
+            let order = [];
+            tbody.querySelectorAll('tr').forEach((tr, index) => {
+                order.push({
+                    id: tr.dataset.id,
+                    slno: index + 1
+                });
+            });
+
+            fetch('core/update_slno.php', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify(order)
+            })
+            .then(r => r.text())
+            .then(msg => {
+                console.log(msg);
+            });
+        }
+    });
+
+});
 </script>

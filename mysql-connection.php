@@ -12,7 +12,7 @@ $q = $conn->query("
         SELECT created_at, threads_connected, max_used_connections, max_connections
         FROM connection_log
         ORDER BY created_at DESC
-        LIMIT 300
+        LIMIT 1500
     ) t
     ORDER BY created_at ASC
 ");
@@ -35,7 +35,11 @@ while ($row = $q->fetch_assoc()) {
 
 </div>
 
-<?php require_once 'footer.php'; ?>
+<?php
+
+include_once('core/upgrade-plan.php');
+
+require_once 'footer.php'; ?>
 
 <!-- ----------------------------------- -->
 <script></script>
