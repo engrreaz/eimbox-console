@@ -6,12 +6,6 @@ require_once '../core/db.php';
 $from = $_GET['from'] ?? '';
 $to = $_GET['to'] ?? '';
 
-echo $from . ' - ' . $to;
-
-echo "SELECT *
-    FROM logbook
-    WHERE entrytime BETWEEN '$from' AND '$to'
-    ORDER BY entrytime ASC";
 
 $stmt = $conn->prepare("
     SELECT *
@@ -34,17 +28,20 @@ $res = $stmt->get_result();
     <table class="table table-sm table-bordered">
         <tr>
             <th>Time</th>
-            <th>Open</th>
-            <th>Peak</th>
-            <th>Limit</th>
+            <th>Platform</th>
+            <th>EIIN</th>
+            <th>User</th>
+            <th>Script</th>
         </tr>
 
         <?php while ($r = $res->fetch_assoc()): ?>
             <tr>
+                <td><?= $r['entrytime'] ?></td>
+                <td><?= $r['platform'] ?></td>
                 <td><?= $r['sccode'] ?></td>
                 <td><?= $r['email'] ?></td>
                 <td><?= $r['pagename'] ?></td>
-                <td><?= $r['entrytime'] ?></td>
+
             </tr>
         <?php endwhile; ?>
 
