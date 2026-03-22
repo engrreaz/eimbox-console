@@ -9,7 +9,7 @@ if (isset($_POST['module_name'], $_POST['col'], $_POST['val'])) {
     $id = intval($_POST['id']);
 
 
-    $allowedCols = ['crud', 'ui', 'image', 'perm', 'error', 'feature', 'doc', 'youtube'];
+    $allowedCols = ['crud', 'ui', 'image', 'perm', 'error', 'feature', 'doc', 'faq', 'tour', 'youtube'];
     if (in_array($col, $allowedCols)) {
         $sql = "UPDATE modulemanager SET $col='$val' WHERE id='$id'";
         $conn->query($sql);

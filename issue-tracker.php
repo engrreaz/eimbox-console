@@ -17,6 +17,8 @@
         'error' => 'bi bi-bug-fill',
         'feature' => 'bi bi-feather',
         'doc' => 'bi bi-file-earmark-text',
+        'faq' => 'bi bi-question-circle',
+        'tour' => 'bi bi-person-walking',
         'youtube' => 'bi bi-youtube'
     ];
 
@@ -31,7 +33,7 @@
     ];
 
     // modulemanager থেকে ডেটা ফেচ করা
-    $sql = "SELECT id, slno, module_name, module_topic, status_name, nav_icon, crud, ui, image, perm, error, feature, doc, youtube, ytlink
+    $sql = "SELECT id, slno, module_name, module_topic, status_name, nav_icon, crud, ui, image, perm, error, feature, doc, faq, tour, youtube, ytlink
             FROM modulemanager
             WHERE module_topic IS NOT NULL AND module_topic != ''
             ORDER BY module_name, slno";
@@ -45,7 +47,7 @@
             $modules[$row['module_name']][] = $row;
 
             // পরিসংখ্যান গণনা
-            foreach (['crud', 'ui', 'image', 'perm', 'error', 'feature', 'doc', 'youtube'] as $col) {
+            foreach (['crud', 'ui', 'image', 'perm', 'error', 'feature', 'doc', 'faq', 'tour', 'youtube'] as $col) {
                 switch ($row[$col]) {
                     case 0:
                         $stats['red']++;
@@ -89,44 +91,46 @@
                 <div id="collapse-<?php echo md5($module_name); ?>" class="accordion-collapse collapse"
                     data-bs-parent="#moduleAccordion">
                     <div class="accordion-body p-0">
-                        <table class="table table-bordered">
+                        <table class="table table-bordered table-sm">
                             <thead>
                                 <tr>
-                                    <th></th>
-                                    <th>Topic</th>
-                                    <th>Status</th>
-                                    <th>CRUD</th>
-                                    <th>UI</th>
-                                    <th>Image</th>
+                                    <th class="px-3"></th>
+                                    <th class="px-3">Topic</th>
+                                    <th class="px-3">Status</th>
+                                    <th class="px-3">CRUD</th>
+                                    <th class="px-3">UI</th>
+                                    <th class="px-3">Img</th>
                                     <th>Perm</th>
-                                    <th>Error</th>
-                                    <th>Feature</th>
+                                    <th>Err</th>
+                                    <th>Fea</th>
                                     <th>Doc</th>
-                                    <th>YouTube</th>
+                                    <th>FAQ</th>
+                                    <th>Tour</th>
+                                    <th>YT</th>
                                     <th>Link</th>
                                 </tr>
                             </thead>
-                           <tbody class="sortable-body">
+                            <tbody class="sortable-body">
                                 <?php foreach ($items as $item): ?>
                                     <tr data-id="<?= $item['id'] ?>">
-                                        <td class="text-center">
-    <i class="bi bi-grip-vertical drag-handle" style="cursor:grab"></i>
-</td>
-                                        <td><?php echo htmlspecialchars($item['module_topic']); ?></td>
-                                        
+                                        <td class="text-center p-1">
+                                            <i class="bi bi-grip-vertical drag-handle" style="cursor:grab"></i>
+                                        </td>
+                                        <td class="px-1 py-2"><?php echo htmlspecialchars($item['module_topic']); ?></td>
+
                                         <td style="color:<?= $page_status_colors[$item['status_name']]; ?>;">
                                             <?php echo htmlspecialchars($page_status_names[$item['status_name']]); ?>
                                         </td>
                                         <?php
-                                        $cols = ['crud', 'ui', 'image', 'perm', 'error', 'feature', 'doc', 'youtube'];
+                                        $cols = ['crud', 'ui', 'image', 'perm', 'error', 'feature', 'doc', 'faq', 'tour', 'youtube'];
                                         $colors = [0 => 'danger', 1 => 'warning', 2 => 'info', 3 => 'primary', 4 => 'success', null => 'secondary'];
                                         foreach ($cols as $col):
                                             $val = $item[$col];
                                             $color = isset($colors[$val]) ? $colors[$val] : 'secondary';
                                             $icon = $col_icon[$col];
                                             ?>
-                                            <td class="text-center p-1">
-                                                <div class="dropdown">
+                                            <td class="text-center p-0">
+                                                <div class="dropdown  m-0">
                                                     <i class="<?php echo $icon; ?> text-<?php echo $color; ?>"
                                                         data-bs-toggle="dropdown" style="cursor:pointer; font-size:18px;"></i>
                                                     <ul class="dropdown-menu">
@@ -149,7 +153,8 @@
                                             </td>
                                         <?php endforeach; ?>
                                         <td>
-                                            <div class=" ytlink" data-id="<?= $item['id'] ?>" style="width:100%; min-height: 20px;;"
+                                            <div class=" ytlink" data-id="<?= $item['id'] ?>"
+                                                style="width:100%; min-height: 20px;;"
                                                 data-val="<?= htmlspecialchars($item['ytlink']) ?>">
                                                 <?= htmlspecialchars($item['ytlink'] ?? '-') ?>
                                             </div>
@@ -248,33 +253,33 @@
 </script>
 
 <script>
-document.querySelectorAll('.sortable-body').forEach(function(tbody){
+    document.querySelectorAll('.sortable-body').forEach(function (tbody) {
 
-    new Sortable(tbody, {
-        animation: 150,
-        handle: '.drag-handle',
-        ghostClass: 'table-warning',
+        new Sortable(tbody, {
+            animation: 150,
+            handle: '.drag-handle',
+            ghostClass: 'table-warning',
 
-        onEnd: function () {
-            let order = [];
-            tbody.querySelectorAll('tr').forEach((tr, index) => {
-                order.push({
-                    id: tr.dataset.id,
-                    slno: index + 1
+            onEnd: function () {
+                let order = [];
+                tbody.querySelectorAll('tr').forEach((tr, index) => {
+                    order.push({
+                        id: tr.dataset.id,
+                        slno: index + 1
+                    });
                 });
-            });
 
-            fetch('core/update_slno.php', {
-                method: 'POST',
-                headers: {'Content-Type':'application/json'},
-                body: JSON.stringify(order)
-            })
-            .then(r => r.text())
-            .then(msg => {
-                console.log(msg);
-            });
-        }
+                fetch('core/update_slno.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(order)
+                })
+                    .then(r => r.text())
+                    .then(msg => {
+                        console.log(msg);
+                    });
+            }
+        });
+
     });
-
-});
 </script>

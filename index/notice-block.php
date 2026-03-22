@@ -36,7 +36,7 @@ if (!empty($notices)) {
 }
 ?>
 
-<div class="card card-border-shadow-primary h-100 shadow-none border">
+<div class="card card-border-shadow-primary  shadow-none border">
     <div class="card-body">
 
         <!-- Header -->

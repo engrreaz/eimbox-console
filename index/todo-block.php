@@ -47,7 +47,7 @@ $todo_count = $todo_res->num_rows;
     }
 </style>
 
-<div class="card card-border-shadow-primary h-100 shadow-none border">
+<div class="card card-border-shadow-primary shadow-none border">
     <div class="card-body">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div class="d-flex align-items-center">

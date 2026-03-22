@@ -37,7 +37,7 @@ $current_period = $stmt_p->get_result()->fetch_assoc();
     }
 
     .live-dashboard-card {
-        border-radius: 20px;
+        border-radius: 8px;
         background: var(--glass-bg);
         border: 1px solid rgba(0, 0, 0, 0.05);
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
