@@ -26,7 +26,7 @@ $module = $admin_data['module'] ?? [];
 <!-- ================== CONTENT START ================== -->
 <div class="container-xxl flex-grow-1 container-p-y">
 
-    <h3 class="d-print-none">Basic Primary Settings</h3>
+    <!-- <h3 class="d-print-none">Basic Primary Settings</h3> -->
 
     <!-- ================== WEEKENDS ================== -->
     <?php
