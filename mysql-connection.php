@@ -17,9 +17,11 @@ $q = $conn->query("
     ORDER BY created_at ASC
 ");
 
+$timestamps = [];
 while ($row = $q->fetch_assoc()) {
     $labels[] = date('H:i', strtotime($row['created_at']));
     $threads[] = (int) $row['threads_connected'];
+    $timestamps[] = $row['created_at'];
     $maxUsed[] = (int) $row['max_used_connections'];
     $maxLimit[] = (int) $row['max_connections'];
 }
@@ -35,9 +37,23 @@ while ($row = $q->fetch_assoc()) {
 
 </div>
 
-<?php
 
-include_once('core/upgrade-plan.php');
+<div class="modal fade" id="logModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Connection Logs</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <iframe id="logFrame" style="width:100%; height:70vh; border:0;"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<?php
 
 require_once 'footer.php'; ?>
 
@@ -80,7 +96,10 @@ require_once 'footer.php'; ?>
         },
         options: {
             responsive: true,
-            interaction: { mode: 'index', intersect: false },
+            interaction: {
+                mode: 'nearest',
+                intersect: true   // ← point এ direct click
+            },
             plugins: { legend: { position: 'top' } },
             scales: {
                 y: { beginAtZero: true, ticks: { precision: 0 } }
@@ -91,7 +110,6 @@ require_once 'footer.php'; ?>
                 const idx = elements[0].index;
                 const ts = timestamps[idx];
 
-                // ±2 মিনিট range
                 const d = new Date(ts);
                 const from = new Date(d.getTime() - 2 * 60000);
                 const to = new Date(d.getTime() + 2 * 60000);
@@ -103,10 +121,18 @@ require_once 'footer.php'; ?>
                     '&to=' +
                     encodeURIComponent(fmt(to));
 
-                window.open(url, '_blank');
+                document.getElementById('logFrame').src = url;
+
+                new bootstrap.Modal(document.getElementById('logModal')).show();
             }
         }
     });
+
+
+    document.getElementById('logModal')
+        .addEventListener('hidden.bs.modal', function () {
+            document.getElementById('logFrame').src = '';
+        });
 </script>
 
 <!-- ----------------------------------- -->
