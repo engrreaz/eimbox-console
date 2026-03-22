@@ -63,6 +63,7 @@ require_once 'footer.php'; ?>
 <script>
     const timestamps = <?= json_encode($timestamps) ?>;
 
+
     const chart = new Chart(document.getElementById('connChart'), {
         type: 'line',
         data: {
@@ -111,8 +112,9 @@ require_once 'footer.php'; ?>
                 const ts = timestamps[idx];
 
                 const d = new Date(ts);
-                const from = new Date(d.getTime() - 2 * 60000);
-                const to = new Date(d.getTime() + 2 * 60000);
+                const offset = 6 * 60 * 60 * 1000; // 6 hours in ms
+                const from = new Date(d.getTime() - 2 * 60000 + offset);
+                const to = new Date(d.getTime() + 2 * 60000 + offset);
 
                 const fmt = d => d.toISOString().slice(0, 19).replace('T', ' ');
 
