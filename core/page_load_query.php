@@ -51,3 +51,30 @@ $res = $conn->query($sql);
 while ($row = $res->fetch_assoc()) {
     $sett[] = $row;
 }
+
+
+
+$stmt = $conn->prepare("SELECT step_no, element_id,  content 
+                        FROM tours 
+                        WHERE page=? 
+                        ORDER BY step_no ASC");
+$stmt->bind_param("s", $currentFile);
+$stmt->execute();
+$result = $stmt->get_result();
+
+$steps = [];
+
+while($row = $result->fetch_assoc()){
+    $step = [];
+    
+    if(!empty($row['element_id'])){
+        $step['element'] = "#".$row['element_id'];
+    }
+ 
+    
+    $step['intro'] = $row['content'];
+    
+    $steps[] = $step;
+}
+
+echo "<script>var tourSteps = ".json_encode($steps).";</script>";

@@ -172,6 +172,7 @@ function store_user_session($user, $school = [])
     $_SESSION['address'] = $user['address'] ?? '';
     $_SESSION['dob'] = $user['dob'] ?? '';
     $_SESSION['user_role'] = $user['role'] ?? 'user';
+    $_SESSION['tour_enable'] = $user['tour_enable'] ?? '1';
 
     if (($user['is_chief'] ?? '0') == 1) {
         $_SESSION['userlevel'] = 'Chief';
@@ -195,6 +196,7 @@ function store_user_session($user, $school = [])
     $_SESSION['package_name'] = $school['package_name'] ?? 2;
     $_SESSION['package_tier'] = $school['tier'] ?? '';
     $_SESSION['scaddress_top'] = $school['ps'] . ', ' . $school['dist'];
+    $_SESSION['tour_enable'] = $user['tour_enable'] ?? '1';
     $_SESSION['scaddress_top_full'] = str_replace(', ,', ', ', $school['scadd1'] . ', ' . $school['scadd2'] . ', ' . $school['ps'] . ', ' . $school['dist']);
 
     $_SESSION['rootuser'] = $school['rootuser'];

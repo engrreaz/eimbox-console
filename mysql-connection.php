@@ -39,7 +39,7 @@ while ($row = $q->fetch_assoc()) {
         <!-- <label for="adj" class="form-label">Time Adjust (min)</label>    -->
         <select id="adj" class="select-control ">
             <option value="1">1</option>
-            <option value="2" >2</option>
+            <option value="2">2</option>
             <option value="3">3</option>
             <option value="4">4</option>
             <option value="5">5</option>

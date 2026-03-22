@@ -32,7 +32,7 @@ $per_page_default = 20;
                     <input type="text" name="text" id="filterText" class="form-control" placeholder="Search text...">
                 </div>
                 <div class="col-md-1">
-                    <button id="btnSearch" class="btn btn-primary p-3 mt-1 w-100" type="button"><i
+                    <button id="btnSearch" class="btn btn-primary p-3 mt-1 w-100 tour" type="button"><i
                             class="bi bi-search"></i></button>
                 </div>
             </form>
@@ -43,13 +43,13 @@ $per_page_default = 20;
                 <button id="btnDownload" class="btn btn-outline-secondary"><i
                         class="bi bi-cloud-arrow-down"></i></button>
                 <button id="btnClear" class="btn btn-outline-danger"><i class="bi bi-stars"></i></button>
-                <button id="btnArchive" class="btn btn-outline-info"><i class="bi bi-archive-fill"></i></button>
+                <button id="btnArchive" class="btn btn-outline-info tour"><i class="bi bi-archive-fill"></i></button>
             </div>
         </div>
     </div>
 
     <!-- Stats -->
-    <div id="statsArea" class="mb-3"></div>
+    <div id="statsArea" class="mb-3 tour"></div>
 
     <!-- Delete All (per file) -->
 

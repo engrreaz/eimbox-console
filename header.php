@@ -128,6 +128,8 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
     <script src="assets/vendor/libs/jquery/jquery.js"></script>
     <script src="assets/vendor/js/bootstrap.js"></script>
     <script src="https://cdn.datatables.net/2.3.5/js/dataTables.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intro.js/minified/introjs.min.css">
+
 
 
     <style>
@@ -226,7 +228,7 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
                                         <i class="breadcrumb-icon icon-base ri ri-arrow-right-s-line align-middle"></i>
                                     </li>
                                     <li class="breadcrumb-item active" id="page_link_sub_title">
-                                        <?php echo $page_title; ?>
+                                        <?php echo $page_title;  ?> 
                                     </li>
                                 </ol>
                             </nav>

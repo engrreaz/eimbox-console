@@ -234,8 +234,104 @@ if ($monitorPanel === true) { ?>
 </div>
 
 
+<!-- Modal -->
+<div class="modal fade" id="tourModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title flex-grow-1">Manage Tour Steps</h5>
+                <button class="btn btn-success me-3" onclick="openAddStepModal()">Add New Step</button>
+
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <!-- Step Table -->
+                <table class="table table-bordered" id="tourStepsTable">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>#</th>
+                            <th>Element ID</th>
+                            <th>Content</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tourStepsBody"></tbody>
+                </table>
 
 
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="addStepModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Step</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <form id="addStepForm">
+                    <div class="mb-2">
+                        <label>Step Number</label>
+                        <input type="number" name="step_no" class="form-control" required>
+                    </div>
+                    <div class="mb-2">
+                        <label>Element</label>
+                        <select name="element_id" id="elementSelect" class="form-select"></select>
+                    </div>
+                    <div class="mb-2">
+                        <label>Content</label>
+                        <textarea name="content" class="form-control" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Step</button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="editStepModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Step</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <form id="editStepForm">
+                    <input type="hidden" name="id" id="editStepId">
+                    <div class="mb-2">
+                        <label>Step Number</label>
+                        <input type="number" name="step_no" id="editStepNo" class="form-control" required>
+                    </div>
+                    <div class="mb-2">
+                        <label>Element</label>
+                        <select name="element_id" id="editElementSelect" class="form-select"></select>
+                    </div>
+                    <div class="mb-2">
+                        <label>Content</label>
+                        <textarea name="content" id="editContent" class="form-control" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
 
 
 
@@ -456,7 +552,7 @@ if ($monitorPanel === true) { ?>
 </footer>
 
 <?php
-$conn->close(); 
+$conn->close();
 ?>
 
 
@@ -512,6 +608,7 @@ $conn->close();
 
 
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/intro.js/minified/intro.min.js"></script>
 <!-- Custom JS -->
 
 <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
@@ -1632,6 +1729,195 @@ $conn->close();
     });
 </script>
 
+
+<script>
+    function startTour() {
+        let formattedSteps = tourSteps.map(step => {
+            let s = { intro: step.intro };
+
+            if (step.element) {
+                s.element = document.querySelector(step.element);
+                if (step.title) s.title = step.title;
+            } else {
+                s.title = '<?= addslashes($page_title) ?>';
+            }
+            return s;
+        });
+
+        introJs().setOptions({
+            steps: formattedSteps,
+            nextLabel: "Next",
+            prevLabel: "Back",
+            doneLabel: "Finish",
+            showProgress: true
+        }).start();
+    }
+
+
+</script>
+
+<script>
+    window.onload = function () {
+
+        const tourEnable = <?= (int) ($_SESSION['tour_enable'] ?? 0) ?>;
+        const tourKey = "tourDone-<?= $currentFile ?>";
+
+        if (tourEnable === 1) {
+            if (!localStorage.getItem(tourKey)) {
+                startTour();
+                localStorage.setItem(tourKey, "yes");
+            }
+        }
+        else if (tourEnable === 2) {
+            startTour();
+        }
+
+    };
+</script>
+
+
+
+<script>
+    // Open main modal
+    function openTourModal() {
+        fetchSteps();
+        var tourModal = new bootstrap.Modal(document.getElementById('tourModal'));
+        tourModal.show();
+    }
+
+    // Fetch all steps from DB
+    function fetchSteps() {
+        fetch('tour/fetch_tour_steps.php?file=<?= $currentFile ?>')
+            .then(res => res.json())
+            .then(data => {
+                let tbody = document.getElementById('tourStepsBody');
+                tbody.innerHTML = '';
+                data.forEach(step => {
+                    tbody.innerHTML += `
+                <tr data-id="${step.id}">
+                    <td class="handle"><i class="bi bi-grip-vertical"></i></td>
+                    <td>${step.step_no}</td>
+                    <td>${step.element_id}</td>
+                    <td>${step.content}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning p-2" onclick="openEditStepModal(${step.id})"><i class="bi bi-pencil-square"></i></button>
+                        <button class="btn btn-sm btn-danger p-2" onclick="deleteStep(${step.id})"><i class="bi bi-trash3"></i></button>
+                    </td>
+                </tr>
+                `;
+                });
+
+                initSortable(); // call after table render
+            });
+    }
+
+
+    function initSortable() {
+        let tbody = document.getElementById('tourStepsBody');
+
+        Sortable.create(tbody, {
+            handle: '.handle', // drag handle
+            animation: 150,
+            onEnd: function (evt) {
+                let order = [];
+                tbody.querySelectorAll('tr').forEach((tr, index) => {
+                    order.push({ id: tr.dataset.id, step_no: index + 1 });
+                });
+
+                // Send updated order to server
+                fetch('tour/update_tour_order.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ order: order, file: '<?= $currentFile ?>' })
+                })
+                    .then(res => res.json())
+                    .then(resp => {
+                        if (resp.success) {
+                            fetchSteps(); // refresh table
+                        } else {
+                            alert('Error updating order');
+                        }
+                    });
+            }
+        });
+    }
+
+    // ================= Add Step =================
+    function openAddStepModal() {
+        populateElementDropdown('elementSelect');
+        var addModal = new bootstrap.Modal(document.getElementById('addStepModal'));
+        addModal.show();
+    }
+
+    document.getElementById('addStepForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        let formData = new FormData(this);
+        formData.append('file', '<?= $currentFile ?>');
+
+        fetch('tour/add_tour_step.php', { method: 'POST', body: formData })
+            .then(res => res.json())
+            .then(resp => {
+                if (resp.success) {
+                    fetchSteps();
+                    bootstrap.Modal.getInstance(document.getElementById('addStepModal')).hide();
+                    this.reset();
+                } else alert(resp.message);
+            });
+    });
+
+    // ================= Edit Step =================
+    function openEditStepModal(id) {
+        fetch('tour/fetch_single_step.php?id=' + id)
+            .then(res => res.json())
+            .then(step => {
+                document.getElementById('editStepId').value = step.id;
+                document.getElementById('editStepNo').value = step.step_no;
+                document.getElementById('editContent').value = step.content;
+
+                populateElementDropdown('editElementSelect', step.element_id);
+
+                var editModal = new bootstrap.Modal(document.getElementById('editStepModal'));
+                editModal.show();
+            });
+    }
+
+    document.getElementById('editStepForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        let formData = new FormData(this);
+        fetch('tour/edit_tour_step.php', { method: 'POST', body: formData })
+            .then(res => res.json())
+            .then(resp => {
+                if (resp.success) {
+                    fetchSteps();
+                    bootstrap.Modal.getInstance(document.getElementById('editStepModal')).hide();
+                } else alert(resp.message);
+            });
+    });
+
+    // ================= Delete Step =================
+    function deleteStep(id) {
+        if (confirm("Delete this step?")) {
+            fetch('tour/delete_tour_step.php', { method: 'POST', body: new URLSearchParams({ id }) })
+                .then(res => res.json())
+                .then(resp => {
+                    if (resp.success) fetchSteps();
+                });
+        }
+    }
+
+    // ================= Populate Element Dropdown =================
+    function populateElementDropdown(selectId, selected = '') {
+        // শুধুমাত্র .tour ক্লাসযুক্ত element নেবে
+        let elements = document.querySelectorAll('.tour[id]');
+        let select = document.getElementById(selectId);
+        select.innerHTML = '<option value="">-- Select Element --</option>';
+
+        elements.forEach(el => {
+            let sel = (el.id === selected) ? 'selected' : '';
+            select.innerHTML += `<option value="${el.id}" ${sel}>${el.id}</option>`;
+        });
+    }
+</script>
 
 <!-- ------------------------- last Function ------------------------------ -->
 

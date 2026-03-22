@@ -20,11 +20,12 @@ if (isset($_POST['update_profile'])) {
   $p_name = $_POST['profilename'];
   $mobile = $_POST['mobile'];
   $theme = $_POST['theme'];
+  $tour = $_POST['tour'] ?? 1;
 
   // শুধুমাত্র আপডেটযোগ্য ফিল্ডগুলো কুয়েরিতে রাখা হয়েছে
-  $up_stmt = $conn->prepare("UPDATE usersapp SET profilename = ?, mobile = ?, theme = ? WHERE id = ?");
-  $up_stmt->bind_param("sssi", $p_name, $mobile, $theme, $usr);
-
+  $up_stmt = $conn->prepare("UPDATE usersapp SET profilename = ?, mobile = ?, theme = ?, tour_enable = ? WHERE email = ?");
+  $up_stmt->bind_param("sssss", $p_name, $mobile, $theme, $tour, $usr);
+  $_SESSION['tour_enable'] = $tour;
   if ($up_stmt->execute()) {
     echo "<script>alert('Profile Updated Successfully!'); window.location.href='user-profile.php';</script>";
   }
@@ -146,6 +147,14 @@ if (isset($_POST['change_password'])) {
                   <select name="theme" class="form-select">
                     <option value="light" <?= $userData['theme'] == 'light' ? 'selected' : '' ?>>Light Mode</option>
                     <option value="dark" <?= $userData['theme'] == 'dark' ? 'selected' : '' ?>>Dark Mode</option>
+                  </select>
+                </div>
+                <div class="mb-3 col-md-6">
+                  <label class="form-label fw-semibold text-dark">Tour Suggestion</label>
+                  <select name="tour" class="form-select">
+                    <option value="1" <?= $userData['tour_enable'] == '1' ? 'selected' : '' ?>>Enable First Visit</option>
+                    <option value="2" <?= $userData['tour_enable'] == '2' ? 'selected' : '' ?>>Always Enable</option>
+                    <option value="0" <?= $userData['tour_enable'] == '0' ? 'selected' : '' ?>>Disable</option>
                   </select>
                 </div>
 

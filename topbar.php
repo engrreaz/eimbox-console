@@ -104,6 +104,22 @@
 
                     </li>
 
+                    <li>
+                        <a class="dropdown-item text-dark" href="#" onclick="startTour();">
+                            <i class="icon-base bi bi-person-walking icon-22px me-2"></i>
+                            <span class="align-middle">
+                                Tour this Page </span>
+                        </a>
+                    </li>
+                    <?php if ($is_admin >= 4) { ?>
+                        <li>
+                            <a class="dropdown-item text-danger" href="#" onclick="openTourModal();">
+                                <i class="icon-base bi bi-person-walking icon-22px me-2"></i>
+                                <span class="align-middle">Build a Tour</span>
+                            </a>
+                        </li>
+                    <?php } ?>
+
 
 
                 </ul>
@@ -309,11 +325,10 @@
                 <h5 class="modal-title" id="youtubeModalLabel">Video Tutorial <?php echo $ytlink; ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body" >
+            <div class="modal-body">
                 <div class="ratio ratio-16x9">
                     <iframe id="youtubeIframe" src="https://www.youtube.com/embed/<?php echo $ytlink; ?>"
                         title="YouTube video player" frameborder="0"
-                        
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                         allowfullscreen>
                     </iframe>
