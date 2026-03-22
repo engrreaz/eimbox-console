@@ -36,7 +36,7 @@ $module = $admin_data['module'] ?? [];
 
     <div class="card mb-3 d-print-none">
         <div class="card-body">
-            <h4>Weekends</h4>
+            <h4 class="tour" id="weekend-title">Weekends</h4>
             <small class="text-muted">Mark your weekly holidays</small>
 
             <div class="row mt-2">
@@ -53,7 +53,7 @@ $module = $admin_data['module'] ?? [];
                 <?php } ?>
 
                 <div class="col-md-12 mt-2">
-                    <button id="week" class="btn btn-outline-success  " onclick="updateWeekends()">Update</button>
+                    <button id="week" class="btn btn-outline-success  " data-feature="update-weekend" data-points="5" onclick="updateWeekends()">Update</button>
 
                 </div>
             </div>
@@ -71,7 +71,7 @@ $module = $admin_data['module'] ?? [];
         <div class="col-12 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
-                    <h4 class="m-0">Medium</h4>
+                    <h4 class="m-0 tour" id="medium-title">Medium</h4>
                     <small class="text-muted">Active teaching medium</small>
 
                     <div class="row pt-2">
@@ -90,7 +90,7 @@ $module = $admin_data['module'] ?? [];
                         </div>
 
                         <div class="col-md-12 pt-2">
-                            <button id="med" class="btn btn-outline-success" onclick="updateMedium()">Update</button>
+                            <button id="med" class="btn btn-outline-success"  data-feature="update-medium" data-points="5"  onclick="updateMedium()">Update</button>
                         </div>
                     </div>
                 </div>
@@ -109,7 +109,7 @@ $module = $admin_data['module'] ?? [];
         <div class="col-12 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
-                    <h4 class="m-0">Version</h4>
+                    <h4 class="m-0 tour" id="version-title">Version</h4>
                     <small class="text-muted">Curriculum / version selection</small>
 
                     <div class="row pt-2">
@@ -135,7 +135,7 @@ $module = $admin_data['module'] ?? [];
                         </div>
 
                         <div class="col-md-12 pt-2">
-                            <button id="ver" class="btn btn-outline-success" onclick="updateVersion()">Update</button>
+                            <button id="ver" class="btn btn-outline-success"  data-feature="update-version" data-points="5"  onclick="updateVersion()">Update</button>
                         </div>
                     </div>
                 </div>
@@ -151,7 +151,7 @@ $module = $admin_data['module'] ?? [];
         <div class="col-12 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
-                    <h4 class="m-0">Active Session Year</h4>
+                    <h4 class="m-0 tour" id="session-year-title">Active Session Year</h4>
                     <small class="text-muted">Select active academic session</small>
 
                     <div class="row pt-2">
@@ -185,7 +185,7 @@ $module = $admin_data['module'] ?? [];
 
                         <div class="col-md-12 pt-2">
                             <button class="btn btn-outline-success" id="sy"
-                                onclick="updateSessionYear()">Update</button>
+                                onclick="updateSessionYear()"  data-feature="update-session-year" data-points="5" >Update</button>
                         </div>
                     </div>
                 </div>
@@ -196,7 +196,7 @@ $module = $admin_data['module'] ?? [];
 
     <div class="card my-3">
         <div class="card-header">
-            <h4 class="mb-0">Classes</h4>
+            <h4 class="mb-0 tour" id="class-title">Classes</h4>
         </div>
 
         <div class="card-body">
@@ -254,7 +254,7 @@ $module = $admin_data['module'] ?? [];
             </div>
 
             <div class="mt-3">
-                <button id="klass" class="btn btn-outline-success btn-sm" onclick="updateClasses()">
+                <button id="klass" class="btn btn-outline-success btn-sm"  data-feature="update-class-list" data-points="5"  onclick="updateClasses()">
                     Update
                 </button>
                 <span id="clsmsg" class="ms-2"></span>
