@@ -8,6 +8,11 @@ $to = $_GET['to'] ?? '';
 
 echo $from . ' - ' . $to;
 
+echo "SELECT *
+    FROM logbook
+    WHERE entrytime BETWEEN '$from' AND '$to'
+    ORDER BY entrytime ASC";
+
 $stmt = $conn->prepare("
     SELECT *
     FROM logbook
