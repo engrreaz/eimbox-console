@@ -6,7 +6,7 @@ $GLOBALS['execution_time'] = round(($GLOBALS['script_end'] - $GLOBALS['script_st
 echo "Queries: {$GLOBALS['queries_count']}, Time: {$GLOBALS['execution_time']}s";
 
 $ipaddr = $_SERVER['REMOTE_ADDR'];
-$platform = $_SERVER['HTTP_USER_AGENT'];
+$platform = 'Console';
 $browser = $_SERVER['HTTP_USER_AGENT'];
 $location = '';
 
