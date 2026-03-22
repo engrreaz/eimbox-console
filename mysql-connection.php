@@ -29,6 +29,24 @@ while ($row = $q->fetch_assoc()) {
 
 <div class="container-xxl flex-grow-1 container-p-y">
     <h3>MySQL Connection Monitor</h3>
+    <select id="adj">
+        <option value="1">1</option>
+        <option value="2" selected>2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="15">15</option>
+        <option value="20">20</option>
+        <option value="30">30</option>
+        <option value="45">45</option>
+        <option value="60">60</option>
+        <option value="90">90</option>
+        <option value="120">120</option>
+        <option value="180">180</option>
+        <option value="240">240</option>
+        <option value="300">300</option>
+    </select>
     <div class="card p-2">
 
         <canvas id="connChart" height="200"></canvas>
@@ -62,6 +80,7 @@ require_once 'footer.php'; ?>
 
 <script>
     const timestamps = <?= json_encode($timestamps) ?>;
+    
 
 
     const chart = new Chart(document.getElementById('connChart'), {
@@ -111,10 +130,13 @@ require_once 'footer.php'; ?>
                 const idx = elements[0].index;
                 const ts = timestamps[idx];
 
+                const adj = parseInt($('#adj').val(), 10) || 0;
                 const d = new Date(ts);
                 const offset = 6 * 60 * 60 * 1000; // 6 hours in ms
-                const from = new Date(d.getTime() - 2 * 60000 + offset);
-                const to = new Date(d.getTime() + 2 * 60000 + offset);
+                const from = new Date(d.getTime() - adj * 60000 + offset);
+                const to = new Date(d.getTime() + adj * 60000 + offset);
+                console.log(from, to);
+
 
                 const fmt = d => d.toISOString().slice(0, 19).replace('T', ' ');
 
