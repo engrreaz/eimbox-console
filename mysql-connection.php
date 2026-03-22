@@ -45,9 +45,9 @@ require_once 'footer.php'; ?>
 <script></script>
 
 <script>
-    const ctx = document.getElementById('connChart');
+    const timestamps = <?= json_encode($timestamps) ?>;
 
-    new Chart(ctx, {
+    const chart = new Chart(document.getElementById('connChart'), {
         type: 'line',
         data: {
             labels: <?= json_encode($labels) ?>,
@@ -55,34 +55,55 @@ require_once 'footer.php'; ?>
                 {
                     label: 'Open Connections',
                     data: <?= json_encode($threads) ?>,
-                    tension: .3
+                    tension: .3,
+                    pointRadius: 2,
+                    pointHoverRadius: 5,
+                    pointHitRadius: 12
                 },
                 {
                     label: 'Peak Used',
                     data: <?= json_encode($maxUsed) ?>,
-                    tension: .3
+                    tension: .3,
+                    pointRadius: 2,
+                    pointHoverRadius: 5,
+                    pointHitRadius: 12
                 },
                 {
                     label: 'Max Limit',
                     data: <?= json_encode($maxLimit) ?>,
-                    tension: .3
+                    tension: .3,
+                    pointRadius: 2,
+                    pointHoverRadius: 5,
+                    pointHitRadius: 12
                 }
             ]
         },
         options: {
             responsive: true,
-            interaction: {
-                mode: 'index',
-                intersect: false
-            },
-            plugins: {
-                legend: { position: 'top' }
-            },
+            interaction: { mode: 'index', intersect: false },
+            plugins: { legend: { position: 'top' } },
             scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: { precision: 0 }
-                }
+                y: { beginAtZero: true, ticks: { precision: 0 } }
+            },
+            onClick: function (evt, elements) {
+                if (!elements.length) return;
+
+                const idx = elements[0].index;
+                const ts = timestamps[idx];
+
+                // ±2 মিনিট range
+                const d = new Date(ts);
+                const from = new Date(d.getTime() - 2 * 60000);
+                const to = new Date(d.getTime() + 2 * 60000);
+
+                const fmt = d => d.toISOString().slice(0, 19).replace('T', ' ');
+
+                const url = 'developer/connection-log-view.php?from=' +
+                    encodeURIComponent(fmt(from)) +
+                    '&to=' +
+                    encodeURIComponent(fmt(to));
+
+                window.open(url, '_blank');
             }
         }
     });
