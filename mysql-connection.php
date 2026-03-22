@@ -56,7 +56,7 @@ require_once 'footer.php'; ?>
                     label: 'Open Connections',
                     data: <?= json_encode($threads) ?>,
                     tension: .3,
-                    pointRadius: 2,
+                    pointRadius: 1,
                     pointHoverRadius: 5,
                     pointHitRadius: 12
                 },
