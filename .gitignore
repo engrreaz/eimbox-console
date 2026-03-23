@@ -34,3 +34,4 @@ firebase-messaging-sw.js
 
 # Schema Files
 schema/remote.sql
+.htaccess
