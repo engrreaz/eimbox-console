@@ -129,6 +129,8 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
     <script src="assets/vendor/js/bootstrap.js"></script>
     <script src="https://cdn.datatables.net/2.3.5/js/dataTables.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intro.js/minified/introjs.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/intro.js/minified/introjs.min.css">
+
 
 
 

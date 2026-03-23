@@ -1,1 +1,2 @@
 ErrorDocument 404 /eimbox-dashboard/eimbox-materio/pages/404.php
+AddType application/json .json

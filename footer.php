@@ -154,6 +154,146 @@ $release_colors = [
     }
 </style>
 
+
+<style>
+    .ai-guide {
+        position: fixed;
+        bottom: 28px;
+        right: 28px;
+        display: flex;
+        align-items: flex-end;
+        gap: 14px;
+        z-index: 99999;
+        transition: all .4s ease;
+    }
+
+    .hidden {
+        opacity: 0;
+        transform: translateY(40px);
+        pointer-events: none;
+    }
+
+    /* Avatar */
+    .ai-avatar {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        backdrop-filter: blur(10px);
+        background: transparent;
+        box-shadow:
+            0 10px 30px rgba(0, 0, 0, .15),
+            inset 0 0 0 1px rgba(255, 255, 255, .2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: float 4s ease-in-out infinite;
+    }
+
+
+    .ai-avatar {
+      
+        overflow: hidden;
+        /* 👈 এটা জরুরি */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .ai-avatar img,
+    .ai-avatar lottie-player {
+        width: 100%;
+        height: 100%;
+    }
+
+    .ai-avatar lottie-player {
+        width: 100%;
+        height: 100%;
+        display: block;
+    }
+
+    /* Bubble */
+    .ai-bubble {
+        max-width: 240px;
+        padding: 14px 16px;
+        border-radius: 18px;
+        font-size: 14px;
+        line-height: 1.5;
+        backdrop-filter: blur(14px);
+        background: rgba(255, 255, 255, .25);
+        box-shadow:
+            0 10px 30px rgba(0, 0, 0, .12),
+            inset 0 0 0 1px rgba(255, 255, 255, .35);
+        position: relative;
+        animation: bubbleIn .35s ease;
+    }
+
+    .ai-bubble:after {
+        content: "";
+        position: absolute;
+        right: -8px;
+        bottom: 18px;
+        width: 16px;
+        height: 16px;
+        background: rgba(255, 255, 255, .25);
+        transform: rotate(45deg);
+        border-radius: 3px;
+    }
+
+    .introjs-tooltip {
+        z-index: 100000 !important;
+    }
+
+    .introjs-overlay {
+        z-index: 99998 !important;
+    }
+
+    .ai-guide {
+        pointer-events: none;
+    }
+
+    @keyframes float {
+        0% {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(-12px);
+        }
+
+        100% {
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes bubbleIn {
+        from {
+            transform: translateY(10px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .ai-exit {
+        animation: flyOut .9s cubic-bezier(.22, .61, .36, 1) forwards;
+    }
+
+    @keyframes flyOut {
+        0% {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+
+        100% {
+            transform: translateY(-180px) scale(.4);
+            opacity: 0;
+        }
+    }
+</style>
+
 <?php
 $monitorPanel = false;
 if ($monitorPanel === true) { ?>
@@ -504,9 +644,19 @@ if ($monitorPanel === true) { ?>
 </footer>
 
 
+<!-- https://assets2.lottiefiles.com/packages/lf20_ydo1amjm.json -->
+<!-- https://assets4.lottiefiles.com/packages/lf20_3rwasyjy.json -->
+<!-- Floating AI Guide -->
+<div id="aiGuide" class="ai-guide hidden">
+    <div class="ai-bubble" id="aiBubble"></div>
 
+    <div class="ai-avatar">
+        <lottie-player src="https://assets4.lottiefiles.com/packages/lf20_1pxqjqps.json" background="transparent" speed="1" autoplay loop>
+        </lottie-player>
+    </div>
+</div>
 
-
+<script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 
 
 
@@ -609,6 +759,8 @@ $conn->close();
 
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/intro.js/minified/intro.min.js"></script>
+<script src="https://unpkg.com/intro.js/minified/intro.min.js"></script>
+<script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 <!-- Custom JS -->
 
 <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
@@ -1730,8 +1882,10 @@ $conn->close();
 </script>
 
 
+
 <script>
     function startTour() {
+
         let formattedSteps = tourSteps.map(step => {
             let s = { intro: step.intro };
 
@@ -1744,17 +1898,49 @@ $conn->close();
             return s;
         });
 
-        introJs().setOptions({
+        /* ✅ NEW API */
+        const tour = introJs.tour();
+
+        /* 🧠 Tour Start */
+        tour.onStart(function () {
+            guideShow("স্বাগতম! আমি আপনার AI গাইড 🤖✨");
+        });
+
+        /* 🧭 Step Change */
+        tour.onChange(function () {
+            let i = tour.getCurrentStep();
+            let step = formattedSteps[i];
+
+            if (step.title) {
+                guideSay("ধাপ " + (i + 1) + " — " + step.title);
+            } else {
+                guideSay("ধাপ " + (i + 1) + " — লক্ষ্য করুন এই অংশটি");
+            }
+        });
+
+        /* ✅ Finish */
+        tour.onComplete(function () {
+            guideBye();
+        });
+
+        /* ❌ Exit */
+        tour.onExit(function () {
+            guideBye();
+        });
+
+        tour.setOptions({
             steps: formattedSteps,
             nextLabel: "Next",
             prevLabel: "Back",
             doneLabel: "Finish",
-            showProgress: true
-        }).start();
+            showProgress: true,
+            scrollToElement: true
+        });
+
+        tour.start();
     }
-
-
 </script>
+
 
 <script>
     window.onload = function () {
@@ -1916,6 +2102,32 @@ $conn->close();
             let sel = (el.id === selected) ? 'selected' : '';
             select.innerHTML += `<option value="${el.id}" ${sel}>${el.id}</option>`;
         });
+    }
+</script>
+
+<script>
+    const guide = document.getElementById('aiGuide');
+    const bubble = document.getElementById('aiBubble');
+
+    function guideShow(text) {
+        bubble.innerHTML = text;
+        guide.classList.remove('hidden');
+    }
+
+    function guideSay(text) {
+        bubble.style.animation = 'none';
+        void bubble.offsetWidth;
+        bubble.style.animation = '';
+        bubble.innerHTML = text;
+    }
+
+    function guideBye() {
+        bubble.innerHTML = "টা টা 👋 আবার দেখা হবে!";
+        guide.classList.add('ai-exit');
+        setTimeout(() => {
+            guide.classList.add('hidden');
+            guide.classList.remove('ai-exit');
+        }, 900);
     }
 </script>
 
