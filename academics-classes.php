@@ -113,7 +113,7 @@
                     <label>Class Teacher</label>
                     <?php
                     $query = "SELECT tid, tname FROM teacher WHERE sccode = ?";
-                    $stmt = $conn->prepare($query);
+                    $stmt = $conn->prepare($query); 
                     $stmt->bind_param("s", $sccode);
                     $stmt->execute();
                     $result = $stmt->get_result();
