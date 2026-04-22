@@ -396,7 +396,7 @@ if ($monitorPanel === true) { ?>
                             <th>#</th>
                             <th>Element ID</th>
                             <th>Content</th>
-                            <th>Actions</th>
+                            <th style="width:60px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="tourStepsBody"></tbody>
