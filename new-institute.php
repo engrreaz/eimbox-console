@@ -503,7 +503,7 @@
             e.preventDefault();
             const formData = new FormData(this);
 
-            fetch('ajax/insert_institution.php', { 
+            fetch('ajax/insert-institution.php', { 
                 method: 'POST',
                 body: formData
             })
