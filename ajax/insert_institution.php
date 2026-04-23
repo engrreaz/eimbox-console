@@ -20,9 +20,11 @@ $headtitle = trim($_POST['headtitle'] ?? '');
 $rootuser = trim($_POST['rootuser'] ?? '');
 $entryby = $_SESSION['user'] ?? 'system';
 
+$package_id = '2';
+$package_name = 'Trial';
 $tier = 'A';
 $billing_data = '';
-$valid_module = $active_module = 'Student | Result | Payment';
+$valid_module = $active_module = 'Student | Result | Payment | Attendance | Gradebook | Finance';
 $valid_panel = $active_panel = 'Administrator | Chief | Teacher';
 
 // Validation
@@ -44,8 +46,8 @@ $check->close();
 
 // ইনসার্ট
 $sql = "INSERT INTO scinfo 
-(sccode, scname, sccategory, scadd1, scadd2, ps, dist, mobile, scmail, headname, headtitle, rootuser, tier, billing_data, valid_module, active_module, valid_panel, active_panel )
-VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+(sccode, scname, sccategory, scadd1, scadd2, ps, dist, mobile, scmail, headname, headtitle, rootuser, tier, billing_data, valid_module, active_module, valid_panel, active_panel , package_id, package_name)
+VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
 $stmt = $conn->prepare($sql);
 $ok = $stmt->execute([
@@ -66,7 +68,8 @@ $ok = $stmt->execute([
     $valid_module,
     $active_module,
     $valid_panel,
-    $active_panel
+    $active_panel,
+    $package_id, $package_name
 ]);
 
 if ($ok) {
