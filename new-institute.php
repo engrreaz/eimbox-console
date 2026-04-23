@@ -505,7 +505,7 @@
 
             fetch('ajax/insert-institution.php', { 
                 method: 'POST',
-                body: formData  
+                body: formData   
             })
                 .then(res => res.text())
                 .then(data => {
