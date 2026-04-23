@@ -498,7 +498,7 @@
             });
         });
 
-        // ফরম সাবমিট
+        // ফরম সাবমিটাাাা
         document.getElementById('instForm').addEventListener('submit', function (e) {
             e.preventDefault();
             const formData = new FormData(this);
