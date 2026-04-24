@@ -498,12 +498,12 @@
             });
         });
 
-        // ফরম সাবমিটাাাা----
+        // ফরম সাবমিটাাাা---------
         document.getElementById('instForm').addEventListener('submit', function (e) {
             e.preventDefault();
             const formData = new FormData(this);
 
-            fetch('ajax/insert-institution.php', { 
+            fetch('ajax/insert_institution.php', { 
                 method: 'POST',
                 body: formData   
             })

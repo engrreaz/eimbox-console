@@ -1,11 +1,8 @@
 <?php
-// header.php থেকে ইতিমধ্যে config.php এবং db.php অন্তর্ভুক্ত থাকে,
-// তাই এখানে নতুন করে include দরকার নেই।
 
 require_once '../core/config.php';
 require_once '../core/db.php';
 
-// ইনপুট গ্রহণ
 $sccode = trim($_POST['sccode'] ?? '');
 $scname = trim($_POST['scname'] ?? '');
 $sccategory = trim($_POST['sccategory'] ?? '');
@@ -57,7 +54,7 @@ $ok = $stmt->execute([
     $scadd1,
     $scadd2,
     $ps,
-    $dist,
+    $dist, 
     $mobile,
     $scmail,
     $headname,
