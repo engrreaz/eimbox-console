@@ -69,9 +69,9 @@ while($cls = $classQ->fetch_assoc()):
             SELECT particulareng, pr1 
             FROM stfinance
             WHERE stid='$stid'
-            AND prno='$prno'
+            AND pr1no='$prno'
             AND sccode='$sccode'
-            AND prdate='$date'
+            AND pr1date='$date'
         ");
 
         while($fin = $finQ->fetch_assoc()):
