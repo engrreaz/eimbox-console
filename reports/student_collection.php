@@ -35,11 +35,11 @@ while ($cls = $classQ->fetch_assoc()):
             <table class="table table-sm table-bordered">
                 <thead>
                     <tr>
-                        <th class="small">Roll</th>
-                        <th class="small">ID</th>
-                        <th class="small">Receipt No</th>
-                        <th class="small">Particular</th>
-                        <th class="small">Amount</th>
+                        <th class="small py-1">Roll</th>
+                        <th class="small py-1">ID</th>
+                        <th class="small py-1">PR No</th>
+                        <th class="small py-1">Particular</th>
+                        <th class="small py-1">Amount</th>
                     </tr>
                 </thead>
                 <tbody>
