@@ -146,10 +146,9 @@ $sessionyear = $_COOKIE['chain-session'] ?? date('Y');
     
     <style>
             @media print {
-             #reportArea {
-    font-family: "IBM Plex Mono", monospace;
-
-  }
+             body {
+                  font-family: "IBM Plex Mono", monospace;
+                }
                 table {
                     width: 100% !important;
                     border-collapse: collapse;
