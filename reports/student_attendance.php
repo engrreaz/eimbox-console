@@ -5,7 +5,7 @@
 
 $date = mysqli_real_escape_string($conn, $date);
 $sccode = mysqli_real_escape_string($conn, $sccode);
-
+$totalBunk = 0;
 if (!empty($classList)):
 
     foreach ($classList as $cls):
@@ -38,6 +38,7 @@ if (!empty($classList)):
                 // bunk highlight
                 if ($row['bunk'] == 1) {
                     $rolls[] = "<span style='color:darkorange;font-weight:bold'>{$roll}</span>";
+                    $totalBunk++;
                 } else {
                     $rolls[] = $roll;
                 }
@@ -63,5 +64,6 @@ else:
     echo "<div class='text-danger'>No class data found</div>";
 endif;
 
+echo "<div class='text-muted fw-bold'>Total Bunk: <b>$totalBunk</b></div>";
 ?>
 <hr>
