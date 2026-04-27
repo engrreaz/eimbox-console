@@ -1,4 +1,5 @@
 <?php
+require_once '../core/config.php';
 require_once '../core/db.php';
 
 $slot = $_POST['slot'] ?? '';
