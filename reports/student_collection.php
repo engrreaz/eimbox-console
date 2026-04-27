@@ -48,7 +48,7 @@ while($cls = $classQ->fetch_assoc()):
 <?php
     // 2️⃣ প্রতিটি class/section অনুযায়ী stpr থেকে data
     $sss = "
-        SELECT roll, stid, prno, entryby 
+        SELECT rollno, stid, prno, entryby 
         FROM stpr
         WHERE sccode='$sccode' 
         AND prdate='$date'
