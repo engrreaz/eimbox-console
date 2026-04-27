@@ -1,17 +1,3 @@
-<!-- 
-রিপোর্টের প্রতিটি অংশের জন্য আলাদা আলাদা স্ক্রিপ্ট তৈরী কররো। যেগুলো reports ফোল্ডারে থোকবে। 
-1. Events/Notes/Description (in any)
-2. teachers attendance
-3. students attendance
-4. students performance
-5. collection short report
-6. students collection (with receipt details)
-7. payment gateway transaction
-8. bank transaction
-9. sms reports (count, to student, purpose)
- -->
-
-
 <?php require_once 'header.php'; ?>
 
 <style>
