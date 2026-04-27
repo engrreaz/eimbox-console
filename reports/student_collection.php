@@ -5,15 +5,16 @@
 
 // নিরাপদ ইনপুট
 $date = mysqli_real_escape_string($conn, $date);
-$sccode = mysqli_real_escape_string($conn, $sccode);
 
 // 1️⃣ প্রথমে class + section তালিকা
-$classQ = $conn->query("
+$sql = "
     SELECT DISTINCT classname, sectionname 
     FROM stpr 
-    WHERE sccode='$sccode' AND prdate='$date'
+    WHERE sccode='$sccode' AND prdate='$date' 
     ORDER BY classname, sectionname
-");
+";
+echo $sql;
+$classQ = $conn->query($sql);
 
 $grand_total = 0;
 
