@@ -18,9 +18,10 @@ $sql = "
         a.detectin,
         a.detectout
     FROM teacherattnd a
-    LEFT JOIN teachers t ON t.tid = a.tid
+    LEFT JOIN teacher t ON t.tid = a.tid
     WHERE a.sccode='$sccode' 
-    AND a.adate='$date'
+    AND a.adate='$date' 
+    AND t.sccode='$sccode'
     ORDER BY a.tid
 ";
 
