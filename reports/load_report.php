@@ -30,7 +30,7 @@ $sessionyear = $_POST['sessionyear'] ?? date('Y');
     WHERE sccode='$sccode' 
     AND slot='$slot' 
     AND sessionyear='$sessionyear' 
-    ORDER BY slno
+    ORDER BY idno
 ";
 echo $sql1;
     $areaQ = $conn->query($sql1);
