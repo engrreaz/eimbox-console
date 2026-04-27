@@ -1,6 +1,6 @@
 <h6 class="fw-bold mt-4">SMS Report</h6>
 <hr>
-
+<div class="small">
 <?php
 
 $date = mysqli_real_escape_string($conn, $date);
@@ -53,6 +53,8 @@ else:
 endif;
 ?>
 
+
+</div>
 <hr>
 
 <div class="mt-3">
