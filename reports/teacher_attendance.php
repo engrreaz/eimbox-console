@@ -177,7 +177,7 @@ $res = $conn->query($sql);
 
             <?php if ($res && $res->num_rows > 0): ?>
 
-                <?php while ($row = $res->fetch_assoc()): 
+                <?php while ($row = $res->fetch_assoc()):
                     $tidList[] = $row['tid'];
                     ?>
 
@@ -212,27 +212,27 @@ $sccode = mysqli_real_escape_string($conn, $sccode);
 $teacherQ = $conn->query("
     SELECT tid, tname 
     FROM teacher
-    WHERE sccode='$sccode'
+    WHERE sccode='$sccode' order by sl
 ");
 
 // $tidList already exists (present + leave)
 ?>
 
 <h6 class="fw-bold mt-4">Teachers not in records above</h6>
-<hr>
+
 
 <div class="row">
-    
-<?php
-while($row = $teacherQ->fetch_assoc()) {
 
-    $tid = $row['tid'];
+    <?php
 
-    // 🔹 যদি tid list এ না থাকে
-    if (!in_array($tid, $tidList)) {
-        echo "<div class='col-md-4 small px-0 py-1'>" . htmlspecialchars($row['tname']) . "</div>";
+    while ($row = $teacherQ->fetch_assoc()) {
+
+        $tid = $row['tid'];
+
+        // 🔹 যদি tid list এ না থাকে
+        if (!in_array($tid, $tidList)) {
+            echo "<div class='col-md-4 small px-0 py-1'>" . htmlspecialchars($row['tname']) . "</div>";
+        }
     }
-}
-?>
+    ?>
 </div>
-
