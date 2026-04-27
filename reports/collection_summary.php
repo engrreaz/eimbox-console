@@ -151,7 +151,7 @@ foreach ($itemList as $item) {
                     <th></th>
                 <?php endforeach; ?>
 
-                <th class="text-end"><?= number_format($t1total, 2) ?></th>
+                <th class="text-end"><?= number_format($t1total, 0) ?></th>
             </tr>
         </tfoot>
 
