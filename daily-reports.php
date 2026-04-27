@@ -23,7 +23,7 @@ $sessionyear = $_COOKIE['chain-session'] ?? date('Y');
 
       <form id="reportForm" class="row g-3">
 
-        <div class="col-md-3">
+        <div class="col-md-2">
           <label class="form-label">Slot</label>
           <select name="slot" class="form-control form-control-sm">
             <?php
@@ -38,7 +38,7 @@ $sessionyear = $_COOKIE['chain-session'] ?? date('Y');
           </select>
         </div>
 
-        <div class="col-md-3">
+        <div class="col-md-2">
           <label class="form-label">Session Year</label>
           <select name="sessionyear" class="form-control form-control-sm">
             <?php
@@ -55,7 +55,7 @@ $sessionyear = $_COOKIE['chain-session'] ?? date('Y');
         </div>
 
 
-        <div class="col-md-3">
+        <div class="col-md-2">
           <label class="form-label">Date</label>
           <input type="date" name="date" value="<?= $date ?>" class="form-control form-control-sm" required>
         </div>

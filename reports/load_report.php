@@ -32,7 +32,6 @@ $sessionyear = $_POST['sessionyear'] ?? date('Y');
     AND sessionyear='$sessionyear' 
     ORDER BY idno
 ";
-echo $sql1;
     $areaQ = $conn->query($sql1);
 
     $classList = [];
@@ -54,7 +53,7 @@ var_dump($classList);
     include 'student_attendance.php';
     include 'student_performance.php';
     include 'collection_summary.php';
-    include 'student_collection.php';
+    // include 'student_collection.php';
     include 'payment_gateway.php';
     include 'bank_transaction.php';
     include 'sms_report.php';
