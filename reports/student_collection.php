@@ -13,7 +13,7 @@ $sql = "
     WHERE sccode='$sccode' AND prdate='$date' 
     ORDER BY classname, sectionname
 ";
-echo $sql;
+// echo $sql;
 $classQ = $conn->query($sql);
 
 $grand_total = 0;
@@ -56,12 +56,12 @@ while($cls = $classQ->fetch_assoc()):
         AND sectionname='$sectionname'
         ORDER BY rollno ASC
     ";
-    echo $sss;
+    // echo $sss;
     $stQ = $conn->query($sss);
 
     while($st = $stQ->fetch_assoc()):
 
-        $roll = $st['roll'];
+        $roll = $st['rollno'];
         $stid = $st['stid'];
         $prno = $st['prno'];
         $entryby = $st['entryby'];
@@ -75,9 +75,10 @@ while($cls = $classQ->fetch_assoc()):
             AND sccode='$sccode'
             AND pr1date='$date'
         ";
-        echo $qqq;
+        // echo $qqq;
         $finQ = $conn->query($qqq);
 
+        $body = ''; $tak = 0;
         while($fin = $finQ->fetch_assoc()):
 
             $particular = $fin['particulareng'];
@@ -85,17 +86,26 @@ while($cls = $classQ->fetch_assoc()):
 
             $sub_total += $amount;
             $grand_total += $amount;
+            $tak += $amount;
+
+
+            $body .= $particular . ': ' . number_format($amount) . ", ";
+            
 ?>
-                <tr>
+            
+
+<?php endwhile;?>
+
+<tr>
                     <td><?= $roll ?></td>
                     <td><?= $stid ?></td>
                     <td><?= $prno ?></td>
                     <td><?= $entryby ?></td>
-                    <td><?= $particular ?></td>
-                    <td class="text-end"><?= number_format($amount,2) ?></td>
+                    <td class="small"><?= $body ?></td>
+                    <td class="text-end"><?= number_format($tak,2) ?></td>
                 </tr>
 
-<?php endwhile; endwhile; ?>
+<?php  endwhile; ?>
 
             </tbody>
 
