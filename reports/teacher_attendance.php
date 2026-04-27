@@ -218,11 +218,11 @@ $teacherQ = $conn->query("
 // $tidList already exists (present + leave)
 ?>
 
-<h6 class="fw-bold mt-4">Not In List Teachers</h6>
+<h6 class="fw-bold mt-4">Teachers not in records above</h6>
 <hr>
 
-<ul>
-
+<div class="row">
+    
 <?php
 while($row = $teacherQ->fetch_assoc()) {
 
@@ -230,9 +230,9 @@ while($row = $teacherQ->fetch_assoc()) {
 
     // 🔹 যদি tid list এ না থাকে
     if (!in_array($tid, $tidList)) {
-        echo "<li>" . htmlspecialchars($row['tname']) . "</li>";
+        echo "<div class='col-md-4 small px-0 py-1'>" . htmlspecialchars($row['tname']) . "</div>";
     }
 }
 ?>
+</div>
 
-</ul>
