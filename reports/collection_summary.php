@@ -5,110 +5,132 @@
 
 $t1total = 0;
 
-
-
+/*
+🔹 ITEM LIST (columns)
+*/
 $itemList = [];
-$sql0x2 = "SELECT itemcode, max(particulareng), max(particularben), sum(pr1) as tk  from stfinance where  sessionyear LIKE '%$sessionyear%'  and pr1date = '$date'  and sccode='$sccode'  group by itemcode order by itemcode ";
+$sql0x2 = "
+    SELECT itemcode
+    FROM stfinance
+    WHERE sessionyear LIKE '%$sessionyear%'
+      AND pr1date = '$date'
+      AND sccode='$sccode'
+    GROUP BY itemcode
+    ORDER BY itemcode
+";
+
 $result0x2 = $conn->query($sql0x2);
-if ($result0x2->num_rows > 0) {
-    while ($row0x2 = $result0x2->fetch_assoc()) {
-        $itemList[] = $row0x2;
-    }
+
+while ($row = $result0x2->fetch_assoc()) {
+    $itemList[] = $row['itemcode'];
 }
 
-
+/*
+🔹 DATA LIST (class-section-item wise)
+*/
 $dataList = [];
-$sql0x2 = "SELECT classname, sectionname, itemcode, max(particulareng), max(particularben), sum(pr1) as taka from stfinance where  sessionyear LIKE '%$sessionyear%'  and pr1date = '$date'  and sccode='$sccode'  group by classname, sectionname, itemcode ";
+$sql0x2 = "
+    SELECT classname, sectionname, itemcode, SUM(pr1) AS taka
+    FROM stfinance
+    WHERE sessionyear LIKE '%$sessionyear%'
+      AND pr1date = '$date'
+      AND sccode='$sccode'
+    GROUP BY classname, sectionname, itemcode
+";
 
 $result0x2 = $conn->query($sql0x2);
-if ($result0x2->num_rows > 0) {
-    while ($row0x2 = $result0x2->fetch_assoc()) {
-        $dataList[] = $row0x2;
-    }
+
+while ($row = $result0x2->fetch_assoc()) {
+    $dataList[] = $row;
 }
 
-
-// 🔹 main loop: class/section
-foreach ($classList as $cls):
-
-    $classname = $cls['classname'];
-    $sectionname = $cls['sectionname'];
-
-    $clsTotal = 0;
-
-    // check any data exists
-    $hasData = false;
-
-    ?>
-
-    <div class="mb-3">
-        <b><?= htmlspecialchars($classname) ?> - <?= htmlspecialchars($sectionname) ?></b>
-
-        <table class="table table-sm table-bordered mt-2">
-            <thead>
-                <tr>
-                    <th>Item</th>
-                    <th class="text-end">Amount</th>
-                </tr>
-            </thead>
-            <tbody>
-
-                <?php foreach ($itemList as $item):
-
-                    $itemcode = $item['itemcode'];
-
-                    // sum per class+section+item
-                    $amount = 0;
-
-                    foreach ($dataList as $data) {
-                        if (
-                            strtolower($data['itemcode']) == strtolower($itemcode) &&
-                            strtolower($data['classname']) == strtolower($classname) &&
-                            strtolower($data['sectionname']) == strtolower($sectionname)
-                        ) {
-                            $amount = (float) $data['taka'];
-                            break;
-                        }
-                    }
-
-                    if ($amount > 0) {
-                        $hasData = true;
-                    }
-
-                    $clsTotal += $amount;
-
-                    ?>
-
-                    <tr>
-                        <td><?= htmlspecialchars($item['itemcode']) ?></td>
-                        <td class="text-end"><?= number_format($amount, 2) ?></td>
-                    </tr>
-
-                <?php endforeach; ?>
-
-            </tbody>
-
-            <tfoot>
-                <tr>
-                    <th class="text-end">Sub Total</th>
-                    <th class="text-end"><?= number_format($clsTotal, 2) ?></th>
-                </tr>
-            </tfoot>
-
-        </table>
-    </div>
-
-    <?php
-
-    $t1total += $clsTotal;
-
-endforeach;
+// helper function
+function getAmount($dataList, $cls, $sec, $item)
+{
+    foreach ($dataList as $d) {
+        if (
+            strtolower($d['classname']) == strtolower($cls) &&
+            strtolower($d['sectionname']) == strtolower($sec) &&
+            strtolower($d['itemcode']) == strtolower($item)
+        ) {
+            return (float) $d['taka'];
+        }
+    }
+    return 0;
+}
 
 ?>
 
-<!-- GRAND TOTAL -->
-<div class="mt-4">
-    <h5 class="text-end text-danger">
-        Grand Total: <?= number_format($t1total, 2) ?>
-    </h5>
+<div class="table-responsive">
+    <table class="table table-bordered table-sm">
+
+        <!-- HEADER -->
+        <thead class="table-light">
+            <tr>
+                <th>Class</th>
+                <th>Section</th>
+
+                <?php foreach ($itemList as $item): ?>
+                    <th class="text-end"><?= htmlspecialchars($item) ?></th>
+                <?php endforeach; ?>
+
+                <th class="text-end text-primary">Total</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            <?php foreach ($classList as $cls):
+
+                $classname = $cls['classname'];
+                $sectionname = $cls['sectionname'];
+
+                $rowTotal = 0;
+
+                ?>
+
+                <tr>
+                    <td><?= htmlspecialchars($classname) ?></td>
+                    <td><?= htmlspecialchars($sectionname) ?></td>
+
+                    <?php foreach ($itemList as $item):
+
+                        $amount = getAmount($dataList, $classname, $sectionname, $item);
+
+                        $rowTotal += $amount;
+
+                        ?>
+
+                        <td class="text-end">
+                            <?= $amount > 0 ? number_format($amount, 2) : '' ?>
+                        </td>
+
+                    <?php endforeach; ?>
+
+                    <td class="text-end fw-bold">
+                        <?= number_format($rowTotal, 2) ?>
+                    </td>
+                </tr>
+
+                <?php
+                $t1total += $rowTotal;
+            endforeach;
+            ?>
+
+        </tbody>
+
+        <!-- GRAND TOTAL -->
+        <tfoot class="table-dark">
+            <tr>
+                <th colspan="2" class="text-end">Grand Total</th>
+
+                <?php foreach ($itemList as $item): ?>
+                    <th></th>
+                <?php endforeach; ?>
+
+                <th class="text-end"><?= number_format($t1total, 2) ?></th>
+            </tr>
+        </tfoot>
+
+    </table>
 </div>
