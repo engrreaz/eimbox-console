@@ -56,6 +56,7 @@ $sessionyear = $_POST['sessionyear'] ?? date('Y');
     // include 'student_collection.php';
     include 'payment_gateway.php';
     include 'bank_transaction.php';
+    // Expenses report is currently not working due to missing data. Will fix it later.
     include 'sms_report.php';
     ?>
 
