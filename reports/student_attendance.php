@@ -6,9 +6,9 @@
 $date = mysqli_real_escape_string($conn, $date);
 $sccode = mysqli_real_escape_string($conn, $sccode);
 
-if (!empty($clsList)):
+if (!empty($classList)):
 
-    foreach ($clsList as $cls):
+    foreach ($classList as $cls):
 
         $classname = $cls['classname'];
         $sectionname = $cls['sectionname'];
