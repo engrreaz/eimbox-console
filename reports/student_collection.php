@@ -111,11 +111,11 @@ while ($cls = $classQ->fetch_assoc()):
                         ?>
 
                         <tr>
-                            <td><?= $roll ?></td>
-                            <td><?= $stid ?></td>
-                            <td><?= $prno ?></td>
-                            <td class="small"><?= $body ?></td>
-                            <td class="text-end"><?= number_format($tak, 2) ?></td>
+                            <td class="small"><?= $roll ?></td>
+                            <td class="small"><?= $stid ?></td>
+                            <td class="small"><?= $prno ?></td>
+                            <td class="small" class="small"><?= $body ?></td>
+                            <td class="text-end small"><?= number_format($tak, 2) ?></td>
                         </tr>
 
                     <?php endwhile; ?>
@@ -124,7 +124,7 @@ while ($cls = $classQ->fetch_assoc()):
 
                 <tfoot>
                     <tr>
-                        <th colspan="5" class="text-end">Sub Total</th>
+                        <th colspan="4" class="text-end">Sub Total</th>
                         <th class="text-end text-success">
                             <?= number_format($sub_total, 2) ?>
                         </th>
