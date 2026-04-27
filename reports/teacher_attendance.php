@@ -154,7 +154,7 @@ $sql = "
     AND '$date' BETWEEN l.date_from AND l.date_to
     ORDER BY l.tid
 ";
-
+echo $sql;
 $res = $conn->query($sql);
 
 ?>
