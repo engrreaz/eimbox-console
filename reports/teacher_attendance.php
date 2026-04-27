@@ -221,7 +221,7 @@ $teacherQ = $conn->query("
 <h6 class="fw-bold mt-4">Teachers not in records above</h6>
 
 
-<div class="row">
+<div class="row mx-4">
 
     <?php
 
