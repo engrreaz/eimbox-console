@@ -1,4 +1,8 @@
-<?php require_once 'header.php'; ?>
+<?php require_once 'header.php';
+
+$date = $_COOKIE['report-date'] ?? date('Y-m-d');
+$slot = $_COOKIE['chain-slot'] ?? 'School';
+?>
 
 <style>
   .action-btn {
@@ -21,8 +25,15 @@
         <div class="col-md-3">
           <label class="form-label">Slot</label>
           <select name="slot" class="form-control form-control-sm">
-            <option value="morning">Morning</option>
-            <option value="evening">Evening</option>
+            <?php
+            $qr = "SELECT DISTINCT slotname FROM slots WHERE sccode='$sccode'";
+            $res = $conn->query($qr);
+
+            while ($row = $res->fetch_assoc()) {
+              $selected = ($row['slotname'] == $slot) ? 'selected' : '';
+              echo "<option value='" . $row['slotname'] . "' $selected>" . $row['slotname'] . "</option>";
+            }
+            ?>
           </select>
         </div>
 
@@ -67,6 +78,11 @@
   $('#reportForm').submit(function (e) {
     e.preventDefault();
 
+    let date = $(this).find('input[name="date"]').val();
+    let slot = $(this).find('select[name="slot"]').val();
+    setCookie('report-date', date, 7);
+    setCookie('chain-slot', slot, 7);
+
     let formData = $(this).serialize();
 
     $.post('reports/load_report.php', formData, function (res) {
@@ -93,4 +109,6 @@
   $('#mailBtn').click(function () {
     alert('Email system coming soon...');
   });
+
+  $('#reportForm').trigger('submit'); 
 </script>
