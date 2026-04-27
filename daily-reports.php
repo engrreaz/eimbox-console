@@ -10,7 +10,7 @@ $sessionyear = $_COOKIE['chain-session'] ?? date('Y');
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=Noto+Sans+Bengali:wght@100..900&family=Noto+Serif+Bengali:wght@100..900&display=swap" rel="stylesheet">
 <style>
 
-  body {
+  #main-page-block {
       font-family: "IBM Plex Mono", monospace;
 
   }
@@ -24,7 +24,7 @@ $sessionyear = $_COOKIE['chain-session'] ?? date('Y');
   }
 </style>
 
-<div class="container-xxl flex-grow-1 container-p-y">
+<div class="container-xxl flex-grow-1 container-p-y" id="main-page-block">
 
   <div class="card mb-4">
     <div class="card-body">
