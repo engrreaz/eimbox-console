@@ -12,7 +12,7 @@ $sql = "
         sms_type,
         GROUP_CONCAT(DISTINCT mobile_number) AS mobiles,
         GROUP_CONCAT(DISTINCT stid) AS stids,
-        COUNT(*) AS total_count,
+        SUM(count) AS total_count,
         SUM(cost) AS total_cost
     FROM sms
     WHERE sccode='$sccode' 
@@ -31,7 +31,7 @@ if ($res && $res->num_rows > 0):
 
         $sms_type = $row['sms_type'];
         $mobiles = $row['mobiles'];
-        $stids = $row['stids'];
+        $stids = $row['stids'] ?? 'N/A';
         $count = $row['total_count'];
         $cost = $row['total_cost'];
 
@@ -40,11 +40,8 @@ if ($res && $res->num_rows > 0):
 ?>
 
 <div class="mb-2">
-    <b>Type:</b> <?= htmlspecialchars($sms_type) ?> <br>
-    <b>Mobiles:</b> <?= htmlspecialchars($mobiles) ?> <br>
-    <b>Student IDs:</b> <?= htmlspecialchars($stids) ?> <br>
-    <b>Count:</b> <?= $count ?> , 
-    <b>Cost:</b> <?= number_format($cost,2) ?>
+    <b>Type :</b> <?= htmlspecialchars($sms_type) ?> <br>
+    <b>Data :</b> <?= htmlspecialchars($mobiles) . '/' . htmlspecialchars($stids)  . ' (' . $count . ') &mdash ' . number_format($cost,2) . ', ' ?> <br>
 </div>
 
 <hr>
