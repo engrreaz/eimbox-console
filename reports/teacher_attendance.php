@@ -124,3 +124,76 @@ function detectIcon($type)
         </tbody>
     </table>
 </div>
+
+
+
+
+<!-- LEAVE  -->
+
+<h6 class="fw-bold mt-4">Teacher Leave Report</h6>
+<hr>
+
+<?php
+
+$date = mysqli_real_escape_string($conn, $date);
+$sccode = mysqli_real_escape_string($conn, $sccode);
+
+// leave table query (range match)
+$sql = "
+    SELECT 
+        l.tid,
+        t.tname,
+        l.leave_type,
+        l.leave_reason,
+        l.date_from,
+        l.date_to
+    FROM teacher_leave_app l
+    LEFT JOIN teachers t ON t.tid = l.tid
+    WHERE l.sccode='$sccode'
+    AND l.status=1
+    AND '$date' BETWEEN l.date_from AND l.date_to
+    ORDER BY l.tid
+";
+
+$res = $conn->query($sql);
+
+?>
+
+<div class="table-responsive">
+    <table class="table table-sm table-bordered">
+        <thead>
+            <tr>
+                <th>Teacher</th>
+                <th>Leave Type</th>
+                <th>Reason</th>
+                <th>From</th>
+                <th>To</th>
+            </tr>
+        </thead>
+        <tbody>
+
+            <?php if ($res && $res->num_rows > 0): ?>
+
+                <?php while ($row = $res->fetch_assoc()): ?>
+
+                    <tr>
+                        <td><?= htmlspecialchars($row['tname']) ?></td>
+                        <td><?= htmlspecialchars($row['leave_type']) ?></td>
+                        <td><?= htmlspecialchars($row['leave_reason']) ?></td>
+                        <td><?= $row['date_from'] ?></td>
+                        <td><?= $row['date_to'] ?></td>
+                    </tr>
+
+                <?php endwhile; ?>
+
+            <?php else: ?>
+                <tr>
+                    <td colspan="5" class="text-danger text-center">
+                        No leave record found
+                    </td>
+                </tr>
+            <?php endif; ?>
+
+        </tbody>
+    </table>
+</div>
