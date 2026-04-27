@@ -39,7 +39,7 @@ $slot = $_COOKIE['chain-slot'] ?? 'School';
 
         <div class="col-md-3">
           <label class="form-label">Date</label>
-          <input type="date" name="date" class="form-control form-control-sm" required>
+          <input type="date" name="date" value="<?= $date ?>" class="form-control form-control-sm" required>
         </div>
 
         <div class="col-md-2 d-flex align-items-end">
