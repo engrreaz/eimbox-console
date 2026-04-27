@@ -100,11 +100,11 @@ while ($cls = $classQ->fetch_assoc()):
                         <?php
                         if ($entrybyPre != $entryby) {
                             $entrybyPre = $entryby;
-                            $body = "Collected by: " . $entryby . " | " . $body;
+                            $collector = "Collected by: " . $entryby ;
 
                             ?>
                             <tr>
-                                <td colspan="6"><?= $body ?></td>
+                                <td colspan="6"><?= $collector ?></td>
                             </tr>
                             <?php
                         }
