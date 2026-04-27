@@ -262,7 +262,7 @@ $files = array_filter(scandir(__DIR__), function ($f) {
                 const modalEl = document.getElementById('mapSettingsModal');
                 const mapModal = bootstrap.Modal.getInstance(modalEl);
                 mapModal?.hide();
-                location.reload();
+                // location.reload();
             }
         );
     });
