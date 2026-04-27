@@ -51,7 +51,7 @@ if (!empty($classList)):
 
 <div class="mb-2">
     <b><?= htmlspecialchars($classname) ?> - <?= htmlspecialchars($sectionname) ?> :</b>
-    <?= implode(', ', $rolls) ?>
+    <?= implode(', ', $rolls) ?> <b>= <?= count($rolls) ?> students</b>
 </div>
 
 <?php
