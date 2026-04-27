@@ -73,7 +73,7 @@ $sessionyear = $_COOKIE['chain-session'] ?? date('Y');
 
           <i class="bi bi-file-earmark-pdf fs-3 text-danger action-btn" id="pdfBtn" title="Download PDF"></i>
 
-          <i class="bi bi-envelope fs-4 text-success action-btn" id="mailBtn" title="Send Email"></i>
+          <i class="bi bi-envelope fs-3 text-success action-btn" id="mailBtn" title="Send Email"></i>
 
         </div>
 
