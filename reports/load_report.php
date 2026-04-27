@@ -49,7 +49,7 @@ $sessionyear = $_POST['sessionyear'] ?? date('Y');
 // var_dump($classList);
 
     include 'events.php';
-    include 'teacher_attendance.php';
+    // include 'teacher_attendance.php';
     include 'student_attendance.php';
     include 'student_performance.php';
     include 'collection_summary.php';
