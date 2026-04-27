@@ -30,10 +30,10 @@ $total = 0;
 
         <thead class="table-light">
             <tr>
-                <th>Category</th>
-                <th>Memo No</th>
-                <th>Particulars</th>
-                <th class="text-end">Amount</th>
+                <th class=" small py-1">Category</th>
+                <th class=" small py-1">Memo No</th>
+                <th class=" small py-1">Particulars</th>
+                <th class="text-end small py-1">Amount</th>
             </tr>
         </thead>
 
@@ -49,10 +49,10 @@ $total = 0;
                     ?>
 
                     <tr>
-                        <td><?= htmlspecialchars($row['category']) ?></td>
-                        <td><?= htmlspecialchars($row['memono']) ?></td>
-                        <td><?= htmlspecialchars($row['particulars']) ?></td>
-                        <td class="text-end"><?= number_format($amount, 2) ?></td>
+                        <td class="small py-1"><?= htmlspecialchars($row['category']) ?></td>
+                        <td class="small py-1"><?= htmlspecialchars($row['memono']) ?></td>
+                        <td class="small py-1"><?= htmlspecialchars($row['particulars']) ?></td>
+                        <td class="text-end small py-1"><?= number_format($amount, 2) ?></td>
                     </tr>
 
                 <?php endwhile; ?>
@@ -60,7 +60,7 @@ $total = 0;
             <?php else: ?>
 
                 <tr>
-                    <td colspan="4" class="text-danger text-center">
+                    <td colspan="4" class="text-danger text-center small py-1">
                         No expenditure found
                     </td>
                 </tr>
@@ -71,8 +71,8 @@ $total = 0;
 
         <tfoot class="table-dark">
             <tr>
-                <th colspan="3" class="text-end">Total</th>
-                <th class="text-end"><?= number_format($total, 2) ?></th>
+                <th colspan="3" class="text-end small py-1">Total</th>
+                <th class="text-end small py-1"><?= number_format($total, 2) ?></th>
             </tr>
         </tfoot>
 
