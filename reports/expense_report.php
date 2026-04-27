@@ -1,5 +1,4 @@
 <h6 class="fw-bold mt-4">Expense Report</h6>
-<hr>
 
 <?php
 
