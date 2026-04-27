@@ -23,15 +23,15 @@ $sessionyear = $_POST['sessionyear'] ?? date('Y');
 
     // query
     $sql1 = "
-    SELECT 
-        areaname AS classname, 
-        subarea AS sectionname 
-    FROM areas 
-    WHERE sccode='$sccode' 
-    AND slot='$slot' 
-    AND sessionyear='$sessionyear' 
-    ORDER BY idno
-";
+        SELECT 
+            areaname AS classname, 
+            subarea AS sectionname 
+        FROM areas 
+        WHERE sccode='$sccode' 
+        AND slot='$slot' 
+        AND sessionyear='$sessionyear' 
+        ORDER BY idno
+    ";
     $areaQ = $conn->query($sql1);
 
     $classList = [];
