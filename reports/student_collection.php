@@ -47,7 +47,7 @@ while($cls = $classQ->fetch_assoc()):
 
 <?php
     // 2️⃣ প্রতিটি class/section অনুযায়ী stpr থেকে data
-    $stQ = $conn->query("
+    $sss = "
         SELECT roll, stid, prno, entryby 
         FROM stpr
         WHERE sccode='$sccode' 
@@ -55,7 +55,9 @@ while($cls = $classQ->fetch_assoc()):
         AND classname='$classname'
         AND sectionname='$sectionname'
         ORDER BY roll ASC
-    ");
+    ";
+    echo $sss;
+    $stQ = $conn->query($sss);
 
     while($st = $stQ->fetch_assoc()):
 
@@ -65,14 +67,16 @@ while($cls = $classQ->fetch_assoc()):
         $entryby = $st['entryby'];
 
         // 3️⃣ stfinance থেকে details
-        $finQ = $conn->query("
+        $qqq = "
             SELECT particulareng, pr1 
             FROM stfinance
             WHERE stid='$stid'
             AND pr1no='$prno'
             AND sccode='$sccode'
             AND pr1date='$date'
-        ");
+        ";
+        echo $qqq;
+        $finQ = $conn->query($qqq);
 
         while($fin = $finQ->fetch_assoc()):
 
