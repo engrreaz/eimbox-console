@@ -48,11 +48,11 @@ if ($res && $res->num_rows > 0):
 ?>
 
         <tr>
-            <td><?= htmlspecialchars($accno) ?></td>
-            <td><?= htmlspecialchars($row['transtype']) ?></td>
-            <td><?= htmlspecialchars($row['particulareng']) ?></td>
-            <td class="text-end"><?= number_format($row['amount'],2) ?></td>
-            <td class="text-end"><?= number_format($row['balance'],2) ?></td>
+            <td class="small"><?= htmlspecialchars($accno) ?></td>
+            <td class="small"><?= htmlspecialchars($row['transtype']) ?></td>
+            <td class="small"><?= htmlspecialchars($row['particulareng']) ?></td>
+            <td class="text-end small"><?= number_format($row['amount'],2) ?></td>
+            <td class="text-end small"><?= number_format($row['balance'],2) ?></td>
         </tr>
 
 <?php
