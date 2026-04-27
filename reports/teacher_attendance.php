@@ -68,13 +68,13 @@ function detectIcon($type)
     <table class="table table-sm table-bordered">
         <thead>
             <tr>
-                <th>Teacher</th>
-                <th>In Time</th>
-                <th>Status In</th>
-                <th>Out Time</th>
-                <th>Status Out</th>
-                <th>Detect In</th>
-                <th>Detect Out</th>
+                <th class="small py-1">Teacher</th>
+                <th class="small py-1">In Time</th>
+                <th class="small py-1">Status In</th>
+                <th class="small py-1">Out Time</th>
+                <th class="small py-1">Status Out</th>
+                <th class="small py-1">Detect In</th>
+                <th class="small py-1">Detect Out</th>
             </tr>
         </thead>
         <tbody>
@@ -84,30 +84,30 @@ function detectIcon($type)
                 <?php while ($row = $res->fetch_assoc()): ?>
 
                     <tr>
-                        <td><?= htmlspecialchars($row['tname']) ?></td>
+                        <td class="small py-1"><?= htmlspecialchars($row['tname']) ?></td>
 
-                        <td><?= $row['realin'] ?></td>
+                        <td class="small py-1"><?= $row['realin'] ?></td>
 
-                        <td>
+                        <td class="small py-1">
                             <span class="badge bg-<?= statusColor($row['statusin'], 'in') ?>">
                                 <?= ucfirst($row['statusin']) ?>
                             </span>
                         </td>
 
-                        <td><?= $row['realout'] ?></td>
+                        <td class="small py-1"><?= $row['realout'] ?></td>
 
-                        <td>
+                        <td class="small py-1">
                             <span class="badge bg-<?= statusColor($row['statusout'], 'out') ?>">
                                 <?= ucfirst($row['statusout']) ?>
                             </span>
                         </td>
 
-                        <td>
+                        <td class="small py-1">
                             <i class="bi bi-<?= detectIcon($row['detectin']) ?>"></i>
                             <?= $row['detectin'] ?>
                         </td>
 
-                        <td>
+                        <td class="small py-1">
                             <i class="bi bi-<?= detectIcon($row['detectout']) ?>"></i>
                             <?= $row['detectout'] ?>
                         </td>
@@ -163,11 +163,11 @@ $res = $conn->query($sql);
     <table class="table table-sm table-bordered">
         <thead>
             <tr>
-                <th>Teacher</th>
-                <th>Leave Type</th>
-                <th>Reason</th>
-                <th>From</th>
-                <th>To</th>
+                <th class="small py-1">Teacher</th>
+                <th class="small py-1">Leave Type</th>
+                <th class="small py-1">Reason</th>
+                <th class="small py-1">From</th>
+                <th class="small py-1">To</th>
             </tr>
         </thead>
         <tbody>
@@ -177,11 +177,11 @@ $res = $conn->query($sql);
                 <?php while ($row = $res->fetch_assoc()): ?>
 
                     <tr>
-                        <td><?= htmlspecialchars($row['tname']) ?></td>
-                        <td><?= htmlspecialchars($row['leave_type']) ?></td>
-                        <td><?= htmlspecialchars($row['leave_reason']) ?></td>
-                        <td><?= $row['date_from'] ?></td>
-                        <td><?= $row['date_to'] ?></td>
+                        <td class="small py-1"><?= htmlspecialchars($row['tname']) ?></td>
+                        <td class="small py-1"><?= htmlspecialchars($row['leave_type']) ?></td>
+                        <td class="small py-1"><?= htmlspecialchars($row['leave_reason']) ?></td>
+                        <td class="small py-1"><?= $row['date_from'] ?></td>
+                        <td class="small py-1"><?= $row['date_to'] ?></td>
                     </tr>
 
                 <?php endwhile; ?>
