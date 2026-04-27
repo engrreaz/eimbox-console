@@ -148,7 +148,7 @@ $sql = "
         l.date_from,
         l.date_to
     FROM teacher_leave_app l
-    LEFT JOIN teachers t ON t.tid = l.tid
+    LEFT JOIN teacher t ON t.tid = l.tid
     WHERE l.sccode='$sccode'
     AND l.status=1
     AND '$date' BETWEEN l.date_from AND l.date_to
