@@ -1,5 +1,5 @@
 <h6 class="fw-bold mt-4">Students Attendance</h6>
-<hr>
+
 
 <?php
 
@@ -37,7 +37,7 @@ if (!empty($classList)):
 
                 // bunk highlight
                 if ($row['bunk'] == 1) {
-                    $rolls[] = "<span style='color:orange;font-weight:bold'>{$roll}</span>";
+                    $rolls[] = "<span style='color:darkorange;font-weight:bold'>{$roll}</span>";
                 } else {
                     $rolls[] = $roll;
                 }
@@ -64,3 +64,4 @@ else:
 endif;
 
 ?>
+<hr>
