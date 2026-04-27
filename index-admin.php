@@ -1,9 +1,8 @@
 <!-- Content -->
 <div class="container-xxl flex-grow-1 container-p-y">
 
-    <div class="card mb-3" id="exam-stat">
-
-    </div>
+    <div class="card mb-3" id="basic-setup-block"></div>
+    <div class="card mb-3" id="exam-stat"></div>
 
     <div class="row g-6">
         <div class="col-md-8">
@@ -276,6 +275,10 @@
 
         $.post("index/exam-stat.php", {}, function (data) {
             $("#exam-stat").html(data);
+        });
+        
+        $.post("index/basic-setup.php", {}, function (data) {
+            $("#basic-setup-block").html(data);
         });
 
 

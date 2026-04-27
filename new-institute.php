@@ -32,9 +32,13 @@
 
 
     <div class="card shadow-lg">
-        <div class="card-header bg-primary ">
-            <h5 class="mb-0 text-white">Institution Setup Wizard (Mock Settings)</h5>
-        </div>
+        <div class="card-header bg-primary d-flex justify-content-between align-items-center">
+    <h5 class="mb-0 text-white">Institution Setup Wizard (Mock Settings)</h5>
+
+    <button type="button" class="btn btn-outline-light btn-sm" onclick="go_profile();">
+        Institute Profile
+    </button>
+</div>
 
         <div class="card-body">
             <!-- Tabs -->
@@ -78,7 +82,7 @@
                     <form id="instForm" class="row g-3">
                         <div class="col-md-3">
                             <label class="form-label">Institute Code</label>
-                            <input type="text" name="sccode" class="form-control" placeholder="ex: SC001" required>
+                            <input type="text" name="sccode" id="sc_sccode" class="form-control" placeholder="ex: SC001" required>
                         </div>
                         <div class="col-md-5">
                             <label class="form-label">Institute Name</label>
@@ -389,6 +393,20 @@
     }
 </script>
 
+<script>
+function go_profile() {
+    const sccode = document.getElementById('check_sccode').value;
+
+    if (!sccode) {
+        alert('Please enter EIIN / SCCODE');
+        return;
+    }
+
+    const url = 'view-ins-profile.php?sccode=' + encodeURIComponent(sccode);
+
+    window.open(url, '_blank'); // নতুন ট্যাবে ওপেন
+}
+</script>
 
 <script>
     $(document).ready(function () {
@@ -467,7 +485,8 @@
                 districts.forEach(d => {
                     const opt = document.createElement('option');
                     opt.value = d.id;
-                    opt.textContent = `${d.bn_name} (${d.name})`;
+                    opt.textContent = `${d.name} (${d.bn_name})`;
+                      opt.dataset.name = d.name;
                     distSelect.appendChild(opt);
                 });
             })
@@ -493,7 +512,8 @@
             filtered.forEach(u => {
                 const opt = document.createElement('option');
                 opt.value = u.name;
-                opt.textContent = `${u.bn_name} (${u.name})`;
+                opt.textContent = `${u.name} (${u.bn_name})`;
+              
                 psSelect.appendChild(opt);
             });
         });
@@ -502,6 +522,11 @@
         document.getElementById('instForm').addEventListener('submit', function (e) {
             e.preventDefault();
             const formData = new FormData(this);
+            
+            const distSelect = document.getElementById('dist');
+    const selectedOption = distSelect.options[distSelect.selectedIndex];
+            const distName = selectedOption.dataset.name;
+    formData.append('dist_name', distName); // 👈 extra field
 
             fetch('ajax/insert-institution.php', { 
                 method: 'POST',
@@ -514,6 +539,12 @@
                     document.getElementById('tab2').removeAttribute('disabled');
                     const tab2 = new bootstrap.Tab(document.getElementById('tab2'));
                     tab2.show();
+                    let scc =   document.getElementById('sc_sccode').value;
+                    document.getElementById('check_sccode').value = scc;
+                     setTimeout(() => {
+        document.getElementById('checkInstitutionForm').requestSubmit();
+    }, 500);
+                    
                 })
                 .catch(err => alert('Error: ' + err.message));
         });

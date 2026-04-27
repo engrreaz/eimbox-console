@@ -6,30 +6,23 @@ require_once '../core/global_values.php';
 
 $push = '';
 
-$order = json_decode($_POST['order'], true);
 
-$stmt = $conn->prepare(
-    "UPDATE areas 
+
+$data = json_decode($_POST['order'], true);
+
+foreach ($data as $row) {
+
+    $id = intval($row['section_id']);
+    $pos = intval($row['position']);
+
+    $stmt = $conn->prepare("UPDATE areas 
      SET idno = ? 
-     WHERE areaname = ? AND slot = ? AND sessionyear = ? AND id = ? AND sccode=?"
-);
-
-foreach ($order as $row) {
-    $stmt->bind_param(
-        "isssii",
-        $row['position'],
-        $row['classname'],
-        $row['slot'],
-        $row['session'],
-        $row['section_id'],
-        $sccode
-
-    );
-
+     WHERE  id = ? AND sccode=?");
+    $stmt->bind_param("iii", $pos, $id, $sccode);
     $stmt->execute();
-    $push .= $row['section_id'];
 }
+
 
 $stmt->close();
 
-echo json_encode(['status' => 'success-Sectuib' . $push]);
+echo json_encode(['status' => 'ok']);

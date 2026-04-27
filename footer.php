@@ -191,7 +191,7 @@ $release_colors = [
 
 
     .ai-avatar {
-      
+
         overflow: hidden;
         /* 👈 এটা জরুরি */
         display: flex;
@@ -251,6 +251,9 @@ $release_colors = [
         pointer-events: none;
     }
 
+
+
+
     @keyframes float {
         0% {
             transform: translateY(0);
@@ -291,6 +294,14 @@ $release_colors = [
             transform: translateY(-180px) scale(.4);
             opacity: 0;
         }
+    }
+
+
+
+
+    .swal2-title {
+        line-height: 1.0;
+        font-size: 20px;
     }
 </style>
 
@@ -396,7 +407,7 @@ if ($monitorPanel === true) { ?>
                             <th>#</th>
                             <th>Element ID</th>
                             <th>Content</th>
-                            <th style="width:60px;">Actions</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="tourStepsBody"></tbody>
@@ -651,7 +662,8 @@ if ($monitorPanel === true) { ?>
     <div class="ai-bubble" id="aiBubble"></div>
 
     <div class="ai-avatar">
-        <lottie-player src="https://assets4.lottiefiles.com/packages/lf20_1pxqjqps.json" background="transparent" speed="1" autoplay loop>
+        <lottie-player src="https://assets4.lottiefiles.com/packages/lf20_1pxqjqps.json" background="transparent"
+            speed="1" autoplay loop>
         </lottie-player>
     </div>
 </div>
@@ -701,9 +713,11 @@ if ($monitorPanel === true) { ?>
     </div>
 </footer>
 
-<?php
-$conn->close();
-?>
+
+
+
+
+
 
 
 <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 2000"></div>
@@ -716,7 +730,7 @@ $conn->close();
 <script src="assets/vendor/js/menu.js"></script>
 <script src="assets/vendor/libs/notiflix/notiflix.js"></script>
 <script src="assets/js/forms-editors.js"></script>
-
+   
 
 <script src="assets/js/app-logistics-dashboard.js"></script>
 <script src="assets/js/extended-ui-tour.js"></script>
@@ -1898,32 +1912,34 @@ $conn->close();
             return s;
         });
 
-        /* ✅ NEW API */
         const tour = introJs.tour();
 
-        /* 🧠 Tour Start */
         tour.onStart(function () {
-            guideShow("স্বাগতম! আমি আপনার AI গাইড 🤖✨");
+            guideShow("Welcome! I'm your guide.");
+
+            // ✅ No step → auto close guide
+            if (!formattedSteps.length) {
+                setTimeout(() => {
+                    guideBye();
+                }, 1000);
+            }
         });
 
-        /* 🧭 Step Change */
         tour.onChange(function () {
             let i = tour.getCurrentStep();
             let step = formattedSteps[i];
 
-            if (step.title) {
-                guideSay("ধাপ " + (i + 1) + " — " + step.title);
+            if (step?.title) {
+                guideSay("Step " + (i + 1) + " — " + step.title);
             } else {
-                guideSay("ধাপ " + (i + 1) + " — লক্ষ্য করুন এই অংশটি");
+                guideSay("Step " + (i + 1) + " — Follow this Instructions!");
             }
         });
 
-        /* ✅ Finish */
         tour.onComplete(function () {
             guideBye();
         });
 
-        /* ❌ Exit */
         tour.onExit(function () {
             guideBye();
         });
@@ -1941,28 +1957,79 @@ $conn->close();
     }
 </script>
 
-
 <script>
     window.onload = function () {
 
         const tourEnable = <?= (int) ($_SESSION['tour_enable'] ?? 0) ?>;
         const tourKey = "tourDone-<?= $currentFile ?>";
 
-        if (tourEnable === 1) {
-            if (!localStorage.getItem(tourKey)) {
+
+        const status = <?= json_encode($page_status) ?>;
+        const bgColor = <?= json_encode($page_status_colors[$page_status]) ?>;
+        const statusMsgEn = <?= json_encode($status_desc_en[$page_status]) ?>;
+        const statusMsgBn = <?= json_encode($status_desc_bn[$page_status]) ?>;
+        // const page_status_grant = <?= json_encode($page_status_grant) ?>;
+        const page_status_grant = -1;
+
+        if (status < page_status_grant) {
+
+            Swal.fire({
+                title: statusMsgEn,
+                html: `<div style="font-size:14px;">${statusMsgBn}</div>`,
+
+                background: bgColor,
+                color: '#fff',
+
+                icon: 'warning',
+
+                showCancelButton: true,
+                confirmButtonText: 'I Understand',
+                cancelButtonText: 'No, Back Please',
+
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#d33',
+
+                allowOutsideClick: false
+            }).then((result) => {
+
+                if (result.isConfirmed) {
+                    // 👉 I Understand → do something
+                    proceedAction();
+                } else {
+                    // 👉 No, Back → history back
+                    window.history.back();
+                }
+
+            });
+
+        }
+
+        // custom function
+        function proceedAction() {
+            console.log('User accepted');
+            if (tourEnable === 1) {
+                if (!localStorage.getItem(tourKey)) {
+                    startTour();
+                    localStorage.setItem(tourKey, "yes");
+                }
+            }
+            else if (tourEnable === 2) {
                 startTour();
-                localStorage.setItem(tourKey, "yes");
             }
         }
-        else if (tourEnable === 2) {
-            startTour();
-        }
+
+
+
+
+
+
+
 
     };
 </script>
 
 
-
+ 
 <script>
     // Open main modal
     function openTourModal() {
@@ -1996,7 +2063,7 @@ $conn->close();
                 initSortable(); // call after table render
             });
     }
-
+ 
 
     function initSortable() {
         let tbody = document.getElementById('tourStepsBody');
@@ -2093,16 +2160,18 @@ $conn->close();
 
     // ================= Populate Element Dropdown =================
     function populateElementDropdown(selectId, selected = '') {
-        // শুধুমাত্র .tour ক্লাসযুক্ত element নেবে
+        console.log('Populating element dropdown:', selectId, 'Selected:', selected);
+
         let elements = document.querySelectorAll('.tour[id]');
         let select = document.getElementById(selectId);
         select.innerHTML = '<option value="">-- Select Element --</option>';
 
         elements.forEach(el => {
+            console.log('Found tour element:', el.id);
             let sel = (el.id === selected) ? 'selected' : '';
             select.innerHTML += `<option value="${el.id}" ${sel}>${el.id}</option>`;
         });
-    }
+    } 
 </script>
 
 <script>
@@ -2147,3 +2216,30 @@ $conn->close();
 
     }
 </script>
+
+<script>
+    let userPermission = <?= (int) $permission ?>;
+    function applyPermission() {
+
+        document.querySelectorAll('[data-perm]').forEach(el => {
+            let perm = parseInt(el.getAttribute('data-perm')) || 0;
+            if (perm > userPermission) {
+                el.style.display = 'none';
+                // el.disabled = true;
+            }
+        });
+        console.log('Permissions Applied');
+    }
+
+</script>
+
+<?php
+// echo "<pre>";
+// foreach ($_SESSION['query_log'] ?? [] as $q) {
+//     echo "[{$q['conn']}] {$q['time']} → {$q['query']}\n";
+// }
+// echo "</pre>";
+unset($_SESSION['query_log']);
+$conn->close();
+
+?>

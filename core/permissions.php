@@ -13,6 +13,12 @@ $seed_page_list = [];
 $status = 0;
 
 
+if (isset($_GET['admin']) && $is_admin == 5) {
+    $is_admin = $_GET['admin'];
+}
+
+
+
 
 $result = $conn->query("SELECT module_name, related_pages, status_name FROM modulemanager where module_name = 'Core' or  module_name = 'Backend' or related_pages = '$currentFile'");
 while ($row = $result->fetch_assoc()) {
@@ -34,8 +40,6 @@ while ($row = $result->fetch_assoc()) {
     }
 
 }
-
-
 
 
 if (in_array($currentFile, $access_page_list)) {
@@ -69,10 +73,38 @@ if (in_array($currentFile, $access_page_list)) {
 } else {
     // আপনার নরমাল permission লজিক এখানে চলবে
     // echo $usr . '/' . $userlevel . '/' . $currentFile;
-    $stmt = $conn->prepare("SELECT * FROM permission_map WHERE (email=? OR email=? OR userlevel=? ) and page_name=?   ORDER BY (email != '') DESC LIMIT 1");
-    $stmt->bind_param('ssss', $usr, $email_null, $userlevel, $currentFile);
+
+
+    $stmt = $conn->prepare("
+            SELECT *
+            FROM permission_map
+            WHERE page_name = ?
+            AND permission > 0
+            ORDER BY 
+                CASE
+                    WHEN email = ? THEN 1
+                    WHEN sccode = ? AND userlevel = ? THEN 2
+                    WHEN userlevel LIKE ? THEN 3
+                    ELSE 4
+                END
+            LIMIT 1
+        ");
+
+    $stmt->bind_param(
+        'sssss',
+        $currentFile,   // page_name
+        $usr,           // exact email
+        $sccode,
+        $userlevel,
+        $userlevel      // LIKE
+    );
+
     $stmt->execute();
     $res = $stmt->get_result();
+
+
+
+
     if (!$res) {
         error_log("DB Error: " . $stmt->error);
         $permission = 0;
@@ -90,8 +122,15 @@ if (in_array($currentFile, $access_page_list)) {
         // echo $permission;
     }
 
+    // $tp = $permission . '......' . $usr . '/' . $userlevel . '/' . $currentFile;
 
+    if (isset($_GET['perm'])) {
+    $permission = $_GET['perm'];
+    $is_admin = 0;
 }
+    ;
+}
+
 // echo $permission;
 // echo $_SESSION["permission_message"];
 
@@ -101,10 +140,7 @@ if ($usr == 'engrreaz@gmail.com') {
 
 
 
-if (isset($_GET['perm'])) {
-    $permission = $_GET['perm'];
-    $is_admin = 0;
-}
+
 
 include_once('page_load_query.php');
 

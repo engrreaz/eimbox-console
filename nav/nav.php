@@ -1,10 +1,11 @@
 <?php
-// Variables
 
 
 $email_null = '';
 $userlevel = '%' . $userlevel . '%';
 // $like_userlevel = %administrator%'; // LIKE এর জন্য wildcard সহ
+
+
 
 // Fetch modules with highest priority permission
 $sql = "SELECT mm.id AS module_id,
@@ -29,8 +30,8 @@ $sql = "SELECT mm.id AS module_id,
                            CASE
                                WHEN email = ? THEN 1
                                WHEN sccode = ? AND userlevel = ? THEN 2
-                               WHEN userlevel LIKE ? THEN 3
-                               ELSE 4
+                               WHEN userlevel LIKE ?  THEN 3 
+                               ELSE 4 
                            END
                        ) AS min_priority
                 FROM permission_map
@@ -46,7 +47,7 @@ $sql = "SELECT mm.id AS module_id,
         ) pm
         ON pm.page_name = mm.related_pages
         LEFT JOIN modulelist ml ON ml.module_name = mm.module_name
-        WHERE mm.module_name NOT IN ('Core')
+        WHERE (mm.module_name NOT IN ('Core') AND mm.module_name != '' AND mm.module_name IS NOT NULL )
         ORDER BY ml.slno ASC, ml.module_name ASC, mm.slno ASC, mm.nav_title ASC;";
 
 $stmt = $conn->prepare($sql);
@@ -71,7 +72,7 @@ while ($row = $result->fetch_assoc()) {
     $module_icon = $row['ml_module_icon'] ?? 'three-dots-vertical'; // মূল মেনুর আইকন
     $submenu = $row['nav_title'];
     $page = $row['page_name'] ?: $row['related_pages'];
-    $permission = $row['permission'] ?? 0;
+    $nav_permission = $row['permission'] ?? 0;
     $nav_icon = $row['mm_nav_icon'] ?? 'three-dots-vertical'; // সাবমেনুর আইকন
     $root_page = $row['root_page'] ?? '';
 
@@ -80,9 +81,11 @@ while ($row = $result->fetch_assoc()) {
         continue; // root_page সেট থাকলে সাবপেজ মেনুতে যোগ হবে না
     }
 
-    if ($is_admin < 4 && $permission == 0) {
+    if ($is_admin < 4 && $nav_permission == 0) {
         continue; // skip no permission
     }
+
+ 
 
     if (!isset($menu[$module])) {
         // মূল মেনুর আইকন যোগ করা
@@ -105,7 +108,7 @@ while ($row = $result->fetch_assoc()) {
             'submenu' => $submenu,
             'link' => $page,
             'nav_icon' => $nav_icon,
-            'permission' => $permission
+            'permission' => $nav_permission
         ];
     }
 
@@ -163,7 +166,10 @@ $stmt->close();
 
 
 
-        <?php foreach ($menu as $moduleName => $moduleData):
+        <?php
+
+        
+        foreach ($menu as $moduleName => $moduleData):
             if ($moduleName == 'Backend') {
                 $mname_color = '#769603ff';
             } else if ($moduleName == 'Orion') {
@@ -283,7 +289,7 @@ $stmt->close();
         left: -400px;
         /* hidden */
         width: 400px;
-        max-width:90%;
+        max-width: 90%;
         height: 100%;
         max-width: 90%;
         /* background: #2c3e50; */
@@ -314,8 +320,38 @@ $stmt->close();
     }
 </style>
 
+<button id="dToggle" class="d-toggle-btn">
+    <i class="bi bi-layout-sidebar-inset"></i>
+</button>
 
+<style>
+    /* D shape floating toggle */
+    .d-toggle-btn {
+        position: fixed;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 42px;
+        height: 64px;
+        border: none;
+        border-radius: 0 40px 40px 0;
+        /* D shape */
+        background: rgba(0, 0, 0, .15);
+        color: #fff;
+        font-size: 20px;
+        box-shadow: 2px 4px 10px rgba(0, 0, 0, .25);
+        z-index: 10000;
+        display: none;
+        /* default hidden */
+    }
 
+    /* Only show on mobile/tablet */
+    @media (max-width: 991.98px) {
+        .d-toggle-btn {
+            display: block;
+        }
+    }
+</style>
 
 
 <div id="sidebar" class="card card-border-shadow-primary p-0">
@@ -335,31 +371,34 @@ $stmt->close();
     </div>
 </div>
 
-
+<!-- 
 <script>
     let sidebar = document.getElementById("sidebar");
     let lockBtn = document.getElementById("lockBtn");
     let timer = null;
     let delay = 500;
     let locked = false;
+    const isMobile = window.matchMedia("(max-width: 991.98px)").matches;
 
     // ----- Mouse edge detect → open sidebar (LEFT SIDE) -----
-    document.addEventListener("mousemove", function (e) {
-        let mouseX = e.clientX;
+    if (!isMobile) {
+        document.addEventListener("mousemove", function (e) {
+            let mouseX = e.clientX;
 
-        // LEFT EDGE → 0px–1px
-        if (!locked && mouseX <= 1) {
-            if (!timer && !sidebar.classList.contains("open")) {
-                timer = setTimeout(() => {
-                    sidebar.classList.add("open");
-                    timer = null;
-                }, delay);
+            // LEFT EDGE → 0px–1px
+            if (!locked && mouseX <= 1) {
+                if (!timer && !sidebar.classList.contains("open")) {
+                    timer = setTimeout(() => {
+                        sidebar.classList.add("open");
+                        timer = null;
+                    }, delay);
+                }
+            } else {
+                clearTimeout(timer);
+                timer = null;
             }
-        } else {
-            clearTimeout(timer);
-            timer = null;
-        }
-    });
+        });
+    }
 
     // Auto close when mouse leaves
     sidebar.addEventListener("mouseleave", function () {
@@ -381,6 +420,7 @@ $stmt->close();
         } else {
             lockBtn.classList.remove("locked");
         }
+
     });
 
     // Escape → close
@@ -391,30 +431,149 @@ $stmt->close();
     });
 
     // ----- Swipe detect (same logic works for left sidebar) -----
-    let touchStartX = 0;
-    let touchEndX = 0;
 
-    document.addEventListener("touchstart", e => {
-        touchStartX = e.changedTouches[0].screenX;
-    });
+    if (!isMobile) {
+        let touchStartX = 0;
+        let touchEndX = 0;
 
-    document.addEventListener("touchend", e => {
-        touchEndX = e.changedTouches[0].screenX;
-        handleSwipe();
-    });
 
-    function handleSwipe() {
-        const swipeDistance = touchEndX - touchStartX;
-        const threshold = 50;
+        document.addEventListener("touchstart", function (e) {
+            touchStartX = e.changedTouches[0].screenX;
+            if (sidebar.classList.contains("open") && !locked) {
 
-        if (!locked) {
-            if (swipeDistance > threshold) {
-                // Right swipe → open sidebar (LEFT SIDEBAR)
-                sidebar.classList.add("open");
-            } else if (swipeDistance < -threshold) {
-                // Left swipe → close
-                sidebar.classList.remove("open");
+                if (!sidebar.contains(e.target) && !document.getElementById("dToggle").contains(e.target)) {
+                    sidebar.classList.remove("open");
+                }
             }
+
+        });
+
+        document.addEventListener("touchend", e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            const swipeDistance = touchEndX - touchStartX;
+            const threshold = 50;
+
+            if (!locked) {
+                if (swipeDistance > threshold) {
+                    sidebar.classList.add("open");
+                } else if (swipeDistance < -threshold) {
+                    sidebar.classList.remove("open");
+                }
+            }
+
+
         }
     }
 </script>
+
+<script>
+    document.getElementById("dToggle").onclick = function () {
+        document.getElementById("sidebar").classList.toggle("open");
+    };
+</script> -->
+
+
+<script>
+    let sidebar = document.getElementById("sidebar");
+    let lockBtn = document.getElementById("lockBtn");
+    let timer = null;
+    let delay = 500;
+    let locked = false;
+    const isMobile = window.matchMedia("(max-width: 991.98px)").matches;
+
+    // Desktop edge open
+    if (!isMobile) {
+        document.addEventListener("mousemove", function (e) {
+            let mouseX = e.clientX;
+
+            if (!locked && mouseX <= 1) {
+                if (!timer && !sidebar.classList.contains("open")) {
+                    timer = setTimeout(() => {
+                        sidebar.classList.add("open");
+                        timer = null;
+                    }, delay);
+                }
+            } else {
+                clearTimeout(timer);
+                timer = null;
+            }
+        });
+    }
+
+    // mouse leave close
+    sidebar.addEventListener("mouseleave", function () {
+        if (!locked) sidebar.classList.remove("open");
+    });
+
+    // scroll close
+    window.addEventListener("scroll", function () {
+        if (!locked && sidebar.classList.contains("open")) {
+            sidebar.classList.remove("open");
+        }
+    });
+
+    // lock toggle
+    lockBtn.addEventListener("click", function () {
+        locked = !locked;
+
+        if (locked) {
+            sidebar.classList.add("open");
+            lockBtn.classList.add("locked");
+        } else {
+            lockBtn.classList.remove("locked");
+        }
+    });
+
+    // ESC close
+    document.addEventListener("keydown", function (e) {
+        if (!locked && e.key === "Escape" && sidebar.classList.contains("open")) {
+            sidebar.classList.remove("open");
+        }
+    });
+
+    // ✅ Mobile সহ সব জায়গায় outside touch → close
+    document.addEventListener("touchstart touchend", function (e) {
+
+        if (sidebar.classList.contains("open") && !locked) {
+
+            if (!sidebar.contains(e.target) && !document.getElementById("dToggle").contains(e.target)) {
+                sidebar.classList.remove("open");
+            }
+        }
+
+    });
+
+
+    if (isMobile) {
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener("touchstart", e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener("touchend", e => {
+            touchEndX = e.changedTouches[0].screenX;
+
+            const swipeDistance = touchEndX - touchStartX;
+            const threshold = 50;
+
+            // 👉 only LEFT swipe → close
+            if (!locked && sidebar.classList.contains("open") && swipeDistance < -threshold) {
+                sidebar.classList.remove("open");
+            }
+        });
+    }
+
+</script>
+
+<script>
+    document.getElementById("dToggle").onclick = function () {
+        document.getElementById("sidebar").classList.toggle("open");
+    };
+</script>
+

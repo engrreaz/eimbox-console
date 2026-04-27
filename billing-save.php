@@ -1,5 +1,7 @@
 <?php
-require_once 'header.php'; // এখানে config এবং db ইতিমধ্যেই যুক্ত আছে
+require_once 'core/config.php'; 
+require_once 'core/db.php'; 
+require_once 'core/global_values.php'; 
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
@@ -56,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $conn->rollback();
         echo "<script>
             alert('❌ ইনভয়েস তৈরিতে সমস্যা হয়েছে!');
-            window.history.back();
+            // window.history.back();
         </script>";
     }
 }

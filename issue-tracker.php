@@ -10,14 +10,14 @@
     <?php
 
     $col_icon = [
-        'crud' => 'bi bi-code-slash',
-        'ui' => 'bi bi-braces-asterisk',
+        'crud' => 'bi bi-database-gear',
+        'ui' => 'bi bi-css',
         'image' => 'bi bi-image',
-        'perm' => 'bi bi-shield-check',
+        'perm' => 'bi bi-shield-fill-check',
         'error' => 'bi bi-bug-fill',
-        'feature' => 'bi bi-feather',
-        'doc' => 'bi bi-file-earmark-text',
-        'faq' => 'bi bi-question-circle',
+        'feature' => 'bi bi-bullseye',
+        'doc' => 'bi bi-file-earmark-text-fill',
+        'faq' => 'bi bi-question-circle-fill',
         'tour' => 'bi bi-person-walking',
         'youtube' => 'bi bi-youtube'
     ];
@@ -33,7 +33,7 @@
     ];
 
     // modulemanager থেকে ডেটা ফেচ করা
-    $sql = "SELECT id, slno, module_name, module_topic, status_name, nav_icon, crud, ui, image, perm, error, feature, doc, faq, tour, youtube, ytlink
+    $sql = "SELECT id, slno, module_name, module_topic, related_pages, status_name, nav_icon, crud, ui, image, perm, error, feature, doc, faq, tour, youtube, ytlink
             FROM modulemanager
             WHERE module_topic IS NOT NULL AND module_topic != ''
             ORDER BY module_name, slno";
@@ -75,7 +75,7 @@
         <span class="text-danger">Red: <?php echo $stats['red']; ?></span> |
         <span class="text-warning">Orange: <?php echo $stats['orange']; ?></span> |
         <span class="text-purple">Violet: <?php echo $stats['violet']; ?></span> |
-        <span class="text-primary">Blue: <?php echo $stats['blue']; ?></span> |
+        <span style="color:dodgerblue">Blue: <?php echo $stats['blue']; ?></span> |
         <span class="text-success">Green: <?php echo $stats['green']; ?></span>
     </div>
 
@@ -116,7 +116,12 @@
                                         <td class="text-center p-1">
                                             <i class="bi bi-grip-vertical drag-handle" style="cursor:grab"></i>
                                         </td>
-                                        <td class="px-1 py-2"><?php echo htmlspecialchars($item['module_topic']); ?></td>
+                                        <td class="px-1 py-2 ps-2">
+                                            <i class="bi bi-<?php echo htmlspecialchars($item['nav_icon']); ?>"></i>
+                                            <span class="px-2"></span>
+                                            <a class="" href="<?= htmlspecialchars($item['related_pages']); ?>" target="_blank">
+                                                <?php echo htmlspecialchars($item['module_topic']); ?></a>
+                                        </td>
 
                                         <td style="color:<?= $page_status_colors[$item['status_name']]; ?>;">
                                             <?php echo htmlspecialchars($page_status_names[$item['status_name']]); ?>
@@ -200,22 +205,52 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('.update-status').forEach(function (el) {
+
             el.addEventListener('click', function (e) {
                 e.preventDefault();
+
                 let module = this.dataset.id;
                 let id = this.dataset.idno;
                 let col = this.dataset.col;
                 let val = this.dataset.val;
 
+                // 👉 current icon ধরো
+                let iconEl = this.closest('.dropdown').querySelector('i');
+
+                // 👉 color map
+                let colors = {
+                    0: 'danger',
+                    1: 'warning',
+                    2: 'info',
+                    3: 'primary',
+                    4: 'success'
+                };
+
                 fetch('core/update_module_status.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: 'module_name=' + encodeURIComponent(module) + '&col=' + encodeURIComponent(col) + '&val=' + encodeURIComponent(val) + '&id=' + encodeURIComponent(id)
-                }).then(res => res.text()).then(data => {
-                    alert('Status updated successfully!');
-                    location.reload();
-                });
+                    body: 'module_name=' + encodeURIComponent(module) +
+                        '&col=' + encodeURIComponent(col) +
+                        '&val=' + encodeURIComponent(val) +
+                        '&id=' + encodeURIComponent(id)
+                })
+                    .then(res => res.text())
+                    .then(data => {
+
+                        // ✅ UI instant update
+                        if (iconEl) {
+                            iconEl.classList.remove(
+                                'text-danger', 'text-warning', 'text-info', 'text-primary', 'text-success', 'text-secondary'
+                            );
+
+                            iconEl.classList.add('text-' + colors[val]);
+                        }
+
+                        showToast('success', 'Update Successfully', 'Updated');
+                    });
+
             });
+
         });
     });
 </script>
@@ -277,6 +312,7 @@
                     .then(r => r.text())
                     .then(msg => {
                         console.log(msg);
+                        showToast('success', 'Menu Re-arranged', 'Updated');
                     });
             }
         });

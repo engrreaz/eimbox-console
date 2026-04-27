@@ -1,5 +1,6 @@
 <?php
-require_once 'core/init.php';
+require_once 'core/init.php'; 
+
 require_once __DIR__ . '/vendor/autoload.php'; // HTMLPurifier autoload
 $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
 ?>
@@ -172,6 +173,7 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
 
                 <?php require_once 'topbar.php'; ?>
 
+
                 <div class="content-wrapper">
 
                     <?php
@@ -230,7 +232,7 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
                                         <i class="breadcrumb-icon icon-base ri ri-arrow-right-s-line align-middle"></i>
                                     </li>
                                     <li class="breadcrumb-item active" id="page_link_sub_title">
-                                        <?php echo $page_title;  ?> 
+                                        <?php echo $page_title; ?>
                                     </li>
                                 </ol>
                             </nav>
@@ -317,14 +319,12 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
 
 
                     <?php
-              
+
                     if (!$package_check) {
                         include_once('core/upgrade-plan.php');
                         include_once('footer.php');
                         exit;
                     }
 
-
-
-
                     ?>
+

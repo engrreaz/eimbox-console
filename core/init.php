@@ -46,7 +46,6 @@ require_once 'search-functions.php';
 // if (session_status() === PHP_SESSION_NONE)
 //     session_start();
 
-
  if (!isset($_SESSION['user_id']) && isset($_COOKIE['remember_me'])) {
         verify_remember_token($conn);
     }

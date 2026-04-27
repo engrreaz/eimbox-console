@@ -1,5 +1,11 @@
 <?php require_once 'header.php'; ?>
 
+<?php 
+// echo '<pre>';
+// print_r($_SESSION);
+// echo '</pre>';
+?>
+
 <style>
     /* Drag handle cursor */
 
@@ -36,21 +42,44 @@
     .class-card {
         position: relative;
     }
+
+    .sortable-ghost {
+        opacity: 0.4;
+    }
+
+    .sortable-chosen {
+        background: #e3f2fd;
+        border: 2px dashed #2196f3;
+    }
+
+    .sortable-drag {
+        background: #ffffff;
+        border: 2px solid #0d6efd;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, .2);
+    }
+
+    /* Placeholder space */
+    .sortable-placeholder {
+        height: 60px;
+        border: 2px dashed #999;
+        background: #f8f9fa;
+        margin-bottom: 10px;
+    }
 </style>
 
 <div class="container-xxl flex-grow-1 container-p-y">
 
-    <!-- FILTER -->
+    <!-- FILTER --> 
     <div class="card mb-3">
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
                     <h6>Slot Filter</h6>
-                    <div id="slotBox" class="d-flex flex-wrap gap-3"></div>
+                    <div id="slotBox" class="d-flex flex-wrap gap-3 tour" data-feature="Slot"></div>
                 </div>
                 <div class="col-md-6">
                     <h6>Session Filter</h6>
-                    <div id="sessionBox" class="d-flex flex-wrap gap-3"></div>
+                    <div id="sessionBox" class="d-flex flex-wrap gap-3 tour" data-feature="Session"></div>
                 </div>
             </div>
         </div>
@@ -113,14 +142,14 @@
                     <label>Class Teacher</label>
                     <?php
                     $query = "SELECT tid, tname FROM teacher WHERE sccode = ?";
-                    $stmt = $conn->prepare($query); 
+                    $stmt = $conn->prepare($query);
                     $stmt->bind_param("s", $sccode);
                     $stmt->execute();
                     $result = $stmt->get_result();
                     $teachers = $result->fetch_all(MYSQLI_ASSOC);
                     ?>
 
-                    <select name="teacher" class="form-control form-control-sm" required>
+                    <select name="teacher" class="form-control form-control-sm">
                         <option value="">Select a teacher</option>
                         <?php foreach ($teachers as $teacher): ?>
                             <option value="<?= htmlspecialchars($teacher['tid']) ?>">
@@ -137,7 +166,7 @@
             </div>
 
             <div class="modal-footer">
-                <button class="btn btn-primary btn-sm">Save</button>
+                <button class="btn btn-primary btn-sm" data-feature="Add/Edit Class/Section" data-points="5">Save</button>
             </div>
         </form>
     </div>
@@ -148,12 +177,15 @@
 
 
 
+
+
 <script>
     let areaModal = new bootstrap.Modal('#areaModal');
 
     $(function () {
         loadSlots();
         loadSessions();
+
     });
 
     /* ================= FILTER ================= */
@@ -232,8 +264,8 @@
                         <div class="ms-3 mb-3">
                             <h6 class="d-flex justify-content-between">
                             Session :  ${session}
-                                <button class="btn btn-sm btn-primary addClass"
-                                    data-slot="${slot}" data-session="${session}">
+                                <button class="btn btn-sm btn-primary addClass tour" id="addClass_${slot}_${session}"
+                                    data-slot="${slot}" data-session="${session}"  data-perm="2">
                                     + Class
                                 </button>
                             </h6>
@@ -262,15 +294,27 @@
             });
 
             Object.keys(g).forEach(slot => {
-                html += `<div class="mb-4"><h4>${slot}</h4>`;
+                html += `<div class="mb-4">
+                
+                   <div class="divider divider-primary m-0 p-0 mx-4"
+                            style="--bs-divider-color:teal;">
+                            <div class="divider-text fs-5 fw-bold "
+                                style="color: teal"> ${slot}
+                            </div>
+                        </div>
+                
+                
+                
+                
+                `;
 
                 Object.keys(g[slot]).forEach(session => {
                     html += `
             <div class="ms-3 mb-3">
                 <h6 class="d-flex justify-content-between">
-                    ${session}
-                    <button class="btn btn-sm btn-primary addClass"
-                        data-slot="${slot}" data-session="${session}">
+                    Session : ${session} 
+                    <button class="btn btn-sm btn-primary addClass tour" id="addClass_${slot}_${session}"
+                        data-slot="${slot}" data-session="${session}"  data-perm="2">
                         + Class
                     </button>
                 </h6>
@@ -280,15 +324,15 @@
                         html += `
                 <div class="class-card mb-3"
                     data-class="${cls}" data-slot="${slot}" data-session="${session}">
-                    <div class="card h-100">
+                    <div class="card ">
                         <div class="card-header d-flex justify-content-between">
-                        <i class="bi bi-grip-horizontal" style="cursor: grabbing;"></i> 
-                            <strong class="flex-grow-1 ms-3">${cls}</strong>
+                        <i class="bi bi-grip-horizontal pt-2" style="cursor: grabbing;"></i> 
+                            <strong class="flex-grow-1 ms-3 fs-5 pt-1">${cls}</strong> 
                             <div>
-                                <button class="btn btn-sm btn-outline-primary addSection"
-                                    data-class="${cls}" data-slot="${slot}" data-session="${session}">+</button>
-                                <button class="btn btn-sm btn-outline-danger delClass"
-                                    data-class="${cls}" data-slot="${slot}" data-session="${session}">×</button>
+                                <button class="btn btn-sm btn-outline-primary addSection tour" id="addSection_${slot}_${session}_${cls}"
+                                    data-class="${cls}" data-slot="${slot}" data-session="${session}" data-perm="2"><i class="bi bi-plus fs-6 p-0"></i></button>
+                                <button class="btn btn-sm btn-outline-danger delClass ms-1 tour" id="delClass_${slot}_${session}_${cls}"
+                                    data-class="${cls}" data-slot="${slot}" data-session="${session}" data-perm="3" data-feature="Delete Class" data-points="-3"><i class="bi bi-x fs-6"></i></button>
                             </div>
                         </div>
                         <div class="card-body section-list"></div>
@@ -305,7 +349,8 @@
             $('#classContainer').html(html);
             loadSections();
             enableClassDrag();
-
+            setTimeout(applyPermission, 200);
+             populateElementDropdown("element_id");
         }, 'json');
 
     }
@@ -313,35 +358,31 @@
 
     function enableClassDrag() {
 
-        $('.session-row').each(function () {
+        document.querySelectorAll('.session-row').forEach(el => {
 
-            if ($(this).hasClass('ui-sortable')) {
-                $(this).sortable('destroy');
-            }
-
-            $(this).sortable({
-                items: '.class-card',
+            new Sortable(el, {
+                animation: 150,
                 handle: '.card-header',
-                placeholder: 'sortable-placeholder',
-                tolerance: 'pointer',
-                forcePlaceholderSize: true,
 
-                update: function () {
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                dragClass: 'sortable-drag',
 
+                onEnd: function () {
                     let order = [];
 
-                    $(this).children('.class-card').each(function (i) {
+                    el.querySelectorAll('.class-card').forEach((item, i) => {
                         order.push({
-                            classname: $(this).data('class'),
-                            slot: $(this).data('slot'),
-                            session: $(this).data('session'),
+                            classname: item.dataset.class,
+                            slot: item.dataset.slot,
+                            session: item.dataset.session,
                             position: i + 1
                         });
                     });
 
                     $.post('academics/update-class-order.php', {
                         order: JSON.stringify(order)
-                    }, res => {
+                    }, () => {
                         showToast("success", "Re-arrange Classes Updated!");
                     });
                 }
@@ -396,10 +437,10 @@
                             </small>
                         </div>
                         <div class="pt-3">
-                            <button class="btn btn-sm btn-outline-primary editArea py-1 px-2">
+                            <button class="btn btn-sm btn-outline-primary editArea py-2 px-2 tour" id="editArea_${r.id}" data-perm="3">
                             <i class="bi bi-pencil-square fs-5"></i>
                             </button>
-                            <button class="btn btn-sm btn-outline-danger delArea py-1 px-2"><i class="bi bi-trash fs-5"></i></button>
+                            <button class="btn btn-sm btn-outline-danger delArea py-2 px-2 ms-1 tour" id="delArea_${r.id}" data-perm="3" data-feature="Delete Section" data-points="-1"><i class="bi bi-trash fs-5"></i></button>
                         </div>
                     </div>
                 </div>`;
@@ -408,47 +449,49 @@
                 sectionList.html(html);
 
                 enableSectionDrag(sectionList, card);
-
+                setTimeout(applyPermission, 200);
+                populateElementDropdown("element_id");
             }, 'json');
         });
+
     }
 
 
     function enableSectionDrag(sectionList, card) {
 
-        sectionList.sortable({
-            items: '.section-item',
-            placeholder: 'sortable-placeholder',
-            tolerance: 'pointer',
+        new Sortable(sectionList[0], {
+            animation: 150,
+            handle: '.bi-grip-vertical',
 
-            update: function () {
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            dragClass: 'sortable-drag',
+
+            onEnd: function () {
 
                 let order = [];
 
-                sectionList.children('.section-item').each(function (i) {
+                sectionList.find('.section-item').each(function (i) {
                     order.push({
                         section_id: $(this).data('id'),
-                        classname: card.data('class'),
+                        position: i + 1,
+                        class: card.data('class'),
                         slot: card.data('slot'),
-                        session: card.data('session'),
-                        position: i + 1
+                        session: card.data('session')
                     });
                 });
 
-                console.log('ORDER' + JSON.stringify(order)); // 🔴 debug
+                $.post('academics/update-section-order.php', {
+                    order: JSON.stringify(order)
+                }, function (res) {
 
-                $.ajax({
-                    url: 'academics/update-section-order.php',
-                    type: 'POST',
-                    data: {
-                        order: JSON.stringify(order)
-                    },
-                    success: function (res) {
-                        console.log(res);
-                        showToast("success", "Re-arrange Sections Updated!");
-
+                    if (res.status === 'ok') {
+                        showToast("success", "Section order updated!");
+                    } else {
+                        showToast("error", "Failed to update order");
                     }
-                });
+
+                }, 'json');
             }
         });
     }
@@ -534,22 +577,86 @@
 
     /* ================= DELETE ================= */
 
+    // Delete Section
     $(document).on('click', '.delArea', function () {
+
         let id = $(this).closest('.section-item').data('id');
-        if (confirm('Delete section?'))
-            $.post('academics/class-delete.php', {
-                id
-            }, () => loadClasses(), 'json');
+
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'Delete section?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+
+            if (result.isConfirmed) {
+
+                $.post('academics/class-delete.php', { id }, function (res) {
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Deleted!',
+                        text: 'Section deleted successfully',
+                        timer: 1000,
+                        showConfirmButton: false
+                    });
+
+                    loadClasses();
+
+                }, 'json');
+
+            }
+
+        });
+
     });
 
+
+    // Delete Class + Sections
     $(document).on('click', '.delClass', function () {
-        if (!confirm('Delete class & sections?')) return;
-        $.post('academics/class-delete-all.php', {
+
+        let data = {
             areaname: $(this).data('class'),
             slot: $(this).data('slot'),
             session: $(this).data('session')
-        }, () => loadClasses(), 'json');
+        };
+
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'Delete class & all sections?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete all!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+
+            if (result.isConfirmed) {
+
+                $.post('academics/class-delete-all.php', data, function (res) {
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Deleted!',
+                        text: 'Class & sections deleted',
+                        timer: 1000,
+                        showConfirmButton: false
+                    });
+
+                    loadClasses();
+
+                }, 'json');
+
+            }
+
+        });
+
     });
+</script>
+ 
+<script>
+    setTimeout(applyPermission, 200);
 </script>
 
 </body>
