@@ -6,18 +6,17 @@
 $date = mysqli_real_escape_string($conn, $date);
 $sccode = mysqli_real_escape_string($conn, $sccode);
 
-// query (group by sms_type)
+// 🔹 mobile + stid wise group
 $sql = "
     SELECT 
-        sms_type,
-        GROUP_CONCAT(DISTINCT mobile_number) AS mobiles,
-        GROUP_CONCAT(DISTINCT stid) AS stids,
+        mobile_number,
+        stid,
         SUM(count) AS total_count,
         SUM(cost) AS total_cost
     FROM sms
     WHERE sccode='$sccode' 
     AND DATE(date)='$date'
-    GROUP BY sms_type
+    GROUP BY mobile_number, stid
 ";
 
 $res = $conn->query($sql);
@@ -25,36 +24,37 @@ $res = $conn->query($sql);
 $grand_count = 0;
 $grand_cost = 0;
 
+$output = [];
+
 if ($res && $res->num_rows > 0):
 
     while ($row = $res->fetch_assoc()):
 
-        $sms_type = $row['sms_type'];
-        $mobiles = $row['mobiles'];
-        $stids = $row['stids'] ?? 'N/A';
+        $mobile = $row['mobile_number'];
+        $stid = $row['stid'] ?: 'N/A';
         $count = $row['total_count'];
         $cost = $row['total_cost'];
 
         $grand_count += $count;
         $grand_cost += $cost;
-?>
 
-<div class="mb-2">
-    <b>Type :</b> <?= htmlspecialchars($sms_type) ?> <br>
-    <b>Data :</b> <?= htmlspecialchars($mobiles) . '/' . htmlspecialchars($stids)  . ' (' . $count . ') &mdash ' . number_format($cost,2) . ', ' ?> <br>
-</div>
+        // 🔹 format: 01xxx / stid (count) - cost
+        $output[] = htmlspecialchars($mobile) . ' / ' .
+                    htmlspecialchars($stid) . 
+                    " ($count) - " . number_format($cost,2);
 
-<hr>
+    endwhile;
 
-<?php 
-    endwhile; 
+    // 🔹 comma separated output
+    echo implode(', ', $output);
 
 else:
     echo "<div class='text-danger'>No SMS data found</div>";
 endif;
 ?>
 
-<!-- Grand Total -->
+<hr>
+
 <div class="mt-3">
     <b>Total SMS:</b> <?= $grand_count ?> , 
     <b>Total Cost:</b> <?= number_format($grand_cost,2) ?>
