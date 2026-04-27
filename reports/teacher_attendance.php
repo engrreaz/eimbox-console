@@ -211,7 +211,7 @@ $sccode = mysqli_real_escape_string($conn, $sccode);
 // all teachers
 $teacherQ = $conn->query("
     SELECT tid, tname 
-    FROM teachers 
+    FROM teacher
     WHERE sccode='$sccode'
 ");
 
