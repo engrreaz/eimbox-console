@@ -3,6 +3,15 @@
 
 <?php
 
+$codeList = [];
+$sql0x2 = "SELECT itemcode, particulareng from financesetup where  sessionyear LIKE '%$sessionyear%'  and sccode='$sccode' ";
+$result0x2 = $conn->query($sql0x2);
+if ($result0x2->num_rows > 0) {
+    while ($row0x2 = $result0x2->fetch_assoc()) {
+        $codeList[$row0x2['itemcode']] = $row0x2['particulareng'];
+    }
+}
+
 $t1total = 0;
 
 /*
@@ -61,6 +70,19 @@ function getAmount($dataList, $cls, $sec, $item)
 
 ?>
 
+<div >
+    <?php 
+    $char = 65;
+foreach ($itemList as $item) { 
+    $eng = $codeList[$item] ?? $item;
+    
+    echo "<span class='badge bg-secondary me-2 mb-2'> " . chr($char) . ". $eng</span>";
+    $char++;
+}
+
+?>
+</div>
+
 <div class="table-responsive">
     <table class="table table-bordered table-sm">
 
@@ -70,8 +92,9 @@ function getAmount($dataList, $cls, $sec, $item)
                 <th>Class</th>
                 <th>Section</th>
 
-                <?php foreach ($itemList as $item): ?>
-                    <th class="text-end"><?= htmlspecialchars($item) ?></th>
+                <?php $char = 65; foreach ($itemList as $item): ?>
+                    <th class="text-end"><?= chr($char) ?></th>
+                    <?php $char++; ?>
                 <?php endforeach; ?>
 
                 <th class="text-end text-primary">Total</th>
