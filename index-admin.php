@@ -277,6 +277,7 @@
             $("#exam-stat").html(data);
         });
         
+        $("#basic-setup-block").html("<div class='text-center p-3'>Loading...</div>");
         $.post("index/basic-setup.php", {}, function (data) {
             $("#basic-setup-block").html(data);
         });
