@@ -46,17 +46,17 @@ $sessionyear = $_POST['sessionyear'] ?? date('Y');
       echo "<div class='text-danger'>No data found</div>";
     }
 
-// var_dump($classList);
-
+    // var_dump($classList);
+    
     include 'events.php';
     // include 'teacher_attendance.php';
     // include 'student_attendance.php';
     include 'student_performance.php';
-    include 'collection_summary.php';
+    // include 'collection_summary.php';
     // include 'student_collection.php';
     include 'payment_gateway.php';
     // include 'bank_transaction.php';
-    // Expenses report is currently not working due to missing data. Will fix it later.
+    include ' expense_report.php';
     // include 'sms_report.php';
     ?>
 
