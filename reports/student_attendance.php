@@ -64,6 +64,7 @@ else:
     echo "<div class='text-danger'>No class data found</div>";
 endif;
 
+echo "---------------------------------------------";
 echo "<div class='text-muted fw-bold'>Total Bunk: <b>$totalBunk</b></div>";
 ?>
 <hr>
