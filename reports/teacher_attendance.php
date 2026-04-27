@@ -2,6 +2,7 @@
 
 
 <?php
+$tidList = [];
 
 $date = mysqli_real_escape_string($conn, $date);
 $sccode = mysqli_real_escape_string($conn, $sccode);
@@ -81,7 +82,9 @@ function detectIcon($type)
 
             <?php if ($res && $res->num_rows > 0): ?>
 
-                <?php while ($row = $res->fetch_assoc()): ?>
+                <?php while ($row = $res->fetch_assoc()):
+                    $tidList[] = $row['tid'];
+                    ?>
 
                     <tr>
                         <td class="small py-1"><?= htmlspecialchars($row['tname']) ?></td>
@@ -130,7 +133,7 @@ function detectIcon($type)
 
 <!-- LEAVE  -->
 
-<h6 class="fw-bold mt-4">Teacher Leave Report</h6>
+<h6 class="fw-bold mt-4">Teacher Leave Records</h6>
 
 
 <?php
@@ -174,7 +177,9 @@ $res = $conn->query($sql);
 
             <?php if ($res && $res->num_rows > 0): ?>
 
-                <?php while ($row = $res->fetch_assoc()): ?>
+                <?php while ($row = $res->fetch_assoc()): 
+                    $tidList[] = $row['tid'];
+                    ?>
 
                     <tr>
                         <td class="small py-1"><?= htmlspecialchars($row['tname']) ?></td>
@@ -197,3 +202,37 @@ $res = $conn->query($sql);
         </tbody>
     </table>
 </div>
+
+
+<?php
+
+$sccode = mysqli_real_escape_string($conn, $sccode);
+
+// all teachers
+$teacherQ = $conn->query("
+    SELECT tid, tname 
+    FROM teachers 
+    WHERE sccode='$sccode'
+");
+
+// $tidList already exists (present + leave)
+?>
+
+<h6 class="fw-bold mt-4">Not In List Teachers</h6>
+<hr>
+
+<ul>
+
+<?php
+while($row = $teacherQ->fetch_assoc()) {
+
+    $tid = $row['tid'];
+
+    // 🔹 যদি tid list এ না থাকে
+    if (!in_array($tid, $tidList)) {
+        echo "<li>" . htmlspecialchars($row['tname']) . "</li>";
+    }
+}
+?>
+
+</ul>
