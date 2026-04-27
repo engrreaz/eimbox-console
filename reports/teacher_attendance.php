@@ -233,6 +233,6 @@ $teacherQ = $conn->query("
         if (!in_array($tid, $tidList)) {
             echo "<span class='col-md-4 small px-0 py-1' style='width:33%;'>" . htmlspecialchars($row['tname']) . "</span>";
         }
-    }
+    } 
     ?>
 </div>
