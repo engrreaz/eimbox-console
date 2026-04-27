@@ -8,7 +8,7 @@ $t1total = 0;
 
 
 $itemList = [];
-$sql0x2 = "SELECT itemcode, max(particulareng), max(particularben), sum(pr1) as tk  from stfinance where  sessionyear LIKE '%$y_v2%'  and pr1date between '$dtf' and '$dtt' and sccode='$sccode'  group by itemcode order by itemcode ";
+$sql0x2 = "SELECT itemcode, max(particulareng), max(particularben), sum(pr1) as tk  from stfinance where  sessionyear LIKE '%$sessionyear%'  and pr1date = '$date'  and sccode='$sccode'  group by itemcode order by itemcode ";
 $result0x2 = $conn->query($sql0x2);
 if ($result0x2->num_rows > 0) {
     while ($row0x2 = $result0x2->fetch_assoc()) {
@@ -18,7 +18,7 @@ if ($result0x2->num_rows > 0) {
 
 
 $dataList = [];
-$sql0x2 = "SELECT classname, sectionname, itemcode, max(particulareng), max(particularben), sum(pr1) as taka from stfinance where  sessionyear LIKE '%$y_v2%'  and pr1date between '$dtf' and '$dtt' and sccode='$sccode'  group by classname, sectionname, itemcode ";
+$sql0x2 = "SELECT classname, sectionname, itemcode, max(particulareng), max(particularben), sum(pr1) as taka from stfinance where  sessionyear LIKE '%$sessionyear%'  and pr1date = '$date'  and sccode='$sccode'  group by classname, sectionname, itemcode ";
 
 $result0x2 = $conn->query($sql0x2);
 if ($result0x2->num_rows > 0) {
