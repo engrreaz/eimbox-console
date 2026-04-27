@@ -1,5 +1,5 @@
 <h6 class="fw-bold mt-4">Teachers Attendance</h6>
-<hr>
+
 
 <?php
 
@@ -131,7 +131,7 @@ function detectIcon($type)
 <!-- LEAVE  -->
 
 <h6 class="fw-bold mt-4">Teacher Leave Report</h6>
-<hr>
+
 
 <?php
 
@@ -154,7 +154,7 @@ $sql = "
     AND '$date' BETWEEN l.date_from AND l.date_to
     ORDER BY l.tid
 ";
-echo $sql;
+
 $res = $conn->query($sql);
 
 ?>
