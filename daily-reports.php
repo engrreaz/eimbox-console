@@ -69,11 +69,11 @@ $sessionyear = $_COOKIE['chain-session'] ?? date('Y');
         <!-- Action Icons -->
         <div class="col-md-4 d-flex align-items-end justify-content-end gap-3">
 
-          <i class="bi bi-printer fs-5 text-primary action-btn" id="printBtn" title="Print"></i>
+          <i class="bi bi-printer fs-3 text-primary action-btn" id="printBtn" title="Print"></i>
 
-          <i class="bi bi-file-earmark-pdf fs-5 text-danger action-btn" id="pdfBtn" title="Download PDF"></i>
+          <i class="bi bi-file-earmark-pdf fs-3 text-danger action-btn" id="pdfBtn" title="Download PDF"></i>
 
-          <i class="bi bi-envelope fs-5 text-success action-btn" id="mailBtn" title="Send Email"></i>
+          <i class="bi bi-envelope fs-4 text-success action-btn" id="mailBtn" title="Send Email"></i>
 
         </div>
 
