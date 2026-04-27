@@ -8,8 +8,8 @@ $t1total = 0;
 // 🔹 main loop: class/section
 foreach ($classList as $cls):
 
-    $classname = $cls['areaname'];
-    $sectionname = $cls['subarea'];
+    $classname = $cls['classname'];
+    $sectionname = $cls['sectionname'];
 
     $clsTotal = 0;
 
