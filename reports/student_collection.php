@@ -38,7 +38,6 @@ while ($cls = $classQ->fetch_assoc()):
                         <th>Roll</th>
                         <th>Student ID</th>
                         <th>Receipt No</th>
-                        <th>Collected By</th>
                         <th>Particular</th>
                         <th>Amount</th>
                     </tr>
@@ -104,7 +103,7 @@ while ($cls = $classQ->fetch_assoc()):
 
                             ?>
                             <tr>
-                                <td colspan="6"><?= $collector ?></td>
+                                <td colspan="5"><?= $collector ?></td>
                             </tr>
                             <?php
                         }
@@ -115,7 +114,6 @@ while ($cls = $classQ->fetch_assoc()):
                             <td><?= $roll ?></td>
                             <td><?= $stid ?></td>
                             <td><?= $prno ?></td>
-                            <td><?= $entryby ?></td>
                             <td class="small"><?= $body ?></td>
                             <td class="text-end"><?= number_format($tak, 2) ?></td>
                         </tr>
