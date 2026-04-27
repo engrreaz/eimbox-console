@@ -24,11 +24,11 @@ if ($res && $res->num_rows > 0):
 <table class="table table-sm table-bordered">
     <thead>
         <tr>
-            <th>Acc No</th>
-            <th>Type</th>
-            <th>Particular</th>
-            <th class="text-end">Amount</th>
-            <th class="text-end">Balance</th>
+            <th class="  small py-1">Acc No</th>
+            <th class="  small py-1">Type</th>
+            <th class="  small py-1">Particular</th>
+            <th class="text-end  small py-1">Amount</th>
+            <th class="text-end  small py-1">Balance</th>
         </tr>
     </thead>
     <tbody>
