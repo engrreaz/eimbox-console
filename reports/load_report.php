@@ -47,6 +47,7 @@ $sessionyear = $_POST['sessionyear'] ?? date('Y');
       echo "<div class='text-danger'>No data found</div>";
     }
 
+var_dump($classList);
 
     include 'events.php';
     include 'teacher_attendance.php';
