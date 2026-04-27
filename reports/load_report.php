@@ -32,7 +32,7 @@ $sessionyear = $_POST['sessionyear'] ?? date('Y');
     AND sessionyear='$sessionyear' 
     ORDER BY slno
 ";
-
+echo $sql1;
     $areaQ = $conn->query($sql1);
 
     $classList = [];
