@@ -2,6 +2,7 @@
 
 $date = $_COOKIE['report-date'] ?? date('Y-m-d');
 $slot = $_COOKIE['chain-slot'] ?? 'School';
+$sessionyear = $_COOKIE['chain-session'] ?? date('Y');
 ?>
 
 <style>
@@ -36,6 +37,23 @@ $slot = $_COOKIE['chain-slot'] ?? 'School';
             ?>
           </select>
         </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Session Year</label>
+          <select name="sessionyear" class="form-control form-control-sm">
+            <?php
+            $qr = "SELECT DISTINCT syear FROM sessionyear WHERE sccode='$sccode' AND active=1 order by syear";
+            $res = $conn->query($qr);
+
+            while ($row = $res->fetch_assoc()) {
+              $syear = htmlspecialchars($row['syear']);
+              $selected = ($syear == $sessionyear) ? 'selected' : '';
+              echo "<option value='$syear' $selected>$syear</option>";
+            }
+            ?>
+          </select>
+        </div>
+
 
         <div class="col-md-3">
           <label class="form-label">Date</label>
@@ -80,12 +98,14 @@ $slot = $_COOKIE['chain-slot'] ?? 'School';
 
     let date = $(this).find('input[name="date"]').val();
     let slot = $(this).find('select[name="slot"]').val();
+    let sessionyear = $(this).find('select[name="sessionyear"]').val();
     setCookie('report-date', date, 7);
     setCookie('chain-slot', slot, 7);
+    setCookie('chain-session', sessionyear, 7);
 
     let formData = $(this).serialize();
 
- $('#reportArea').html('<div class="alert alert-primary text-center py-3">Loading, Please wait...</div>');
+    $('#reportArea').html('<div class="alert alert-primary text-center py-3">Loading, Please wait...</div>');
     $.post('reports/load_report.php', formData, function (res) {
       $('#reportArea').html(res);
     });

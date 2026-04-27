@@ -18,7 +18,7 @@ $classQ = $conn->query($sql);
 
 $grand_total = 0;
 
-while ($cls = $classQ->fetch_assoc()):
+foreach ($classList as $cls) {
 
     $classname = $cls['classname'];
     $sectionname = $cls['sectionname'];
@@ -99,7 +99,7 @@ while ($cls = $classQ->fetch_assoc()):
                         <?php
                         if ($entrybyPre != $entryby) {
                             $entrybyPre = $entryby;
-                            $collector = "Collected by: " . $entryby ;
+                            $collector = "Collected by: " . $entryby;
 
                             ?>
                             <tr>
@@ -135,7 +135,7 @@ while ($cls = $classQ->fetch_assoc()):
         </div>
     </div>
 
-<?php endwhile; ?>
+<?php } ?>
 
 <!-- GRAND TOTAL -->
 <div class="mt-4">
