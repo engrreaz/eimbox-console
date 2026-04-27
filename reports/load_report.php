@@ -49,15 +49,15 @@ $sessionyear = $_POST['sessionyear'] ?? date('Y');
     // var_dump($classList);
     
     include 'events.php';
-    // include 'teacher_attendance.php';
-    // include 'student_attendance.php';
+    include 'teacher_attendance.php';
+    include 'student_attendance.php';
     include 'student_performance.php';
-    // include 'collection_summary.php';
-    // include 'student_collection.php';
+    include 'collection_summary.php';
+    include 'student_collection.php';
     include 'payment_gateway.php';
-    // include 'bank_transaction.php';
+    include 'bank_transaction.php';
     include 'expense_report.php';
-    // include 'sms_report.php';
+    include 'sms_report.php';
     ?>
 
   </div>
