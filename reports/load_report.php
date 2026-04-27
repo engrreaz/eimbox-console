@@ -28,7 +28,7 @@ $sessionyear = $_POST['sessionyear'] ?? date('Y');
         subarea AS sectionname 
     FROM areas 
     WHERE sccode='$sccode' 
-    AND slotname='$slot' 
+    AND slot='$slot' 
     AND sessionyear='$sessionyear' 
     ORDER BY slno
 ";
