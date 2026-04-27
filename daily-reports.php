@@ -136,12 +136,44 @@ $sessionyear = $_COOKIE['chain-session'] ?? date('Y');
   // Print
   $('#printBtn').click(function () {
 
-    let style = ` @media print { table,tr, td {border-collapse: collapse; border: 1px solid #000 !important; width: 100%; }}`;
+    let style = `
+        <style>
+            @media print {
+                table {
+                    width: 100% !important;
+                    border-collapse: collapse;
+                }
+
+                table, th, td {
+                    border: 1px solid #000 !important;
+                }
+
+                th, td {
+                    padding: 5px;
+                    font-size: 12px;
+                }
+            }
+        </style>
+    `;
 
     let content = document.getElementById('reportArea').innerHTML;
-    let w = window.open();
-    w.document.write(style);
-    w.document.write(content);
+
+    let w = window.open('', '', 'width=900,height=700');
+
+    w.document.write(`
+        <html>
+            <head>
+                <title>Print Report</title>
+                ${style}
+            </head>
+            <body>
+                ${content}
+            </body>
+        </html>
+    `);
+
+    w.document.close();
+    w.focus();
     w.print();
     w.close();
   });
