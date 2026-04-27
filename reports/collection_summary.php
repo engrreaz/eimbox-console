@@ -113,8 +113,8 @@ foreach ($itemList as $item) {
                 ?>
 
                 <tr>
-                    <td><?= htmlspecialchars($classname) ?></td>
-                    <td><?= htmlspecialchars($sectionname) ?></td>
+                    <td class=" small px-1"><?= htmlspecialchars($classname) ?></td>
+                    <td class=" small px-1"><?= htmlspecialchars($sectionname) ?></td>
 
                     <?php foreach ($itemList as $item):
 
@@ -124,14 +124,14 @@ foreach ($itemList as $item) {
 
                         ?>
 
-                        <td class="text-end">
-                            <?= $amount > 0 ? number_format($amount, 2) : '' ?>
+                        <td class="text-end small px-1">
+                            <?= $amount > 0 ? number_format($amount, 0) : '' ?>
                         </td>
 
                     <?php endforeach; ?>
 
-                    <td class="text-end fw-bold">
-                        <?= number_format($rowTotal, 2) ?>
+                    <td class="text-end fw-bold small px-1">
+                        <?= number_format($rowTotal, 0) ?>
                     </td>
                 </tr>
 
