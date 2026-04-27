@@ -69,9 +69,9 @@
 
     let formData = $(this).serialize();
 
-    // $.post('reports/load_report.php', formData, function (res) {
-    //   $('#reportArea').html(res);
-    // });
+    $.post('reports/load_report.php', formData, function (res) {
+      $('#reportArea').html(res);
+    });
   });
 
 
