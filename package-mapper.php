@@ -170,7 +170,7 @@ $files = array_filter(scandir(__DIR__), function ($f) {
                     </div>
 
 
-                    <div class="col-md-3" >
+                    <div class="col-md-3">
                         <label class="form-label">Display Limit (Times)</label>
                         <input type="number" name="view_limit" class="form-control form-control-sm">
                     </div>
@@ -180,15 +180,15 @@ $files = array_filter(scandir(__DIR__), function ($f) {
                         <label class="form-label">Max Stay Limit (Min)</label>
                         <input type="number" name="max_stay_limit" class="form-control form-control-sm">
                     </div>
-                    
+
                     <div class="col-md-4">
                         <label class="form-label">Total Time Limit </label>
                         <input type="number" name="total_time_limit" class="form-control form-control-sm">
                     </div>
 
-                    
 
-                    
+
+
 
                     <div class="col-md-4">
                         <label class="form-label">Print</label>
@@ -255,17 +255,55 @@ $files = array_filter(scandir(__DIR__), function ($f) {
 
     $('#mapSettingsForm').submit(function (e) {
         e.preventDefault();
+
+        let formData = $(this).serialize();
+
         $.post('package-manager/package_map_action.php',
-            $(this).serialize() + '&action=save_page_settings',
+            formData + '&action=save_page_settings',
             function (msg) {
-                alert(msg);
+
+                // যদি plain text আসে
+                let responseText = msg;
+
+                // যদি JSON ব্যবহার করো (recommended)
+                // let res = JSON.parse(msg);
+
+                let page = $('#page_name').val();
+                let pkgId = $('#package_id').val();
+                let access = $('[name=access]').val();
+
+                let btn = $(`.editMap[data-page="${page}"][data-pkg="${pkgId}"]`);
+
+                btn.removeClass('btn-success btn-danger btn-outline-dark btn-dark');
+
+                if (access === 'Yes') {
+                    btn.addClass('btn-success');
+                    btn.html('<i class="bi bi-check2"></i>');
+                } else {
+                    btn.addClass('btn-danger');
+                    btn.html('<i class="bi bi-x-lg"></i>');
+                }
+
+                // optional black bg
+                btn.addClass('btn-dark');
+
+                // ✅ SweetAlert
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Updated!',
+                    text: responseText,
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+
+                // modal close
                 const modalEl = document.getElementById('mapSettingsModal');
                 const mapModal = bootstrap.Modal.getInstance(modalEl);
                 mapModal?.hide();
-                // location.reload();
             }
         );
     });
+
 </script>
 
 
