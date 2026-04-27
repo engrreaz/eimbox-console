@@ -10,6 +10,7 @@ $sccode = mysqli_real_escape_string($conn, $sccode);
 $sql = "
     SELECT 
         t.tname,
+        t.sl,
         a.tid,
         a.realin,
         a.realout,
@@ -22,7 +23,7 @@ $sql = "
     WHERE a.sccode='$sccode' 
     AND a.adate='$date' 
     AND t.sccode='$sccode'
-    ORDER BY a.tid
+    ORDER BY t.sl, a.tid
 ";
 
 $res = $conn->query($sql);
