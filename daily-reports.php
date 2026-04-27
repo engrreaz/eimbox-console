@@ -85,6 +85,7 @@ $slot = $_COOKIE['chain-slot'] ?? 'School';
 
     let formData = $(this).serialize();
 
+ $('#reportArea').html('<div class="alert alert-primary text-center py-3">Loading, Please wait...</div>');
     $.post('reports/load_report.php', formData, function (res) {
       $('#reportArea').html(res);
     });
