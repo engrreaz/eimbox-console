@@ -2,7 +2,7 @@
 $t1total = 0;
 $classList = [];
 $sql0x2 = "SELECT areaname, subarea from areas where  sessionyear LIKE '%$sessionyear%' and (user='$rootuser' or sccode='$sccode') order by idno";
-// echo $sql0x2 ;
+echo $sql0x2 ;
 $result0x2 = $conn->query($sql0x2);
 if ($result0x2->num_rows > 0) {
     while ($row0x2 = $result0x2->fetch_assoc()) {
@@ -10,6 +10,7 @@ if ($result0x2->num_rows > 0) {
     }
 }
 
+var_dump($classList);
 
 $codeList = [];
 $sql0x2 = "SELECT itemcode, particulareng, particularben from financesetup where  sessionyear LIKE '%$sessionyear%'  and sccode='$sccode' ";
@@ -20,6 +21,7 @@ if ($result0x2->num_rows > 0) {
     }
 }
 
+var_dump($codeList);
 
 $itemList = [];
 $sql0x2 = "SELECT itemcode, max(particulareng), max(particularben), sum(pr1) as tk  from stfinance where  sessionyear LIKE '%$sessionyear%'  and pr1date between '$dtf' and '$dtt' and sccode='$sccode'  group by itemcode order by itemcode ";
@@ -30,6 +32,7 @@ if ($result0x2->num_rows > 0) {
     }
 }
 
+var_dump($itemList);
 
 $dataList = [];
 $sql0x2 = "SELECT classname, sectionname, itemcode, max(particulareng), max(particularben), sum(pr1) as taka from stfinance where  sessionyear LIKE '%$sessionyear%'  and pr1date between '$dtf' and '$dtt' and sccode='$sccode'  group by classname, sectionname, itemcode ";
@@ -40,6 +43,7 @@ if ($result0x2->num_rows > 0) {
         $dataList[] = $row0x2;
     }
 }
+var_dump($dataList);
 
 // echo '<pre>';
 // print_r($dataList);
