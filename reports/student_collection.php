@@ -54,7 +54,7 @@ while($cls = $classQ->fetch_assoc()):
         AND prdate='$date'
         AND classname='$classname'
         AND sectionname='$sectionname'
-        ORDER BY roll ASC
+        ORDER BY rollno ASC
     ";
     echo $sss;
     $stQ = $conn->query($sss);
