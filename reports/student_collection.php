@@ -7,14 +7,7 @@
 $date = mysqli_real_escape_string($conn, $date);
 
 // 1️⃣ প্রথমে class + section তালিকা
-$sql = "
-    SELECT DISTINCT classname, sectionname 
-    FROM stpr 
-    WHERE sccode='$sccode' AND prdate='$date' 
-    ORDER BY classname, sectionname
-";
-// echo $sql;
-$classQ = $conn->query($sql);
+
 
 $grand_total = 0;
 
