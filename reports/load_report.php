@@ -56,7 +56,7 @@ $sessionyear = $_POST['sessionyear'] ?? date('Y');
     // include 'student_collection.php';
     include 'payment_gateway.php';
     // include 'bank_transaction.php';
-    include ' expense_report.php';
+    include 'expense_report.php';
     // include 'sms_report.php';
     ?>
 
