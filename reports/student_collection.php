@@ -1,3 +1,118 @@
 <h6 class="fw-bold mt-4">Student Collection</h6>
 <hr>
-<div>Receipt-wise collection details...</div>
+
+<?php
+
+// নিরাপদ ইনপুট
+$date = mysqli_real_escape_string($conn, $date);
+$sccode = mysqli_real_escape_string($conn, $sccode);
+
+// 1️⃣ প্রথমে class + section তালিকা
+$classQ = $conn->query("
+    SELECT DISTINCT classname, sectionname 
+    FROM stpr 
+    WHERE sccode='$sccode' AND prdate='$date'
+    ORDER BY classname, sectionname
+");
+
+$grand_total = 0;
+
+while($cls = $classQ->fetch_assoc()):
+
+    $classname = $cls['classname'];
+    $sectionname = $cls['sectionname'];
+
+    $sub_total = 0;
+?>
+
+<div class="mt-3">
+    <h6 class="text-primary">
+        Class: <?= $classname ?> | Section: <?= $sectionname ?>
+    </h6>
+
+    <div class="table-responsive">
+        <table class="table table-sm table-bordered">
+            <thead>
+                <tr>
+                    <th>Roll</th>
+                    <th>Student ID</th>
+                    <th>Receipt No</th>
+                    <th>Collected By</th>
+                    <th>Particular</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+
+<?php
+    // 2️⃣ প্রতিটি class/section অনুযায়ী stpr থেকে data
+    $stQ = $conn->query("
+        SELECT roll, stid, prno, entryby 
+        FROM stpr
+        WHERE sccode='$sccode' 
+        AND prdate='$date'
+        AND classname='$classname'
+        AND sectionname='$sectionname'
+        ORDER BY roll ASC
+    ");
+
+    while($st = $stQ->fetch_assoc()):
+
+        $roll = $st['roll'];
+        $stid = $st['stid'];
+        $prno = $st['prno'];
+        $entryby = $st['entryby'];
+
+        // 3️⃣ stfinance থেকে details
+        $finQ = $conn->query("
+            SELECT particulareng, pr1 
+            FROM stfinance
+            WHERE stid='$stid'
+            AND prno='$prno'
+            AND sccode='$sccode'
+            AND prdate='$date'
+        ");
+
+        while($fin = $finQ->fetch_assoc()):
+
+            $particular = $fin['particulareng'];
+            $amount = $fin['pr1'];
+
+            $sub_total += $amount;
+            $grand_total += $amount;
+?>
+                <tr>
+                    <td><?= $roll ?></td>
+                    <td><?= $stid ?></td>
+                    <td><?= $prno ?></td>
+                    <td><?= $entryby ?></td>
+                    <td><?= $particular ?></td>
+                    <td class="text-end"><?= number_format($amount,2) ?></td>
+                </tr>
+
+<?php endwhile; endwhile; ?>
+
+            </tbody>
+
+            <tfoot>
+                <tr>
+                    <th colspan="5" class="text-end">Sub Total</th>
+                    <th class="text-end text-success">
+                        <?= number_format($sub_total,2) ?>
+                    </th>
+                </tr>
+            </tfoot>
+
+        </table>
+    </div>
+</div>
+
+<?php endwhile; ?>
+
+<!-- GRAND TOTAL -->
+<div class="mt-4">
+    <h5 class="text-end">
+        Grand Total: 
+        <span class="text-danger"><?= number_format($grand_total,2) ?></span>
+    </h5>
+</div>
