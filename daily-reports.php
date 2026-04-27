@@ -135,8 +135,12 @@ $sessionyear = $_COOKIE['chain-session'] ?? date('Y');
 
   // Print
   $('#printBtn').click(function () {
+
+    let style = ` @media print { table,tr, td {border-collapse: collapse; border: 1px solid #000 !important; width: 100%; }}`;
+
     let content = document.getElementById('reportArea').innerHTML;
     let w = window.open();
+    w.document.write(style);
     w.document.write(content);
     w.print();
     w.close();
