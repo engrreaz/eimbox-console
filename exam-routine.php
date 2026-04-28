@@ -21,11 +21,11 @@ $exam = $_COOKIE['chain-exam'] ?? null;
 
   <div class="row">
     <div class="col-12">
-      <div class="card">
+      <div class="card" id="result-area">
         <div class="card-header">
 
         </div>
-        <div class="card-body" id="result-area">
+        <div class="card-body" >
 
         </div>
       </div>
