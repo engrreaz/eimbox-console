@@ -286,12 +286,12 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 
       if (res.status == 'success') {
 
-        addModalInstance.hide();
+        addModalInstance.hide();   // ✅ FIXED
 
-        loadRoutine(); // reload table
+        loadRoutine();
 
       } else {
-        alert('Insert failed');
+        sweetAlert('Error', 'Failed to add subject', 'error');
       }
 
     }, 'json');
@@ -362,11 +362,11 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 
       if (res.status == 'success') {
 
-       cloneModalInstance.hide();
+        cloneModalInstance.hide();
         loadRoutine();
 
       } else {
-        alert('Clone failed');
+        sweetAlert('Error', 'Failed to clone routine', 'error');
       }
 
     }, 'json');
