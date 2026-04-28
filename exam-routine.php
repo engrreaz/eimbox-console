@@ -294,6 +294,7 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 
       if (res.status == 'success') {
 
+      console.log(JSON.stringify(res));
         addModalInstance.hide();   // ✅ FIXED
 
         chinBtnFunc(); // Refresh routine view

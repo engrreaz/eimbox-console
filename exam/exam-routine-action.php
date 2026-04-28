@@ -61,7 +61,7 @@ if ($action == 'insert') {
             (sccode, sessionyear, examname, clsname, secname, date, time, subcode)
             VALUES
             ('$sccode','$sessionyear','$examname','$clsname','$secname','$date','$time','$subcode')";
-
+    echo $sql;
     mysqli_query($conn, $sql);
 
     echo json_encode(['status' => 'success']);
