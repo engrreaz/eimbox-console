@@ -160,11 +160,7 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 
       </div>
 
-      <div class="modal-footer">
-        <button class="btn btn-success" onclick="doClone()">
-          Clone Now
-        </button>
-      </div>
+
 
     </div>
   </div>
@@ -378,10 +374,16 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
                         <td class="small py-1">${row.subcode}</td>
                         <td class="small py-1">${row.subject}</td>
                     </tr>
+
+                    
                 `;
         });
 
-        html += `</table>`;
+        html += `</table>
+        <button class="btn btn-success btn-sm mt-3" onclick="doClone()">
+                      Clone Now
+                    </button>
+                    `;
       }
 
       $('#clonePreview').html(html);
