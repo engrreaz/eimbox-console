@@ -162,9 +162,8 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
     cloneModalInstance = new bootstrap.Modal(document.getElementById('cloneModal'));
   });
 
-  function openAddModal() {
-    // addModalInstance.show();
-    alert('Add subject manually is disabled for now. Please use clone feature to import routine.');
+  function openAddModalRoutine() {
+    addModalInstance.show();
   }
 
 
