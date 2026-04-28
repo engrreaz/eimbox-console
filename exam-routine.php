@@ -51,38 +51,7 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
   <div class="modal-dialog">
     <div class="modal-content">
 
-      <div class="modal-header">
-        <h5>Add Subject</h5>
-        <button class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-
-      <div class="modal-body">
-
-        <div class="mb-2">
-          <label>Date</label>
-          <input type="date" id="m_date" class="form-control">
-        </div>
-
-        <div class="mb-2">
-          <label>Time</label>
-          <input type="time" id="m_time" class="form-control">
-        </div>
-
-        <div class="mb-2">
-          <label>Subject</label>
-          <select id="m_subcode" class="form-control">
-            <option value="">Select</option>
-
-            <?php foreach ($subjectList as $sub): ?>
-              <option value="<?= $sub['subcode'] ?>">
-                <?= $sub['subcode'] ?> - <?= $sub['subject'] ?>
-              </option>
-            <?php endforeach; ?>
-
-          </select>
-        </div>
-
-      </div>
+     
 
       <div class="modal-footer">
         <button class="btn btn-success" onclick="saveSubject()">Save</button>
