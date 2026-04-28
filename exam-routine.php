@@ -338,10 +338,10 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
         res.data.forEach(row => {
           html += `
                     <tr>
-                        <td>${row.date ?? ''}</td>
-                        <td>${row.time ?? ''}</td>
-                        <td>${row.subcode}</td>
-                        <td>${row.subject}</td>
+                        <td class="small py-1">${row.date ?? ''}</td>
+                        <td class="small py-1">${row.time ?? ''}</td>
+                        <td class="small py-1">${row.subcode}</td>
+                        <td class="small py-1">${row.subject}</td>
                     </tr>
                 `;
         });
