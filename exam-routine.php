@@ -59,35 +59,40 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 
       <div class="modal-body">
 
+        <div class="row">
+          <div class="col-md-6 mb-2">
+            <label>Date</label>
+            <input type="date" id="m_date" class="form-control form-control-sm">
+          </div>
 
-        <div class="col-md-6 mb-2">
-          <label>Date</label>
-          <input type="date" id="m_date" class="form-control form-control-sm">
+          <div class="col-md-6 mb-2">
+            <label>Time</label>
+            <input type="time" id="m_time" class="form-control form-control-sm">
+          </div>
         </div>
 
-        <div class="col-md-6 mb-2">
-          <label>Time</label>
-          <input type="time" id="m_time" class="form-control form-control-sm">
+        <div class="row">
+          <div class="col-md-12 mb-2">
+            <label>Subject</label>
+            <select id="m_subcode" class="form-control form-control-sm">
+              <option value="">Select</option>
+
+              <?php foreach ($subjectList as $sub): ?>
+                <option value="<?= $sub['subcode'] ?>">
+                  <?= $sub['subcode'] ?> - <?= $sub['subject'] ?>
+                </option>
+              <?php endforeach; ?>
+
+            </select>
+          </div>
         </div>
 
-        <div class="col-md-12 mb-2">
-          <label>Subject</label>
-          <select id="m_subcode" class="form-control form-control-sm">
-            <option value="">Select</option>
 
-            <?php foreach ($subjectList as $sub): ?>
-              <option value="<?= $sub['subcode'] ?>">
-                <?= $sub['subcode'] ?> - <?= $sub['subject'] ?>
-              </option>
-            <?php endforeach; ?>
-
-          </select>
-        </div>
 
       </div>
 
       <div class="modal-footer">
-        <button class="btn btn-success" onclick="saveSubject()">Save</button>
+        <button class="btn btn-success btn-sm" onclick="saveSubject()">Save</button>
       </div>
 
     </div>
@@ -283,7 +288,7 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 
     $.post('exam/exam-routine-action.php', {
       action: 'insert',
-   
+
       sessionyear: sessionyear,
       examname: exam,
       clsname: classname,
@@ -295,7 +300,7 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 
       if (res.status == 'success') {
 
-      console.log(JSON.stringify(res));
+        console.log(JSON.stringify(res));
         addModalInstance.hide();   // ✅ FIXED
 
         chinBtnFunc(); // Refresh routine view
