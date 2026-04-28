@@ -38,7 +38,7 @@ $sql = "SELECT r.id, r.date, r.time, r.subcode, s.subject
             AND r.clsname='$clsname'
             AND r.secname='$secname'
             ORDER BY r.date, r.time";
-
+echo $sql;
 $res = mysqli_query($conn, $sql);
 
 $data = [];
@@ -172,7 +172,7 @@ $students = [
             <table>
                 <tr>
                     <td>
-                        <table class="table table-bordered mt-2" style="font-size:12px;">
+                        <table class="" style="font-size:12px;">
                             <tr>
                                 <th>Date</th>
                                 <th>Day</th>
