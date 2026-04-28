@@ -1,8 +1,6 @@
 <?php
 require_once 'header.php';
 
-$sctype = 'School';
-$sccode = 103187;
 
 $slot = $_COOKIE['chain-slot'] ?? null;
 $sessionyear = $_COOKIE['chain-session'] ?? null;
@@ -162,27 +160,12 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
   $(document).ready(function () {
     addModalInstance = new bootstrap.Modal(document.getElementById('addModalRoutine'));
     cloneModalInstance = new bootstrap.Modal(document.getElementById('cloneModal'));
-
-    function openAddModal() {
-      const el = document.getElementById('addModalRoutine');
-      if (!el) {
-        console.log('Add modal not found');
-        return;
-      }
-      const modal = new bootstrap.Modal(el);
-      modal.show();
-    }
-
-    function closeAddModal() {
-      const el = document.getElementById('addModalRoutine');
-      const modal = bootstrap.Modal.getInstance(el);
-      if (modal) {
-        modal.hide();
-      }
-    }
-
   });
 
+  function openAddModal() {
+    // addModalInstance.show();
+    alert('Add subject manually is disabled for now. Please use clone feature to import routine.');
+  }
 
 
   function openCloneModal() {
