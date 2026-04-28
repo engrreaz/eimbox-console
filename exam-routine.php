@@ -39,7 +39,7 @@ $exam = $_COOKIE['chain-exam'] ?? null;
 
 <!-- ----------------------------------- -->
 <script>
-function btnchain() {
+function chainBtnFunc() {
 
     let slot = $('#chain-slot').val();
     let sessionyear = $('#chain-session').val();
