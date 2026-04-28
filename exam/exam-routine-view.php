@@ -57,23 +57,28 @@ if ($action == 'fetch') {
         <b>Exam Routine</b>
         <div id="routine-info" class="d-flex">
             <div >
+                <div class="small">Slot</div>
+                <div class="fs-6 fw-bold"><?= $slot ?? '' ?></div>
+            </div>
+            <div class="vr mx-3"></div>
+            <div >
                 <div class="small">Session</div>
-                <div class="fs-5 fw-bold"><?= $sessionyear ?? '' ?></div>
+                <div class="fs-6 fw-bold"><?= $sessionyear ?? '' ?></div>
             </div>
             <div class="vr mx-3"></div>
             <div>
                 <div class="small">Examination</div>
-                <div class="fs-5 fw-bold"><?= $examname ?? '' ?></div>
+                <div class="fs-6 fw-bold"><?= $examname ?? '' ?></div>
             </div>
             <div class="vr mx-3"></div>
             <div>
                 <div class="small">Class</div>
-                <div class="fs-5 fw-bold"><?= $clsname ?? '' ?></div>
+                <div class="fs-6 fw-bold"><?= $clsname ?? '' ?></div>
             </div>
             <div class="vr mx-3"></div>
             <div>
                 <div class="small">Section</div>
-                <div class="fs-5 fw-bold"><?= $secname ?? '' ?></div>
+                <div class="fs-6 fw-bold"><?= $secname ?? '' ?></div>
             </div>
            
         </div>
