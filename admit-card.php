@@ -199,10 +199,10 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
     let exam = $('#exam-main').val();
 
     $.ajax({
-      url: 'exam/exam-routine-view.php',
+      url: 'exam/exam-routine-admit-card.php',
       type: 'POST',
       data: {
-        action: 'fetch',
+        action: 'admit',
         slot: slot,
         sessionyear: sessionyear,
         classname: classname,
@@ -223,207 +223,13 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
   }
 </script>
 
-<script>
-  $(document).on('change', '.updateField', function () {
-
-    let tr = $(this).closest('tr');
-    let id = tr.data('id');
-    let field = $(this).data('field');
-    let value = $(this).val();
-
-    $.post('exam/exam-routine-action.php', {
-      action: 'update',
-      id: id,
-      field: field,
-      value: value
-    }, function (res) {
-
-      if (res.status == 'success') {
-        console.log('Updated');
-        showToast('success', 'Updated successfully', 'Update Routine');
-
-      } else {
-        sweetAlert('Error', 'Update failed', 'error');
-      }
-
-    }, 'json');
-
-  });
-
-
-
-  $(document).on('click', '.btnDelete', function () {
-
-    let tr = $(this).closest('tr');
-    let id = tr.data('id');
-
-    Swal.fire({
-      title: 'Are you sure?',
-      text: "This subject will be deleted!",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Yes, delete it!',
-      cancelButtonText: 'Cancel'
-    }).then((result) => {
-
-      if (result.isConfirmed) {
-
-        $.post('exam/exam-routine-action.php', {
-          action: 'delete',
-          id: id
-        }, function (res) {
-
-          if (res.status == 'success') {
-
-            tr.remove();
-
-            showToast('success', 'Deleted successfully', 'Delete Routine');
-
-          } else {
-
-            Swal.fire('Error', 'Delete failed', 'error');
-
-          }
-
-        }, 'json');
-
-      }
-
-    });
-
-  });
-</script>
 
 
 
 
 
-<script>
-  function saveSubject() {
-
-    let date = $('#m_date').val();
-    let time = $('#m_time').val();
-    let subcode = $('#m_subcode').val();
-
-    let slot = $('#slot-main').val();
-    let sessionyear = $('#session-main').val();
-    let classname = $('#class-main').val();
-    let sectionname = $('#section-main').val();
-    let exam = $('#exam-main').val();
-
-    if (!subcode) {
-      alert('Select subject');
-      return;
-    }
-
-    $.post('exam/exam-routine-action.php', {
-      action: 'insert',
-
-      sessionyear: sessionyear,
-      examname: exam,
-      clsname: classname,
-      secname: sectionname,
-      date: date,
-      time: time,
-      subcode: subcode
-    }, function (res) {
-
-      if (res.status == 'success') {
-
-        console.log(JSON.stringify(res));
-        addModalInstance.hide();   // ✅ FIXED
-
-        chainBtnFunc(); // Refresh routine view
-
-      } else {
-        sweetAlert('Error', 'Failed to add subject', 'error');
-      }
-
-    }, 'json');
-  }
-</script>
 
 
-<script>
-
-  function previewClone() {
-
-  $('#clonePreview').html('<div class="alert alert-primary text-center  ">Loading...</div>');
-
-    $.post('exam/exam-routine-action.php', {
-      action: 'preview_clone',
-      sessionyear: $('#clone_session').val(),
-      examname: $('#clone_exam').val(),
-      clsname: $('#clone_class').val(),
-      secname: $('#clone_section').val(),
-
-    }, function (res) {
-
-      let html = '';
-
-      if (res.data.length === 0) {
-        html = '<div class="text-danger">No data found</div>';
-      } else {
-
-        html += `<table class="table table-bordered table-sm">`;
-
-        res.data.forEach(row => {
-          html += `
-                    <tr>
-                        <td class="small py-1">${row.date ?? ''}</td>
-                        <td class="small py-1">${row.time ?? ''}</td>
-                        <td class="small py-1">${row.subcode}</td>
-                        <td class="small py-1">${row.subject}</td>
-                    </tr>
-
-                    
-                `;
-        });
-
-        html += `</table>
-        <button class="btn btn-success btn-sm mt-3" onclick="doClone()">
-                      Clone Now
-                    </button>
-                    `;
-      }
-
-      $('#clonePreview').html(html);
-
-    }, 'json');
-  }
-
-
-  function doClone() {
-
-    if (!confirm('Clone routine from selected source?')) return;
-
-    $.post('exam/exam-routine-action.php', {
-      action: 'clone',
-
-      from_session: $('#clone_session').val(),
-      from_exam: $('#clone_exam').val(),
-      from_class: $('#clone_class').val(),
-      from_section: $('#clone_section').val(),
-
-      sessionyear: $('#session-main').val(),
-      examname: $('#exam-main').val(),
-      clsname: $('#class-main').val(),
-      secname: $('#section-main').val(),
-
-    }, function (res) {
-
-      if (res.status == 'success') {
-
-        cloneModalInstance.hide();
-        chainBtnFunc(); // Refresh routine view
-
-      } else {
-        sweetAlert('Error', 'Failed to clone routine', 'error');
-      }
-
-    }, 'json');
-  }
-</script>
 <!-- ----------------------------------- -->
 </body>
 
