@@ -115,35 +115,42 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
           <div class="col-md-4">
             <div class="row">
 
-              <div class="col-md-6 mb-2">
+              <div class="col-12 mb-2">
                 <label>Session</label>
                 <input type="text" id="clone_session" class="form-control form-control-sm">
               </div>
 
-              <div class="col-md-6 mb-2">
+              <div class="col-12 mb-2">
                 <label>Exam</label>
                 <input type="text" id="clone_exam" class="form-control form-control-sm">
               </div>
 
-              <div class="col-md-6 mb-2">
+              <div class="col-12 mb-2">
                 <label>Class</label>
                 <input type="text" id="clone_class" class="form-control form-control-sm">
               </div>
 
-              <div class="col-md-6 mb-2">
+              <div class="col-12 mb-2">
                 <label>Section</label>
                 <input type="text" id="clone_section" class="form-control form-control-sm">
               </div>
 
-              <button class="btn btn-info btn-sm mt-2" onclick="previewClone()">
-                Preview
-              </button>
+              <div class="col-12 mb-2">
+                <button class="btn btn-info btn-sm mt-2" onclick="previewClone()">
+                  Preview
+                </button>
+              </div>
+
 
             </div>
           </div>
           <div class="col-md-8">
 
-            <div id="clonePreview"></div>
+            <div id="clonePreview">
+              <div class="alert alert-info text-center small">
+                if found, routine will display here as preview before cloning.
+              </div>
+            </div>
           </div>
         </div>
 
