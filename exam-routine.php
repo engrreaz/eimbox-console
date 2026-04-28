@@ -146,7 +146,7 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
           </div>
           <div class="col-md-8">
 
-            <div id="clonePreview" class="d-flex align-items-center">
+            <div id="clonePreview" class="">
               <div class="alert alert-info text-center small">
                 if found, routine will display here as preview before cloning.
               </div>
