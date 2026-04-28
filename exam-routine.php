@@ -281,9 +281,10 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 
 
 <script>
-  function openCloneModal() {
-    $('#cloneModal').modal('show');
-  }
+function openCloneModal(){
+    var modal = new bootstrap.Modal(document.getElementById('cloneModal'));
+    modal.show();
+}
 
   function previewClone() {
 
