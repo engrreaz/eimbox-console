@@ -103,7 +103,6 @@ if ($action == 'preview_clone') {
 
 if ($action == 'clone') {
 
-    $sccode = $_POST['sccode'];
 
     $from_session = $_POST['from_session'];
     $from_exam = $_POST['from_exam'];
