@@ -39,19 +39,36 @@ $exam = $_COOKIE['chain-exam'] ?? null;
 
 <!-- ----------------------------------- -->
 <script>
-  function btnchain(){
-    let slot = document.getElementById('chain-slot').value;
-    let sessionyear = document.getElementById('chain-session').value;
-    let classname = document.getElementById('chain-class').value;
-    let sectionname = document.getElementById('chain-section').value;
-    let exam = document.getElementById('chain-exam').value;
+function btnchain() {
 
-    if(slot && sessionyear && classname && sectionname && exam){
-      window.location.href = `exam-routine-view.php?slot=${slot}&sessionyear=${sessionyear}&classname=${classname}&sectionname=${sectionname}&exam=${exam}`;
-    }else{
-      alert('Please select all values.');
-    }
-  }
+    let slot = $('#chain-slot').val();
+    let sessionyear = $('#chain-session').val();
+    let classname = $('#chain-class').val();
+    let sectionname = $('#chain-section').val();
+    let exam = $('#chain-exam').val();
+
+    $.ajax({
+        url: 'exam/exam-routine-view.php',
+        type: 'POST',
+        data: {
+            slot: slot,
+            sessionyear: sessionyear,
+            classname: classname,
+            sectionname: sectionname,
+            exam: exam
+        },
+        beforeSend: function () {
+            $('#resultArea').html('<div class="text-center">Loading...</div>');
+        },
+        success: function (res) {
+            $('#resultArea').html(res);
+        },
+        error: function () {
+            $('#resultArea').html('<div class="text-danger">Failed to load data</div>');
+        }
+    });
+
+}
 </script>
 <!-- ----------------------------------- -->
 </body>
