@@ -150,7 +150,7 @@ $students = [
 
             <!-- TITLE -->
             <div class="text-center mb-2">
-                <img src="assets/admit/admit.png" height="35"><br>
+                <img src="assets/admit/admit.png" height="35px"><br>
                 <b><?php echo $examname . ' Examination - ' . $sessionyear; ?></b>
             </div>
 
