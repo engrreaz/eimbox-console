@@ -77,4 +77,9 @@ while($row = $result->fetch_assoc()){
     $steps[] = $step;
 }
 
-echo "<script>var tourSteps = ".json_encode($steps).";</script>";
+// echo "<script>var tourSteps = ".json_encode($steps).";</script>";
+
+?>
+<script>
+    var tourSteps = "<?= json_encode($steps) ?>";
+</script>
