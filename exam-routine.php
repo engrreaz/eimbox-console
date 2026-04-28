@@ -151,6 +151,26 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 <?php require_once 'footer.php'; ?>
 
 <!-- ----------------------------------- -->
+
+<script>
+  let addModalInstance;
+  let cloneModalInstance;
+
+  $(document).ready(function () {
+    addModalInstance = new bootstrap.Modal(document.getElementById('addModal'));
+    cloneModalInstance = new bootstrap.Modal(document.getElementById('cloneModal'));
+  });
+
+  function openAddModal() {
+    addModalInstance.show();
+  }
+
+  function openCloneModal() {
+    cloneModalInstance.show();
+  }
+</script>
+
+
 <script>
   function chainBtnFunc() {
 
@@ -237,12 +257,7 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 </script>
 
 
-<script>
-  function openAddModal() {
-    var modal = new bootstrap.Modal(document.getElementById('addModal'));
-    modal.show();
-  }
-</script>
+
 
 
 <script>
@@ -285,10 +300,6 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 
 
 <script>
-  function openCloneModal() {
-    var modal = new bootstrap.Modal(document.getElementById('cloneModal'));
-    modal.show();
-  }
 
   function previewClone() {
 
