@@ -5,7 +5,7 @@ $status_name = 0;
 $page_title = 'EIMBox';
 $page_icon = 'app';
 $cur_page_module = '&mdash;';
-$ytlink='';
+$ytlink = '';
 
 $stmt = $conn->prepare("
             SELECT module_name, nav_title, nav_icon, status_name, root_page , ytlink
@@ -64,22 +64,19 @@ $result = $stmt->get_result();
 
 $steps = [];
 
-while($row = $result->fetch_assoc()){
+while ($row = $result->fetch_assoc()) {
     $step = [];
-    
-    if(!empty($row['element_id'])){
-        $step['element'] = "#".$row['element_id'];
+
+    if (!empty($row['element_id'])) {
+        $step['element'] = "#" . $row['element_id'];
     }
- 
-    
+
+
     $step['intro'] = $row['content'];
-    
+
     $steps[] = $step;
 }
 
-// echo "<script>var tourSteps = ".json_encode($steps).";</script>";
-
-?>
-<script>
-    var tourSteps = "<?= json_encode($steps) ?>";
-</script>
+if ($currentFile != 'daily-collection-summery-pdf.php') {
+    echo "<script>var tourSteps = " . json_encode($steps) . ";</script>";
+}
