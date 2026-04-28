@@ -139,8 +139,9 @@ $students = [
                 <img src="https://eimbox.com/logo/<?php echo $sccode; ?>.png" height="60">
                 <div class="ms-3">
                     <h5 class="mb-0"><?php echo $scname; ?></h5>
-                    <small><?php echo $scadd1; ?></small><br>
-                    <small>Contact: <?php echo $mobile; ?></small>
+                    <small><?php echo $scaddress; ?></small><br>
+                    <small>Contact: <?php echo $scmobile; ?></small><br>
+                    <small>Email : <?= $scmail ?>, Web : <?= $scweb ?></small>
                 </div>
             </div>
 
