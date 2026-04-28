@@ -177,7 +177,7 @@ $students = [
             <table>
                 <tr>
                     <td>
-                        <table class="" style="font-size:12px; ">
+                        <table class="" style="font-size:11px; ">
                             <tr>
                                 <th style="border:1px solid gray; padding:2px; text-align:center;">Date</th>
                                 <th style="border:1px solid gray; padding:2px; text-align:center;">Day</th>

@@ -138,7 +138,6 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
         <html>
         <head>
             <title>Print Admit</title>
-       
         </head>
         <body>${content}</body>
         </html>
