@@ -158,7 +158,6 @@ $sessionyear = $_COOKIE['chain-session'] ?? date('Y');
               bottom: 0;
               left: 0;
               width: 100%;
-              height: 30px;
               text-align: center;
               font-size: 12px;
            /*   background: #fff;  overlap হলে clean দেখাবে */
