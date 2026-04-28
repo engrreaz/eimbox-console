@@ -169,24 +169,74 @@ $students = [
                 </div>
             </div>
 
-            <!-- ROUTINE TABLE -->
-            <table class="table table-bordered mt-2" style="font-size:12px;">
+            <table>
                 <tr>
-                    <th>Date</th>
-                    <th>Day</th>
-                    <th>Time</th>
-                    <th>Subject</th>
-                </tr>
+                    <td>
+                        <table class="table table-bordered mt-2" style="font-size:12px;">
+                            <tr>
+                                <th>Date</th>
+                                <th>Day</th>
+                                <th>Time</th>
+                                <th>Subject</th>
+                            </tr>
 
-                <?php foreach ($data as $r) { ?>
-                    <tr>
-                        <td><?= date('d/m/Y', strtotime($r['date'])) ?></td>
-                        <td><?= date('l', strtotime($r['date'])) ?></td>
-                        <td><?= date('h:i A', strtotime($r['time'])) ?></td>
-                        <td><?= $r['subject'] ?></td>
-                    </tr>
-                <?php } ?>
+                            <?php foreach ($data as $r) { ?>
+                                <tr>
+                                    <td><?= date('d/m/Y', strtotime($r['date'])) ?></td>
+                                    <td><?= date('l', strtotime($r['date'])) ?></td>
+                                    <td><?= date('h:i A', strtotime($r['time'])) ?></td>
+                                    <td><?= $r['subject'] ?></td>
+                                </tr>
+                            <?php } ?>
+                        </table>
+                    </td>
+
+
+                    <td>
+                        <table style="width:100%; text-align:center;">
+                            <tr>
+                                <td colspan="2" style="text-align:left; font-size:10px;">
+                                    <ul>
+                                        <li>Don’t be late. Report to the hall min 15 min. before the exam
+                                            starts.</li>
+                                        <li>Carry your admit card and occupy the seat where your roll is marked.
+                                        </li>
+                                        <li>Carry your own stationary with calculator. Programmable Calculator
+                                            and any electronic gadgets are not allowed.</li>
+                                        <li>Don’t exchange stationary or calculator with others without
+                                            invigilator permission.</li>
+                                        <li>Don’t tear/damage your seat card on desk.</li>
+                                        <li>Don’t any misbehave/argue with invigilator and others.</li>
+                                        <li>Submit all of invalid equipment/docs to the invigilator before start
+                                            exam and collect them before exiting hall.</li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="font-size:12px;  text-align:center;">
+
+                                    <!-- <img src="<?php echo 'https://eimbox.com/sign/' . $ctea; ?>.png"
+                                                height="40px" /> -->
+                                    <br>
+                                    <b>(<?php echo $cteaname; ?>)</b> <br> Class Teacher
+                                </td style="font-size:12px;">
+                                <td style="font-size:12px; text-align:center;">
+                                    <img src="<?php echo 'https://eimbox.com/sign/' . $sccode; ?>.png" height="35px" /><br>
+                                    <?php echo '<b>' . $headname . '</b><br>' . $headtitle; ?>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" style="font-size:8px;">
+                                    <?php echo $scname; ?><br>
+                                    <?php echo $scaddress ; ?>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
             </table>
+            <!-- ROUTINE TABLE -->
+
 
         </div>
     <?php } ?>
