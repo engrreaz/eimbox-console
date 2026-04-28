@@ -24,6 +24,18 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 
 ?>
 
+<style>
+  @media print {
+    .admit-card {
+      width: 210mm;
+      height: auto;
+    }
+  }
+
+  .admit-card {
+    page-break-after: always;
+  }
+</style>
 <div class="container-xxl flex-grow-1 container-p-y">
   <?php
   $chain_param = '-c 12 -t Choose Values -u -r -b View Routine -h exam';
@@ -47,51 +59,28 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 
 </div>
 
-<div class="modal fade" id="addModalRoutine">
-  <div class="modal-dialog modal-dialog-centered">
+
+
+<div class="modal fade" id="settingsModal">
+  <div class="modal-dialog">
     <div class="modal-content">
 
       <div class="modal-header">
-        <h5>Add Subject</h5>
-        <button class="btn-close" data-bs-dismiss="modal"></button>
+        <h5>Admit Card Settings</h5>
       </div>
 
       <div class="modal-body">
 
-        <div class="row">
-          <div class="col-md-6 mb-2">
-            <label>Date</label>
-            <input type="date" id="m_date" class="form-control form-control-sm">
-          </div>
+        <label>Padding (mm)</label>
+        <input type="number" id="pad" class="form-control" value="10">
 
-          <div class="col-md-6 mb-2">
-            <label>Time</label>
-            <input type="time" id="m_time" class="form-control form-control-sm">
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="col-md-12 mb-2">
-            <label>Subject</label>
-            <select id="m_subcode" class="form-control form-control-sm">
-              <option value="">Select</option>
-
-              <?php foreach ($subjectList as $sub): ?>
-                <option value="<?= $sub['subcode'] ?>">
-                  <?= $sub['subcode'] ?> - <?= $sub['subject'] ?>
-                </option>
-              <?php endforeach; ?>
-
-            </select>
-          </div>
-        </div>
-
-
+        <label class="mt-2">Font Size</label>
+        <input type="number" id="fontSize" class="form-control" value="12">
 
       </div>
 
       <div class="modal-footer">
-        <button class="btn btn-success btn-sm" onclick="saveSubject()">Save</button>
+        <button class="btn btn-primary" onclick="applySettings()">Apply</button>
       </div>
 
     </div>
@@ -99,94 +88,10 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 </div>
 
 
-<div class="modal fade" id="cloneModal">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-
-      <div class="modal-header">
-        <h5>Clone Exam Routine</h5>
-        <button class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-
-      <div class="modal-body">
-
-        <div class="row">
-          <div class="col-md-4">
-            <div class="row">
-
-              <div class="col-12 mb-2">
-                <label>Session</label>
-                <input type="text" id="clone_session" class="form-control form-control-sm">
-              </div>
-
-              <div class="col-12 mb-2">
-                <label>Exam</label>
-                <input type="text" id="clone_exam" class="form-control form-control-sm">
-              </div>
-
-              <div class="col-12 mb-2">
-                <label>Class</label>
-                <input type="text" id="clone_class" class="form-control form-control-sm">
-              </div>
-
-              <div class="col-12 mb-2">
-                <label>Section</label>
-                <input type="text" id="clone_section" class="form-control form-control-sm">
-              </div>
-
-              <div class="col-12 mb-2">
-                <button class="btn btn-info btn-sm mt-2" onclick="previewClone()">
-                  Preview
-                </button>
-              </div>
-
-
-            </div>
-          </div>
-          <div class="col-md-8">
-
-            <div id="clonePreview" class="">
-              <div class="alert alert-info text-center small">
-                if found, routine will display here as preview before cloning.
-              </div>
-            </div>
-          </div>
-        </div>
-
-
-
-
-
-      </div>
-
-
-
-    </div>
-  </div>
-</div>
 
 <?php require_once 'footer.php'; ?>
 
 <!-- ----------------------------------- -->
-
-<script>
-  let addModalInstance;
-  let cloneModalInstance;
-
-  $(document).ready(function () {
-    addModalInstance = new bootstrap.Modal(document.getElementById('addModalRoutine'));
-    cloneModalInstance = new bootstrap.Modal(document.getElementById('cloneModal'));
-  });
-
-  function openAddModalRoutine() {
-    addModalInstance.show();
-  }
-
-
-  function openCloneModal() {
-    cloneModalInstance.show();
-  }
-</script>
 
 
 <script>
@@ -224,12 +129,57 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 </script>
 
 
+<script>
+  function printAdmit() {
+    let content = document.getElementById('routineTable').innerHTML;
+
+    let win = window.open('', '', 'width=900,height=700');
+    win.document.write(`
+        <html>
+        <head>
+            <title>Print Admit</title>
+            <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+        </head>
+        <body>${content}</body>
+        </html>
+    `);
+
+    win.document.close();
+    win.print();
+  }
+</script>
 
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
+<script>
+  function downloadPDF() {
+    let element = document.getElementById('routineTable');
 
+    html2pdf().from(element).save('admit-card.pdf');
+  }
+</script>
 
+<script>
+  function openSettings() {
+    $('#settingsModal').modal('show');
+  }
+</script>
 
+<script>
+  function applySettings() {
+
+    let pad = $('#pad').val();
+    let font = $('#fontSize').val();
+
+    $('.admit-card').css({
+      'padding': pad + 'mm',
+      'font-size': font + 'px'
+    });
+
+    $('#settingsModal').modal('hide');
+  }
+</script>
 <!-- ----------------------------------- -->
 </body>
 
