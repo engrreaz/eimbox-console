@@ -146,6 +146,13 @@ $sessionyear = $_COOKIE['chain-session'] ?? date('Y');
     
     <style>
             @media print {
+             .print-footer {
+                position: fixed;
+                bottom: 0;
+                width: 100%;
+                text-align: center;
+                font-size: 12px;
+            }
              body {
                   font-family: "IBM Plex Mono", monospace;
                 }
@@ -178,6 +185,11 @@ $sessionyear = $_COOKIE['chain-session'] ?? date('Y');
             </head>
             <body>
                 ${content}
+
+                <div class="print-footer">
+                    <hr style="margin:5px;"/>
+                    Daily Report - Date : ${$('input[name="date"]').val()} | Slot : ${$('select[name="slot"]').val()} | Session Year : ${$('select[name="sessionyear"]').val()}
+                </div>
             </body>
         </html>
     `);
