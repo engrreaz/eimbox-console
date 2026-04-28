@@ -85,7 +85,7 @@ var_dump($data);
                     <td contenteditable="true" class="edit" data-field="date"><?= $row['date'] ?></td>
                     <td contenteditable="true" class="edit" data-field="time"><?= $row['time'] ?></td>
                     <td contenteditable="true" class="edit" data-field="subcode"><?= $row['subcode'] ?> -
-                        <?= $row['subj'] ?></td>
+                        <?= $row['subject'] ?></td>
                 </tr>
             <?php endforeach; ?>
         </tbody>
