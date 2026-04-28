@@ -146,7 +146,7 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
           </div>
           <div class="col-md-8">
 
-            <div id="clonePreview">
+            <div id="clonePreview" class="d-flex align-items-center">
               <div class="alert alert-info text-center small">
                 if found, routine will display here as preview before cloning.
               </div>
@@ -348,6 +348,8 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 <script>
 
   function previewClone() {
+
+  $('#clonePreview').html('<div class="alert alert-primary text-center  ">Loading...</div>');
 
     $.post('exam/exam-routine-action.php', {
       action: 'preview_clone',
