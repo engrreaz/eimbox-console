@@ -240,26 +240,46 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 
   });
 
-  $(document).on('click', '.btnDelete', function () {
 
-    if (!confirm('Delete this subject?')) return;
+
+  $(document).on('click', '.btnDelete', function () {
 
     let tr = $(this).closest('tr');
     let id = tr.data('id');
 
-    $.post('exam/exam-routine-action.php', {
-      action: 'delete',
-      id: id
-    }, function (res) {
+    Swal.fire({
+      title: 'Are you sure?',
+      text: "This subject will be deleted!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
 
-      if (res.status == 'success') {
-        tr.remove();
-        showToast('success', 'Deleted successfully', 'Delete Routine');
-      } else {
-        sweetAlert('Error', 'Delete failed', 'error');
+      if (result.isConfirmed) {
+
+        $.post('exam/exam-routine-action.php', {
+          action: 'delete',
+          id: id
+        }, function (res) {
+
+          if (res.status == 'success') {
+
+            tr.remove();
+
+            showToast('success', 'Deleted successfully', 'Delete Routine');
+
+          } else {
+
+            Swal.fire('Error', 'Delete failed', 'error');
+
+          }
+
+        }, 'json');
+
       }
 
-    }, 'json');
+    });
 
   });
 </script>
