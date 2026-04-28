@@ -78,7 +78,8 @@ if ($action == 'preview_clone') {
     $sql = "SELECT r.*, s.subject
             FROM examroutine r
             LEFT JOIN subjects s ON r.subcode=s.subcode
-            WHERE r.sccode='$sccode'
+            WHERE s.sccategory = '$sctype'
+            AND r.sccode='$sccode'
             AND r.sessionyear='$sessionyear'
             AND r.examname='$examname'
             AND r.clsname='$clsname'

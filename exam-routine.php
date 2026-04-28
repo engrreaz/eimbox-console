@@ -115,22 +115,22 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 
           <div class="col-md-6 mb-2">
             <label>Session</label>
-            <input type="text" id="clone_session" class="form-control">
+            <input type="text" id="clone_session" class="form-control form-control-sm">
           </div>
 
           <div class="col-md-6 mb-2">
             <label>Exam</label>
-            <input type="text" id="clone_exam" class="form-control">
+            <input type="text" id="clone_exam" class="form-control form-control-sm">
           </div>
 
           <div class="col-md-6 mb-2">
             <label>Class</label>
-            <input type="text" id="clone_class" class="form-control">
+            <input type="text" id="clone_class" class="form-control form-control-sm">
           </div>
 
           <div class="col-md-6 mb-2">
             <label>Section</label>
-            <input type="text" id="clone_section" class="form-control">
+            <input type="text" id="clone_section" class="form-control form-control-sm">
           </div>
 
         </div>
@@ -333,7 +333,7 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
         html = '<div class="text-danger">No data found</div>';
       } else {
 
-        html += `<table class="table table-bordered">`;
+        html += `<table class="table table-bordered table-sm">`;
 
         res.data.forEach(row => {
           html += `
