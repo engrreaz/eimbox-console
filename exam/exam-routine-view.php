@@ -4,12 +4,10 @@ require_once '../core/config.php';
 require_once '../core/db.php';
 require_once '../core/global_values.php';
 
-
-$sccode = $_POST['sccode'] ?? '';
 $sessionyear = $_POST['sessionyear'] ?? '';
-$examname = $_POST['examname'] ?? '';
-$clsname = $_POST['clsname'] ?? '';
-$secname = $_POST['secname'] ?? '';
+$examname = $_POST['exam'] ?? '';
+$clsname = $_POST['classname'] ?? '';
+$secname = $_POST['sectionname'] ?? '';
 $action = $_POST['action'] ?? '';
 
 
