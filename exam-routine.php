@@ -202,6 +202,7 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 
       if (res.status == 'success') {
         console.log('Updated');
+        toastr.success("Updated successfully");
       } else {
         alert('Update failed');
       }
