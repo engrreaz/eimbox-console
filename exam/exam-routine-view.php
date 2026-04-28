@@ -18,7 +18,6 @@ if ($action == 'fetch') {
             FROM examroutine r
             LEFT JOIN subjects s 
                 ON r.subcode = s.subcode 
-                AND r.sccode = s.sccode
             WHERE s.sccategory = '$sctype'
             AND r.sccode='$sccode'
             AND r.sessionyear='$sessionyear'
