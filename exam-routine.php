@@ -112,36 +112,44 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
       <div class="modal-body">
 
         <div class="row">
+          <div class="col-md-4">
+            <div class="row">
 
-          <div class="col-md-6 mb-2">
-            <label>Session</label>
-            <input type="text" id="clone_session" class="form-control form-control-sm">
+              <div class="col-md-6 mb-2">
+                <label>Session</label>
+                <input type="text" id="clone_session" class="form-control form-control-sm">
+              </div>
+
+              <div class="col-md-6 mb-2">
+                <label>Exam</label>
+                <input type="text" id="clone_exam" class="form-control form-control-sm">
+              </div>
+
+              <div class="col-md-6 mb-2">
+                <label>Class</label>
+                <input type="text" id="clone_class" class="form-control form-control-sm">
+              </div>
+
+              <div class="col-md-6 mb-2">
+                <label>Section</label>
+                <input type="text" id="clone_section" class="form-control form-control-sm">
+              </div>
+
+              <button class="btn btn-info btn-sm mt-2" onclick="previewClone()">
+                Preview
+              </button>
+
+            </div>
           </div>
+          <div class="col-md-8">
 
-          <div class="col-md-6 mb-2">
-            <label>Exam</label>
-            <input type="text" id="clone_exam" class="form-control form-control-sm">
+            <div id="clonePreview"></div>
           </div>
-
-          <div class="col-md-6 mb-2">
-            <label>Class</label>
-            <input type="text" id="clone_class" class="form-control form-control-sm">
-          </div>
-
-          <div class="col-md-6 mb-2">
-            <label>Section</label>
-            <input type="text" id="clone_section" class="form-control form-control-sm">
-          </div>
-
         </div>
 
-        <button class="btn btn-info btn-sm mt-2" onclick="previewClone()">
-          Preview
-        </button>
 
-        <hr>
 
-        <div id="clonePreview"></div>
+
 
       </div>
 
