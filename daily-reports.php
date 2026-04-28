@@ -137,46 +137,50 @@ $sessionyear = $_COOKIE['chain-session'] ?? date('Y');
   $('#printBtn').click(function () {
 
     let style = `
-        
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link
-  href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=Noto+Sans+Bengali:wght@100..900&family=Noto+Serif+Bengali:wght@100..900&display=swap"
-  rel="stylesheet">
-    
-    <style>
-            @media print {
-            @page {
-        size: A4;       
-        margin: 10mm 10mm 2mm 15mm;      
-    }
-             .print-footer {
-                position: fixed;
-                bottom: 0;
-                width: 100%;
-                height: 50px;
-                text-align: center;
-                font-size: 12px;
-            }
-             body {
-                  font-family: "IBM Plex Mono", monospace;
-                }
-                table {
-                    width: 100% !important;
-                    border-collapse: collapse;
-                }
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono&family=Noto+Sans+Bengali&display=swap" rel="stylesheet">
 
-                table, th, td {
-                    border: 1px solid #000 !important;
-                }
+<style>
+      @media print {
 
-                th, td {
-                    padding: 5px;
-                    font-size: 12px;
-                }
-            }
-        </style>
-    `;
+          @page {
+              size: A4;       
+              margin: 10mm 10mm 15mm 15mm;  /* bottom margin বাড়ানো */
+          }
+
+          body {
+              font-family: "IBM Plex Mono", monospace;
+              margin-bottom: 60px; /* 🔥 footer এর জন্য জায়গা */
+          }
+
+          .print-footer {
+              position: fixed;
+              bottom: 0;
+              left: 0;
+              width: 100%;
+              height: 50px;
+              text-align: center;
+              font-size: 12px;
+              background: #fff; /* overlap হলে clean দেখাবে */
+          }
+
+          table {
+              width: 100% !important;
+              border-collapse: collapse;
+          }
+
+          table, th, td {
+              border: 1px solid #000 !important;
+          }
+
+          th, td {
+              padding: 5px;
+              font-size: 12px;
+          }
+      }
+      </style>
+      `;
 
     let content = document.getElementById('reportArea').innerHTML;
 
@@ -205,6 +209,9 @@ $sessionyear = $_COOKIE['chain-session'] ?? date('Y');
     w.close();
   });
 
+
+
+  
   // PDF (placeholder)
   $('#pdfBtn').click(function () {
     alert('PDF coming soon...');
