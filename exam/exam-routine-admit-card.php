@@ -155,7 +155,7 @@ $students = [
             </div>
 
             <!-- STUDENT INFO -->
-            <table>
+            <table style="width:100%;">
                 <tr>
                     <td>
                         <b><?php echo $st['stnameeng']; ?></b><br>
@@ -177,20 +177,20 @@ $students = [
             <table>
                 <tr>
                     <td>
-                        <table class="" style="font-size:12px;">
+                        <table class="" style="font-size:12px; ">
                             <tr>
-                                <th>Date</th>
-                                <th>Day</th>
-                                <th>Time</th>
-                                <th>Subject</th>
+                                <th style="border:1px solid gray; padding:2px; text-align:center;">Date</th>
+                                <th style="border:1px solid gray; padding:2px; text-align:center;">Day</th>
+                                <th style="border:1px solid gray; padding:2px; text-align:center;">Time</th>
+                                <th style="border:1px solid gray; padding:2px; text-align:center;">Subject</th>
                             </tr>
 
                             <?php foreach ($data as $r) { ?>
                                 <tr>
-                                    <td><?= date('d/m/Y', strtotime($r['date'])) ?></td>
-                                    <td><?= date('l', strtotime($r['date'])) ?></td>
-                                    <td><?= date('h:i A', strtotime($r['time'])) ?></td>
-                                    <td><?= $r['subject'] ?></td>
+                                    <td style="border:1px solid gray; padding:2px; text-align:center;"><?= date('d/m/Y', strtotime($r['date'])) ?></td>
+                                    <td style="border:1px solid gray; padding:2px; text-align:center;"><?= date('l', strtotime($r['date'])) ?></td>
+                                    <td style="border:1px solid gray; padding:2px; text-align:center;"><?= date('h:i A', strtotime($r['time'])) ?></td>
+                                    <td style="border:1px solid gray; padding:2px; text-align:left;"><?= $r['subject'] ?></td>
                                 </tr>
                             <?php } ?>
                         </table>
