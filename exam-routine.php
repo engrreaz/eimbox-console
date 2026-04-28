@@ -159,25 +159,28 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
   $(document).ready(function () {
     addModalInstance = new bootstrap.Modal(document.getElementById('addModal'));
     cloneModalInstance = new bootstrap.Modal(document.getElementById('cloneModal'));
+
+    function openAddModal() {
+      const el = document.getElementById('addModal');
+      if (!el) {
+        console.log('Add modal not found');
+        return;
+      }
+      const modal = new bootstrap.Modal(el);
+      modal.show();
+    }
+
+    function closeAddModal() {
+      const el = document.getElementById('addModal');
+      const modal = bootstrap.Modal.getInstance(el);
+      if (modal) {
+        modal.hide();
+      }
+    }
+
   });
 
-  function openAddModal() {
-    const el = document.getElementById('addModal');
-    if (!el) {
-      console.log('Add modal not found');
-      return;
-    }
-    const modal = new bootstrap.Modal(el);
-    modal.show();
-  }
 
-  function closeAddModal(){
-    const el = document.getElementById('addModal');
-    const modal = bootstrap.Modal.getInstance(el);
-    if(modal){
-        modal.hide();
-    }
-}
 
   function openCloneModal() {
     cloneModalInstance.show();
