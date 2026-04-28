@@ -80,7 +80,7 @@ if ($action == 'preview_clone') {
             LEFT JOIN subjects s ON r.subcode=s.subcode
             WHERE r.sccode='$sccode'
             AND r.sessionyear='$sessionyear'
-            AND r.examname='$examname'
+            AND r.examtitle='$examname'
             AND r.clsname='$clsname'
             AND r.secname='$secname'
             ORDER BY r.date,time";
