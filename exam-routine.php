@@ -1,6 +1,9 @@
 <?php
 require_once 'header.php';
 
+$sctype = 'School';
+$sccode = 103187;
+
 $slot = $_COOKIE['chain-slot'] ?? null;
 $sessionyear = $_COOKIE['chain-session'] ?? null;
 $classname = $_COOKIE['chain-class'] ?? null;
