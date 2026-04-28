@@ -14,7 +14,7 @@ $action = $_POST['action'] ?? '';
 
 if ($action == 'fetch') {
 
-    $sql = "SELECT r.id, r.date, r.time, r.subcode, s.subj
+    $sql = "SELECT r.id, r.date, r.time, r.subcode, s.subject
             FROM examroutine r
             LEFT JOIN subjects s 
                 ON r.subcode = s.subcode 
