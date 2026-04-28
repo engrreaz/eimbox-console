@@ -41,11 +41,11 @@ $exam = $_COOKIE['chain-exam'] ?? null;
 <script>
 function chainBtnFunc() {
 
-    let slot = $('#chain-slot').val();
-    let sessionyear = $('#chain-session').val();
-    let classname = $('#chain-class').val();
-    let sectionname = $('#chain-section').val();
-    let exam = $('#chain-exam').val();
+    let slot = $('#slot-main').val();
+    let sessionyear = $('#session-main').val();
+    let classname = $('#class-main').val();
+    let sectionname = $('#section-main').val();
+    let exam = $('#exam-main').val();
 
     $.ajax({
         url: 'exam/exam-routine-view.php',
