@@ -25,7 +25,7 @@ $exam = $_COOKIE['chain-exam'] ?? null;
         <div class="card-header">
 
         </div>
-        <div class="card-body">
+        <div class="card-body" id="result-area">
 
         </div>
       </div>
@@ -58,13 +58,13 @@ function chainBtnFunc() {
             exam: exam
         },
         beforeSend: function () {
-            $('#resultArea').html('<div class="text-center">Loading...</div>');
+            $('#result-area').html('<div class="text-center">Loading...</div>');
         },
         success: function (res) {
-            $('#resultArea').html(res);
+            $('#result-area').html(res);
         },
         error: function () {
-            $('#resultArea').html('<div class="text-danger">Failed to load data</div>');
+            $('#result-area').html('<div class="text-danger">Failed to load data</div>');
         }
     });
 
