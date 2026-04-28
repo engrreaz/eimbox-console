@@ -27,9 +27,7 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 }
 
 
-if ($action == 'admit') {
-
-    $sql = "SELECT r.id, r.date, r.time, r.subcode, s.subject
+$sql = "SELECT r.id, r.date, r.time, r.subcode, s.subject
             FROM examroutine r
             LEFT JOIN subjects s 
                 ON r.subcode = s.subcode 
@@ -41,15 +39,13 @@ if ($action == 'admit') {
             AND r.secname='$secname'
             ORDER BY r.date, r.time";
 
-    $res = mysqli_query($conn, $sql);
+$res = mysqli_query($conn, $sql);
 
-    $data = [];
-    while ($row = mysqli_fetch_assoc($res)) {
-        $data[] = $row;
-    }
-
-
+$data = [];
+while ($row = mysqli_fetch_assoc($res)) {
+    $data[] = $row;
 }
+
 
 
 $students = [
