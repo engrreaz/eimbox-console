@@ -154,7 +154,7 @@ if ($action == 'fetch') {
         </tbody>
     </table>
 <?php else: ?>
-    <div id="emptyState" class="alert alert-info text-center mx-4">
+    <div id="emptyState" class="alert alert-warning text-center mx-4">
         No subject assigned for this exam. Click the button below to add subjects to the routine.
     </div>
 <?php endif; ?>
