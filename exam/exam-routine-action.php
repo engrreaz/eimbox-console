@@ -14,7 +14,6 @@ $secname = $_POST['secname'] ?? '';
 $action = $_POST['action'] ?? '';
 
 
-
 if ($action == 'update') {
 
     $id = $_POST['id'];
@@ -24,14 +23,22 @@ if ($action == 'update') {
     $allowed = ['date', 'time', 'subcode'];
 
     if (!in_array($field, $allowed)) {
-        echo json_encode(['status' => 'error', 'msg' => 'Invalid field']);
+        echo json_encode(['status' => 'error']);
         exit;
     }
 
-    $sql = "UPDATE examroutine 
-            SET $field='$value' 
-            WHERE id='$id'";
+    $sql = "UPDATE examroutine SET $field='$value' WHERE id='$id'";
+    mysqli_query($conn, $sql);
 
+    echo json_encode(['status' => 'success']);
+    exit;
+}
+
+if ($action == 'delete') {
+
+    $id = $_POST['id'];
+
+    $sql = "DELETE FROM examroutine WHERE id='$id'";
     mysqli_query($conn, $sql);
 
     echo json_encode(['status' => 'success']);
@@ -40,6 +47,12 @@ if ($action == 'update') {
 
 
 if ($action == 'insert') {
+
+    $sccode = $_POST['sccode'];
+    $sessionyear = $_POST['sessionyear'];
+    $examname = $_POST['examname'];
+    $clsname = $_POST['clsname'];
+    $secname = $_POST['secname'];
 
     $date = $_POST['date'];
     $time = $_POST['time'];
@@ -57,18 +70,66 @@ if ($action == 'insert') {
 }
 
 
+if ($action == 'preview_clone') {
+
+    $sccode = $_POST['sccode'];
+    $sessionyear = $_POST['sessionyear'];
+    $examname = $_POST['examname'];
+    $clsname = $_POST['clsname'];
+    $secname = $_POST['secname'];
+
+    $sql = "SELECT r.*, s.subject
+            FROM examroutine r
+            LEFT JOIN subjects s ON r.subcode=s.subcode
+            WHERE r.sccode='$sccode'
+            AND r.sessionyear='$sessionyear'
+            AND r.examname='$examname'
+            AND r.clsname='$clsname'
+            AND r.secname='$secname'
+            ORDER BY r.date,time";
+
+    $res = mysqli_query($conn, $sql);
+
+    $data = [];
+    while ($row = mysqli_fetch_assoc($res)) {
+        $data[] = $row;
+    }
+
+    echo json_encode([
+        'status' => 'success',
+        'data' => $data
+    ]);
+    exit;
+}
+
+
 if ($action == 'clone') {
+
+    $sccode = $_POST['sccode'];
 
     $from_session = $_POST['from_session'];
     $from_exam = $_POST['from_exam'];
     $from_class = $_POST['from_class'];
     $from_section = $_POST['from_section'];
 
+    $sessionyear = $_POST['sessionyear'];
+    $examname = $_POST['examname'];
+    $clsname = $_POST['clsname'];
+    $secname = $_POST['secname'];
+
     $sql = "INSERT INTO examroutine
-            (sccode, sessionyear, examname, clsname, secname, date, time, subcode)
-            SELECT 
-                '$sccode','$sessionyear','$examname','$clsname','$secname',
-                date, time, subcode
+            (sccode,sessionyear,examname,clsname,secname,date,time,subcode)
+
+            SELECT
+            '$sccode',
+            '$sessionyear',
+            '$examname',
+            '$clsname',
+            '$secname',
+            date,
+            time,
+            subcode
+
             FROM examroutine
             WHERE sccode='$sccode'
             AND sessionyear='$from_session'

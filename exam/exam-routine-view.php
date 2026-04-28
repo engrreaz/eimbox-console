@@ -11,6 +11,20 @@ $secname = $_POST['sectionname'] ?? '';
 $action = $_POST['action'] ?? '';
 
 
+$subjectList = [];
+
+$sqlSub = "SELECT subcode, subject 
+           FROM subjects
+           WHERE sccategory='$sctype'
+           AND (sccode='0' OR sccode='$sccode')
+           ORDER BY subcode";
+
+$resSub = mysqli_query($conn, $sqlSub);
+
+while ($rowSub = mysqli_fetch_assoc($resSub)) {
+    $subjectList[] = $rowSub;
+}
+
 
 if ($action == 'fetch') {
 
@@ -25,7 +39,7 @@ if ($action == 'fetch') {
             AND r.clsname='$clsname'
             AND r.secname='$secname'
             ORDER BY r.date, r.time";
-echo $sql;
+    echo $sql;
     $res = mysqli_query($conn, $sql);
 
     $data = [];
@@ -36,9 +50,6 @@ echo $sql;
 
 }
 
-
-
-var_dump($data);
 ?>
 
 <div class="card-header d-flex justify-content-between">
@@ -48,8 +59,8 @@ var_dump($data);
     </div>
 
     <div>
-        <button id="btnAdd" class="btn btn-sm btn-primary">+ Add Subject</button>
-        <button id="btnClone" class="btn btn-sm btn-warning">Clone From</button>
+        <button id="btnAdd" class="btn btn-sm btn-primary" onclick="openAddModal()">+ Add Subject</button>
+        <button id="btnClone" class="btn btn-sm btn-warning" onclick="openCloneModal()">Clone From</button>
     </div>
 </div>
 
@@ -82,11 +93,36 @@ var_dump($data);
         <tbody>
             <?php foreach ($data as $row): ?>
                 <tr data-id="<?= $row['id'] ?>">
-                    <td contenteditable="true" class="edit" data-field="date"><?= $row['date'] ?></td>
-                    <td contenteditable="true" class="edit" data-field="time"><?= $row['time'] ?></td>
-                    <td contenteditable="true" class="edit" data-field="subcode"><?= $row['subcode'] ?> -
-                        <?= $row['subject'] ?></td>
-                        <td><i class="bi bi-trash text-danger" onclick="delSubject(<?= $row['id'] ?>);"></i></td>
+
+                    <!-- Date -->
+                    <td>
+                        <input type="date" class="form-control form-control-sm updateField" data-field="date"
+                            value="<?= $row['date'] ?>">
+                    </td>
+
+                    <!-- Time -->
+                    <td>
+                        <input type="time" class="form-control form-control-sm updateField" data-field="time"
+                            value="<?= $row['time'] ?>">
+                    </td>
+
+                    <!-- Subject -->
+                    <td>
+                        <select class="form-control form-control-sm updateField" data-field="subcode">
+                            <option value="">Select</option>
+                            <?php foreach ($subjectList as $sub): ?>
+                                <option value="<?= $sub['subcode'] ?>" <?= ($sub['subcode'] == $row['subcode']) ? 'selected' : '' ?>>
+                                    <?= $sub['subcode'] ?> - <?= $sub['subject'] ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </td>
+
+                    <!-- Delete -->
+                    <td>
+                        <i class="bi bi-trash text-danger btnDelete" style="cursor:pointer;"></i>
+                    </td>
+
                 </tr>
             <?php endforeach; ?>
         </tbody>
