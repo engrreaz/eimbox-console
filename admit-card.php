@@ -138,7 +138,7 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
         <html>
         <head>
             <title>Print Admit</title>
-            <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+       
         </head>
         <body>${content}</body>
         </html>
