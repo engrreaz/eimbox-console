@@ -148,12 +148,13 @@ $sessionyear = $_COOKIE['chain-session'] ?? date('Y');
             @media print {
             @page {
         size: A4;       
-        margin: 10mm 10mm 15mm 15mm;      
+        margin: 10mm 10mm 5mm 15mm;      
     }
              .print-footer {
                 position: fixed;
                 bottom: 0;
                 width: 100%;
+                height: 30px;
                 text-align: center;
                 font-size: 12px;
             }
