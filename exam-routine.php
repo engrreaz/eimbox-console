@@ -59,19 +59,20 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 
       <div class="modal-body">
 
-        <div class="mb-2">
+
+        <div class="col-md-6 mb-2">
           <label>Date</label>
-          <input type="date" id="m_date" class="form-control">
+          <input type="date" id="m_date" class="form-control form-control-sm">
         </div>
 
-        <div class="mb-2">
+        <div class="col-md-6 mb-2">
           <label>Time</label>
-          <input type="time" id="m_time" class="form-control">
+          <input type="time" id="m_time" class="form-control form-control-sm">
         </div>
 
-        <div class="mb-2">
+        <div class="col-md-12 mb-2">
           <label>Subject</label>
-          <select id="m_subcode" class="form-control">
+          <select id="m_subcode" class="form-control form-control-sm">
             <option value="">Select</option>
 
             <?php foreach ($subjectList as $sub): ?>
