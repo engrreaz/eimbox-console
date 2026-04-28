@@ -47,7 +47,6 @@ if ($action == 'delete') {
 
 if ($action == 'insert') {
 
-    $sccode = $_POST['sccode'];
     $sessionyear = $_POST['sessionyear'];
     $examname = $_POST['examname'];
     $clsname = $_POST['clsname'];
