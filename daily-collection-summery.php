@@ -15,6 +15,7 @@ $y_v2 = $_GET['sy'] ?? $y_v2;
 // $dtf = "2025-11-01";
 // $dtt = "2025-11-19";
 
+$conn->query("UPDATE stpr set sessionyear=sessionyear+2000 where sessionyear<100 AND sccode='$sccode' and prdate between '$dtf' and '$dtt';");
 
 $classList = [];
 $sql0x2 = "SELECT areaname, subarea from areas where  sessionyear LIKE '%$y_v2%' and user='$rootuser' order by idno";
