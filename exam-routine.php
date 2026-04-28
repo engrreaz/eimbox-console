@@ -303,7 +303,7 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
         console.log(JSON.stringify(res));
         addModalInstance.hide();   // ✅ FIXED
 
-        chinBtnFunc(); // Refresh routine view
+        chainBtnFunc(); // Refresh routine view
 
       } else {
         sweetAlert('Error', 'Failed to add subject', 'error');
@@ -377,7 +377,7 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
       if (res.status == 'success') {
 
         cloneModalInstance.hide();
-        chinBtnFunc(); // Refresh routine view
+        chainBtnFunc(); // Refresh routine view
 
       } else {
         sweetAlert('Error', 'Failed to clone routine', 'error');
