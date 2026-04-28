@@ -151,7 +151,7 @@ $sessionyear = $_COOKIE['chain-session'] ?? date('Y');
 
           body {
               font-family: "IBM Plex Mono", monospace;
-              margin-bottom: 80px; /* 🔥 footer এর জন্য জায়গা */
+              margin-bottom: 15mm; /* 🔥 footer এর জন্য জায়গা */
           }
 
           .print-footer {
