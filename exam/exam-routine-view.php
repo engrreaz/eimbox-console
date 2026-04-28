@@ -19,7 +19,8 @@ if ($action == 'fetch') {
             LEFT JOIN subjects s 
                 ON r.subcode = s.subcode 
                 AND r.sccode = s.sccode
-            WHERE r.sccode='$sccode'
+            WHERE s.sccategory = '$sctype'
+            AND r.sccode='$sccode'
             AND r.sessionyear='$sessionyear'
             AND r.examname='$examname'
             AND r.clsname='$clsname'
