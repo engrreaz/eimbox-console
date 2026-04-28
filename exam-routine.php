@@ -367,11 +367,10 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
       from_class: $('#clone_class').val(),
       from_section: $('#clone_section').val(),
 
-      sccode: params.sccode,
-      sessionyear: params.sessionyear,
-      examname: params.examname,
-      clsname: params.clsname,
-      secname: params.secname
+      sessionyear: $('#clone_session').val(),
+      examname: $('#clone_exam').val(),
+      clsname: $('#clone_class').val(),
+      secname: $('#clone_section').val(),
 
     }, function (res) {
 
