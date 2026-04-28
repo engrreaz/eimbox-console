@@ -158,6 +158,7 @@ $sessionyear = $_COOKIE['chain-session'] ?? date('Y');
               position: fixed;
               bottom: 0;
               left: 0;
+              height:30px;
               width: 100%;
               text-align: center;
               font-size: 12px;
