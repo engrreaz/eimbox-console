@@ -55,6 +55,13 @@ $students = [
         'sectionname' => $secname,
         'rollno' => '01',
         'stid' => '1001'
+    ],
+    [
+        'stnameeng' => 'Rahim Uddin',
+        'classname' => $clsname,
+        'sectionname' => $secname,
+        'rollno' => '01',
+        'stid' => '1001'
     ]
 ];
 
