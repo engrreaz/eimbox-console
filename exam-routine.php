@@ -269,6 +269,12 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
     let time = $('#m_time').val();
     let subcode = $('#m_subcode').val();
 
+    let slot = $('#slot-main').val();
+    let sessionyear = $('#session-main').val();
+    let classname = $('#class-main').val();
+    let sectionname = $('#section-main').val();
+    let exam = $('#exam-main').val();
+
     if (!subcode) {
       alert('Select subject');
       return;
@@ -276,11 +282,11 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 
     $.post('exam/exam-routine-action.php', {
       action: 'insert',
-      sccode: params.sccode,
-      sessionyear: params.sessionyear,
-      examname: params.examname,
-      clsname: params.clsname,
-      secname: params.secname,
+   
+      sessionyear: sessionyear,
+      examname: exam,
+      clsname: classname,
+      secname: sectionname,
       date: date,
       time: time,
       subcode: subcode
@@ -290,7 +296,7 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 
         addModalInstance.hide();   // ✅ FIXED
 
-        loadRoutine();
+        chinBtnFunc(); // Refresh routine view
 
       } else {
         sweetAlert('Error', 'Failed to add subject', 'error');
@@ -365,7 +371,7 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
       if (res.status == 'success') {
 
         cloneModalInstance.hide();
-        loadRoutine();
+        chinBtnFunc(); // Refresh routine view
 
       } else {
         sweetAlert('Error', 'Failed to clone routine', 'error');
