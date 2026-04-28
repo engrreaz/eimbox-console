@@ -55,7 +55,28 @@ if ($action == 'fetch') {
 <div class="card-header d-flex justify-content-between">
     <div>
         <b>Exam Routine</b>
-        <div id="routine-info"></div>
+        <div id="routine-info" class="d-flex">
+            <div>
+                <div class="small">Session</div>
+                <div class="fs-5 fw-bold"><?= $sessionyear ?? '' ?></div>
+            </div>
+            <div class="vr"></div>
+            <div>
+                <div class="small">Examination</div>
+                <div class="fs-5 fw-bold"><?= $examname ?? '' ?></div>
+            </div>
+            <div class="vr"></div>
+            <div>
+                <div class="small">Class</div>
+                <div class="fs-5 fw-bold"><?= $clsname ?? '' ?></div>
+            </div>
+            <div class="vr"></div>
+            <div>
+                <div class="small">Section</div>
+                <div class="fs-5 fw-bold"><?= $secname ?? '' ?></div>
+            </div>
+           
+        </div>
     </div>
 
     <div>
@@ -80,7 +101,7 @@ if ($action == 'fetch') {
 </div>
 
 <div id="routineTable" class="table table-responsive">
-
+<?php if (count($data) > 0): ?>
     <table class="table table-bordered table-sm">
         <thead>
             <tr>
@@ -127,5 +148,9 @@ if ($action == 'fetch') {
             <?php endforeach; ?>
         </tbody>
     </table>
-
+<?php else: ?>
+    <div id="emptyState" class="alert alert-info text-center">
+        No subject assigned for this exam. Click the button below to add subjects to the routine.
+    </div>
+<?php endif; ?>
 </div>

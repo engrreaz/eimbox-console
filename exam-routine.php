@@ -200,7 +200,7 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
         exam: exam
       },
       beforeSend: function () {
-        $('#result-area').html('<div class="text-center">Loading...</div>');
+        $('#result-area').html('<div class="alert alert-primary text-center">Loading...</div>');
       },
       success: function (res) {
         $('#result-area').html(res);
