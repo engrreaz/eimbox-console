@@ -156,6 +156,7 @@ $sessionyear = $_COOKIE['chain-session'] ?? date('Y');
           .print-footer {
               position: fixed;
               bottom: 0;
+              padding-top:15px;
               left: 0;
               width: 100%;
               text-align: center;
@@ -193,7 +194,7 @@ $sessionyear = $_COOKIE['chain-session'] ?? date('Y');
             <body>
                 ${content}
 
-                <div class="print-footer">
+                <div class="print-footer" >
                     <hr style="margin:20px 0 8px;"/>
                     Daily Report - Date : ${$('input[name="date"]').val()} | Slot : ${$('select[name="slot"]').val()} | Session Year : ${$('select[name="sessionyear"]').val()}
                 </div>
