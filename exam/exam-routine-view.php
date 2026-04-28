@@ -60,7 +60,7 @@ if ($action == 'fetch') {
 
     <div>
         <button id="btnAdd" class="btn btn-sm btn-primary" onclick="openAddModal()">+ Add Subject</button>
-        <button id="btnClone" class="btn btn-sm btn-warning" onclick="openCloneModal()">Clone From</button>
+        <button id="btnClone" class="btn btn-sm btn-warning" onclick="openCloneModal()">Import Routine</button>
     </div>
 </div>
 

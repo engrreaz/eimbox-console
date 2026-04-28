@@ -48,7 +48,7 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 </div>
 
 <div class="modal fade" id="addModal">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
 
       <div class="modal-header">
