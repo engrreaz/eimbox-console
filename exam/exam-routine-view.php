@@ -56,21 +56,21 @@ if ($action == 'fetch') {
     <div>
         <b>Exam Routine</b>
         <div id="routine-info" class="d-flex">
-            <div>
+            <div >
                 <div class="small">Session</div>
                 <div class="fs-5 fw-bold"><?= $sessionyear ?? '' ?></div>
             </div>
-            <div class="vr"></div>
+            <div class="vr mx-3"></div>
             <div>
                 <div class="small">Examination</div>
                 <div class="fs-5 fw-bold"><?= $examname ?? '' ?></div>
             </div>
-            <div class="vr"></div>
+            <div class="vr mx-3"></div>
             <div>
                 <div class="small">Class</div>
                 <div class="fs-5 fw-bold"><?= $clsname ?? '' ?></div>
             </div>
-            <div class="vr"></div>
+            <div class="vr mx-3"></div>
             <div>
                 <div class="small">Section</div>
                 <div class="fs-5 fw-bold"><?= $secname ?? '' ?></div>
@@ -149,7 +149,7 @@ if ($action == 'fetch') {
         </tbody>
     </table>
 <?php else: ?>
-    <div id="emptyState" class="alert alert-info text-center">
+    <div id="emptyState" class="alert alert-info text-center mx-4">
         No subject assigned for this exam. Click the button below to add subjects to the routine.
     </div>
 <?php endif; ?>
