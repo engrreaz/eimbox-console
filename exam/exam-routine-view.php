@@ -76,6 +76,7 @@ var_dump($data);
                 <th>Date</th>
                 <th>Time</th>
                 <th>Subject</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -85,6 +86,7 @@ var_dump($data);
                     <td contenteditable="true" class="edit" data-field="time"><?= $row['time'] ?></td>
                     <td contenteditable="true" class="edit" data-field="subcode"><?= $row['subcode'] ?> -
                         <?= $row['subject'] ?></td>
+                        <td><i class="bi bi-trash text-danger" onclick="delSubject(<?= $row['id'] ?>);"></i></td>
                 </tr>
             <?php endforeach; ?>
         </tbody>
