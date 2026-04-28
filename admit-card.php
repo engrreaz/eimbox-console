@@ -28,7 +28,7 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
   @media print {
     .admit-card {
       width: 210mm;
-      height: auto;
+      height: 148mm;
     }
   }
 
