@@ -56,7 +56,7 @@ if ($action == 'fetch') {
 <div class="card-header d-flex justify-content-between">
     <div>
         <b>Exam Routine</b>
-        <div id="routine-info" class="d-flex">
+        <div id="routine-info" class="d-flex mt-2">
             <div >
                 <div class="small">Slot</div>
                 <div class="fs-6 fw-bold"><?= $slot ?? '' ?></div>
