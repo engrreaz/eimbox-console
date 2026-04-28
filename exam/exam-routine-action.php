@@ -133,7 +133,7 @@ if ($action == 'clone') {
             AND examname='$from_exam'
             AND clsname='$from_class'
             AND secname='$from_section'";
-echo $sql;
+
     mysqli_query($conn, $sql);
 
     echo json_encode(['status' => 'success']);
