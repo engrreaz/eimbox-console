@@ -47,7 +47,7 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 
 </div>
 
-<div class="modal fade" id="addModal">
+<div class="modal fade" id="addModalRoutine">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
 
@@ -157,11 +157,11 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
   let cloneModalInstance;
 
   $(document).ready(function () {
-    addModalInstance = new bootstrap.Modal(document.getElementById('addModal'));
+    addModalInstance = new bootstrap.Modal(document.getElementById('addModalRoutine'));
     cloneModalInstance = new bootstrap.Modal(document.getElementById('cloneModal'));
 
     function openAddModal() {
-      const el = document.getElementById('addModal');
+      const el = document.getElementById('addModalRoutine');
       if (!el) {
         console.log('Add modal not found');
         return;
@@ -171,7 +171,7 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
     }
 
     function closeAddModal() {
-      const el = document.getElementById('addModal');
+      const el = document.getElementById('addModalRoutine');
       const modal = bootstrap.Modal.getInstance(el);
       if (modal) {
         modal.hide();
