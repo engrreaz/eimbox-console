@@ -286,7 +286,7 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 
       if (res.status == 'success') {
 
-        $('#addModal').modal('hide');
+        addModalInstance.hide();
 
         loadRoutine(); // reload table
 
@@ -362,7 +362,7 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 
       if (res.status == 'success') {
 
-        $('#cloneModal').modal('hide');
+       cloneModalInstance.hide();
         loadRoutine();
 
       } else {
