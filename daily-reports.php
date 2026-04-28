@@ -151,7 +151,7 @@ $sessionyear = $_COOKIE['chain-session'] ?? date('Y');
 
           body {
               font-family: "IBM Plex Mono", monospace;
-              margin-bottom:50px;
+              margin-bottom:40px;
           }
 
           .print-footer {
