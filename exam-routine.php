@@ -324,7 +324,7 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
       examname: $('#clone_exam').val(),
       clsname: $('#clone_class').val(),
       secname: $('#clone_section').val(),
-      sccode: params.sccode
+
     }, function (res) {
 
       let html = '';
