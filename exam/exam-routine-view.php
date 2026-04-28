@@ -4,7 +4,6 @@ require_once '../core/config.php';
 require_once '../core/db.php';
 require_once '../core/global_values.php';
 
-header('Content-Type: application/json');
 
 $sccode = $_POST['sccode'] ?? '';
 $sessionyear = $_POST['sessionyear'] ?? '';
@@ -28,7 +27,7 @@ if ($action == 'fetch') {
             AND r.clsname='$clsname'
             AND r.secname='$secname'
             ORDER BY r.date, r.time";
-
+echo $sql;
     $res = mysqli_query($conn, $sql);
 
     $data = [];
