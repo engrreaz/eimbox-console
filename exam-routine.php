@@ -51,6 +51,7 @@ function chainBtnFunc() {
         url: 'exam/exam-routine-view.php',
         type: 'POST',
         data: {
+            action: 'fetch',
             slot: slot,
             sessionyear: sessionyear,
             classname: classname,
