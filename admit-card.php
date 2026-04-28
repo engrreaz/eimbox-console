@@ -161,9 +161,17 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 </script>
 
 <script>
+
+
+  let settingsModal;
+
+  $(document).ready(function () {
+    settingsModal = new bootstrap.Modal(document.getElementById('settingsModal'));
+  });
   function openSettings() {
-    $('#settingsModal').modal('show');
+    settingsModal.show();
   }
+
 </script>
 
 <script>
