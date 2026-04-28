@@ -202,9 +202,10 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 
       if (res.status == 'success') {
         console.log('Updated');
-        toastr.success("Updated successfully");
+        showToast('success', 'Updated successfully', 'Update Routine');
+
       } else {
-        alert('Update failed');
+        sweetAlert('Error', 'Update failed', 'error');
       }
 
     }, 'json');
@@ -225,8 +226,9 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 
       if (res.status == 'success') {
         tr.remove();
+        showToast('success', 'Deleted successfully', 'Delete Routine');
       } else {
-        alert('Delete failed');
+        sweetAlert('Error', 'Delete failed', 'error');
       }
 
     }, 'json');
