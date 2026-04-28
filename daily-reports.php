@@ -44,6 +44,7 @@ $sessionyear = $_COOKIE['chain-session'] ?? date('Y');
 
       <form id="reportForm" class="row g-3">
 
+
         <div class="col-md-2">
           <label class="form-label">Slot</label>
           <select name="slot" class="form-control form-control-sm">
@@ -182,6 +183,7 @@ $sessionyear = $_COOKIE['chain-session'] ?? date('Y');
       </style>
       `;
 
+      
     let content = document.getElementById('reportArea').innerHTML;
 
     let w = window.open('', '', 'width=900,height=700');
