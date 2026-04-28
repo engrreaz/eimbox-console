@@ -239,7 +239,8 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 
 <script>
   function openAddModal() {
-    $('#addModal').modal('show');
+    var modal = new bootstrap.Modal(document.getElementById('addModal'));
+    modal.show();
   }
 
   function saveSubject() {
@@ -281,10 +282,10 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 
 
 <script>
-function openCloneModal(){
+  function openCloneModal() {
     var modal = new bootstrap.Modal(document.getElementById('cloneModal'));
     modal.show();
-}
+  }
 
   function previewClone() {
 
