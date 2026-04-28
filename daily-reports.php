@@ -146,7 +146,7 @@ $sessionyear = $_COOKIE['chain-session'] ?? date('Y');
 
           @page {
               size: A4;       
-              margin: 10mm 10mm 5mm 15mm;  /* bottom margin বাড়ানো */
+              margin: 10mm 10mm 15mm 15mm;  /* bottom margin বাড়ানো */
           }
 
           body {
