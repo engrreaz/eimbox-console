@@ -155,19 +155,24 @@ $students = [
             </div>
 
             <!-- STUDENT INFO -->
-            <div class="d-flex justify-content-between">
-                <div>
-                    <b><?php echo $st['stnameeng']; ?></b><br>
-                    Class: <b><?php echo $st['classname']; ?></b>
-                    Section: <b><?php echo $st['sectionname']; ?></b>
-                    Roll: <b><?php echo $st['rollno']; ?></b><br>
-                    ID: <?php echo $st['stid']; ?>
-                </div>
+            <table>
+                <tr>
+                    <td>
+                        <b><?php echo $st['stnameeng']; ?></b><br>
+                        Class: <b><?php echo $st['classname']; ?></b>
+                        Section: <b><?php echo $st['sectionname']; ?></b>
+                        Roll: <b><?php echo $st['rollno']; ?></b><br>
+                        ID: <?php echo $st['stid']; ?>
+                    </td>
 
-                <div>
-                    <img src="http://www.eimbox.com/admit/noimg.jpg" height="90" style="border:1px solid #000;">
-                </div>
-            </div>
+                    <td style="width:80px; text-align:right;">
+                        <img src="http://www.eimbox.com/admit/noimg.jpg" height="90" style="border:1px solid #000;">
+
+                    </td>
+                </tr>
+            </table>
+
+
 
             <table>
                 <tr>
@@ -228,7 +233,7 @@ $students = [
                             <tr>
                                 <td colspan="2" style="font-size:8px;">
                                     <?php echo $scname; ?><br>
-                                    <?php echo $scaddress ; ?>
+                                    <?php echo $scaddress; ?>
                                 </td>
                             </tr>
                         </table>
