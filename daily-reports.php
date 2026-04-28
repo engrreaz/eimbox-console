@@ -146,12 +146,12 @@ $sessionyear = $_COOKIE['chain-session'] ?? date('Y');
 
           @page {
               size: A4;       
-              margin: 10mm 10mm 10mm 15mm;  /* bottom margin বাড়ানো */
+              margin: 10mm 10mm 13mm 15mm;  /* bottom margin বাড়ানো */
           }
 
           body {
               font-family: "IBM Plex Mono", monospace;
-              margin-bottom: 30px; /* 🔥 footer এর জন্য জায়গা */
+              margin-bottom: 40px; /* 🔥 footer এর জন্য জায়গা */
           }
 
           .print-footer {
@@ -159,7 +159,7 @@ $sessionyear = $_COOKIE['chain-session'] ?? date('Y');
               bottom: 0;
               left: 0;
               width: 100%;
-              height: 20px;
+              height: 30px;
               text-align: center;
               font-size: 12px;
               background: #fff; /* overlap হলে clean দেখাবে */
