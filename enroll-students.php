@@ -697,7 +697,7 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
     }
 
     // Save values on change/click
-    $("#medium, #version, #slot, #session, #class, #section, #rollno").on("change click", function () {
+    $("#medium, #version, #slot, #session, #class, #section, #rollno").on("change", function () {
         saveValue($(this).attr("id"));
     });
 
@@ -962,7 +962,10 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
 
         if (savedMedium) $("#medium").val(savedMedium).trigger("change");
         if (savedVersion) $("#version").val(savedVersion).trigger("change");
-        if (savedSlot) $("#slot").val(savedSlot).trigger("change");
+        if (savedSlot) {
+            $("#slot").val("");
+            $("#slot").val(savedSlot).trigger("change");
+        } 
     });
 </script>
 
