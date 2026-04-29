@@ -735,7 +735,9 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
     }
 
     $("#slot").on("change", function () {
+
         const slot = $(this).val();
+        console.log("Slot changed:", slot);
         if (!slot) return;
 
         loadOptions("components/get-session.php?slot=" + slot, "session", function () {
