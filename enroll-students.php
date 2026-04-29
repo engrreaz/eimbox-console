@@ -830,7 +830,7 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
 
 
 
-                $("#photoPreview").attr("src", <?= student_profile_image_path(0) ?>);
+                $("#photoPreview").attr("src", "<?= student_profile_image_path($stid) ?>");
 
 
 
