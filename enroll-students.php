@@ -5,6 +5,12 @@
 
 setcookie("enroll_save", "next", time() + (86400 * 30), "/");
 $enroll_action = $_COOKIE['enroll_save'] ?? "blank";
+if (isset($_GET['stid']))
+    $enroll_action = 'back';
+
+
+
+
 
 // echo $enroll_action;
 $sql = "SELECT st_entry_fld FROM usersapp 
@@ -158,7 +164,7 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
                         <label class="form-label">Medium</label>
                         <select id="medium" class="form-select form-select-sm">
                             <option value="">Select</option>
-                            <option value="Bangla">Bangla</option>
+                            <option value="Bengali">Bengali</option>
                             <option value="English">English</option>
                         </select>
                     </div>
@@ -167,7 +173,7 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
                         <label class="form-label">Version</label>
                         <select id="version" class="form-select form-select-sm">
                             <option value="">Select</option>
-                            <option value="Bangla">Bangla</option>
+                            <option value="Bengali">Bengali</option>
                             <option value="English">English</option>
                         </select>
                     </div>
@@ -228,7 +234,7 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
 
             <div class="col-md-2 text-end p-3">
                 <div id="photobox p-3">
-                    <img id="stphoto" src="<?= student_profile_image_path($stid) ?>"
+                    <img id="stphoto" src=""
                         style="height:130px; width:103px; border-radius:5px; border:1px solid gray;" />
                 </div>
 
@@ -378,7 +384,7 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
     <!-- ============================================================= -->
 
     <div class="card mb-4">
-        <div class="card-header fw-bold"> Address</div>
+        <div class="card-header fw-bold"> Address (Present)</div>
         <div class="card-body row g-3">
             <div class="col-md-3">
                 <label>Village</label>
@@ -396,7 +402,14 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
                 <label>District</label>
                 <input type="text" id="predist" class="form-control form-control-sm">
             </div>
+        </div>
 
+
+        <div class="card-header fw-bold">
+            Address (Permanent)
+            <button class="btn btn-dark btn-sm float-end" onclick="sameAddress();">Same as Present</button>
+        </div>
+        <div class="card-body row g-3">
 
             <div class="col-md-3">
                 <label>Village</label>
@@ -429,7 +442,7 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
 
             <div class="col-md-3">
                 <label>DOB</label>
-                <input type="text" id="dob" class="form-control form-control-sm">
+                <input type="date" id="dob" class="form-control form-control-sm">
             </div>
 
             <div class="col-md-3">
@@ -439,6 +452,7 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
                     <option value="Islam">Islam</option>
                     <option value="Hindu">Hindu</option>
                     <option value="Christian">Christian</option>
+                    <option value="Buddist">Buddist</option>
                 </select>
             </div>
 
@@ -458,7 +472,17 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
 
             <div class="col-md-3">
                 <label>Blood Group</label>
-                <input type="text" id="bgroup" class="form-control form-control-sm">
+                <select id="bgroup" class="form-select form-select-sm">
+                    <option value="">Select Blood Group</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                </select>
             </div>
 
             <div class="col-md-3">
@@ -473,7 +497,10 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
 
             <div class="col-md-3">
                 <label>Disability</label>
-                <input type="text" id="disables" class="form-control form-control-sm">
+                <select id="disables" class="form-select form-select-sm">
+                    <option value="0">Disabled</option>
+                    <option value="1">Not Disabled</option>
+                </select>
             </div>
 
         </div>
@@ -588,19 +615,19 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
                     <input type="file" id="photoFile" class="form-control form-control-sm">
                     <input type="hidden" id="photoid">
                 </div>
-                <div class="col-md-2">
-                    <button class="btn btn-dark btn-sm py-2 mt-1 w-100" id="btnCrop">Crop & Upload</button>
 
-                </div>
 
                 <div class="col-md-3">
-                    <img id="photoPreview" src="<?= student_profile_image_path($stid) ?>" class="img-thumbnail"
+                    <img id="photoPreview" src="" class="img-thumbnail"
                         style="height:40px;">
                 </div>
 
+                <div class="col-md-2">
+                    <button class="btn btn-dark btn-sm py-2  w-100" id="btnCrop">Crop & Upload</button>
+                </div>
 
                 <div class="col-md-3 text-end">
-                    <button id="btnSave" class="btn btn-primary btn-sm p-3 w-100 fs-6">
+                    <button id="btnSave" class="btn btn-primary btn-sm w-100 fs-6">
                         <i class="bi bi-check-circle pe-5"></i> Save Enrollment
                     </button>
                 </div>
@@ -628,6 +655,14 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
     $('#entry_action').val('<?= $enroll_action ?>');
 
 
+    function sameAddress() {
+        // alert('trigger');
+        $('#pervill').val($('#previll').val());
+        $('#perpo').val($('#prepo').val());
+        $('#perps').val($('#preps').val());
+        $('#perdist').val($('#predist').val());
+        $('#perdist').focus();
+    }
 
 </script>
 
@@ -680,6 +715,7 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
         if (!st) return;
         $.post('student/get-student-photo.php', { id: st }, function (imgPath) {
             $("#stphoto").attr("src", imgPath);
+            $("#photoPreview").attr("src", imgPath);
         });
     });
     // ===========================
@@ -697,7 +733,7 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
     }
 
     // Save values on change/click
-    $("#medium, #version, #slot, #session, #class, #section, #rollno").on("change", function () {
+    $("#medium, #version, #slot, #session, #class, #section, #rollno").on("change click", function () {
         saveValue($(this).attr("id"));
     });
 
@@ -735,9 +771,8 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
     }
 
     $("#slot").on("change", function () {
-
+        console.log('Trigger....................');
         const slot = $(this).val();
-        console.log("Slot changed:", slot);
         if (!slot) return;
 
         loadOptions("components/get-session.php?slot=" + slot, "session", function () {
@@ -746,6 +781,36 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
         });
     });
 
+
+    function changeSection() {
+        const savedRoll = loadValue("rollno");
+        console.log('savedRoll:', savedRoll);
+        if (savedRoll) $("#rollno").val(savedRoll).trigger("change");
+        console.log('Section changed, trigger fetch');
+        $("#btnFetch").trigger("click");
+    }
+
+    function triggerClassChange() {
+        console.log('Class changed, load sections');
+        const slot = $("#slot").val();
+        const session = $("#session").val();
+        const className = $("#class").val();
+        if (!className) return;
+
+        loadOptions(`components/get-section.php?slot=${slot}&session=${session}&class=${className}`, "section", function () {
+            const savedSection = loadValue("section");
+            console.log('savedSection:', savedSection);
+            if (savedSection) {
+                console.log('Trigger section change');
+                $("#section").val(savedSection);
+                changeSection();
+            }
+
+        });
+    }
+
+
+
     $("#session").on("change", function () {
         const slot = $("#slot").val();
         const session = $(this).val();
@@ -753,27 +818,60 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
 
         loadOptions(`components/get-class.php?slot=${slot}&session=${session}`, "class", function () {
             const savedClass = loadValue("class");
-            if (savedClass) $("#class").val(savedClass).trigger("change");
+            if (savedClass) {
+                console.log('Trigger class change');
+                $("#class").val(savedClass);
+                console.log('class name set to:', savedClass);
+                triggerClassChange();
+            }
         });
     });
+
+
 
     $("#class").on("change", function () {
+        triggerClassChange();
+    });
+
+    $("#section").on("change", function () {
+        changeSection();
+    });
+
+
+
+
+    function loadSection() {
         const slot = $("#slot").val();
         const session = $("#session").val();
-        const className = $(this).val();
-        if (!className) return;
+        const className = $("#class").val();
 
-        loadOptions(`components/get-section.php?slot=${slot}&session=${session}&class=${className}`, "section", function () {
-            const savedSection = loadValue("section");
-            if (savedSection) $("#section").val(savedSection).trigger("change");
-        });
-    });
+        if (!className) {
+            console.log("Class empty, skip section load");
+            return;
+        }
 
-    $("#section").on("change click", function () {
-        const savedRoll = loadValue("rollno");
-        if (savedRoll) $("#rollno").val(savedRoll).trigger("change");
-        $("#btnFetch").trigger("click");
-    });
+        console.log("Calling get-section.php...");
+
+        loadOptions(
+            `components/get-section.php?slot=${slot}&session=${session}&class=${className}`,
+            "section",
+            function () {
+                console.log("Section loaded");
+
+                const savedSection = loadValue("section");
+                if (savedSection) {
+                    $("#section").val(savedSection).trigger("change");
+                }
+            }
+        );
+    }
+
+    // $("#class").on("change", function () {
+    //     loadSection();
+    // });
+
+
+
 
     // ===========================
     // AUTO GENERATE STID FOR NEW STUDENT
@@ -815,7 +913,15 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
                     $("#" + id).val(res.data[id]);
                 });
                 showToast('info', 'Student Found ' + res.data['stnameeng'], 'Found');
-                $("#stphoto").attr("src", "<?= student_profile_image_path($stid) ?>");
+                // console.log(JSON.stringify(res.data));
+                console.log("segs" + JSON.stringify(res.data['photo_path']));
+
+                let img = $("#stphoto");
+                img.attr("src", "");
+                img.attr("src", res.data['photo_path'] );
+                img.attr("src", res.data['photo_path'] );
+                $("#stid").trigger("click");
+
             } else {
                 // New student
                 generateStid();
@@ -830,7 +936,7 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
 
 
 
-                $("#photoPreview").attr("src", "<?= student_profile_image_path($stid) ?>");
+                $("#photoPreview").attr("src", res.data['photo_path']);
 
 
 
@@ -897,7 +1003,7 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
                 processData: false,
                 success: function (resp) {
                     $("#photoid").val(resp);
-                    $("#photoPreview").attr("src", "students/" + resp);
+                    $("#photoPreview").attr("src", resp);
                     cropper.destroy();
                     cropper = null;
 
@@ -922,13 +1028,23 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
             if (res === "SUCCESS") {
                 showToast("success", "Saved Successfully", "Done");
                 const enroll_action = "<?php echo $enroll_action; ?>";
+                // alert(enroll_action);
 
-                if (enroll_action === "next") {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Profile Saved Successfully',
+                    timer: 1000, // 1 second
+                    timerProgressBar: true,
+                    showConfirmButton: false
+                });
+
+                if (enroll_action == "next") {
 
                     let nextRoll = parseInt($("#rollno").val()) + 1;
 
                     // next roll store for after reload
                     sessionStorage.setItem("next_roll", nextRoll);
+                    localStorage.setItem("enroll-students_rollno", nextRoll);
 
                     // reload page
                     location.reload();
@@ -962,10 +1078,7 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
 
         if (savedMedium) $("#medium").val(savedMedium).trigger("change");
         if (savedVersion) $("#version").val(savedVersion).trigger("change");
-        if (savedSlot) {
-            $("#slot").val("");
-            $("#slot").val(savedSlot).trigger("change");
-        } 
+        if (savedSlot) $("#slot").val(savedSlot).trigger("change");
     });
 </script>
 
@@ -1118,6 +1231,104 @@ $display_name = array("Student_Name_English", "Student_Name_Bengali", "Father_Na
 
 
 </script>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", async () => {
+
+        const params = new URLSearchParams(window.location.search);
+        const stid = params.get("stid");
+        const sy = params.get("sy");
+        if (!stid) return;
+
+        const res = await fetch("student/fetch-single.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({ stid, sy })
+        });
+
+        const data = await res.json();
+
+        // basic
+        $("#version").val(data.version);
+        $("#medium").val(data.medium);
+        $("#rollno").val(data.rollno);
+        $("#stid").val(data.stid);
+
+        // 🔥 STEP 1: SLOT → SESSION
+        $("#slot").val(data.slot);
+
+        loadOptions(
+            "components/get-session.php?slot=" + data.slot,
+            "session",
+            function () {
+
+                $("#session").val(data.sessionyear);
+
+                // 🔥 STEP 2: SESSION → CLASS
+                loadOptions(
+                    `components/get-class.php?slot=${data.slot}&session=${data.sessionyear}`,
+                    "class",
+                    function () {
+
+                        $("#class").val(data.classname);
+
+                        // 🔥 STEP 3: CLASS → SECTION
+                        loadOptions(
+                            `components/get-section.php?slot=${data.slot}&session=${data.sessionyear}&class=${data.classname}`,
+                            "section",
+                            function () {
+
+                                $("#section").val(data.sectionname);
+
+                                // FINAL
+                                $("#btnFetch").trigger("click");
+
+                            }
+                        );
+
+                    }
+                );
+
+            }
+        );
+
+    });
+</script>
+
+
+<script>
+    function toTitleCase(str) {
+        return str.toLowerCase().replace(/\b\w/g, function (char) {
+            return char.toUpperCase();
+        });
+    }
+
+    document.querySelectorAll('input[type="text"]').forEach(input => {
+
+        // 👉 focus হলে পুরো text select
+        input.addEventListener('focus', function () {
+            this.select();
+        });
+
+        // 👉 blur হলে Title Case
+        input.addEventListener('blur', function () {
+            if (this.value.trim() !== '') {
+                this.value = toTitleCase(this.value);
+            }
+        });
+
+    });
+
+    $("#rollno").on("keydown", function (e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            $("#btnFetch").trigger("click");
+        }
+    });
+</script>
+
+
 
 </body>
 
