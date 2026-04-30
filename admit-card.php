@@ -95,7 +95,7 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 
 
 <script>
-  function chainBtnFunc() {
+  function chainBtnFunc(mode = 'preview') {
 
     let slot = $('#slot-main').val();
     let sessionyear = $('#session-main').val();
@@ -104,48 +104,69 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
     let exam = $('#exam-main').val();
 
     $.ajax({
-      url: 'exam/exam-routine-admit-card.php',
-      type: 'POST',
-      data: {
-        action: 'admit',
-        slot: slot,
-        sessionyear: sessionyear,
-        classname: classname,
-        sectionname: sectionname,
-        exam: exam
-      },
-      beforeSend: function () {
-        $('#result-area').html('<div class="alert alert-primary text-center">Loading...</div>');
-      },
-      success: function (res) {
-        $('#result-area').html(res);
-      },
-      error: function () {
-        $('#result-area').html('<div class="text-danger">Failed to load data</div>');
-      }
+        url: 'exam/exam-routine-admit-card.php',
+        type: 'POST',
+        data: {
+            action: 'admit',
+            mode: mode, // 🔥 add this
+            slot,
+            sessionyear,
+            classname,
+            sectionname,
+            exam
+        },
+        success: function (res) {
+            $('#result-area').html(res);
+        }
     });
-
-  }
+}
 </script>
 
+<script>
+  function waitForImagesAndPrint(win) {
+    let images = win.document.images;
+    let total = images.length;
+    let loaded = 0;
+
+    if (total === 0) {
+        win.print();
+        return;
+    }
+
+    for (let img of images) {
+        if (img.complete) {
+            loaded++;
+        } else {
+            img.onload = img.onerror = function () {
+                loaded++;
+                if (loaded === total) win.print();
+            };
+        }
+    }
+
+    if (loaded === total) win.print();
+}
+</script>
 
 <script>
-  function printAdmit() {
-    let content = document.getElementById('routineTable').innerHTML;
+ function printAdmit() {
+    // 🔥 load FULL data first
+    chainBtnFunc('print');
 
-    let win = window.open('', '', 'width=900,height=700');
-    win.document.write(`
-        <html>
-        <head>
-            <title>Print Admit</title>
-        </head>
-        <body>${content}</body>
-        </html>
-    `);
+    setTimeout(() => {
+        let content = document.getElementById('routineTable').innerHTML;
 
-    win.document.close();
-    win.print();
-  }
+        let win = window.open('', '', 'width=900,height=700');
+
+        win.document.write(`<html><body>${content}</body></html>`);
+        win.document.close();
+
+        win.onload = function () {
+            waitForImagesAndPrint(win);
+        };
+
+    }, 1000); // wait for ajax
+}
 </script>
 
 
