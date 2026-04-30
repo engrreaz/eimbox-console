@@ -182,7 +182,7 @@ while ($row = mysqli_fetch_assoc($resStudent)) {
                         <img src="https://eimbox.com/logo/<?php echo $sccode; ?>.png" height="60">
                     </td>
                     <td style="padding-left:10px;">
-                        <h5 style="line-height:12px;"><?php echo $scname; ?></h5>
+                        <h5 style="line-height:10px;"><?php echo $scname; ?></h5>
                         <small><?php echo $scaddress; ?></small><br>
                         <small>Contact: <?php echo $scmobile; ?></small><br>
                         <small>Email : <?= $scmail ?>, Web : <?= $scweb ?></small>
