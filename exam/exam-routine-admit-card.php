@@ -174,7 +174,7 @@ while ($row = mysqli_fetch_assoc($resStudent)) {
     foreach ($students as $st) {
         ?>
         <div class="admit-card mb-4 p-3 border"
-            style="background:url('assets/admit/sample_02.png'); background-size:cover; padding:7mm;">
+            style="width:210mm; height:148mm; background:url('assets/admit/sample_02.png'); background-size:cover; padding:7mm;">
 
             <!-- HEADER -->
 
@@ -234,26 +234,26 @@ while ($row = mysqli_fetch_assoc($resStudent)) {
             <table style="width:100%;">
                 <tr>
                     <td style="min-width:50%;">
-                        <table class="" style="font-size:11px; ">
+                        <table class="" style="font-size:11px; border-collapse: collapse; ">
                             <tr>
-                                <th style="border:1px solid gray; padding:2px; text-align:center;">Date</th>
-                                <th style="border:1px solid gray; padding:2px; text-align:center;">Day</th>
-                                <th style="border:1px solid gray; padding:2px; text-align:center;">Time</th>
-                                <th style="border:1px solid gray; padding:2px; text-align:center;">Subject</th>
+                                <th style="border:1px solid gray; padding:2px; text-align:center; border-collapse: collapse;">Date</th>
+                                <th style="border:1px solid gray; padding:2px; text-align:center; border-collapse: collapse;">Day</th>
+                                <th style="border:1px solid gray; padding:2px; text-align:center; border-collapse: collapse;">Time</th>
+                                <th style="border:1px solid gray; padding:2px; text-align:center; border-collapse: collapse;">Subject</th>
                             </tr>
 
                             <?php foreach ($data as $r) { ?>
                                 <tr>
-                                    <td style="border:1px solid gray; padding:2px; text-align:center;">
+                                    <td style="border:1px solid gray; padding:2px; text-align:center;  border-collapse: collapse;">
                                         <?= date('d/m/Y', strtotime($r['date'])) ?>
                                     </td>
-                                    <td style="border:1px solid gray; padding:2px; text-align:center;">
+                                    <td style="border:1px solid gray; padding:2px; text-align:center;  border-collapse: collapse;">
                                         <?= date('l', strtotime($r['date'])) ?>
                                     </td>
-                                    <td style="border:1px solid gray; padding:2px; text-align:center;">
+                                    <td style="border:1px solid gray; padding:2px; text-align:center;  border-collapse: collapse;">
                                         <?= date('h:i A', strtotime($r['time'])) ?>
                                     </td>
-                                    <td style="border:1px solid gray; padding:2px; text-align:left;"><?= $r['subject'] ?></td>
+                                    <td style="border:1px solid gray; padding:2px; text-align:left;  border-collapse: collapse;"><?= $r['subject'] ?></td>
                                 </tr>
                             <?php } ?>
                         </table>
