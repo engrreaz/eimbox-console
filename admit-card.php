@@ -207,6 +207,9 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 
     $('#settingsModal').modal('hide');
   }
+
+
+  chainBtnFunc();
 </script>
 <!-- ----------------------------------- -->
 </body>

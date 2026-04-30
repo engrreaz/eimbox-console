@@ -209,8 +209,8 @@ while ($row = mysqli_fetch_assoc($resStudent)) {
 
                         <table style="width:100%">
                             <tr>
-                                <td>Class: <b><?php echo $st['classname']; ?></b></td>
-                                <td>Section: <b><?php echo $st['sectionname']; ?></b></td>
+                                <td>Class: <b><?php echo $clsname; ?></b></td>
+                                <td>Section: <b><?php echo $secname; ?></b></td>
                                 <td>Roll: <b><?php echo $st['rollno']; ?></b></td>
                             </tr>
                         </table>
