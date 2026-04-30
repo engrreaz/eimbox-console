@@ -12,6 +12,7 @@ $secname = $_POST['sectionname'] ?? '';
 $action = $_POST['action'] ?? '';
 $mode = $_POST['mode'] ?? 'preview';
 
+echo $_COOKIE['mark-entry_exam'];
 
 $subjectList = [];
 
