@@ -164,6 +164,11 @@ while ($row = mysqli_fetch_assoc($resStudent)) {
 </div>
 
 <div id="routineTable" class="table table-responsive">
+    <style>
+        body{
+            font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+    </style>
     <?php
     foreach ($students as $st) {
         ?>
