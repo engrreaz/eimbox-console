@@ -94,6 +94,14 @@ while ($row = mysqli_fetch_assoc($resStudent)) {
 
 ?>
 
+<style>
+    .admit-card{
+        height:148mm;
+        border:1px solid #000;
+    }
+</style>
+
+
 <div class="card-header d-flex justify-content-between">
     <div>
         <b>Exam Routine</b>
