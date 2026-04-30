@@ -62,7 +62,7 @@ if ($mode == 'preview') {
                AND si.sessionyear = '$sessionyear'
                AND si.sccode = '$sccode'
                AND si.slot = '$slot'
-               LIMIT 2";
+               LIMIT 1";
 } else {
     $sqlStudent = "SELECT 
                     si.rollno,
@@ -76,7 +76,7 @@ if ($mode == 'preview') {
                AND si.sectionname = '$secname'
                AND si.sessionyear = '$sessionyear'
                AND si.sccode = '$sccode'
-               AND si.slot = '$slot'";
+               AND si.slot = '$slot' LIMIT 4";
 }
 
 $resStudent = mysqli_query($conn, $sqlStudent);
