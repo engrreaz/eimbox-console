@@ -21,7 +21,7 @@ AND ss.sccode = '$sccode'
 AND ss.classname = '$classname'
 AND ss.sectionname = '$sectionname'
 ORDER BY s.subcode";
-echo $sqlSub;
+
 $resSub = mysqli_query($conn, $sqlSub);
 
 while ($rowSub = mysqli_fetch_assoc($resSub)) {
