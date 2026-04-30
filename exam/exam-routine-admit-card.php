@@ -162,15 +162,21 @@ while ($row = mysqli_fetch_assoc($resStudent)) {
             style="background:url('assets/admit/sample_02.png'); background-size:cover;">
 
             <!-- HEADER -->
-            <div class="d-flex align-items-center mb-2">
-                <img src="https://eimbox.com/logo/<?php echo $sccode; ?>.png" height="60">
-                <div class="ms-3">
-                    <h5 class="mb-0"><?php echo $scname; ?></h5>
+
+            <table>
+                <tr>
+                    <td>
+                        <img src="https://eimbox.com/logo/<?php echo $sccode; ?>.png" height="60">
+                    </td>
+                    <td>
+<h5 class="mb-0"><?php echo $scname; ?></h5>
                     <small><?php echo $scaddress; ?></small><br>
                     <small>Contact: <?php echo $scmobile; ?></small><br>
                     <small>Email : <?= $scmail ?>, Web : <?= $scweb ?></small>
-                </div>
-            </div>
+                    </td>
+                </tr>
+            </table>
+           
 
             <!-- TITLE -->
             <div class="text-center mb-2">
