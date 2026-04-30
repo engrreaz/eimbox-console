@@ -14,7 +14,7 @@ $sqlSub = "SELECT s.subcode, s.subject
 FROM subjects s
 INNER JOIN subsetup ss ON s.subcode = ss.subcode
 WHERE s.sccategory = '$sctype'
-AND (s.sccode = '0' OR s.sccode = '$sccode')র্
+AND (s.sccode = '0' OR s.sccode = '$sccode')
 AND ss.slot = '$slot'
 AND ss.sessionyear = '$sessionyear'
 AND ss.sccode = '$sccode'
