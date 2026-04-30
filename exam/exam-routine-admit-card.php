@@ -166,6 +166,9 @@ while ($row = mysqli_fetch_assoc($resStudent)) {
         .admit-card {
             border: none;
         }
+        table{
+            border:0;
+        }
     </style>
     <?php
     foreach ($students as $st) {
