@@ -172,7 +172,7 @@ while ($row = mysqli_fetch_assoc($resStudent)) {
     foreach ($students as $st) {
         ?>
         <div class="admit-card mb-4 p-3 border"
-            style="background:url('assets/admit/sample_02.png'); background-size:cover; padding:12mm;">
+            style="background:url('assets/admit/sample_02.png'); background-size:cover; padding:7mm;">
 
             <!-- HEADER -->
 
@@ -182,7 +182,7 @@ while ($row = mysqli_fetch_assoc($resStudent)) {
                         <img src="https://eimbox.com/logo/<?php echo $sccode; ?>.png" height="60">
                     </td>
                     <td style="padding-left:10px;">
-                        <h5 style="line-height:10px;"><?php echo $scname; ?></h5>
+                        <div style="font-size:20px; font-weight:bold; margin:0; margin-bottom:5px;"><?php echo $scname; ?></div>
                         <small><?php echo $scaddress; ?></small><br>
                         <small>Contact: <?php echo $scmobile; ?></small><br>
                         <small>Email : <?= $scmail ?>, Web : <?= $scweb ?></small>
@@ -262,7 +262,7 @@ while ($row = mysqli_fetch_assoc($resStudent)) {
                         <table style="width:100%; text-align:center;">
                             <tr>
                                 <td colspan="2" style="text-align:left; font-size:10px;">
-                                <h6>Read this instruction :</h6>    
+                                <div style="font-size:16px; font-weight:bold; color:red; margin-bottom:5px;">Read this instruction :</div>    
                                 <ul>
                                         <li>Don’t be late. Report to the hall min 15 min. before the exam
                                             starts.</li>
