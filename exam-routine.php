@@ -10,11 +10,17 @@ $exam = $_COOKIE['chain-exam'] ?? null;
 
 $subjectList = [];
 
-$sqlSub = "SELECT subcode, subject 
-           FROM subjects
-           WHERE sccategory='$sctype'
-           AND (sccode='0' OR sccode='$sccode')
-           ORDER BY subcode";
+$sqlSub = "SELECT s.subcode, s.subject
+FROM subjects s
+INNER JOIN subsetup ss ON s.subcode = ss.subcode
+WHERE s.sccategory = '$sctype'
+AND (s.sccode = '0' OR s.sccode = '$sccode')র্
+AND ss.slot = '$slot'
+AND ss.sessionyear = '$sessionyear'
+AND ss.sccode = '$sccode'
+AND ss.classname = '$classname'
+AND ss.sectionname = '$sectionname'
+ORDER BY s.subcode";
 
 $resSub = mysqli_query($conn, $sqlSub);
 
