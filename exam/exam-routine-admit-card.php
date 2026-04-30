@@ -172,7 +172,7 @@ while ($row = mysqli_fetch_assoc($resStudent)) {
     foreach ($students as $st) {
         ?>
         <div class="admit-card mb-4 p-3 border"
-            style="background:url('assets/admit/sample_02.png'); background-size:cover;">
+            style="background:url('assets/admit/sample_02.png'); background-size:cover; padding:12mm;">
 
             <!-- HEADER -->
 
@@ -192,9 +192,11 @@ while ($row = mysqli_fetch_assoc($resStudent)) {
 
 
             <!-- TITLE -->
-            <div class="text-center mb-2">
+            <div style="text-align:center; margin-top:15px;">
                 <img src="assets/admit/admit.png" height="35px"><br>
-                <b><?php echo $examname . ' Examination - ' . $sessionyear; ?></b>
+                <span style="color:teal; font-weight:bold;">
+                    <?php echo $examname . ' Examination - ' . $sessionyear; ?>
+                </span>
             </div>
 
             <!-- STUDENT INFO -->
@@ -202,14 +204,24 @@ while ($row = mysqli_fetch_assoc($resStudent)) {
                 <tr>
                     <td>
                         <b><?php echo $st['stnameeng']; ?></b><br>
-                        Class: <b><?php echo $st['classname']; ?></b>
-                        Section: <b><?php echo $st['sectionname']; ?></b>
-                        Roll: <b><?php echo $st['rollno']; ?></b><br>
+                        <b><?php echo $st['stnameben']; ?></b><br>
                         ID: <?php echo $st['stid']; ?>
+
+                        <table style="width:100%">
+                            <tr>
+                                <td>Class: <b><?php echo $st['classname']; ?></b></td>
+                                <td>Section: <b><?php echo $st['sectionname']; ?></b></td>
+                                <td>Roll: <b><?php echo $st['rollno']; ?></b></td>
+                            </tr>
+                        </table>
+
+
+
+
                     </td>
 
-                    <td style="width:80px; text-align:right;">
-                        <img src="http://www.eimbox.com/admit/noimg.jpg" height="90" style="border:1px solid #000;">
+                    <td style="width:80px; text-align:right; padding-left:5mm;">
+                        <img src="https://www.eimbox.com/students/<?= $st['stid'] ?>.jpg" height="90" style="border:1px solid #000;">
 
                     </td>
                 </tr>
@@ -217,9 +229,9 @@ while ($row = mysqli_fetch_assoc($resStudent)) {
 
 
 
-            <table>
+            <table style="width:100%;">
                 <tr>
-                    <td>
+                    <td style="min-width:50%;">
                         <table class="" style="font-size:11px; ">
                             <tr>
                                 <th style="border:1px solid gray; padding:2px; text-align:center;">Date</th>
@@ -250,7 +262,8 @@ while ($row = mysqli_fetch_assoc($resStudent)) {
                         <table style="width:100%; text-align:center;">
                             <tr>
                                 <td colspan="2" style="text-align:left; font-size:10px;">
-                                    <ul>
+                                <h6>Read this instruction :</h6>    
+                                <ul>
                                         <li>Don’t be late. Report to the hall min 15 min. before the exam
                                             starts.</li>
                                         <li>Carry your admit card and occupy the seat where your roll is marked.
