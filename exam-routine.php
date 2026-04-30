@@ -12,7 +12,7 @@ $subjectList = [];
 
 $sqlSub = "SELECT s.subcode, s.subject
 FROM subjects s
-INNER JOIN subsetup ss ON s.subcode = ss.subcode
+INNER JOIN subsetup ss ON s.subcode = ss.subject
 WHERE s.sccategory = '$sctype'
 AND (s.sccode = '0' OR s.sccode = '$sccode')
 AND ss.slot = '$slot'
