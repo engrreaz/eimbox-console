@@ -174,7 +174,7 @@ while ($row = mysqli_fetch_assoc($resStudent)) {
     foreach ($students as $st) {
         ?>
         <div class="admit-card mb-4 p-3 border"
-            style="margin:auto; width:210mm; height:145.5mm; overflow-y: hidden; background:url('assets/admit/sample_02.png'); background-size:cover; padding:7mm;">
+            style="margin:auto; width:210mm; height:145mm; overflow-y: hidden; background:url('assets/admit/sample_02.png'); background-size:cover; padding:7mm;">
 
             <!-- HEADER -->
 
