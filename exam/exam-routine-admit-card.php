@@ -49,14 +49,34 @@ while ($row = mysqli_fetch_assoc($res)) {
 
 
 if ($mode == 'preview') {
-    $sqlStudent = "SELECT * FROM students 
-                   WHERE classname='$clsname' 
-                   AND sectionname='$secname'
-                   LIMIT 2";
+    $sqlStudent = "SELECT 
+                    si.rollno,
+                    si.stid,
+                    st.stnameeng,
+                    st.stnameben
+               FROM sessioninfo si
+               INNER JOIN students st 
+                    ON si.stid = st.stid
+               WHERE si.classname = '$clsname'
+               AND si.sectionname = '$secname'
+               AND si.sessionyear = '$sessionyear'
+               AND si.sccode = '$sccode'
+               AND si.slot = '$slot'
+               LIMIT 2";
 } else {
-    $sqlStudent = "SELECT * FROM students 
-                   WHERE classname='$clsname' 
-                   AND sectionname='$secname'";
+    $sqlStudent = "SELECT 
+                    si.rollno,
+                    si.stid,
+                    st.stnameeng,
+                    st.stnameben
+               FROM sessioninfo si
+               INNER JOIN students st 
+                    ON si.stid = st.stid
+               WHERE si.classname = '$clsname'
+               AND si.sectionname = '$secname'
+               AND si.sessionyear = '$sessionyear'
+               AND si.sccode = '$sccode'
+               AND si.slot = '$slot'";
 }
 
 $resStudent = mysqli_query($conn, $sqlStudent);
@@ -192,11 +212,14 @@ while ($row = mysqli_fetch_assoc($resStudent)) {
                             <?php foreach ($data as $r) { ?>
                                 <tr>
                                     <td style="border:1px solid gray; padding:2px; text-align:center;">
-                                        <?= date('d/m/Y', strtotime($r['date'])) ?></td>
+                                        <?= date('d/m/Y', strtotime($r['date'])) ?>
+                                    </td>
                                     <td style="border:1px solid gray; padding:2px; text-align:center;">
-                                        <?= date('l', strtotime($r['date'])) ?></td>
+                                        <?= date('l', strtotime($r['date'])) ?>
+                                    </td>
                                     <td style="border:1px solid gray; padding:2px; text-align:center;">
-                                        <?= date('h:i A', strtotime($r['time'])) ?></td>
+                                        <?= date('h:i A', strtotime($r['time'])) ?>
+                                    </td>
                                     <td style="border:1px solid gray; padding:2px; text-align:left;"><?= $r['subject'] ?></td>
                                 </tr>
                             <?php } ?>
