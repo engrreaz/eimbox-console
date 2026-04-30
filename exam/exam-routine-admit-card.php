@@ -196,7 +196,7 @@ while ($row = mysqli_fetch_assoc($resStudent)) {
             <!-- TITLE -->
             <div style="text-align:center; margin-top:15px;">
                 <img src="assets/admit/admit.png" height="35px"><br>
-                <span style="color:teal; font-weight:bold;">
+                <span style="color:teal; font-weight:bold; font-size:15px;">
                     <?php echo $examname . ' Examination - ' . $sessionyear; ?>
                 </span>
             </div>
