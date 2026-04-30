@@ -164,7 +164,6 @@ while ($row = mysqli_fetch_assoc($resStudent)) {
         }
 
         .admit-card {
-            height: 148mm;
             border: none;
         }
     </style>
