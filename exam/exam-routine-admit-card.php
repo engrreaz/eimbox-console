@@ -233,7 +233,7 @@ while ($row = mysqli_fetch_assoc($resStudent)) {
 
             <table style="width:100%;">
                 <tr>
-                    <td style="width:50%;">
+                    <td style="width:45%;">
                         <table style="width:100%; font-size:11px; border-collapse: collapse; ">
                             <tr>
                                 <th style="border:1px solid gray; padding:2px; text-align:center; border-collapse: collapse;">Date</th>
@@ -260,7 +260,7 @@ while ($row = mysqli_fetch_assoc($resStudent)) {
                     </td>
 
 
-                    <td style="width:50%;">
+                    <td style="width:55%;">
                         <table style="width:100%; text-align:center;">
                             <tr>
                                 <td colspan="2" style="text-align:left; font-size:10px;">
