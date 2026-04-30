@@ -95,9 +95,9 @@ while ($row = mysqli_fetch_assoc($resStudent)) {
 ?>
 
 <style>
-    .admit-card{
-        height:148mm;
-        border:1px solid #000;
+    .admit-card {
+        height: 148mm;
+        border: 1px solid #000;
     }
 </style>
 
@@ -172,20 +172,20 @@ while ($row = mysqli_fetch_assoc($resStudent)) {
 
             <!-- HEADER -->
 
-            <table>
+            <table style="margin:auto;">
                 <tr>
                     <td>
                         <img src="https://eimbox.com/logo/<?php echo $sccode; ?>.png" height="60">
                     </td>
-                    <td>
-<h5 class="mb-0"><?php echo $scname; ?></h5>
-                    <small><?php echo $scaddress; ?></small><br>
-                    <small>Contact: <?php echo $scmobile; ?></small><br>
-                    <small>Email : <?= $scmail ?>, Web : <?= $scweb ?></small>
+                    <td style="padding-left:10px;">
+                        <h5 style="line-height:1.2;"><?php echo $scname; ?></h5>
+                        <small><?php echo $scaddress; ?></small><br>
+                        <small>Contact: <?php echo $scmobile; ?></small><br>
+                        <small>Email : <?= $scmail ?>, Web : <?= $scweb ?></small>
                     </td>
                 </tr>
             </table>
-           
+
 
             <!-- TITLE -->
             <div class="text-center mb-2">
