@@ -38,7 +38,7 @@ $sql = "SELECT r.id, r.date, r.time, r.subcode, s.subject
             AND r.clsname='$clsname'
             AND r.secname='$secname'
             ORDER BY r.date, r.time";
-echo $sql;
+
 $res = mysqli_query($conn, $sql);
 
 $data = [];
