@@ -13,7 +13,7 @@ $students_list = [];
 if (!empty($class) && !empty($sessionyear)) {
     $stmt = $conn->prepare("
         SELECT 
-           si.id, si.stid, si.rollno,
+           si.id, si.stid, si.rollno, si.icardst,
             s.stnameeng, s.stnameben, s.fname, s.mname, 
             s.previll, s.prepo, s.preps, s.predist
         FROM sessioninfo AS si
@@ -145,6 +145,23 @@ if (!empty($class) && !empty($sessionyear)) {
                                 </td>
                                 <td class="text-center">
                                     <div class="dropdown">
+                                        <?php
+                                        $status_card = $st['icardst'];
+                                        if ($status_card == 1) {
+                                            $icon = 'card-text';
+                                            $color = 'success';
+                                        } else if ($status_card == 0) {
+                                            $icon = 'check-circle';
+                                            $color = 'primary';
+                                        } else if ($status_card == "d") {
+                                            $icon = 'info-circle';
+                                            $color = 'warning';
+                                        } else if ($status_card == "x") {
+                                            $icon = 'x-lg';
+                                            $color = 'danger';
+                                        }
+                                        ?>
+                                        <i class="bi bi-<?= $icon ?> text-<?= $color ?> fs-4 me-2"></i>
                                         <button type="button" class="btn p-0 dropdown-toggle hide-arrow"
                                             data-bs-toggle="dropdown">
                                             <i class="bi bi-three-dots-vertical fs-5"></i>

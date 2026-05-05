@@ -13,6 +13,14 @@ $action = $_POST['action'] ?? '';
 $mode = $_POST['mode'] ?? 'preview';
 
 
+$admit_background = $_COOKIE['admit-background'] ?? 'sample_02.png';
+$admit_title = $_COOKIE['admit-title'] ?? 'title_01.png';
+$color1 = $_COOKIE['admit-color1'] ?? '#263547';
+$color2 = $_COOKIE['admit-color2'] ?? '#000000';
+$color3 = $_COOKIE['admit-color3'] ?? '#852357';
+
+
+// echo $admit_background . '/' . $admit_title . '/' . $color1.'/'. $color2 . '/' . $color3;
 $subjectList = [];
 
 $sqlSub = "SELECT subcode, subject 
@@ -98,31 +106,31 @@ while ($row = mysqli_fetch_assoc($resStudent)) {
 
 <div class="card-header d-flex justify-content-between">
     <div>
-        <b>Exam Routine</b>
+        <h4>Admit Card</h4>
         <div id="routine-info" class="d-flex mt-2">
             <div>
                 <div class="small">Slot</div>
-                <div class="fs-6 fw-bold"><?= $slot ?? '' ?></div>
+                <div class="fs-6 fw-bold text-primary"><?= $slot ?? '' ?></div>
             </div>
             <div class="vr mx-3"></div>
             <div>
                 <div class="small">Session</div>
-                <div class="fs-6 fw-bold"><?= $sessionyear ?? '' ?></div>
+                <div class="fs-6 fw-bold text-primary"><?= $sessionyear ?? '' ?></div>
             </div>
             <div class="vr mx-3"></div>
             <div>
                 <div class="small">Examination</div>
-                <div class="fs-6 fw-bold"><?= $examname ?? '' ?></div>
+                <div class="fs-6 fw-bold text-primary"><?= $examname ?? '' ?></div>
             </div>
             <div class="vr mx-3"></div>
             <div>
                 <div class="small">Class</div>
-                <div class="fs-6 fw-bold"><?= $clsname ?? '' ?></div>
+                <div class="fs-6 fw-bold text-primary"><?= $clsname ?? '' ?></div>
             </div>
             <div class="vr mx-3"></div>
             <div>
                 <div class="small">Section</div>
-                <div class="fs-6 fw-bold"><?= $secname ?? '' ?></div>
+                <div class="fs-6 fw-bold text-primary"><?= $secname ?? '' ?></div>
             </div>
 
         </div>
@@ -157,7 +165,7 @@ while ($row = mysqli_fetch_assoc($resStudent)) {
 
 </div>
 
-<div id="routineTable" class="table table-responsive">
+<div id="routineTable" class="table table-responsive" style="top:-1px;">
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -169,47 +177,57 @@ while ($row = mysqli_fetch_assoc($resStudent)) {
         table{
             border:0;
         }
+
+        .inst-name{
+            color: <?= $color1 ?>;
+        }
+        .inst-address{
+            color: <?= $color2 ?>;
+        }
+        .exam-name{
+            color: <?= $color3 ?>;
+        }
     </style>
     <?php
     foreach ($students as $st) {
         ?>
         <div class="admit-card mb-4 p-3 border"
-            style="margin:auto; width:210mm;  overflow-y: hidden; background:url('assets/admit/sample_02.png'); background-size:cover; padding:7mm;">
+            style="margin:auto; width:210mm;  overflow-y: hidden; background:url('assets/admit/<?= $admit_background ?>'); background-size:cover;  ">
 
             <!-- HEADER -->
 
-            <table style="margin:auto;">
+            <table style="margin: 18px auto 0;"  class="admit-header">
                 <tr>
                     <td>
                         <img src="https://eimbox.com/logo/<?php echo $sccode; ?>.png" height="60">
                     </td>
                     <td style="padding-left:10px;">
-                        <div style="font-size:20px; font-weight:bold; margin:0; margin-bottom:5px;"><?php echo $scname; ?></div>
-                        <small><?php echo $scaddress; ?></small><br>
-                        <small>Contact: <?php echo $scmobile; ?></small><br>
-                        <small>Email : <?= $scmail ?>, Web : <?= $scweb ?></small>
+                        <div  class="inst-name" style="font-size:20px; font-weight:bold; margin:0; margin-bottom:1px;"><?php echo $scname; ?></div>
+                        <small class="inst-address"><?php echo $scaddress; ?></small><br>
+                        <small class="inst-address">Contact: <?php echo $scmobile; ?></small><br>
+                        <small class="inst-address0">Email : <?= $scmail ?>, Web : <?= $scweb ?></small>
                     </td>
                 </tr>
             </table>
 
 
             <!-- TITLE -->
-            <div style="text-align:center; margin-top:15px;">
-                <img src="assets/admit/admit.png" height="35px"><br>
-                <span style="color:teal; font-weight:bold; font-size:20px;">
+            <div style="text-align:center; margin-top:5px;">
+                <img  class="admit-title-img"  src="assets/admit/<?= $admit_title ?>" style="height:30px; margin:0; padding:0;"><br>
+                <span class="exam-name" style="color:<?= $color3 ?>; font-weight:bold; font-size:20px;">
                     <?php echo $examname . ' Examination - ' . $sessionyear; ?>
                 </span>
             </div>
 
             <!-- STUDENT INFO -->
-            <table style="width:100%;">
+            <table style="width:92%; margin : 0 auto;">
                 <tr>
                     <td>
                         <b><?php echo $st['stnameeng']; ?></b><br>
                         <b><?php echo $st['stnameben']; ?></b><br>
                         ID: <?php echo $st['stid']; ?>
 
-                        <table style="width:100%">
+                        <table style="width:100%; margin-bottom:7px;">
                             <tr>
                                 <td>Class: <b><?php echo $clsname; ?></b></td>
                                 <td>Section: <b><?php echo $secname; ?></b></td>
@@ -223,7 +241,7 @@ while ($row = mysqli_fetch_assoc($resStudent)) {
                     </td>
 
                     <td style="width:80px; text-align:right; padding-left:5mm;">
-                        <img src="https://www.eimbox.com/students/<?= $st['stid'] ?>.jpg" height="90" style="border:1px solid #000;">
+                        <img src="https://www.eimbox.com/students/<?= $st['stid'] ?>.jpg" height="80" style="border:1px solid #000;">
 
                     </td>
                 </tr>
@@ -231,10 +249,10 @@ while ($row = mysqli_fetch_assoc($resStudent)) {
 
 
 
-            <table style="width:100%;">
+            <table style="width:92%; margin:auto;">
                 <tr>
-                    <td style="width:45%;">
-                        <table style="width:100%; font-size:11px; border-collapse: collapse; ">
+                    <td style="width:45%; vertical-align: top;;">
+                        <table style="width:100%; font-size:10px; border-collapse: collapse; ">
                             <tr>
                                 <th style="border:1px solid gray; padding:2px; text-align:center; border-collapse: collapse;">Date</th>
                                 <th style="border:1px solid gray; padding:2px; text-align:center; border-collapse: collapse;">Day</th>
@@ -263,9 +281,9 @@ while ($row = mysqli_fetch_assoc($resStudent)) {
                     <td style="width:55%;">
                         <table style="width:100%; text-align:center;">
                             <tr>
-                                <td colspan="2" style="text-align:left; font-size:10px;">
-                                <div style="font-size:16px; font-weight:bold; color:red; margin-bottom:5px;">Read this instruction :</div>    
-                                <ul>
+                                <td colspan="2" style="text-align:left; font-size:10px; padding-left:7px;">
+                                <div style="font-size:12px; font-weight:bold; color:red; margin-bottom:5px; text-align: center;">Read this instruction :</div>    
+                                <ul style="margin:0;">
                                         <li>Don’t be late. Report to the hall min 15 min. before the exam
                                             starts.</li>
                                         <li>Carry your admit card and occupy the seat where your roll is marked.
@@ -284,18 +302,19 @@ while ($row = mysqli_fetch_assoc($resStudent)) {
                             <tr>
                                 <td style="font-size:12px;  text-align:center;">
 
-                                    <!-- <img src="<?php echo 'https://eimbox.com/sign/' . $ctea; ?>.png"
-                                                height="40px" /> -->
+                                   <img src="<?php echo 'https://eimbox.com/sign/' . $cteacherid; ?>.png"
+                                                height="32"
+                                                onerror="this.style.display='none'; this.insertAdjacentHTML('afterend','<span style=\'font-family:Kunstler Script; \'><?= $cteachername ?></span>');">
                                     <br>
-                                    <b>(<?php echo $cteaname; ?>)</b> <br> Class Teacher
+                                    <b>(<?php echo $cteachername; ?>)</b> <br> Class Teacher
                                 </td style="font-size:12px;">
                                 <td style="font-size:12px; text-align:center;">
-                                    <img src="<?php echo 'https://eimbox.com/sign/' . $sccode; ?>.png" height="35px" /><br>
+                                    <img src="<?php echo 'https://eimbox.com/sign/' . $sccode; ?>.png" height="32px" /><br>
                                     <?php echo '<b>' . $headname . '</b><br>' . $headtitle; ?>
                                 </td>
                             </tr>
                             <tr>
-                                <td colspan="2" style="font-size:8px;">
+                                <td colspan="2" style="font-size:8px;padding-bottom:5px;">
                                     <?php echo $scname; ?><br>
                                     <?php echo $scaddress; ?>
                                 </td>
@@ -304,6 +323,8 @@ while ($row = mysqli_fetch_assoc($resStudent)) {
                     </td>
                 </tr>
             </table>
+
+            <div style="height:17px;"></div>
             <!-- ROUTINE TABLE -->
 
 

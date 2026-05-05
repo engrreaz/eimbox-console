@@ -1,5 +1,6 @@
 <?php
-require_once 'core/init.php'; 
+require_once 'core/init.php';
+
 
 require_once __DIR__ . '/vendor/autoload.php'; // HTMLPurifier autoload
 $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
@@ -326,5 +327,16 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
                         exit;
                     }
 
-                    ?>
 
+
+
+
+
+
+
+
+
+
+
+
+                    ?>

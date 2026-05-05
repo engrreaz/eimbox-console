@@ -201,6 +201,8 @@ function store_user_session($user, $school = [])
 
     $_SESSION['rootuser'] = $school['rootuser'];
     $_SESSION['scmobile'] = $school['mobile'];
+    $_SESSION['scmail'] = $school['scmail'];
+    $_SESSION['scweb'] = $school['scweb'];
     $_SESSION['headname'] = $school['headname'];
     $_SESSION['headtitle'] = $school['headtitle'];
     $_SESSION['sms_gateway'] = $school['sms_gateway'] ?? '';

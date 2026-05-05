@@ -215,3 +215,32 @@ $eimbox_panels = ['Admin', 'Teacher', 'Guardian', 'Student', 'Guest', 'SMC', 'Gu
 // $_SESSION['address'] . '/ ' .
 // $_SESSION['dob'];
 
+
+$slot = $_COOKIE['chain-slot'] ?? null;
+$sessionyear = $_COOKIE['chain-session'] ?? null;
+$classname = $_COOKIE['chain-class'] ?? null;
+$sectionname = $_COOKIE['chain-section'] ?? null;
+$sql = "SELECT 
+            a.classteacher AS cteacherid,
+            t.tname AS cteachername
+        FROM areas a
+        LEFT JOIN teacher t 
+            ON a.classteacher = t.tid
+        WHERE a.slot = '$slot'
+        AND a.sessionyear = '$sessionyear'
+        AND a.areaname = '$classname'
+        AND a.subarea = '$sectionname'
+        AND a.sccode = '$sccode'
+        LIMIT 1";
+
+$res = mysqli_query($conn, $sql);
+
+$cteacherid = null;
+$cteachername = null;
+
+if ($row = mysqli_fetch_assoc($res)) {
+    $cteacherid = $row['cteacherid'] ?? '';
+    $cteachername = $row['cteachername'] ?? '-';
+}
+
+

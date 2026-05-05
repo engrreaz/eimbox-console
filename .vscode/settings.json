@@ -1,0 +1,20 @@
+{
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/vendor": true,
+    "**/.git": true,
+    "**/assets": true,
+    "**/eimbox-panel": true
+  },
+
+  "intelephense.files.exclude": [
+    "**/node_modules/**",
+    "**/vendor/**",
+    "**/.git/**",
+    "**/assets/**",
+    "**/eimbox-panel/**"
+  ],
+
+  "intelephense.files.maxSize": 1000000,
+  "intelephense.diagnostics.run": "onSave"
+}

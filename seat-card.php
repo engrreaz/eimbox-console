@@ -124,10 +124,12 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
         <hr>
 
         <div class="row">
-          <div class="col-md-3"><label class="mt-2 small">Header Position</label>
-            <select id="headerPos" class="form-control form-control-sm" >
-              <option value="center">Center</option>
-              <option value="left">Left</option>
+          <div class="col-md-3"><label class="mt-2 small">Grid | Layout</label>
+            <select id="grid" class="form-control form-control-sm">
+              <option value="2x4">2 X 4</option>
+              <option value="2x5">2 X 5</option>
+              <option value="2x6">2 X 6</option>
+              <option value="3x3">3 X 3</option>
             </select>
           </div>
           <div class="col-md-3"> <label class="mt-2 small">Locale</label>
@@ -153,10 +155,10 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 
         <div class="row">
           <div class="col-md-3">
-            <label class="mt-2 small">Class Teacher</label>
-            <select id="showTeacher" class="form-control form-control-sm" disabled>
-              <option value="yes">Yes</option>
-              <option value="no">No</option>
+            <label class="mt-2 small">Orientation</label>
+            <select id="orientation" class="form-control form-control-sm">
+              <option value="P">Protrait</option>
+              <option value="L">Landscape</option>
             </select>
           </div>
 
@@ -257,7 +259,7 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
     let exam = $('#exam-main').val();
 
     $.ajax({
-      url: 'exam/exam-routine-admit-card.php',
+      url: 'exam/exam-seat-card.php',
       type: 'POST',
       data: {
         action: 'admit',
@@ -420,7 +422,8 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
 
     let pad = $('#pad').val();
     let font = $('#fontSize').val();
-    let headerPos = $('#headerPos').val();
+    let gridSize = $('#grid').val();
+    let orientation = $('#orientation').val();
 
     let c1 = $('#color1').val();
     let c2 = $('#color2').val();
@@ -432,12 +435,16 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
     });
 
     // header alignment
-    $('.admit-header').css('text-align', headerPos);
+    $('.admit-grid').css('text-align', gridSize);
 
     // color apply
     $('.inst-name').css('color', c1);
     $('.inst-address').css('color', c2);
     $('.exam-name').css('color', c3);
+
+
+    setCookie("seat-grid", gridSize);
+    setCookie("seat-orientation", orientation);
 
     setCookie("admit-color1", c1);
     setCookie("admit-color2", c2);
@@ -448,6 +455,7 @@ while ($rowSub = mysqli_fetch_assoc($resSub)) {
     const modal = bootstrap.Modal.getInstance(modalEl);
 
     modal.hide();
+    chainBtnFunc();
   }
 </script>
 <!-- ----------------------------------- -->

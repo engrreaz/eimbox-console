@@ -115,7 +115,7 @@ if ($action == 'clone') {
     $secname = $_POST['secname'];
 
     $sql = "INSERT INTO examroutine
-            (sccode,sessionyear,examname,clsname,secname,date,time,subcode)
+            (sccode,sessionyear,examname,clsname,secname,date,time,subcode, subj)
 
             SELECT
             '$sccode',
@@ -125,7 +125,7 @@ if ($action == 'clone') {
             '$secname',
             date,
             time,
-            subcode
+            subcode, subj
 
             FROM examroutine
             WHERE sccode='$sccode'
