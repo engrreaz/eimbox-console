@@ -83,7 +83,7 @@ if ($class && $sessionyear) {
             max-width: 100% !important;
             margin: 0 !important;
             padding: 0 !important;
-            color:black;
+            color:black !important;
             background: white;
         }
 
@@ -108,7 +108,7 @@ if ($class && $sessionyear) {
         Student List - <?= "$class ($section) - $sessionyear" ?>
     </h4>
 
-    <table class="table table-sm" style="width:100%;">
+    <table class="table table-sm" style="width:100%; color:black !important;">
         <thead>
             <tr>
                 <th class="tdd">Photo</th>
