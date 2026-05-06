@@ -51,6 +51,7 @@ if ($class && $sessionyear) {
 <style>
     body {
         background: white;
+        color:black !important;
     }
 
     .photo {
