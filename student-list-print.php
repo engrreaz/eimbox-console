@@ -83,7 +83,7 @@ if ($class && $sessionyear) {
             max-width: 100% !important;
             margin: 0 !important;
             padding: 0 !important;
-
+            color:black;
             background: white;
         }
 
