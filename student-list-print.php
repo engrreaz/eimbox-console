@@ -62,6 +62,7 @@ if ($class && $sessionyear) {
 
     .tdd {
         padding: 5px !important;
+        color:black !important;
     }
 
     @media print {
