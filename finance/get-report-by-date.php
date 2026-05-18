@@ -122,7 +122,6 @@ while ($row = mysqli_fetch_assoc($result)) {
 
 
 
-echo 'ready';
 
 
 /*
@@ -150,7 +149,7 @@ $sql = "SELECT id, particulars, income, expenditure, amount, type, date
         FROM cashbook 
         WHERE date BETWEEN '$date_from' AND '$date_to' AND sccode='$sccode'
         ORDER BY date ASC, account_head ASC, account_sub_head ASC";
-echo $sql;
+
 
 $result = mysqli_query($conn, $sql);
 
