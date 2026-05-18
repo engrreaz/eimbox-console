@@ -175,6 +175,8 @@ $total_expense = 0;
                         <th>Date</th>
                         <th>Title</th>
                         <th>Type</th>
+                        <th class="text-end">Income</th>
+                        <th class="text-end">Expenditure</th>
                         <th class="text-end">Amount</th>
                     </tr>
                 </thead>
@@ -194,6 +196,12 @@ $total_expense = 0;
                                 <span class="badge bg-<?= $row['type'] == 'Income' ? 'success' : 'danger' ?>">
                                     <?= $row['type'] ?>
                                 </span>
+                            </td>
+                            <td class="text-end">
+                                <?= number_format($row['income'], 2) ?>
+                            </td>
+                            <td class="text-end">
+                                <?= number_format($row['expenditure'], 2) ?>
                             </td>
                             <td class="text-end">
                                 <?= number_format($row['amount'], 2) ?>
