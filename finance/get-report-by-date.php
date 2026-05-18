@@ -95,7 +95,7 @@ $sql = "SELECT
         WHERE sccode = '$sccode'
         AND pr1date BETWEEN '$date_from' AND '$date_to'
         GROUP BY pr1date, itemcode, particulareng, sub_head, classname, sectionname";
-
+echo $sql;
 $result = mysqli_query($conn, $sql);
 
 
@@ -116,7 +116,7 @@ while ($row = mysqli_fetch_assoc($result)) {
         (date, sccode, module, account_sub_head,  amount, slot, sessionyear, account_head, type, particulars, income, expenditure, entryby, entrytime, partid)
         VALUES 
         ('$pr1date', '$sccode', 'Collection', '$sub_head', '$amount', '$slot', '$session', '$acc_head', 'Income', '$particular', '$amount', 0, '$usr', '$cur', '$sub_head')";
-
+echo $sql_insert;
     mysqli_query($conn, $sql_insert);
 }
 
