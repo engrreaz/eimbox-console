@@ -181,7 +181,7 @@ $total_expense = 0;
                 <tbody>
 
                     <?php while ($row = mysqli_fetch_assoc($result)) {
-                        if ($row['type'] == 'income') {
+                        if ($row['type'] == 'Income') {
                             $total_income += $row['amount'];
                         } else {
                             $total_expense += $row['amount'];
