@@ -79,6 +79,7 @@ $sql_delete = "DELETE FROM cashbook
                WHERE date BETWEEN '$date_from' AND '$date_to'
                AND sccode = '$sccode' AND slots='$slot'
                AND module = 'Collection'";
+               echo $sql_delete;
 mysqli_query($conn, $sql_delete);
 
 
