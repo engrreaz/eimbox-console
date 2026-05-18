@@ -7,11 +7,29 @@
       <div class="row">
         <div class="col-md-2">
           <label class="form-label">Slot</label>
-          <input type="text" class="form-control form-control-sm" name="slot-main" id="slot-main">
+          <select id="slot-main" class="form-select form-select-sm">
+            <option value="">Select Slot</option>
+            <?php
+            $q = $conn->query("SELECT slotname FROM slots WHERE sccode='$sccode' ORDER BY slotname");
+            while ($r = $q->fetch_assoc()) {
+              echo "<option value='{$r['slotname']}'>{$r['slotname']}</option>";
+            }
+            ?>
+          </select>
         </div>
         <div class="col-md-2">
           <label class="form-label">Session</label>
-          <input type="text" class="form-control form-control-sm" name="session-main" id="session-main">
+          <select id="session-main" class="form-select form-select-sm">
+            <option value="">Select Session</option>
+            <?php
+            $q = $conn->query("SELECT syear FROM sessionyear 
+                                       WHERE sccode='$sccode' AND active=1 
+                                       ORDER BY syear DESC");
+            while ($r = $q->fetch_assoc()) {
+              echo "<option value='{$r['syear']}'>{$r['syear']}</option>";
+            }
+            ?>
+          </select>
         </div>
 
 
