@@ -213,7 +213,6 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
 
                     ?>
 
-
                     <div class=" container pt-0 pb-0 no-print">
                         <div class="divider divider-primary m-0 p-0"
                             style="--bs-divider-color:<?php echo $release_colors[$page_status]; ?>;">

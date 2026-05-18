@@ -174,8 +174,49 @@ $session = $_COOKIE['chain-session'] ?? $_GET['session'] ?? '';
                         </select>
                     </div>
 
-                    <div class="col-md-3"><label>Account Head</label>
-                        <select id="sub_head" class="form-control form-control-sm"></select>
+                    <div class="col-md-3">
+                        <label>Account Head</label>
+
+                        <select id="acc_head" class="form-control form-control-sm">
+                            <option value="">-- Select Account --</option>
+
+                            <?php
+                            $sccode = $sccode; // already available
+                            
+                            // GET HEADS
+                            $headQuery = mysqli_query($conn, "
+            SELECT * FROM account_head 
+            WHERE sccode = '$sccode'
+            ORDER BY id ASC
+        ");
+
+                            while ($head = mysqli_fetch_assoc($headQuery)) {
+
+                                $head_id = $head['id'];
+
+                                echo '<optgroup label="' . htmlspecialchars($head['account_head']) . '">';
+
+                                // GET SUB HEADS (income = 1 only)
+                                $subQuery = mysqli_query($conn, "
+                SELECT * FROM account_sub_head
+                WHERE sccode = '$sccode'
+                AND account_head_id = '$head_id'
+                AND income = 1
+                ORDER BY id ASC
+            ");
+
+                                while ($sub = mysqli_fetch_assoc($subQuery)) {
+
+                                    echo '<option value="' . $sub['id'] . '">'
+                                        . htmlspecialchars($sub['sub_head']) .
+                                        '</option>';
+                                }
+
+                                echo '</optgroup>';
+                            }
+                            ?>
+
+                        </select>
                     </div>
 
                     <div class="col-md-6 d-flex align-items-end">
@@ -293,6 +334,7 @@ $session = $_COOKIE['chain-session'] ?? $_GET['session'] ?? '';
             $('#peng').val(d.particulareng);
             $('#pben').val(d.particularben);
             $('#mon').val(d.month);
+            $('#acc_head').val(d.sub_head);
             $('#new_only').prop('checked', d.new_only == 1);
             $('#splitable').prop('checked', d.splitable == 1);
             $('#itemMsg').html('');
@@ -306,6 +348,7 @@ $session = $_COOKIE['chain-session'] ?? $_GET['session'] ?? '';
             eng: $('#peng').val(),
             ben: $('#pben').val(),
             mon: $('#mon').val(),
+            acc_head: $('#acc_head').val(),
             new_only: $('#new_only').is(':checked') ? 1 : 0,
             splitable: $('#splitable').is(':checked') ? 1 : 0
         };
@@ -358,7 +401,8 @@ $session = $_COOKIE['chain-session'] ?? $_GET['session'] ?? '';
             class: $('#aclass').val(),
             section: $('#asection').val(),
             amount: $('#aamount').val(),
-            spl: $('#splyn').val()
+            spl: $('#splyn').val(),
+            acc_head: $('#acc_head').val()
         };
         // alert(JSON.stringify(data));
 
@@ -453,6 +497,8 @@ $session = $_COOKIE['chain-session'] ?? $_GET['session'] ?? '';
     function chainBtnFunc() {
         window.location.reload();
     }
+
+    // alert("OK");
 </script>
 
 
