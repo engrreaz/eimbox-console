@@ -149,6 +149,7 @@ $sql = "SELECT id, particulars, income, expenditure, amount, type, date
         FROM cashbook 
         WHERE date BETWEEN '$date_from' AND '$date_to' AND sccode='$sccode'
         ORDER BY date ASC";
+echo $sql;
 
 $result = mysqli_query($conn, $sql);
 
