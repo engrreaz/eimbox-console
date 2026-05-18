@@ -194,7 +194,7 @@ $session = $_COOKIE['chain-session'] ?? $_GET['session'] ?? '';
 
                                 $head_id = $head['id'];
 
-                                echo '<optgroup label="' . htmlspecialchars($head['account_head']) . '">';
+                                echo '<optgroup class="text-muted" label="' . htmlspecialchars($head['account_head']) . '">';
 
                                 // GET SUB HEADS (income = 1 only)
                                 $subQuery = mysqli_query($conn, "
