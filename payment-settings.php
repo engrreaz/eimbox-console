@@ -34,9 +34,9 @@ $session = $_COOKIE['chain-session'] ?? $_GET['session'] ?? '';
     </div>
 
     <div class="row align-items-end g-2">
-      
 
-        
+
+
 
         <?php
         // $chain = 'class'; // -- class (class/section omit), exam (+exam), subject (+subject)
@@ -144,7 +144,7 @@ $session = $_COOKIE['chain-session'] ?? $_GET['session'] ?? '';
                             class="form-control form-control-sm"></div>
                 </div>
                 <div class="row mb-2">
-                    <div class="col-md-4"><label>Frequency</label>
+                    <div class="col-md-3"><label>Frequency</label>
                         <select id="mon" class="form-control form-control-sm">
                             <!-- Months -->
                             <option value="1">January</option>
@@ -174,7 +174,11 @@ $session = $_COOKIE['chain-session'] ?? $_GET['session'] ?? '';
                         </select>
                     </div>
 
-                    <div class="col-md-8 d-flex align-items-end">
+                    <div class="col-md-3"><label>Account Head</label>
+                        <select id="sub_head" class="form-control form-control-sm"></select>
+                    </div>
+
+                    <div class="col-md-6 d-flex align-items-end">
                         <label class="me-3"><input type="checkbox" class="form-check-input" id="new_only">
                             New Admission Only</label>
                         <label><input type="checkbox" class="form-check-input" id="splitable">
@@ -446,7 +450,7 @@ $session = $_COOKIE['chain-session'] ?? $_GET['session'] ?? '';
     }
 
 
-  function chainBtnFunc() {
+    function chainBtnFunc() {
         window.location.reload();
     }
 </script>
