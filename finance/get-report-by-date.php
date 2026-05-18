@@ -163,12 +163,12 @@ $total_expense = 0;
 ?>
 
 <div class="card mt-3">
-    <div class="card-body">
+    <div class="card-bodyx">
 
         <h5 class="mb-3">Report: <?= $date_from ?> to <?= $date_to ?></h5>
 
         <div class="table-responsive">
-            <table class="table table-bordered table-sm fw-tiny">
+            <table class="table table-bordered table-sm">
                 <thead>
                     <tr>
                         <th>Date</th>
