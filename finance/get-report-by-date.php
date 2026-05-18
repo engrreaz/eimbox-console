@@ -113,7 +113,7 @@ while ($row = mysqli_fetch_assoc($result)) {
     $acc_head = $acc_head_list[$sub_head];
 
     $sql_insert = "INSERT INTO cashbook 
-        (date, sccode, module, account_sub_head,  amount, slot, sessionyear, account_head, type, particulars, income, expenditure, entryby, entrytime, partid)
+        (date, sccode, module, account_sub_head,  amount, slots, sessionyear, account_head, type, particulars, income, expenditure, entryby, entrytime, partid)
         VALUES 
         ('$pr1date', '$sccode', 'Collection', '$sub_head', '$amount', '$slot', '$session', '$acc_head', 'Income', '$particular', '$amount', 0, '$usr', '$cur', '$sub_head')";
 echo $sql_insert;
