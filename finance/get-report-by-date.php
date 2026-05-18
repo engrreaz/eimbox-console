@@ -191,7 +191,7 @@ $total_expense = 0;
                             <td><?= $row['date'] ?></td>
                             <td><?= htmlspecialchars($row['particulars']) ?></td>
                             <td>
-                                <span class="badge bg-<?= $row['type'] == 'income' ? 'success' : 'danger' ?>">
+                                <span class="badge bg-<?= $row['type'] == 'Income' ? 'success' : 'danger' ?>">
                                     <?= $row['type'] ?>
                                 </span>
                             </td>
