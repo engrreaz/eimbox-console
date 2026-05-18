@@ -91,7 +91,9 @@
     document.getElementById('date-to-main').value = toDate;
   });
 
+
   function get_report() {
+
     let slot = document.getElementById('slot-main').value;
     let session = document.getElementById('session-main').value;
     let from = document.getElementById('date-from-main').value;
@@ -107,17 +109,41 @@
       headers: {
         "Content-Type": "application/x-www-form-urlencoded"
       },
-      body: "date_from=" + encodeURIComponent(from) + "&date_to=" + encodeURIComponent(to) + "&slot=" + encodeURIComponent(slot) + "&session=" + encodeURIComponent(session)
+      body:
+        "date_from=" + encodeURIComponent(from) +
+        "&date_to=" + encodeURIComponent(to) +
+        "&slot=" + encodeURIComponent(slot) +
+        "&session=" + encodeURIComponent(session)
     })
-      .then(res => res.text())
+      .then(response => {
+
+        console.log("HTTP Status:", response.status);
+
+        if (!response.ok) {
+          throw new Error("HTTP error " + response.status);
+        }
+
+        return response.text();
+      })
       .then(html => {
-        document.getElementById("report-block").innerHTML = html;
+
+        console.log(html);
+
+        let reportBlock = document.getElementById("report-block");
+
+        if (!reportBlock) {
+          throw new Error("#report-block not found");
+        }
+
+        reportBlock.innerHTML = html;
       })
       .catch(err => {
-        console.error(err);
-        alert("Report load failed");
+        console.error("FULL ERROR:", err);
+        alert(err);
       });
   }
+
+
 </script>
 
 <script>
