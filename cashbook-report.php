@@ -53,7 +53,7 @@
     </div>
 
 
-    <div id="report-block mt-3"></div>
+    <div id="report-block" class="mt-3"></div>
 
   </div>
 </div>
