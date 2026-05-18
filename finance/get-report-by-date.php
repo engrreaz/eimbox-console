@@ -169,7 +169,7 @@ $total_expense = 0;
         <h5 class="mb-3">Report: <?= $date_from ?> to <?= $date_to ?></h5>
 
         <div class="table-responsive">
-            <table class="table table-bordered table-sm">
+            <table class="table table-bordered table-sm fw-tiny">
                 <thead>
                     <tr>
                         <th>Date</th>
