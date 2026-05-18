@@ -7,7 +7,7 @@
       <div class="row">
         <div class="col-md-2">
           <label class="form-label">Slot</label>
-          <select id="slot-main" class="form-select form-select-sm">
+          <select id="slot-main" name="slot-main" class="form-select form-select-sm">
             <option value="">Select Slot</option>
             <?php
             $q = $conn->query("SELECT slotname FROM slots WHERE sccode='$sccode' ORDER BY slotname");
@@ -19,7 +19,7 @@
         </div>
         <div class="col-md-2">
           <label class="form-label">Session</label>
-          <select id="session-main" class="form-select form-select-sm">
+          <select id="session-main" name="session-main" class="form-select form-select-sm">
             <option value="">Select Session</option>
             <?php
             $q = $conn->query("SELECT syear FROM sessionyear 
