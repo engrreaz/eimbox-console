@@ -8,6 +8,8 @@ $type = $_POST['type'] ?? 1;
 $recalculation = $_POST['recalculation'] ?? 1;
 
 
+
+
 $slot = $_POST['slot'] ?? '';
 $session = $_POST['session'] ?? '';
 
@@ -116,7 +118,7 @@ if ($recalculation) {
         $amount = $row['total_pr1'];
 
         $particular = $parti . ' - ' . $class . ' (' . $section . ')';
-        $acc_head = $acc_head_list[$sub_head];
+        $acc_head = $acc_head_list[$sub_head] ?? 0;
 
         $sql_insert = "INSERT INTO cashbook 
         (date, sccode, module, account_sub_head,  amount, slots, sessionyear, account_head, type, particulars, income, expenditure, entryby, entrytime, partid)
