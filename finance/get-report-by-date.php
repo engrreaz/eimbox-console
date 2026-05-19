@@ -145,8 +145,6 @@ $sqln = "UPDATE cashbook set expenditure=amount where  sccode='$sccode' and  dat
 $conn->query($sqln);
 
 /*
-
-
 01. stfinance table এর আইটেম কোড অনুযায়ী ‍অ্যাকাউন্ট হেড ম্যাপ করতে হবে। ডেট আপডেট করতে হবে।
 
 02. তারিখ, account_head, sub_head, ক্লাস, সেকশন গ্রুপ করে মোট টাকা দিয়ে ক্যাশবুকে ডেটা ইনসার্ট করতে হবে। 
@@ -194,16 +192,17 @@ $total_expense = 0;
 ?>
 
 <div class="card mt-3">
-    <div class="card-header">
-        <h5 class="mb-3">Report: <?= $date_from ?> to <?= $date_to ?></h5>
+    <div class="card-header d-flex">
+        <h5 class="mb-3 flex-grow-1">Report: <?= $date_from ?> to <?= $date_to ?></h5>
         <div class="d-flex align-items-center gap-3">
-            <button class="btn btn-sm btn-success" onclick="exportTableToExcel('report-table', 'cashbook_report')"><i
-                    class="bi bi-file-earmark-excel"></i> </button>
-            <button class="btn btn-sm btn-danger" onclick="exportTableToPDF('report-table', 'cashbook_report')"><i
+  
+            <button class="btn btn-sm btn-danger" ><i
                     class="bi bi-file-pdf"></i></button>
-            <button class="btn btn-sm btn-primary" onclick="window.print()"><i class="bi bi-printer"></i></button>
+            <button class="btn btn-sm btn-primary" ><i class="bi bi-printer"></i></button>
         </div>
     </div>
+
+    
     <div class="card-bodyx" id="data-block">
 
 
