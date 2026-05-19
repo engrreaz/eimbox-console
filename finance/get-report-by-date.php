@@ -230,10 +230,14 @@ $total_expense = 0;
                                 </span>
                             </td>
                             <td class="text-end">
-                                <?= number_format($row['income'], 2) ?>
+                                <?php if ($row['type'] == 'Income') {
+                                    echo number_format($row['income'], 2);
+                                } ?>
                             </td>
                             <td class="text-end">
-                                <?= number_format($row['expenditure'], 2) ?>
+                                <?php if ($row['type'] == 'Expense') {
+                                    echo number_format($row['expenditure'], 2);
+                                } ?>
                             </td>
                             <td class="text-end">
                                 <?= number_format($row['amount'], 2) ?>
