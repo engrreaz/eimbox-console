@@ -186,6 +186,7 @@ if ($type == 1) {
         WHERE date BETWEEN '$date_from' AND '$date_to' AND sccode='$sccode'
         GROUP BY date,  account_head, account_sub_head
         ORDER BY date , account_head, account_sub_head";
+        echo $sql;
 }
 
 
