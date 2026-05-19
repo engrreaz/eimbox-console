@@ -160,7 +160,7 @@ if ($type == 1) {
     $sql = "SELECT id, particulars, income, expenditure, amount, type, date 
         FROM cashbook 
         WHERE date BETWEEN '$date_from' AND '$date_to' AND sccode='$sccode'
-        GROUP BY date, account_head, account_sub_head, income, type
+        GROUP BY date, account_head, account_sub_head, type
         ORDER BY date , account_head, account_sub_head";
 }
 
