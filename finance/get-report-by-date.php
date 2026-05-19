@@ -261,17 +261,17 @@ $total_expense = 0;
                     <tr>
                         <td colspan="3" class="p-0 ps-4">Grand Total</td>
                         <td class="text-end p-0">
-                            <div class="alert alert-success ">
+                            <div class="alert alert-success m-0">
                                 <b><?= number_format($total_income, 2) ?></b>
                             </div>
                         </td>
                         <td class="text-end p-0">
-                            <div class="alert alert-danger">
+                            <div class="alert alert-danger m-0">
                                 <b><?= number_format($total_expense, 2) ?></b>
                             </div>
                         </td>
                         <td class="text-end p-0">
-                            <div class="alert alert-primary">
+                            <div class="alert alert-primary m-0">
                                 <b><?= number_format($total_income - $total_expense, 2) ?></b>
                             </div>
                         </td>
