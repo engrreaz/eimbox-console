@@ -144,7 +144,6 @@ $conn->query($sqlMod);
 $sqln = "UPDATE cashbook set expenditure=amount where  sccode='$sccode' and  date between '$date_from' and '$date_to' and type='Expenditure'";
 $conn->query($sqln);
 
-echo $sqlMod . '<br>' . $sqln;
 /*
 
 
@@ -197,8 +196,15 @@ $total_expense = 0;
 <div class="card mt-3">
     <div class="card-header">
         <h5 class="mb-3">Report: <?= $date_from ?> to <?= $date_to ?></h5>
+        <div class="d-flex align-items-center gap-3">
+            <button class="btn btn-sm btn-success" onclick="exportTableToExcel('report-table', 'cashbook_report')"><i
+                    class="bi bi-file-earmark-excel"></i> </button>
+            <button class="btn btn-sm btn-danger" onclick="exportTableToPDF('report-table', 'cashbook_report')"><i
+                    class="bi bi-file-pdf"></i></button>
+            <button class="btn btn-sm btn-primary" onclick="window.print()"><i class="bi bi-printer"></i></button>
+        </div>
     </div>
-    <div class="card-bodyx">
+    <div class="card-bodyx" id="data-block">
 
 
 
@@ -281,26 +287,7 @@ $total_expense = 0;
             </table>
         </div>
 
-        <hr>
 
-        <div class="row">
-            <div class="col-md-4">
-
-            </div>
-
-            <div class="col-md-4">
-                <div class="alert alert-danger p-2">
-                    Total Expense: <b><?= number_format($total_expense, 2) ?></b>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="alert alert-primary p-2">
-                    Balance:
-                    <b><?= number_format($total_income - $total_expense, 2) ?></b>
-                </div>
-            </div>
-        </div>
 
     </div>
 </div>
