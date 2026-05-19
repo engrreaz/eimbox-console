@@ -45,16 +45,17 @@ if ($recalculation) {
     // var_dump($acc_head_list);
 
     $account_title_list = [];
-    $sql_00 = "SELECT id, account_head_id, account_head, sub_head where sccode='$sccode'";
+    $sql_00 = "SELECT id, account_head_id, account_head, sub_head from account_sub_head 
+          where sccode='$sccode'";
     $resultox = mysqli_query($conn, $sql_00);
 
-    // while ($row = mysqli_fetch_assoc($resultox)) {
-    //     $account_title_list[$row['id']] = [
-    //         'account_head_id' => $row['account_head_id'],
-    //         'account_head' => $row['account_head'],
-    //         'sub_head' => $row['sub_head']
-    //     ];
-    // }
+    while ($row = mysqli_fetch_assoc($resultox)) {
+        $account_title_list[$row['id']] = [
+            'account_head_id' => $row['account_head_id'],
+            'account_head' => $row['account_head'],
+            'sub_head' => $row['sub_head']
+        ];
+    }
 
 
     $sub_head_list = [];
@@ -249,7 +250,11 @@ $total_expense = 0;
                             } else {
                                 ?>
                                 <td>
-                                  
+                                    <?php
+                                    $descrip = $account_title_list[$row['account_sub_head']]['account_head'] ?? '' . ' - ' .
+                                        $account_title_list[$row['account_sub_head']]['sub_head'] ?? '';
+                                    echo htmlspecialchars($descrip);
+                                    ?>
                                 </td>
                                 <?php
                             }
