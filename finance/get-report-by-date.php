@@ -131,9 +131,12 @@ if ($recalculation) {
 }
 
 
-
+$sqlx = "UPDATE cashbook set partid=account_sub_head where  sccode='$sccode' and slots='$slot' and date between '$date_from' and '$date_to' and account_sub_head >0";
+$conn->query($sqlx);
+$sqly = "UPDATE cashbook set account_sub_head=partid where  sccode='$sccode' and slots='$slot' and date between '$date_from' and '$date_to' and partid> 0";
+$conn->query($sqly);
 /*
-01. stfinance table এর আইটেম কোড অনুযায়ী ‍অ্যাকাউন্ট হেড ম্যাপ করতে হবে। ডেট আপডেট করতে হবে।
+01. stfinance table এর আইটেম কোড অনুযায়ী ‍অ্যাকাউন্ট হেড ম্যাপ করতে হবে। ডেট আপডেট করতে হবে।
 
 02. তারিখ, account_head, sub_head, ক্লাস, সেকশন গ্রুপ করে মোট টাকা দিয়ে ক্যাশবুকে ডেটা ইনসার্ট করতে হবে। 
 ক্যাশবুকে ইনসার্টের সময় একটা ফ্লাগ সেট করতে হবে (data from stfinance বোঝার জন্য)
@@ -155,13 +158,13 @@ if ($type == 1) {
     $sql = "SELECT id, particulars, income, expenditure, amount, type, date 
         FROM cashbook 
         WHERE date BETWEEN '$date_from' AND '$date_to' AND sccode='$sccode'
-        ORDER BY date ASC, account_head ASC, partid ASC";
+        ORDER BY date ASC, account_head ASC, account_sub_head ASC";
 } else {
-    $sql = "SELECT account_head, partid, sum(income) as income, sum(expenditure) as expenditure, sum(amount) as amount, type, date 
+    $sql = "SELECT account_head, account_sub_head, sum(income) as income, sum(expenditure) as expenditure, sum(amount) as amount, type, date 
         FROM cashbook 
         WHERE date BETWEEN '$date_from' AND '$date_to' AND sccode='$sccode'
-        GROUP BY date, type, account_head, partid
-        ORDER BY date , account_head, partid";
+        GROUP BY date, type, account_head, account_sub_head
+        ORDER BY date , account_head, account_sub_head";
 
 }
 
@@ -218,7 +221,7 @@ $total_expense = 0;
                             } else {
                                 ?>
                                 <td><?= htmlspecialchars($row['account_head'] . ' - ' . $row['account_sub_head']) ?></td>
-                            <?php
+                                <?php
                             }
                             ?>
                             <td>
