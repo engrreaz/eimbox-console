@@ -131,17 +131,17 @@ if ($recalculation) {
 }
 
 
-$sqlx = "UPDATE cashbook set partid=account_sub_head where  sccode='$sccode' and slots='$slot' and date between '$date_from' and '$date_to' and account_sub_head >0";
+$sqlx = "UPDATE cashbook set partid=account_sub_head where  sccode='$sccode'  and date between '$date_from' and '$date_to' and account_sub_head >0";
 $conn->query($sqlx);
-$sqly = "UPDATE cashbook set account_sub_head=partid where  sccode='$sccode' and slots='$slot' and date between '$date_from' and '$date_to' and partid> 0";
+$sqly = "UPDATE cashbook set account_sub_head=partid where  sccode='$sccode'  and date between '$date_from' and '$date_to' and partid> 0";
 $conn->query($sqly);
 
 
 
-$sqlMod = "UPDATE cashbook set income=amount where  sccode='$sccode' and slots='$slot' and date between '$date_from' and '$date_to' and type='Income'";
+$sqlMod = "UPDATE cashbook set income=amount where  sccode='$sccode' and  date between '$date_from' and '$date_to' and type='Income'";
 $conn->query($sqlMod);
 
-$sqln = "UPDATE cashbook set expenditure=amount where  sccode='$sccode' and slots='$slot' and date between '$date_from' and '$date_to' and type='Expenditure'";
+$sqln = "UPDATE cashbook set expenditure=amount where  sccode='$sccode' and  date between '$date_from' and '$date_to' and type='Expenditure'";
 $conn->query($sqln);
 
 echo $sqlMod . '<br>' . $sqln;
