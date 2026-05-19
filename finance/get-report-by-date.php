@@ -162,7 +162,7 @@ if ($type == 1) {
         WHERE date BETWEEN '$date_from' AND '$date_to' AND sccode='$sccode'
         GROUP BY date, type, account_head, partid
         ORDER BY date , account_head, partid";
-        echo $sql;
+    echo $sql;
 }
 
 
@@ -210,7 +210,17 @@ $total_expense = 0;
                         ?>
                         <tr>
                             <td><?= $row['date'] ?></td>
-                            <td><?= htmlspecialchars($row['account_head'] . ' - ' . $row['account_sub_head']) ?></td>
+                            <?php
+                            if ($type == 1) {
+                                ?>
+                                <td><?= htmlspecialchars($row['particulars']) ?></td>
+                                <?php
+                            } else {
+                                ?>
+                                <td><?= htmlspecialchars($row['account_head'] . ' - ' . $row['account_sub_head']) ?></td>
+                            <?php
+                            }
+                            ?>
                             <td>
                                 <span class="badge bg-<?= $row['type'] == 'Income' ? 'success' : 'danger' ?>">
                                     <?= $row['type'] ?>
