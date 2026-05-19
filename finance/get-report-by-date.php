@@ -161,7 +161,7 @@ if ($type == 1) {
         FROM cashbook 
         WHERE date BETWEEN '$date_from' AND '$date_to' AND sccode='$sccode'
         GROUP BY date, account_head, account_sub_head, income, type
-        ORDER BY date DESC, account_head DESC, account_sub_head DESC";
+        ORDER BY date , account_head, account_sub_head";
 }
 
 
