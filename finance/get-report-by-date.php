@@ -257,6 +257,14 @@ $total_expense = 0;
                         </tr>
                     <?php } ?>
 
+
+                    <tr>
+                        <td colspan="3">---</td>
+                        <td class="text-end alert alert-success p-2"><b><?= number_format($total_income, 2) ?></b></td>
+                        <td class="text-end alert alert-danger p-2"><b><?= number_format($total_expense, 2) ?></b></td>
+                        <td class="text-end alert alert-primary p-2"><b><?= number_format($total_income - $total_expense, 2) ?></b></td>
+                    </tr>
+
                 </tbody>
             </table>
         </div>
