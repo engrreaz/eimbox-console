@@ -157,11 +157,12 @@ if ($type == 1) {
         WHERE date BETWEEN '$date_from' AND '$date_to' AND sccode='$sccode'
         ORDER BY date ASC, account_head ASC, account_sub_head ASC";
 } else {
-    $sql = "SELECT id, particulars, income, expenditure, amount, type, date 
+    $sql = "SELECT particulars, sum(income) as income, sum(expenditure) as expenditure, sum(amount) as amount, type, date 
         FROM cashbook 
         WHERE date BETWEEN '$date_from' AND '$date_to' AND sccode='$sccode'
-        GROUP BY date, account_head, account_sub_head, type
+        GROUP BY date, type, account_head, account_sub_head
         ORDER BY date , account_head, account_sub_head";
+        echo $sql;
 }
 
 
