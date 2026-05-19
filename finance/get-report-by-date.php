@@ -259,10 +259,16 @@ $total_expense = 0;
 
 
                     <tr>
-                        <td colspan="3">---</td>
-                        <td class="text-end alert alert-success p-2"><b><?= number_format($total_income, 2) ?></b></td>
-                        <td class="text-end alert alert-danger p-2"><b><?= number_format($total_expense, 2) ?></b></td>
-                        <td class="text-end alert alert-primary p-2"><b><?= number_format($total_income - $total_expense, 2) ?></b></td>
+                        <td colspan="3">Grand Total</td>
+                        <td class="text-end "><div class="alert alert-success p-2">
+                    <b><?= number_format($total_income, 2) ?></b>
+                </div></td>
+                        <td class="text-end"><div class="alert alert-danger p-2">
+                   <b><?= number_format($total_expense, 2) ?></b>
+                </div></td>
+                        <td class="text-end"><div class="alert alert-primary p-2">
+                    <b><?= number_format($total_income - $total_expense, 2) ?></b>
+                </div></td>
                     </tr>
 
                 </tbody>
@@ -273,9 +279,7 @@ $total_expense = 0;
 
         <div class="row">
             <div class="col-md-4">
-                <div class="alert alert-success p-2">
-                    Total Income: <b><?= number_format($total_income, 2) ?></b>
-                </div>
+                
             </div>
 
             <div class="col-md-4">
