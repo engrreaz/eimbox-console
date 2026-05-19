@@ -246,7 +246,7 @@ $total_expense = 0;
                                 ?>
                                 <td>
                                     <?php
-                                    $descrip = $account_title_list[$row['account_sub_head']]['account_head'] ?? '--' ;
+                                    $descrip = $account_title_list[$row['account_head']]['account_head'] ?? '--' ;
                                     echo htmlspecialchars($descrip);
                                     ?>
                                 </td>
