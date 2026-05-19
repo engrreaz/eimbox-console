@@ -156,6 +156,7 @@ $recalc = $_COOKIE['cashbook_report_recalculation'] ?? '1';
       return;
     }
 
+    document.getElementById("report-block").innerHTML = "<div class='text-center py-5'>Loading...</div>";
     fetch("finance/get-report-by-date.php", {
       method: "POST",
       headers: {
