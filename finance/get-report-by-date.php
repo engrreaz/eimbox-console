@@ -260,7 +260,7 @@ $total_expense = 0;
 
                     <tr>
                         <td colspan="3" class="p-0">Grand Total</td>
-                        <td class="text-end ">
+                        <td class="text-end bg-success">
                             <div class="alert alert-success p-0">
                                 <b><?= number_format($total_income, 2) ?></b>
                             </div>
