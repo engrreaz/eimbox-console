@@ -48,13 +48,13 @@ if ($recalculation) {
     $sql_00 = "SELECT id, account_head_id, account_head, sub_head where sccode='$sccode'";
     $resultox = mysqli_query($conn, $sql_00);
 
-    while ($row = mysqli_fetch_assoc($resultox)) {
-        $account_title_list[$row['id']] = [
-            'account_head_id' => $row['account_head_id'],
-            'account_head' => $row['account_head'],
-            'sub_head' => $row['sub_head']
-        ];
-    }
+    // while ($row = mysqli_fetch_assoc($resultox)) {
+    //     $account_title_list[$row['id']] = [
+    //         'account_head_id' => $row['account_head_id'],
+    //         'account_head' => $row['account_head'],
+    //         'sub_head' => $row['sub_head']
+    //     ];
+    // }
 
 
     $sub_head_list = [];
