@@ -143,6 +143,8 @@ $conn->query($sqlMod);
 
 $sqln = "UPDATE cashbook set expenditure=amount where  sccode='$sccode' and slots='$slot' and date between '$date_from' and '$date_to' and type='Expenditure'";
 $conn->query($sqln);
+
+echo $sqlMod . '<br>' . $sqln;
 /*
 
 
