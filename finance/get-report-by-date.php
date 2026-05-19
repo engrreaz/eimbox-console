@@ -162,7 +162,7 @@ if ($type == 1) {
         WHERE date BETWEEN '$date_from' AND '$date_to' AND sccode='$sccode'
         GROUP BY date, type, account_head, partid
         ORDER BY date , account_head, partid";
-    echo $sql;
+
 }
 
 
