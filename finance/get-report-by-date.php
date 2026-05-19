@@ -135,7 +135,17 @@ $sqlx = "UPDATE cashbook set partid=account_sub_head where  sccode='$sccode' and
 $conn->query($sqlx);
 $sqly = "UPDATE cashbook set account_sub_head=partid where  sccode='$sccode' and slots='$slot' and date between '$date_from' and '$date_to' and partid> 0";
 $conn->query($sqly);
+
+
+
+$sqlMod = "UPDATE cashbook set income=amount where  sccode='$sccode' and slots='$slot' and date between '$date_from' and '$date_to' and type='Income'";
+$conn->query($sqlMod);
+
+$sqln = "UPDATE cashbook set expenditure=amount where  sccode='$sccode' and slots='$slot' and date between '$date_from' and '$date_to' and type='Expenditure'";
+$conn->query($sqln);
 /*
+
+
 01. stfinance table এর আইটেম কোড অনুযায়ী ‍অ্যাকাউন্ট হেড ম্যাপ করতে হবে। ডেট আপডেট করতে হবে।
 
 02. তারিখ, account_head, sub_head, ক্লাস, সেকশন গ্রুপ করে মোট টাকা দিয়ে ক্যাশবুকে ডেটা ইনসার্ট করতে হবে। 
