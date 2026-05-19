@@ -247,7 +247,7 @@ $total_expense = 0;
                                 } ?>
                             </td>
                             <td class="text-end">
-                                <?php if ($row['type'] == 'Expense') {
+                                <?php if ($row['type'] == 'Expenditure') {
                                     echo number_format($row['expenditure'], 2);
                                 } ?>
                             </td>
