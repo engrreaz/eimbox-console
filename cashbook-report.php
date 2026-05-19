@@ -1,4 +1,6 @@
-<?php require_once 'header.php'; ?>
+<?php require_once 'header.php'; 
+$recalc = $_COOKIE['cashbook_report_recalculation'] ?? '1';
+?>
 
 <div class="container-xxl flex-grow-1 container-p-y">
 
@@ -47,17 +49,53 @@
         </div>
 
         <div class="col-md-2 ">
-          <button class="btn btn-primary" onclick="get_report();">View Report</button>
+          <div class="btn-group">
+
+            <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown"
+              aria-expanded="false">
+              Report
+            </button>
+
+            <ul class="dropdown-menu">
+
+              <li>
+                <a class="dropdown-item" href="javascript:void(0)" onclick="get_report(1)">
+                  View Report
+                </a>
+              </li>
+
+              <li>
+                <a class="dropdown-item" href="javascript:void(0)" onclick="get_report(0)">
+                  Minified Report
+                </a>
+              </li>
+
+              <li>
+                <hr class="dropdown-divider">
+              </li>
+
+              <li>
+                <a class="dropdown-item d-flex align-items-center justify-content-between" href="javascript:void(0)"
+                  onclick="toggleRecalculation(this)">
+
+                  <span>Re-calculation</span>
+
+                  <span id="recalc-check"><?php echo $recalc === '1' ? '✔' : ''; ?></span>
+                </a>
+              </li>
+
+            </ul>
+          </div>
         </div>
       </div>
     </div>
 
 
- 
+
 
   </div>
 
-     <div id="report-block" class="mt-3"></div>
+  <div id="report-block" class="mt-3"></div>
 </div>
 
 
@@ -69,6 +107,18 @@
 <?php require_once 'footer.php'; ?>
 
 <!-- ----------------------------------- -->
+<script>
+  let recalculation = 1;
+
+  function toggleRecalculation(el) {
+
+    recalculation = recalculation ? 0 : 1;
+    setCookie("cashbook_report_recalculation", recalculation, 30);
+
+    document.getElementById("recalc-check").innerHTML =
+      recalculation ? "✔" : "";
+  }
+</script>
 
 <script>
   document.getElementById('month').addEventListener('change', function () {
@@ -94,7 +144,7 @@
   });
 
 
-  function get_report() {
+  function get_report(type = 1) {
 
     let slot = document.getElementById('slot-main').value;
     let session = document.getElementById('session-main').value;
@@ -115,7 +165,9 @@
         "date_from=" + encodeURIComponent(from) +
         "&date_to=" + encodeURIComponent(to) +
         "&slot=" + encodeURIComponent(slot) +
-        "&session=" + encodeURIComponent(session)
+        "&session=" + encodeURIComponent(session) +
+        "&type=" + encodeURIComponent(type) +
+        "&recalculation=" + encodeURIComponent(recalculation)
     })
       .then(response => {
 

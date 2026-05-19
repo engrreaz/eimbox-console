@@ -4,6 +4,10 @@ require_once '../core/config.php';
 require_once '../core/db.php';
 require_once '../core/global_values.php';
 
+$type = $_POST['type'] ?? 1;
+$recalculation = $_POST['recalculation'] ?? 1;
+
+
 $slot = $_POST['slot'] ?? '';
 $session = $_POST['session'] ?? '';
 
@@ -21,69 +25,71 @@ $date_to = mysqli_real_escape_string($conn, $date_to);
 $slot = mysqli_real_escape_string($conn, $slot);
 $session = mysqli_real_escape_string($conn, $session);
 
-$acc_head_list = [];
-$sql_0 = "SELECT id, account_head_id
+
+if ($recalculation) {
+    $acc_head_list = [];
+    $sql_0 = "SELECT id, account_head_id
           FROM account_sub_head 
           WHERE sccode='$sccode' ";
 
-// echo $sql_0;
+    // echo $sql_0;
 
-$result = mysqli_query($conn, $sql_0);
+    $result = mysqli_query($conn, $sql_0);
 
-while ($row = mysqli_fetch_assoc($result)) {
-    $acc_head_list[$row['id']] = $row['account_head_id'];
-}
+    while ($row = mysqli_fetch_assoc($result)) {
+        $acc_head_list[$row['id']] = $row['account_head_id'];
+    }
 
-// var_dump($acc_head_list);
+    // var_dump($acc_head_list);
 
 
 
-$sub_head_list = [];
+    $sub_head_list = [];
 
-$sql_1 = "SELECT itemcode, sub_head 
+    $sql_1 = "SELECT itemcode, sub_head 
           FROM financesetup 
           WHERE sccode='$sccode' 
           AND sessionyear='$session' 
           AND slot='$slot' 
           AND sub_head IS NOT NULL";
 
-// echo $sql_1;
+    // echo $sql_1;
 
-$result = mysqli_query($conn, $sql_1);
+    $result = mysqli_query($conn, $sql_1);
 
-while ($row = mysqli_fetch_assoc($result)) {
-    $sub_head_list[$row['itemcode']] = $row['sub_head'];
-}
+    while ($row = mysqli_fetch_assoc($result)) {
+        $sub_head_list[$row['itemcode']] = $row['sub_head'];
+    }
 
-// var_dump($sub_head_list);
+    // var_dump($sub_head_list);
 
-foreach ($sub_head_list as $itemcode => $sub_head) {
+    foreach ($sub_head_list as $itemcode => $sub_head) {
 
-    $itemcode = mysqli_real_escape_string($conn, $itemcode);
-    $sub_head = mysqli_real_escape_string($conn, $sub_head);
+        $itemcode = mysqli_real_escape_string($conn, $itemcode);
+        $sub_head = mysqli_real_escape_string($conn, $sub_head);
 
-    $sql_update = "UPDATE stfinance 
+        $sql_update = "UPDATE stfinance 
                    SET sub_head = '$sub_head' 
                    WHERE itemcode = '$itemcode'
                    AND sccode = '$sccode'
                    AND sessionyear = '$session'
                    AND pr1date BETWEEN '$date_from' AND '$date_to'
                    ";
-    // echo $sql_update;
+        // echo $sql_update;
 
-    mysqli_query($conn, $sql_update);
-}
+        mysqli_query($conn, $sql_update);
+    }
 
 
-$sql_delete = "DELETE FROM cashbook 
+    $sql_delete = "DELETE FROM cashbook 
                WHERE date BETWEEN '$date_from' AND '$date_to'
                AND sccode = '$sccode' AND slots='$slot'
                AND module = 'Collection'";
-            //    echo $sql_delete;
-mysqli_query($conn, $sql_delete);
+    //    echo $sql_delete;
+    mysqli_query($conn, $sql_delete);
 
 
-$sql = "SELECT 
+    $sql = "SELECT 
             pr1date,
             itemcode,
             particulareng,
@@ -95,32 +101,32 @@ $sql = "SELECT
         WHERE sccode = '$sccode'
         AND pr1date BETWEEN '$date_from' AND '$date_to'
         GROUP BY pr1date, itemcode, particulareng, sub_head, classname, sectionname";
-// echo $sql;
-$result = mysqli_query($conn, $sql);
+    // echo $sql;
+    $result = mysqli_query($conn, $sql);
 
 
-while ($row = mysqli_fetch_assoc($result)) {
+    while ($row = mysqli_fetch_assoc($result)) {
 
-    $pr1date = mysqli_real_escape_string($conn, $row['pr1date']);
-    $itemcode = mysqli_real_escape_string($conn, $row['itemcode']);
-    $parti = mysqli_real_escape_string($conn, $row['particulareng']);
-    $sub_head = mysqli_real_escape_string($conn, $row['sub_head']);
-    $class = mysqli_real_escape_string($conn, $row['classname']);
-    $section = mysqli_real_escape_string($conn, $row['sectionname']);
-    $amount = $row['total_pr1'];
+        $pr1date = mysqli_real_escape_string($conn, $row['pr1date']);
+        $itemcode = mysqli_real_escape_string($conn, $row['itemcode']);
+        $parti = mysqli_real_escape_string($conn, $row['particulareng']);
+        $sub_head = mysqli_real_escape_string($conn, $row['sub_head']);
+        $class = mysqli_real_escape_string($conn, $row['classname']);
+        $section = mysqli_real_escape_string($conn, $row['sectionname']);
+        $amount = $row['total_pr1'];
 
-    $particular = $parti . ' - ' . $class . ' (' . $section . ')';
-    $acc_head = $acc_head_list[$sub_head];
+        $particular = $parti . ' - ' . $class . ' (' . $section . ')';
+        $acc_head = $acc_head_list[$sub_head];
 
-    $sql_insert = "INSERT INTO cashbook 
+        $sql_insert = "INSERT INTO cashbook 
         (date, sccode, module, account_sub_head,  amount, slots, sessionyear, account_head, type, particulars, income, expenditure, entryby, entrytime, partid)
         VALUES 
         ('$pr1date', '$sccode', 'Collection', '$sub_head', '$amount', '$slot', '$session', '$acc_head', 'Income', '$particular', '$amount', 0, '$usr', '$cur', '$sub_head')";
-// echo $sql_insert;
-    mysqli_query($conn, $sql_insert);
+        // echo $sql_insert;
+        mysqli_query($conn, $sql_insert);
+    }
+
 }
-
-
 
 
 
@@ -143,12 +149,20 @@ while ($row = mysqli_fetch_assoc($result)) {
 
 
 
-
-// main query
-$sql = "SELECT id, particulars, income, expenditure, amount, type, date 
+if ($type == 1) {
+    $sql = "SELECT id, particulars, income, expenditure, amount, type, date 
         FROM cashbook 
         WHERE date BETWEEN '$date_from' AND '$date_to' AND sccode='$sccode'
         ORDER BY date ASC, account_head ASC, account_sub_head ASC";
+} else {
+    $sql = "SELECT id, particulars, income, expenditure, amount, type, date 
+        FROM cashbook 
+        WHERE date BETWEEN '$date_from' AND '$date_to' AND sccode='$sccode'
+        GROUP BY date, account_head, account_sub_head, income, type
+        ORDER BY date DESC, account_head DESC, account_sub_head DESC";
+}
+
+
 
 
 $result = mysqli_query($conn, $sql);
@@ -164,11 +178,11 @@ $total_expense = 0;
 
 <div class="card mt-3">
     <div class="card-header">
-         <h5 class="mb-3">Report: <?= $date_from ?> to <?= $date_to ?></h5>
+        <h5 class="mb-3">Report: <?= $date_from ?> to <?= $date_to ?></h5>
     </div>
     <div class="card-bodyx">
 
-       
+
 
         <div class="table-responsive">
             <table class="table table-bordered table-sm">
