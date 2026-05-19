@@ -50,10 +50,8 @@ if ($recalculation) {
     $resultox = mysqli_query($conn, $sql_00);
 
     while ($row = mysqli_fetch_assoc($resultox)) {
-        $account_title_list[$row['id']] = [
-            'account_head_id' => $row['account_head_id'],
-            'account_head' => $row['account_head'],
-            'sub_head' => $row['sub_head']
+        $account_title_list[$row['account_head_id']] = [
+            'account_head' => $row['account_head']
         ];
     }
 
@@ -248,8 +246,7 @@ $total_expense = 0;
                                 ?>
                                 <td>
                                     <?php
-                                    $descrip = $account_title_list[$row['account_sub_head']]['account_head'] ?? '' . ' - ' .
-                                        $account_title_list[$row['account_sub_head']]['sub_head'] ?? $row['account_sub_head'];
+                                    $descrip = $account_title_list[$row['account_sub_head']]['account_head'] ?? '--' ;
                                     echo htmlspecialchars($descrip);
                                     ?>
                                 </td>
