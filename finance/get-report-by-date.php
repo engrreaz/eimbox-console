@@ -157,7 +157,7 @@ if ($type == 1) {
         WHERE date BETWEEN '$date_from' AND '$date_to' AND sccode='$sccode'
         ORDER BY date ASC, account_head ASC, account_sub_head ASC";
 } else {
-    $sql = "SELECT particulars, sum(income) as income, sum(expenditure) as expenditure, sum(amount) as amount, type, date 
+    $sql = "SELECT account_head, account_sub_head, sum(income) as income, sum(expenditure) as expenditure, sum(amount) as amount, type, date 
         FROM cashbook 
         WHERE date BETWEEN '$date_from' AND '$date_to' AND sccode='$sccode'
         GROUP BY date, type, account_head, account_sub_head
@@ -210,7 +210,7 @@ $total_expense = 0;
                         ?>
                         <tr>
                             <td><?= $row['date'] ?></td>
-                            <td><?= htmlspecialchars($row['particulars']) ?></td>
+                            <td><?= htmlspecialchars($row['account_head'] . ' - ' . $row['account_sub_head']) ?></td>
                             <td>
                                 <span class="badge bg-<?= $row['type'] == 'Income' ? 'success' : 'danger' ?>">
                                     <?= $row['type'] ?>
