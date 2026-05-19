@@ -186,7 +186,7 @@ if ($type == 1) {
         WHERE date BETWEEN '$date_from' AND '$date_to' AND sccode='$sccode'
         GROUP BY date,  account_head, account_sub_head
         ORDER BY date , account_head, account_sub_head";
-        echo $sql;
+    echo $sql;
 }
 
 
@@ -233,11 +233,9 @@ $total_expense = 0;
                 <tbody>
 
                     <?php while ($row = mysqli_fetch_assoc($result)) {
-                        if ($row['type'] == 'Income') {
-                            $total_income += $row['amount'];
-                        } else {
-                            $total_expense += $row['amount'];
-                        }
+                        $total_income += $row['income'];
+                        $total_expense += $row['expenditure'];
+
                         ?>
                         <tr>
                             <td><?= $row['date'] ?></td>
@@ -258,15 +256,15 @@ $total_expense = 0;
                                 <?php
                             }
                             ?>
-                            <td> 
+                            <td>
                                 <?php if ($type == 1) {
-                                ?>
+                                    ?>
                                     <span class="badge bg-<?= $row['type'] == 'Income' ? 'success' : 'danger' ?>">
                                         <?= $row['type'] ?>
                                     </span>
-                                <?php
-                            }
-                            ?>
+                                    <?php
+                                }
+                                ?>
 
                             </td>
                             <td class="text-end">
