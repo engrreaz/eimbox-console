@@ -44,6 +44,17 @@ if ($recalculation) {
 
     // var_dump($acc_head_list);
 
+    $account_title_list = [];
+    $sql_00 = "SELECT id, account_head_id, account_head, sub_head where sccode='$sccode'";
+    $resultox = mysqli_query($conn, $sql_00);
+
+    while ($row = mysqli_fetch_assoc($resultox)) {
+        $account_title_list[$row['id']] = [
+            'account_head_id' => $row['account_head_id'],
+            'account_head' => $row['account_head'],
+            'sub_head' => $row['sub_head']
+        ];
+    }
 
 
     $sub_head_list = [];
@@ -175,6 +186,7 @@ if ($type == 1) {
         GROUP BY date, type, account_head, account_sub_head
         ORDER BY date , account_head, account_sub_head";
 
+
 }
 
 
@@ -195,14 +207,13 @@ $total_expense = 0;
     <div class="card-header d-flex">
         <h5 class="mb-3 flex-grow-1">Report: <?= $date_from ?> to <?= $date_to ?></h5>
         <div class="d-flex align-items-center gap-3">
-  
-            <button class="btn btn-sm btn-danger" ><i
-                    class="bi bi-file-pdf"></i></button>
-            <button class="btn btn-sm btn-primary" ><i class="bi bi-printer"></i></button>
+
+            <button class="btn btn-sm btn-danger"><i class="bi bi-file-pdf"></i></button>
+            <button class="btn btn-sm btn-primary"><i class="bi bi-printer"></i></button>
         </div>
     </div>
 
-    
+
     <div class="card-bodyx" id="data-block">
 
 
@@ -237,7 +248,13 @@ $total_expense = 0;
                                 <?php
                             } else {
                                 ?>
-                                <td><?= htmlspecialchars($row['account_head'] . ' - ' . $row['account_sub_head']) ?></td>
+                                <td>
+                                    <?php
+                                    $descrip = $account_title_list[$row['account_sub_head']]['account_head'] ?? '' . ' - ' .
+                                        $account_title_list[$row['account_sub_head']]['sub_head'] ?? '';
+                                    echo htmlspecialchars($descrip);
+                                    ?>
+                                </td>
                                 <?php
                             }
                             ?>
