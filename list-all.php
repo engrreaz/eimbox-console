@@ -144,7 +144,7 @@
 
             $result = mysqli_query($conn, $sql);
 
-            echo '<div id="print-area">';
+            echo '<div id="print-block">';
 
             // --- Print Only Summary Section ---
             echo '<div class="d-none d-print-block mb-4">';
@@ -276,7 +276,7 @@
                 ';
             }
 
-            echo '</div>'; // End print-area
+            echo '</div>'; // End print-block
 
             ?>
 
@@ -289,11 +289,11 @@
 
 <!-- ----------------------------------- -->
 <style>
-#print-area {
+#print-block {
     --print-font-size: 14px;
     font-size: var(--print-font-size);
 }
-#print-area table {
+#print-block table {
     font-size: inherit;
 }
 
@@ -332,7 +332,7 @@ function changeFontSize(step) {
     currentFontSize += step;
     if(currentFontSize < 8) currentFontSize = 8;
     if(currentFontSize > 24) currentFontSize = 24;
-    document.getElementById('print-area').style.setProperty('--print-font-size', currentFontSize + 'px');
+    document.getElementById('print-block').style.setProperty('--print-font-size', currentFontSize + 'px');
 }
 </script>
 <!-- ----------------------------------- -->
