@@ -5,7 +5,7 @@ require_once '../core/db.php';
 require_once '../core/core-val.php';
 require_once '../core/global_values.php';
 
-
+$icon = '';
 
 
 // ===================== TRACK CONFIG =====================
