@@ -76,9 +76,18 @@
                 </div>
 
                 <div class="col-md-3 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary w-100">
-                        Filter
-                    </button>
+                    <div class="d-flex w-100 gap-2">
+                        <button type="submit" class="btn btn-primary flex-fill">
+                            Filter
+                        </button>
+                        <button type="button" class="btn btn-success flex-fill" onclick="window.print()">
+                            Print
+                        </button>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-secondary px-2" onclick="changeFontSize(1)" title="Increase Font">A+</button>
+                            <button type="button" class="btn btn-secondary px-2" onclick="changeFontSize(-1)" title="Decrease Font">A-</button>
+                        </div>
+                    </div>
                 </div>
 
             </form>
@@ -134,6 +143,58 @@
             ";
 
             $result = mysqli_query($conn, $sql);
+
+            echo '<div id="print-area">';
+
+            // --- Print Only Summary Section ---
+            echo '<div class="d-none d-print-block mb-4">';
+            include 'templete/letter-head-01.php';
+            echo '<h4 class="text-center mt-4 mb-3" style="text-decoration: underline;">Student Summary</h4>';
+            
+            $summarySql = "
+                SELECT 
+                    si.classname,
+                    si.sectionname,
+                    COUNT(si.stid) as total_students
+                FROM sessioninfo si
+                WHERE si.sccode='$sccode' $where
+                GROUP BY si.classname, si.sectionname
+                ORDER BY si.classname ASC, si.sectionname ASC
+            ";
+            $summaryResult = mysqli_query($conn, $summarySql);
+            $total_students = 0;
+            
+            echo '<table class="table table-bordered table-sm text-center" style="width: 80%; margin: 0 auto;">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Class</th>
+                            <th>Section</th>
+                            <th>Total Students</th>
+                        </tr>
+                    </thead>
+                    <tbody>';
+                    
+            if($summaryResult && mysqli_num_rows($summaryResult) > 0) {
+                while($sRow = mysqli_fetch_assoc($summaryResult)) {
+                    echo '<tr>
+                        <td>'.$sRow['classname'].'</td>
+                        <td>'.$sRow['sectionname'].'</td>
+                        <td>'.$sRow['total_students'].'</td>
+                    </tr>';
+                    $total_students += $sRow['total_students'];
+                }
+            } else {
+                echo '<tr><td colspan="3">No data found.</td></tr>';
+            }
+            echo '      <tr>
+                            <th colspan="2" class="text-end">Grand Total</th>
+                            <th>'.$total_students.'</th>
+                        </tr>
+                    </tbody>
+                  </table>';
+            echo '<div style="page-break-before: always;"></div>';
+            echo '</div>'; // End d-print-block summary
+            // ----------------------------------
 
             $currentGroup = "";
 
@@ -215,6 +276,8 @@
                 ';
             }
 
+            echo '</div>'; // End print-area
+
             ?>
 
         </div>
@@ -225,8 +288,52 @@
 <?php require_once 'footer.php'; ?>
 
 <!-- ----------------------------------- -->
-<script>
+<style>
+#print-area {
+    --print-font-size: 14px;
+    font-size: var(--print-font-size);
+}
+#print-area table {
+    font-size: inherit;
+}
 
+@media print {
+    /* Hide specific layout elements */
+    .layout-menu,
+    .layout-navbar,
+    .footer,
+    .content-footer,
+    .card-header,
+    form,
+    .btn {
+        display: none !important;
+    }
+    
+    /* Reset layout container padding/margins */
+    .layout-page,
+    .content-wrapper,
+    .container-xxl,
+    .card,
+    .card-body {
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}
+</style>
+
+<script>
+let currentFontSize = 14;
+function changeFontSize(step) {
+    currentFontSize += step;
+    if(currentFontSize < 8) currentFontSize = 8;
+    if(currentFontSize > 24) currentFontSize = 24;
+    document.getElementById('print-area').style.setProperty('--print-font-size', currentFontSize + 'px');
+}
 </script>
 <!-- ----------------------------------- -->
 </body>
