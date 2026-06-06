@@ -171,8 +171,8 @@
                                     <th width="60">SL</th>
                                     <th width="80">Roll</th>
                                     <th>Student Name</th>
-                                    <th>Father Name</th>
-                                    <th>Mother Name</th>
+                                    <th>Parents Name</th>
+                                    <th>Class</th>
                                     <th>Guardian Mobile</th>
                                     <th width="120">DOB</th>
                                     <th width="100">Student ID</th>
@@ -182,7 +182,7 @@
                             <tbody>
                     ';
 
-                    $sl = 1;
+                    // $sl = 1;
                 }
 
                 echo '
@@ -190,8 +190,9 @@
                         <td>' . $sl++ . '</td>
                         <td>' . $row['rollno'] . '</td>
                         <td>' . $row['stnameeng'] . '</td>
-                        <td>' . $row['fname'] . '</td>
-                        <td>' . $row['mname'] . '</td>
+                        <td>' . $row['fname'] . '<br>'.  $row['mname'] .'</td>
+                        <td>' .  '</td>
+                        <td>' . $row['classname'] . '<br>' . $row['sectionname'] .'</td>
                         <td>' . $row['guarmobile'] . '</td>
                         <td>' . $row['dob'] . '</td>
                         <td>' . $row['stid'] . '</td>
