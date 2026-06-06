@@ -21,7 +21,7 @@
                         $classQuery = mysqli_query($conn, "
                             SELECT DISTINCT areaname
                             FROM areas
-                            WHERE sccode='$sccode'
+                            WHERE sccode='$sccode' and sessionyear = '$sessionyear'
                             ORDER BY areaname ASC
                         ");
 
@@ -42,7 +42,7 @@
                         $sectionQuery = mysqli_query($conn, "
                             SELECT DISTINCT subarea
                             FROM areas
-                            WHERE sccode='$sccode'
+                            WHERE sccode='$sccode' AND sessionyear = '$sessionyear'
                             ORDER BY subarea ASC
                         ");
 
@@ -144,7 +144,7 @@
 
             $result = mysqli_query($conn, $sql);
 
-            echo '<div id="print-block">';
+            echo '<div id="print-block-list">';
 
             // --- Print Only Summary Section ---
             echo '<div class="d-none d-print-block mb-4">';
@@ -289,11 +289,11 @@
 
 <!-- ----------------------------------- -->
 <style>
-#print-block {
+#print-block-list {
     --print-font-size: 14px;
     font-size: var(--print-font-size);
 }
-#print-block table {
+#print-block-list table {
     font-size: inherit;
 }
 
@@ -332,7 +332,7 @@ function changeFontSize(step) {
     currentFontSize += step;
     if(currentFontSize < 8) currentFontSize = 8;
     if(currentFontSize > 24) currentFontSize = 24;
-    document.getElementById('print-block').style.setProperty('--print-font-size', currentFontSize + 'px');
+    document.getElementById('print-block-list').style.setProperty('--print-font-size', currentFontSize + 'px');
 }
 </script>
 <!-- ----------------------------------- -->
