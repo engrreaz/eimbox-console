@@ -191,7 +191,6 @@
                         <td>' . $row['rollno'] . '</td>
                         <td>' . $row['stnameeng'] . '</td>
                         <td>' . $row['fname'] . '<br>'.  $row['mname'] .'</td>
-                        <td>' .  '</td>
                         <td>' . $row['classname'] . '<br>' . $row['sectionname'] .'</td>
                         <td>' . $row['guarmobile'] . '</td>
                         <td>' . $row['dob'] . '</td>
