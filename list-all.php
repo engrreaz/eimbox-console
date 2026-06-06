@@ -305,7 +305,24 @@
     .content-footer,
     .card-header,
     form,
-    .btn {
+    .btn,
+    .buy-now,
+    .layout-overlay,
+    .toast-container,
+    #mainFooter,
+    #extend-footer,
+    #feedbackModal,
+    .app-brand {
+        display: none !important;
+    }
+
+    /* Hide any direct siblings of print-block-list within card-body */
+    .card-body > *:not(#print-block-list) {
+        display: none !important;
+    }
+    
+    /* Hide extra scripts/divs injected directly into body */
+    body > *:not(.layout-wrapper):not(script) {
         display: none !important;
     }
     
