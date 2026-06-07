@@ -84,7 +84,8 @@ if ($mode == 'preview') {
                AND si.sectionname = '$secname'
                AND si.sessionyear = '$sessionyear'
                AND si.sccode = '$sccode'
-               AND si.slot = '$slot'";
+               AND si.slot = '$slot'
+               ORDER BY si.rollno";
 }
 
 $resStudent = mysqli_query($conn, $sqlStudent);
