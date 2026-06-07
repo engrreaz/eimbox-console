@@ -84,7 +84,7 @@ if ($mode == 'preview') {
                AND si.sectionname = '$secname'
                AND si.sessionyear = '$sessionyear'
                AND si.sccode = '$sccode'
-               AND si.slot = '$slot' LIMIT 4";
+               AND si.slot = '$slot'";
 }
 
 $resStudent = mysqli_query($conn, $sqlStudent);
