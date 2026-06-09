@@ -1,4 +1,5 @@
-<?php require_once 'header.php';    $sl = 1; ?>
+<?php require_once 'header.php';
+$sl = 1; ?>
 
 <div class="container-xxl flex-grow-1 container-p-y">
 
@@ -251,7 +252,7 @@
                             <tbody>
                     ';
 
-                 
+
                 }
 
                 echo '
@@ -308,7 +309,7 @@
     @media print {
 
         /* Hide specific layout elements */
-        nav,
+        nav, #page_link_title,
         .layout-menu,
         .layout-navbar,
         .footer,
@@ -325,6 +326,8 @@
         .app-brand {
             display: none !important;
         }
+
+
 
         /* Hide any direct siblings of print-block-list within card-body */
         .card-body>*:not(#print-block-list) {
@@ -349,6 +352,26 @@
             background: transparent !important;
             width: 100% !important;
             max-width: 100% !important;
+        }
+    }
+
+    @media print {
+
+        thead {
+            display: table-header-group;
+        }
+
+        tfoot {
+            display: table-footer-group;
+        }
+
+        tr {
+            page-break-inside: avoid;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
         }
     }
 </style>
