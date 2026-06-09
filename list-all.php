@@ -374,6 +374,7 @@ $sl = 1; ?>
         table {
             width: 100%;
             border-collapse: collapse;
+            background: white !important;
         }
     }
 </style>
