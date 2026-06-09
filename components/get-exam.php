@@ -9,7 +9,8 @@ $session = $_GET['session'];
 
 $q = mysqli_query($conn, "SELECT examtitle FROM examlist 
     WHERE sccode='$sccode' AND slot='$slot' AND sessionyear='$session'");
-
+echo "SELECT examtitle FROM examlist 
+    WHERE sccode='$sccode' AND slot='$slot' AND sessionyear='$session'";
 $data = [];
 while ($r = mysqli_fetch_assoc($q)) {
     $data[] = ["value" => $r['examtitle'], "label" => $r['examtitle']];
