@@ -139,14 +139,8 @@
                 $where
 
                 ORDER BY 
-                    ORDER BY 
-                    FIELD(si.classname,
-                    
-                    'Six',
-                    'Seven',
-                    'Eight',
-                    'Nine',
-                    'Ten'), FIELD(si.sectionname, 'Science', 'Business Studies', 'Humanities'),
+                    FIELD(si.classname, 'Six', 'Seven', 'Eight', 'Nine', 'Ten'), 
+                    FIELD(si.sectionname, 'Science', 'Business Studies', 'Humanities'),
                     CAST(si.rollno AS UNSIGNED) ASC
             ";
 
