@@ -22,7 +22,7 @@
                             SELECT DISTINCT areaname
                             FROM areas
                             WHERE sccode='$sccode' and sessionyear = '$sessionyear'
-                            ORDER BY areaname ASC
+                            ORDER BY slno ASC
                         ");
 
                         while ($classRow = mysqli_fetch_assoc($classQuery)) {
@@ -43,7 +43,7 @@
                             SELECT DISTINCT subarea
                             FROM areas
                             WHERE sccode='$sccode' AND sessionyear = '$sessionyear'
-                            ORDER BY subarea ASC
+                            ORDER BY slno ASC
                         ");
 
                         while ($sectionRow = mysqli_fetch_assoc($sectionQuery)) {
@@ -123,6 +123,7 @@
                     st.stnameeng,
                     st.fname,
                     st.mname,
+                    st.previll, prepo, preps, predist,
                     st.guarmobile,
                     st.dob
 
@@ -231,12 +232,12 @@
                                 <tr>
                                     <th width="60">SL</th>
                                     <th width="80">Roll</th>
+                                    <th>Class</th>
                                     <th>Student Name</th>
                                     <th>Parents Name</th>
-                                    <th>Class</th>
+                                    <th>Address</th>
                                     <th>Guardian Mobile</th>
                                     <th width="120">DOB</th>
-                                    <th width="100">Student ID</th>
                                 </tr>
                             </thead>
 
@@ -252,10 +253,11 @@
                         <td>' . $row['rollno'] . '</td>
                         <td>' . $row['stnameeng'] . '</td>
                         <td>' . $row['fname'] . '<br>'.  $row['mname'] .'</td>
+                        <td>' . $row['previll'] . '<br>' . $row['prepo'] . '<br>' . $row['preps'] . '<br>' . $row['predist'] .'</td>
                         <td>' . $row['classname'] . '<br>' . $row['sectionname'] .'</td>
                         <td>' . $row['guarmobile'] . '</td>
                         <td>' . $row['dob'] . '</td>
-                        <td>' . $row['stid'] . '</td>
+                    
                     </tr>
                 ';
             }
