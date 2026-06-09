@@ -123,7 +123,7 @@
                     st.stnameeng,
                     st.fname,
                     st.mname,
-                    st.previll, prepo, preps, predist,
+                    st.previll, st.prepo, st.preps, st.predist,
                     st.guarmobile,
                     st.dob
 
