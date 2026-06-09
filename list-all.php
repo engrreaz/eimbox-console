@@ -358,20 +358,26 @@ $sl = 1; ?>
 
 
         thead {
-            display: table-header-group;
+            display: table-header-group !important;
         }
 
-        tfoot {
-            display: table-footer-group;
-        }
-
-        tr {
-            page-break-inside: avoid;
+        tr,
+        td,
+        th {
+            page-break-inside: avoid !important;
         }
 
         table {
-            width: 100%;
-            border-collapse: collapse;
+            border-collapse: collapse !important;
+            width: 100% !important;
+        }
+
+        thead th {
+            background: #dcdcdc !important;
+            color: #000 !important;
+
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
     }
 </style>
