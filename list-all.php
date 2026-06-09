@@ -229,7 +229,7 @@ $sl = 1; ?>
                     echo '
                     <div class="table-responsive mb-4">
 
-                        <h5 class="mb-3 text-primary text-center">
+                        <h5 class="mb-3 mt-5 text-dark text-center">
                             Session: ' . $row['sessionyear'] . ' |
                             Class: ' . $row['classname'] . ' |
                             Section: ' . $row['sectionname'] . '
