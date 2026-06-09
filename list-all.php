@@ -1,4 +1,4 @@
-<?php require_once 'header.php'; ?>
+<?php require_once 'header.php';    $sl = 1; ?>
 
 <div class="container-xxl flex-grow-1 container-p-y">
 
@@ -251,7 +251,7 @@
                             <tbody>
                     ';
 
-                    $sl = 1;
+                 
                 }
 
                 echo '
