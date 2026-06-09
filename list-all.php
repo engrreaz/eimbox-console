@@ -308,6 +308,7 @@
     @media print {
 
         /* Hide specific layout elements */
+        nav,
         .layout-menu,
         .layout-navbar,
         .footer,
