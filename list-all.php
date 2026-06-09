@@ -84,8 +84,10 @@
                             Print
                         </button>
                         <div class="btn-group">
-                            <button type="button" class="btn btn-secondary px-2" onclick="changeFontSize(1)" title="Increase Font">A+</button>
-                            <button type="button" class="btn btn-secondary px-2" onclick="changeFontSize(-1)" title="Decrease Font">A-</button>
+                            <button type="button" class="btn btn-secondary px-2" onclick="changeFontSize(1)"
+                                title="Increase Font">A+</button>
+                            <button type="button" class="btn btn-secondary px-2" onclick="changeFontSize(-1)"
+                                title="Decrease Font">A-</button>
                         </div>
                     </div>
                 </div>
@@ -152,7 +154,7 @@
             echo '<div class="d-none d-print-block mb-4">';
             include 'templete/letter-head-01.php';
             echo '<h4 class="text-center mt-4 mb-3" style="text-decoration: underline;">Student Summary</h4>';
-            
+
             $summarySql = "
                 SELECT 
                     si.classname,
@@ -161,11 +163,18 @@
                 FROM sessioninfo si
                 WHERE si.sccode='$sccode' $where
                 GROUP BY si.classname, si.sectionname
-                ORDER BY si.classname ASC, si.sectionname ASC
+                ORDER BY 
+                    FIELD(si.classname,
+                    
+                    'Six',
+                    'Seven',
+                    'Eight',
+                    'Nine',
+                    'Ten'), FIELD(si.sectionname, 'Science', 'Business Studies', 'Humanities')
             ";
             $summaryResult = mysqli_query($conn, $summarySql);
             $total_students = 0;
-            
+
             echo '<table class="table table-bordered table-sm text-center" style="width: 80%; margin: 0 auto;">
                     <thead class="table-light">
                         <tr>
@@ -175,13 +184,13 @@
                         </tr>
                     </thead>
                     <tbody>';
-                    
-            if($summaryResult && mysqli_num_rows($summaryResult) > 0) {
-                while($sRow = mysqli_fetch_assoc($summaryResult)) {
+
+            if ($summaryResult && mysqli_num_rows($summaryResult) > 0) {
+                while ($sRow = mysqli_fetch_assoc($summaryResult)) {
                     echo '<tr>
-                        <td>'.$sRow['classname'].'</td>
-                        <td>'.$sRow['sectionname'].'</td>
-                        <td>'.$sRow['total_students'].'</td>
+                        <td>' . $sRow['classname'] . '</td>
+                        <td>' . $sRow['sectionname'] . '</td>
+                        <td>' . $sRow['total_students'] . '</td>
                     </tr>';
                     $total_students += $sRow['total_students'];
                 }
@@ -190,14 +199,14 @@
             }
             echo '      <tr>
                             <th colspan="2" class="text-end">Grand Total</th>
-                            <th>'.$total_students.'</th>
+                            <th>' . $total_students . '</th>
                         </tr>
                     </tbody>
                   </table>';
             echo '<div style="page-break-before: always;"></div>';
             echo '</div>'; // End d-print-block summary
             // ----------------------------------
-
+            
             $currentGroup = "";
 
             while ($row = mysqli_fetch_assoc($result)) {
@@ -253,9 +262,9 @@
                         <td>' . $row['rollno'] . '</td>
                          <td>' . $row['classname'] . '<br>(' . $row['sectionname'] . ')</td>
                         <td>' . $row['stnameeng'] . '</td>
-                        <td>' . $row['fname'] . '<br>'.  $row['mname'] .'</td>
-                        <td>' . $row['previll']  . '<br>' . $row['preps'] . '<br>' . $row['predist'] .'</td>
-                        <td>' . $row['guarmobile']  . '<br>' . date('d/m/Y', strtotime($row['dob'])) . '</td>
+                        <td>' . $row['fname'] . '<br>' . $row['mname'] . '</td>
+                        <td>' . $row['previll'] . '<br>' . $row['preps'] . '<br>' . $row['predist'] . '</td>
+                        <td>' . $row['guarmobile'] . '<br>' . date('d/m/Y', strtotime($row['dob'])) . '</td>
                     </tr>
                 ';
             }
@@ -277,7 +286,7 @@
             }
 
             echo '</div>'; // End print-block
-
+            
             ?>
 
         </div>
@@ -289,69 +298,72 @@
 
 <!-- ----------------------------------- -->
 <style>
-#print-block-list {
-    --print-font-size: 14px;
-    font-size: var(--print-font-size);
-}
-#print-block-list table {
-    font-size: inherit;
-}
-
-@media print {
-    /* Hide specific layout elements */
-    .layout-menu,
-    .layout-navbar,
-    .footer,
-    .content-footer,
-    .card-header,
-    form,
-    .btn,
-    .buy-now,
-    .layout-overlay,
-    .toast-container,
-    #mainFooter,
-    #extend-footer,
-    #feedbackModal,
-    .app-brand {
-        display: none !important;
+    #print-block-list {
+        --print-font-size: 14px;
+        font-size: var(--print-font-size);
     }
 
-    /* Hide any direct siblings of print-block-list within card-body */
-    .card-body > *:not(#print-block-list) {
-        display: none !important;
+    #print-block-list table {
+        font-size: inherit;
     }
-    
-    /* Hide extra scripts/divs injected directly into body */
-    body > *:not(.layout-wrapper):not(script) {
-        display: none !important;
+
+    @media print {
+
+        /* Hide specific layout elements */
+        .layout-menu,
+        .layout-navbar,
+        .footer,
+        .content-footer,
+        .card-header,
+        form,
+        .btn,
+        .buy-now,
+        .layout-overlay,
+        .toast-container,
+        #mainFooter,
+        #extend-footer,
+        #feedbackModal,
+        .app-brand {
+            display: none !important;
+        }
+
+        /* Hide any direct siblings of print-block-list within card-body */
+        .card-body>*:not(#print-block-list) {
+            display: none !important;
+        }
+
+        /* Hide extra scripts/divs injected directly into body */
+        body>*:not(.layout-wrapper):not(script) {
+            display: none !important;
+        }
+
+        /* Reset layout container padding/margins */
+        .layout-page,
+        .content-wrapper,
+        .container-xxl,
+        .card,
+        .card-body {
+            padding: 0 !important;
+            margin: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
+            background: transparent !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
     }
-    
-    /* Reset layout container padding/margins */
-    .layout-page,
-    .content-wrapper,
-    .container-xxl,
-    .card,
-    .card-body {
-        padding: 0 !important;
-        margin: 0 !important;
-        border: none !important;
-        box-shadow: none !important;
-        background: transparent !important;
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-}
 </style>
 
 <script>
-let currentFontSize = 14;
-function changeFontSize(step) {
-    currentFontSize += step;
-    if(currentFontSize < 8) currentFontSize = 8;
-    if(currentFontSize > 24) currentFontSize = 24;
-    document.getElementById('print-block-list').style.setProperty('--print-font-size', currentFontSize + 'px');
-}
+    let currentFontSize = 14;
+    function changeFontSize(step) {
+        currentFontSize += step;
+        if (currentFontSize < 8) currentFontSize = 8;
+        if (currentFontSize > 24) currentFontSize = 24;
+        document.getElementById('print-block-list').style.setProperty('--print-font-size', currentFontSize + 'px');
+    }
 </script>
 <!-- ----------------------------------- -->
 </body>
+
 </html>
