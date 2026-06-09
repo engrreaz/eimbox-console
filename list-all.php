@@ -139,11 +139,15 @@
                 $where
 
                 ORDER BY 
-                    si.sessionyear DESC,
-                    si.classname ASC,
-                    si.sectionname ASC,
+                    ORDER BY 
+                    FIELD(si.classname,
+                    
+                    'Six',
+                    'Seven',
+                    'Eight',
+                    'Nine',
+                    'Ten'), FIELD(si.sectionname, 'Science', 'Business Studies', 'Humanities'),
                     CAST(si.rollno AS UNSIGNED) ASC
-                    LIMIT 50
             ";
 
             $result = mysqli_query($conn, $sql);
