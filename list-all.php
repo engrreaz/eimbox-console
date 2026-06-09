@@ -255,7 +255,7 @@
                         <td>' . $row['stnameeng'] . '</td>
                         <td>' . $row['fname'] . '<br>'.  $row['mname'] .'</td>
                         <td>' . $row['previll']  . '<br>' . $row['preps'] . '<br>' . $row['predist'] .'</td>
-                        <td>' . $row['guarmobile']  . '<br>' . $row['dob'] . '</td>
+                        <td>' . $row['guarmobile']  . '<br>' . date('d/m/Y', strtotime($row['dob'])) . '</td>
                     </tr>
                 ';
             }
