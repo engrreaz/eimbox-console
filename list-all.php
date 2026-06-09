@@ -227,13 +227,15 @@ $sl = 1; ?>
                     $currentGroup = $groupName;
 
                     echo '
-                    <div class="table-responsive mb-4">
-
-                        <h5 class="mb-3 mt-5 text-dark text-center" style="font-size:18px; font-weight:800; color:black !important;">
+<h5 class="mb-3 mt-5 text-dark text-center" style="font-size:18px; font-weight:800; color:black !important;">
                             Session: ' . $row['sessionyear'] . ' |
                             Class: ' . $row['classname'] . ' |
                             Section: ' . $row['sectionname'] . '
                         </h5>
+
+                    <div class="table-responsive mb-4">
+
+                        
 
                         <table class="table table-bordered table-hover align-middle">
 
