@@ -239,13 +239,13 @@ $sl = 1; ?>
 
                             <thead class="table-dark">
                                 <tr>
-                                    <th width="60">SL</th>
-                                    <th width="80">Roll</th>
-                                    <th>Class (Section)</th>
-                                    <th>Student Name</th>
-                                    <th>Parents Name</th>
-                                    <th>Address</th>
-                                    <th>Mobile & DOB</th>
+                                    <th style="background:#dcdcdc;color:#000;" width="60">SL</th>
+                                    <th style="background:#dcdcdc;color:#000;" width="80">Roll</th>
+                                    <th style="background:#dcdcdc;color:#000;">Class (Section)</th>
+                                    <th style="background:#dcdcdc;color:#000;">Student Name</th>
+                                    <th style="background:#dcdcdc;color:#000;">Parents Name</th>
+                                    <th style="background:#dcdcdc;color:#000;">Address</th>
+                                    <th style="background:#dcdcdc;color:#000;">Mobile & DOB</th>
                                 </tr>
                             </thead>
 
