@@ -351,7 +351,7 @@ $sl = 1; ?>
             margin: 0 !important;
             border: none !important;
             box-shadow: none !important;
-            background: transparent !important;
+            background: white !important;
             width: 100% !important;
             max-width: 100% !important;
         }
@@ -359,6 +359,8 @@ $sl = 1; ?>
 
         thead {
             display: table-header-group;
+            background:white;
+            color:black;
         }
 
         tfoot {
