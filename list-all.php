@@ -379,6 +379,12 @@ $sl = 1; ?>
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
+
+        h5 {
+            font-size: 18px !important;
+            font-weight: 800 !important;
+            color: black !important;
+        }
     }
 </style>
 
