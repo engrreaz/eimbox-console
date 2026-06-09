@@ -141,6 +141,7 @@
                     si.classname ASC,
                     si.sectionname ASC,
                     CAST(si.rollno AS UNSIGNED) ASC
+                    LIMIT 50
             ";
 
             $result = mysqli_query($conn, $sql);
