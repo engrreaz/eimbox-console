@@ -140,7 +140,7 @@
 
                 ORDER BY 
                     FIELD(si.classname, 'Six', 'Seven', 'Eight', 'Nine', 'Ten'), 
-                    FIELD(si.sectionname, 'Science', 'Business Studies', 'Humanities'),
+                    FIELD(si.sectionname, 'Jaba', 'Beli', 'Padma','Meghna','Shapla', 'Golap', 'Science', 'Business Studies', 'Humanities'),
                     CAST(si.rollno AS UNSIGNED) ASC
             ";
 
