@@ -309,7 +309,8 @@ $sl = 1; ?>
     @media print {
 
         /* Hide specific layout elements */
-        nav, #page_link_title,
+        nav,
+        #page_link_title,
         .layout-menu,
         .layout-navbar,
         .footer,
@@ -353,9 +354,7 @@ $sl = 1; ?>
             width: 100% !important;
             max-width: 100% !important;
         }
-    }
 
-    @media print {
 
         thead {
             display: table-header-group;
