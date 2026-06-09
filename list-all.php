@@ -14,7 +14,7 @@
 
                 <div class="col-md-3">
                     <label class="form-label">Class</label>
-                    <select name="classname" class="form-select">
+                    <select name="classname" class="form-select form-select-sm">
                         <option value="">All Class</option>
 
                         <?php
@@ -35,7 +35,7 @@
 
                 <div class="col-md-3">
                     <label class="form-label">Section</label>
-                    <select name="sectionname" class="form-select">
+                    <select name="sectionname" class="form-select  form-select-sm">
                         <option value="">All Section</option>
 
                         <?php
@@ -56,7 +56,7 @@
 
                 <div class="col-md-3">
                     <label class="form-label">Session</label>
-                    <select name="sessionyear" class="form-select">
+                    <select name="sessionyear" class="form-select  form-select-sm">
                         <option value="">All Session</option>
 
                         <?php
