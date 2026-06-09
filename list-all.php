@@ -233,11 +233,11 @@
                                 <tr>
                                     <th width="60">SL</th>
                                     <th width="80">Roll</th>
-                                    <th>Class</th>
+                                    <th>Class (Section)</th>
                                     <th>Student Name</th>
                                     <th>Parents Name</th>
                                     <th>Address</th>
-                                    <th>Guardian Mobile & DOB</th>
+                                    <th>Mobile & DOB</th>
                                 </tr>
                             </thead>
 
@@ -251,11 +251,11 @@
                     <tr>
                         <td>' . $sl++ . '</td>
                         <td>' . $row['rollno'] . '</td>
-                         <td>' . $row['classname'] . '<br>' . $row['sectionname'] .'</td>
+                         <td>' . $row['classname'] . '<br>(' . $row['sectionname'] . ')</td>
                         <td>' . $row['stnameeng'] . '</td>
                         <td>' . $row['fname'] . '<br>'.  $row['mname'] .'</td>
                         <td>' . $row['previll']  . '<br>' . $row['preps'] . '<br>' . $row['predist'] .'</td>
-                        <td>' . $row['guarmobile']  . $row['dob'] . '</td>
+                        <td>' . $row['guarmobile']  . '<br>' . $row['dob'] . '</td>
                     </tr>
                 ';
             }
