@@ -244,7 +244,7 @@
                             <tbody>
                     ';
 
-                    // $sl = 1;
+                    $sl = 1;
                 }
 
                 echo '
@@ -255,10 +255,7 @@
                         <td>' . $row['stnameeng'] . '</td>
                         <td>' . $row['fname'] . '<br>'.  $row['mname'] .'</td>
                         <td>' . $row['previll']  . '<br>' . $row['preps'] . '<br>' . $row['predist'] .'</td>
-                       
-                        <td>' . $row['guarmobile']  . $row['dob'] . '</td>';
-                   
-                    
+                        <td>' . $row['guarmobile']  . $row['dob'] . '</td>
                     </tr>
                 ';
             }
