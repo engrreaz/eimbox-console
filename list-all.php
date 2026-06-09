@@ -237,8 +237,7 @@
                                     <th>Student Name</th>
                                     <th>Parents Name</th>
                                     <th>Address</th>
-                                    <th>Guardian Mobile</th>
-                                    <th width="120">DOB</th>
+                                    <th>Guardian Mobile & DOB</th>
                                 </tr>
                             </thead>
 
@@ -252,12 +251,13 @@
                     <tr>
                         <td>' . $sl++ . '</td>
                         <td>' . $row['rollno'] . '</td>
+                         <td>' . $row['classname'] . '<br>' . $row['sectionname'] .'</td>
                         <td>' . $row['stnameeng'] . '</td>
                         <td>' . $row['fname'] . '<br>'.  $row['mname'] .'</td>
-                        <td>' . $row['previll'] . '<br>' . $row['prepo'] . '<br>' . $row['preps'] . '<br>' . $row['predist'] .'</td>
-                        <td>' . $row['classname'] . '<br>' . $row['sectionname'] .'</td>
-                        <td>' . $row['guarmobile'] . '</td>
-                        <td>' . $row['dob'] . '</td>
+                        <td>' . $row['previll']  . '<br>' . $row['preps'] . '<br>' . $row['predist'] .'</td>
+                       
+                        <td>' . $row['guarmobile']  . $row['dob'] . '</td>';
+                   
                     
                     </tr>
                 ';
