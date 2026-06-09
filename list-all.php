@@ -359,8 +359,8 @@ $sl = 1; ?>
 
         thead {
             display: table-header-group;
-            background:white;
-            color:black;
+            background:white !important;
+            color:black !important;
         }
 
         tfoot {
