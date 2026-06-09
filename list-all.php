@@ -22,7 +22,7 @@
                             SELECT DISTINCT areaname
                             FROM areas
                             WHERE sccode='$sccode' and sessionyear = '$sessionyear'
-                            ORDER BY slno ASC
+                            ORDER BY idno ASC
                         ");
 
                         while ($classRow = mysqli_fetch_assoc($classQuery)) {
@@ -43,7 +43,7 @@
                             SELECT DISTINCT subarea
                             FROM areas
                             WHERE sccode='$sccode' AND sessionyear = '$sessionyear'
-                            ORDER BY slno ASC
+                            ORDER BY idno ASC
                         ");
 
                         while ($sectionRow = mysqli_fetch_assoc($sectionQuery)) {
