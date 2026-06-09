@@ -338,6 +338,7 @@ $sl = 1; ?>
         /* Hide extra scripts/divs injected directly into body */
         body>*:not(.layout-wrapper):not(script) {
             display: none !important;
+            background: none !important;
         }
 
         /* Reset layout container padding/margins */
