@@ -140,8 +140,8 @@ $sl = 1; ?>
                 $where
 
                 ORDER BY 
-                    FIELD(si.classname, 'Six', 'Seven', 'Eight', 'Nine', 'Ten'), 
-                    FIELD(si.sectionname, 'Jaba', 'Beli', 'Padma','Meghna','Shapla', 'Golap', 'Science', 'Business Studies', 'Humanities'),
+                    FIELD(si.classname, 'Play', 'Nursery', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'), 
+                    FIELD(si.sectionname, 'Jaba', 'Beli', 'Padma','Meghna','Shapla', 'Golap', 'Science', 'Business Studies', 'Humanities', 'General'),
                     CAST(si.rollno AS UNSIGNED) ASC
             ";
 
