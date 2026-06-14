@@ -164,12 +164,12 @@ $sl = 1; ?>
                 GROUP BY si.classname, si.sectionname
                 ORDER BY 
                     FIELD(si.classname,
-                    
+                    'Play', 'Nursery', 'One', 'Two', 'Three', 'Four', 'Five',
                     'Six',
                     'Seven',
                     'Eight',
                     'Nine',
-                    'Ten'), FIELD(si.sectionname, 'Science', 'Business Studies', 'Humanities')
+                    'Ten'), FIELD(si.sectionname, 'Science', 'Business Studies', 'Humanities', 'General')
             ";
             $summaryResult = mysqli_query($conn, $summarySql);
             $total_students = 0;
