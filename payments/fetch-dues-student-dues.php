@@ -13,7 +13,17 @@ if (!$cls2 || !$sec2) {
     exit;
 }
 
-$month = date('m');
+$month = (int)date('m');
+
+if ((int)date('d') > 20) {
+    $month++;
+    
+    // ডিসেম্বর হলে জানুয়ারি
+    if ($month > 12) {
+        $month = 12;
+    }
+}
+
 
 $sql = "
 SELECT 

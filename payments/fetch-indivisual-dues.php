@@ -61,7 +61,13 @@ $mmm = $b[5] ?? '';
 
 $cnt = 0;
 $tamt = 0;
-$month = date('m');
+// $month = date('m');
+$month = (int)date('m');
+
+if ((int)date('d') > 20) {
+    $month++;
+
+}
 if ($month >= 10) {
     $month = 12;
 }
