@@ -15,7 +15,7 @@ if (!$cls2 || !$sec2) {
 
 $month = (int)date('m');
 
-if ((int)date('d') > 20) {
+if ((int)date('d') > 15) {
     $month++;
     
     // ডিসেম্বর হলে জানুয়ারি

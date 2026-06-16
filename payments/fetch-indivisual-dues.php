@@ -64,7 +64,7 @@ $tamt = 0;
 // $month = date('m');
 $month = (int)date('m');
 
-if ((int)date('d') > 20) {
+if ((int)date('d') > 15) {
     $month++;
 
 }
