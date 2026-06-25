@@ -316,7 +316,7 @@ alert(0);
 
     });
 
-    $(document).on('click', '.btn-chain', function () {
+    $(document).on('click', '#btn-chain', function () {
         defaultLoadScript();
     });
 </script>
