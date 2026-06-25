@@ -70,7 +70,7 @@ GROUP BY
 
 ORDER BY sp.entrytime DESC
 ";
-
+echo $sql;
 $stmt = $conn->prepare($sql);
 $likeSy = "%$session%";
 $params = [$sccode, $likeSy, $datefrom, $dateto];
