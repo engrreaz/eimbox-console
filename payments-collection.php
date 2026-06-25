@@ -255,7 +255,7 @@
 <script>
 
     function defaultLoadScript() {
-
+alert(0);
         // Get all filter values
         let slot = $('#slot-main').val();
         let year = $('#session-main').val();
