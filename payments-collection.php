@@ -52,8 +52,7 @@
 
                 <div class="col-md-2">
                     <label class="form-label text-small" for="date-from-main">Total Collection</label>
-                    <input type="text"
-                        class="form-control form-control-sm text-center  text-white fs-6 fw-bold "
+                    <input type="text" class="form-control form-control-sm text-center  text-white fs-6 fw-bold "
                         id="totalAmont" style="font-size:24px; padding:0; background:teal;" disabled>
                 </div>
 
@@ -107,7 +106,7 @@
                         </div>
                     </div>
 
-                      <!-- Divider -->
+                    <!-- Divider -->
                     <div class="col-auto d-flex justify-content-center">
                         <div class="vr-full"></div>
                     </div>
@@ -228,7 +227,7 @@
     }
 
     function printReceipt(stid, prno, prdate) {
-         window.open(`payments/selected-receipts.php?prs=${prno}`);
+        window.open(`payments/selected-receipts.php?prs=${prno}`);
     }
 
     function downloadReceipt(stid, prno, prdate) {
@@ -255,7 +254,7 @@
 <script>
 
     function defaultLoadScript() {
-alert(0);
+        // alert(0);
         // Get all filter values
         let slot = $('#slot-main').val();
         let year = $('#session-main').val();
