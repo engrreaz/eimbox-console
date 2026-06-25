@@ -149,7 +149,14 @@ $stmt->close();
 
     <div class="menu-inner-shadow"></div>
 
-    <div class="cards">
+    <div class="px-3 py-2">
+        <a href="#" class="btn btn-tonal-primary w-100" data-bs-toggle="modal" data-bs-target="#appsModal">
+            <i class="bi bi-google-play me-2"></i>
+            <span>Try our Apps</span>
+        </a>
+    </div>
+
+    <div class="cards" id="sidebar_space">
         <div class="" style="height:80px;">
 
         </div>
@@ -577,3 +584,58 @@ $stmt->close();
     };
 </script>
 
+<!-- Apps Modal -->
+<div class="modal fade" id="appsModal" tabindex="-1" aria-labelledby="appsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="appsModalLabel">Download Our Mobile Apps</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- EIMBox Lite App -->
+                <div class="d-flex align-items-center border rounded p-3 mb-3">
+                    <img src="apps/EIMBox_Lite.png" alt="EIMBox Lite" class="me-3" style="width: 64px; height: 64px;">
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1">EIMBox Lite</h6>
+                        <p class="text-muted small mb-2">A lightweight version for essential features.</p>
+                        <div>
+                            <a href="#" class="btn btn-sm btn-outline-secondary">Details</a>
+                            <a href="apps/EIMBox_Lite.apk" class="btn btn-sm btn-primary" download>
+                                <i class="bi bi-download me-1"></i> Download
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- EIMBox App -->
+                <div class="d-flex align-items-center border rounded p-3">
+                    <img src="apps/EIMBox.png" alt="EIMBox" class="me-3" style="width: 64px; height: 64px;">
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1">EIMBox</h6>
+                        <p class="text-muted small mb-2">The full-featured app for a complete experience.</p>
+                        <div>
+                            <a href="#" class="btn btn-sm btn-outline-secondary">Details</a>
+                            <a href="apps/EIMBox.apk" class="btn btn-sm btn-primary" download>
+                                <i class="bi bi-download me-1"></i> Download
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .btn-tonal-primary {
+        background-color: rgba(var(--bs-primary-rgb), 0.1);
+        color: var(--bs-primary);
+        border: 1px solid transparent;
+    }
+
+    .btn-tonal-primary:hover {
+        background-color: rgba(var(--bs-primary-rgb), 0.2);
+        color: var(--bs-primary);
+    }
+</style>
