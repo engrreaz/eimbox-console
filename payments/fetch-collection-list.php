@@ -41,7 +41,7 @@ LEFT JOIN students st
 
 LEFT JOIN stfinance sf 
     ON sf.stid = sp.stid 
-    AND sf.sessionyear = sp.sessionyear
+    AND sf.sessionyear LIKE ?
     AND sf.pr1no = sp.prno
     AND sf.pr1date = sp.prdate
     AND sf.sccode = sp.sccode
@@ -73,7 +73,7 @@ ORDER BY sp.entrytime DESC
 echo $sql;
 $stmt = $conn->prepare($sql);
 $likeSy = "%$session%";
-$params = [$sccode, $likeSy, $datefrom, $dateto];
+$params = [$likeSy, $sccode, $likeSy, $datefrom, $dateto];
 $types = "isss";
 
 if (!empty($cls)) {
