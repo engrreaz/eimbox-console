@@ -75,7 +75,7 @@ echo $sql;
 $stmt = $conn->prepare($sql);
 $likeSy = "%$session%";
 $params = [$likeSy, $sccode, $likeSy, $datefrom, $dateto];
-$types = "isss";
+$types = "sisss";
 
 if (!empty($cls)) {
     $params[] = $cls;
