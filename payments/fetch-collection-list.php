@@ -31,9 +31,11 @@ SELECT
 
 FROM stpr sp
 
-LEFT JOIN sessioninfo si 
-    ON si.stid = sp.stid 
+
+LEFT JOIN sessioninfo si
+    ON si.stid = sp.stid
     AND si.sccode = sp.sccode
+    AND si.sessionyear LIKE ?
 
 LEFT JOIN students st 
     ON st.stid = si.stid 
@@ -41,7 +43,6 @@ LEFT JOIN students st
 
 LEFT JOIN stfinance sf 
     ON sf.stid = sp.stid 
-    AND sf.sessionyear LIKE ?
     AND sf.pr1no = sp.prno
     AND sf.pr1date = sp.prdate
     AND sf.sccode = sp.sccode
