@@ -23,7 +23,7 @@ SELECT
     si.classname, si.sectionname, si.rollno,
     st.stnameeng, st.stnameben
 FROM stpr sp
-LEFT JOIN sessioninfo si ON si.stid = sp.stid AND si.sccode = sp.sccode AND si.sessionyear LIKE '$sessionyear_param'
+LEFT JOIN sessioninfo si ON si.stid = sp.stid AND si.sccode = sp.sccode AND si.sessionyear = sp.sessionyear
 LEFT JOIN students st ON st.stid = si.stid AND st.sccode = si.sccode
 WHERE sp.prno IN ($in)
 ORDER BY sp.prdate, sp.id
