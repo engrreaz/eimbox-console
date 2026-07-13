@@ -23,7 +23,7 @@ $q = mysqli_query($conn, "SELECT subject FROM subsetup
     AND classname='$class' 
     AND sectionname='$section' $teaEx");
 
-echo $teaEx;
+
 
 $data = [];
 
