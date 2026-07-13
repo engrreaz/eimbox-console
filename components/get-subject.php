@@ -11,8 +11,9 @@ $class = $_GET['class'];
 $section = $_GET['section'];
 $teaEx = '';
 if($userlevel == 'Teacher') {
-    $teaEx = ' AND tid =' . $userid;
+    $teaEx = ' AND tid =' . $user_id_no;
 }
+
 
 // subjects list
 $q = mysqli_query($conn, "SELECT subject FROM subsetup 
