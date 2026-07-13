@@ -9,6 +9,10 @@ $slot = $_GET['slot'];
 $session = $_GET['session'];
 $class = $_GET['class'];
 $section = $_GET['section'];
+$teaEx = '';
+if($userlevel == 'Teacher') {
+    $teaEx = ' AND tid =' . $userid;
+}
 
 // subjects list
 $q = mysqli_query($conn, "SELECT subject FROM subsetup 
@@ -16,7 +20,7 @@ $q = mysqli_query($conn, "SELECT subject FROM subsetup
     AND slot='$slot' 
     AND sessionyear='$session'
     AND classname='$class' 
-    AND sectionname='$section'");
+    AND sectionname='$section' $teaEx");
 
 $data = [];
 
