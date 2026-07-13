@@ -11,7 +11,7 @@ $class = $_GET['class'];
 $section = $_GET['section'];
 $teaEx = '';
 if($userlevel == 'Teacher') {
-    $teaEx = ' AND tid =' . $user_id_no;
+    $teaEx = ' AND tid =' . $usertid;
 }
 
 

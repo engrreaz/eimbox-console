@@ -135,6 +135,7 @@ $currentFile = $_SESSION['current_page'] ?? '';
 $error_message = '';
 // echo 'User ID is set: ' . $_SESSION['user_id'];
 $user_id_no = $_SESSION['user_id'] ?? '';
+$usertid = $_SESSION['usertid'] ?? '';
 $usr = $_SESSION['user_email'] ?? '';
 $username = $_SESSION['user_name'] ?? '';
 $pth = $_SESSION['photourl'] ?? '';
