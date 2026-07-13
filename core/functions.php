@@ -166,6 +166,7 @@ function store_user_session($user, $school = [])
     $_SESSION['user_email'] = $user['email'] ?? '';
     $_SESSION['user_name'] = $user['username'] ?? '';
     $_SESSION['userid'] = '';
+    $_SESSION['usertid'] = $user['userid'] ?? '';
     $_SESSION['first_name'] = $user['first_name'] ?? '';
     $_SESSION['last_name'] = $user['last_name'] ?? '';
     $_SESSION['phone'] = $user['phone'] ?? '';
