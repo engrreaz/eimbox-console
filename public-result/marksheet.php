@@ -336,7 +336,7 @@ foreach ($subject_codes_raw as $sub_code) {
                             $colspan = '';
                             ?>
 <tr>
-                        <td class="text-start" <?php echo $colspan; ?>><?php echo $mark['subject'] . $mark['subcode']; ?></td>
+                        <td class="text-start" <?php echo $colspan; ?>><?php echo $mark['subject'] ; ?></td>
                         <td><?php echo htmlspecialchars($mark['full']); ?></td>
                         <td><?php echo htmlspecialchars($mark['sub']); ?></td>
                         <td><?php echo htmlspecialchars($mark['obj']); ?></td>
