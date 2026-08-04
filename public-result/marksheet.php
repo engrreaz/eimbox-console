@@ -129,7 +129,7 @@ foreach ($subject_codes_raw as $sub_code) {
     $processed_subject_codes[] = $sub_code;
     $subject_counter++;
 
-    $subject_details_stmt = $conn->prepare("SELECT subject FROM subjects WHERE subcode = ?");
+    $subject_details_stmt = $conn->prepare("SELECT subject FROM subjects WHERE subcode = ? and sccategory = 'school'  ");
     $subject_details_stmt->bind_param("i", $sub_code);
     $subject_details_stmt->execute();
     $subject_details_result = $subject_details_stmt->get_result();
@@ -153,7 +153,7 @@ foreach ($subject_codes_raw as $sub_code) {
     if ($sub_code > 1000) {
         $key = array_search($sub_code, array_column($extended_marks, 'subcode'));
         if ($key !== false) {
-            $marks_data[] = [
+            $marks_data[$sub_code] = [
                 'subcode' => $sub_code,
                 'subject' => $subject_name,
                 'full' => $extended_marks[$key]['full'],
