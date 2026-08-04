@@ -310,24 +310,24 @@ foreach ($subject_codes_raw as $sub_code) {
                     <th>Pra</th>
                     <th>CA</th>
                     <th>Obtained Marks</th>
-                    <th>Grade</th>
-                    <th>Grade Point</th>
-                    <th rowspan="<?= $sub_count; ?>">..</th>
+                    <th>Grade</th> 
+                    <th>Grade Point</th> 
                 </tr>
             </thead>
             <tbody>
                 <?php
                 $flag = false;
+                $summary_cell_added = false; // Flag to check if summary cell is added
                  foreach ($marks_data as $mark): ?>
                     <?php 
                     if((int)htmlspecialchars($mark['obtained']) > 0 || $flag == false)
                          { 
                         if((int)htmlspecialchars($mark['subcode']) == 1000) {
-                            $colspan = ' colspan="9"';
+                            $colspan = ' colspan="8"';
                             $flag = true;
                             ?>
                             <tr>
-                        <td class="text-start" <?php echo $colspan; ?>><?php echo htmlspecialchars($mark['subject']); ?></td>
+                        <td class="text-start fw-bold" <?php echo $colspan; ?>><?php echo htmlspecialchars($mark['subject']); ?></td>
                        
                     </tr>
                     <?php
@@ -345,6 +345,23 @@ foreach ($subject_codes_raw as $sub_code) {
                         <td><?php echo htmlspecialchars($mark['obtained']); ?></td>
                         <td><?php echo htmlspecialchars($mark['grade']); ?></td>
                         <td><?php echo htmlspecialchars($mark['gp']); ?></td>
+                        <?php if (!$summary_cell_added): ?>
+                            <td rowspan="<?php echo $sub_count; ?>" class="align-middle">
+                                <div class="summary-box p-2" style="border-left: 1px solid #dee2e6;">
+                                    <p class="mb-1">Total Marks: <strong><?php echo htmlspecialchars($result_summary['totalmarks']); ?></strong></p>
+                                    <p class="mb-1">GPA: <strong><?php echo htmlspecialchars(number_format($result_summary['gpa'], 2)); ?></strong></p>
+                                    <p class="mb-1">Grade: <strong><?php echo htmlspecialchars($result_summary['gla']); ?></strong></p>
+                                    <?php if($result_summary['gla'] === 'F'): ?>
+                                        <p class="mb-1 text-danger">Failed in: <strong><?php echo htmlspecialchars($result_summary['totalfail']); ?></strong> subject(s)</p>
+                                    <?php endif; ?>
+                                    <hr>
+                                    <p class="mb-1">Merit Place: <strong><?php echo htmlspecialchars($result_summary['meritplace']); ?></strong></p>
+                                </div>
+                            </td>
+                            <?php 
+                            $summary_cell_added = true; 
+                            ?>
+                        <?php endif; ?>
                     </tr>
 
 <?php
@@ -357,13 +374,7 @@ foreach ($subject_codes_raw as $sub_code) {
                 <?php endforeach; ?>
             </tbody>
             <tfoot class="table-light">
-                <tr>
-                    <th colspan="2" class="text-end">Total Marks:</th>
-                    <th><?php echo htmlspecialchars($result_summary['totalmarks']); ?></th>
-                    <th class="text-end">GPA:</th>
-                    <th><?php echo htmlspecialchars(number_format($result_summary['gpa'], 2)); ?>
-                        (<?php echo htmlspecialchars($result_summary['gla']); ?>)</th>
-                </tr>
+                <!-- Footer can be used for other summary if needed, or removed -->
             </tfoot>
         </table>
 
