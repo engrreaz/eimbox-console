@@ -289,8 +289,8 @@ echo '</pre>';
             <tbody>
                 <?php foreach ($marks_data as $mark): ?>
                     <?php 
-                    if(htmlspecialchars($mark['obtained']) > 0): 
-                        if(htmlspecialchars($mark['subcode']) == 1000) {
+                    if((int)htmlspecialchars($mark['obtained']) > 0): 
+                        if((int)htmlspecialchars($mark['subcode']) == 1000) {
                             $colspan = ' colspan="9"';
                         } else {
                             $colspan = '';
