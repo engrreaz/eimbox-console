@@ -63,9 +63,27 @@ $result_summary = $result_res->fetch_assoc();
 $marks_data = [];
 $all_subjects_str = $result_summary['allsubject'];
 $subject_codes = explode('/', $all_subjects_str);
+// Normalize subject string: replace '/' with '.' then explode by '.'
+// This matches the behavior of marksheet-sample.php
+$all_subjects_str_normalized = str_replace('/', '.', $all_subjects_str);
+$subject_codes_raw = explode('.', $all_subjects_str_normalized);
 
-foreach ($subject_codes as $i => $sub_code) {
-    if (empty($sub_code) || !is_numeric($sub_code)) continue;
+$processed_subject_codes = []; // To track unique subject codes already processed
+$subject_counter = 0; // Counter for 'sub_X' column names
+
+foreach ($subject_codes_raw as $sub_code) {
+    // Trim whitespace and ensure it's a non-empty, numeric subject code
+    $sub_code = trim($sub_code);
+    if (empty($sub_code) || !is_numeric($sub_code) || $sub_code <= 100) { // Added $sub_code <= 100 check as per sample's logic ($ek > 100)
+        continue;
+    }
+
+    // Skip if this subject code has already been processed (handles duplicates in allsubject string)
+    if (in_array($sub_code, $processed_subject_codes)) {
+        continue;
+    }
+    $processed_subject_codes[] = $sub_code;
+    $subject_counter++;
 
     $subject_details_stmt = $conn->prepare("SELECT subject FROM subjects WHERE subcode = ?");
     $subject_details_stmt->bind_param("i", $sub_code);
@@ -78,8 +96,8 @@ foreach ($subject_codes as $i => $sub_code) {
     $subject_setup_stmt->execute();
     $subject_setup_result = $subject_setup_stmt->get_result();
     $full_marks = ($subject_setup_result->num_rows > 0) ? $subject_setup_result->fetch_assoc()['fullmarks'] : 100;
-
-    $col_prefix = 'sub_' . ($i + 1);
+    
+    $col_prefix = 'sub_' . $subject_counter; // Use the dedicated counter for column prefix
     $total_mark = $result_summary[$col_prefix . '_total'] ?? 0;
 
     // Skip subjects with 0 marks if they are not compulsory
@@ -131,10 +149,6 @@ if ($english_combined['count'] > 0) {
 }
 
 $marks_data = array_merge($final_marks_data, $other_subjects);
-
-echo '<pre>';
-print_r($marks_data);
-echo '</pre>';
 ?>
 <!DOCTYPE html>
 <html lang="en">
