@@ -145,7 +145,7 @@ foreach ($subject_codes_raw as $sub_code) {
     }
 
     if ($sub_code > 1000) {
-        $key = array_search($sub_code, array_column($$result_summary, 'subcode'));
+        $key = array_search($sub_code, array_column($result_summary, 'subcode'));
         if ($key !== false) {
             $marks_data[] = [
                 'subcode' => $sub_code,
