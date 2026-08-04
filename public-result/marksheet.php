@@ -312,7 +312,7 @@ foreach ($subject_codes_raw as $sub_code) {
                     <th>Obtained Marks</th>
                     <th>Grade</th>
                     <th>Grade Point</th>
-                    <th rowspan="<?= $sub_count; ?>"></th>
+                    <th rowspan="<?= $sub_count; ?>">..</th>
                 </tr>
             </thead>
             <tbody>
