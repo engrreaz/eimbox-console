@@ -28,7 +28,15 @@ if (empty($sccode) || empty($rollno) || empty($exam) || empty($classname) || emp
 $conn->set_charset("utf8");
 
 // Institute Info
-$institute_info['address'] ='ABC' . ', ' . 'EDE' . ', ' . 'XXX';
+$stmt = $conn->prepare("SELECT * FROM users WHERE eiin = ? AND user_level = '100'");
+$stmt->bind_param("s", $sccode);
+$stmt->execute();
+$institute_result = $stmt->get_result();
+if ($institute_result->num_rows === 0) {
+    showError('Institute not found.');
+}
+$institute_info = $institute_result->fetch_assoc();
+$institute_info['address'] = $institute_info['address'] . ', ' . $institute_info['ps'] . ', ' . $institute_info['dist'];
 
 // Student Info
 $stmt = $conn->prepare("
