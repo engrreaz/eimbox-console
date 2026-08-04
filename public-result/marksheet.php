@@ -106,7 +106,7 @@ for ($i = 1; $i <= 10; $i++) {
 }
 
 echo '<pre>'; // For debugging
-print_r($subject_codes_raw);
+print_r($result_summary);
 echo '</pre>';
 
 foreach ($subject_codes_raw as $sub_code) {
