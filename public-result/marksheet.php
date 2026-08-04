@@ -291,7 +291,7 @@ echo '</pre>';
                 $flag = false;
                  foreach ($marks_data as $mark): ?>
                     <?php 
-                    if((int)htmlspecialchars($mark['obtained']) > 0 && $flag == true)
+                    if((int)htmlspecialchars($mark['obtained']) > 0 && $flag == false)
                          { 
                         if((int)htmlspecialchars($mark['subcode']) == 1000) {
                             $colspan = ' colspan="9"';
