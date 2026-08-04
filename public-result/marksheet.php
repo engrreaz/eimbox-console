@@ -277,6 +277,10 @@ echo '</pre>';
                 <tr>
                     <th>Subject Name</th>
                     <th>Full Marks</th>
+                    <th>Sub</th>
+                    <th>Obj</th>
+                    <th>Pra</th>
+                    <th>CA</th>
                     <th>Obtained Marks</th>
                     <th>Grade</th>
                     <th>Grade Point</th>
