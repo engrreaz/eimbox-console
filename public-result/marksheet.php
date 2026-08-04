@@ -181,14 +181,14 @@ foreach ($subject_codes_raw as $sub_code) {
        $marks_data[$sub_code] = [
                 'subcode' =>  '<b>' . $sub_code . '</b>',
                 'subject' => $subject_name,
-                'full' => 0,
-                'obtained' => 0,
-                'sub' =>0,
-                'obj' => 0,
-                'pra' => 0,
-                'ca' => 0,
-                'grade' => 0,
-                'gp' => 0
+                'full' => "",
+                'obtained' => "",
+                'sub' =>"",
+                'obj' => "",
+                'pra' => "",
+                'ca' => "",
+                'grade' => "",
+                'gp' => ""
        ];
     }
 
