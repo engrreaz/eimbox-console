@@ -28,7 +28,7 @@ if (empty($sccode) || empty($rollno) || empty($exam) || empty($classname) || emp
 $conn->set_charset("utf8");
 
 // Institute Info
-$stmt = $conn->prepare("SELECT * FROM users WHERE eiin = ? AND user_level = '100'");
+$stmt = $conn->prepare("SELECT * FROM scinfo WHERE sccode = ? ");
 $stmt->bind_param("s", $sccode);
 $stmt->execute();
 $institute_result = $stmt->get_result();
@@ -69,7 +69,7 @@ $result_summary = $result_res->fetch_assoc();
 // Marks Data
 $marks_data = [];
 $all_subjects_str = $result_summary['allsubject'];
-$subject_codes = explode('/', $all_subjects_str);
+$subject_codes = explode('.', $all_subjects_str);
 // Normalize subject string: replace '/' with '.' then explode by '.'
 // This matches the behavior of marksheet-sample.php
 $all_subjects_str_normalized = str_replace('/', '.', $all_subjects_str);
