@@ -4,16 +4,17 @@ require_once '../core/db.php';
 require_once '../core/functions.php'; // Assuming you have a functions file for grade calculations
 
 // 1. URL থেকে ডেটা গ্রহণ করা
-$sccode      = $_GET['sccode'] ?? '';
-$slot        = $_GET['slot'] ?? '';
+$sccode = $_GET['sccode'] ?? '';
+$slot = $_GET['slot'] ?? '';
 $sessionyear = $_GET['sessionyear'] ?? '';
-$exam        = $_GET['exam'] ?? '';
-$classname   = $_GET['classname'] ?? '';
+$exam = $_GET['exam'] ?? '';
+$classname = $_GET['classname'] ?? '';
 $sectionname = $_GET['sectionname'] ?? '';
-$rollno      = $_GET['rollno'] ?? '';
+$rollno = $_GET['rollno'] ?? '';
 
 // 2. ন্যূনতম তথ্য যাচাই করা
-function showError($message) {
+function showError($message)
+{
     echo "<!DOCTYPE html><html><head><title>Error</title><link rel='stylesheet' href='../assets/vendor/css/core.css' /></head><body>";
     echo "<div class='container'><div class='alert alert-danger mt-5'>" . htmlspecialchars($message) . "</div></div>";
     echo "</body></html>";
@@ -78,6 +79,29 @@ $subject_codes_raw = explode('.', $all_subjects_str_normalized);
 $processed_subject_codes = []; // To track unique subject codes already processed
 $subject_counter = 0; // Counter for 'sub_X' column names
 
+
+$extend_id = $result_summary['id'] ?? 0;
+$extend_stmt = $conn->prepare("SELECT * FROM tabulatingsheetex WHERE tsheetid = ?");
+$extend_stmt->bind_param("i", $extend_id);
+$extend_stmt->execute();
+$extend_result = $extend_stmt->get_result();
+$extend_data = $extend_result->fetch_assoc() ?? [];
+
+for ($i = 1; $i <= 10; $i++) {
+    $col_prefix = 'sub_' . $i;
+    if (isset($extend_data[$col_prefix . '_total'])) {
+        $subcode = 1000 + (int) $extend_data[$col_prefix] ?? null;
+        $result_summary[$col_prefix . 'sub'] = $extend_data[$col_prefix . 'sub'];
+        $result_summary[$col_prefix . 'obj'] = $extend_data[$col_prefix . 'obj'];
+        $result_summary[$col_prefix . 'pra'] = $extend_data[$col_prefix . 'pra'];
+        $result_summary[$col_prefix . 'ca'] = $extend_data[$col_prefix . 'ca'];
+
+        $result_summary[$col_prefix . '_total'] = $extend_data[$col_prefix . '_total'];
+        $result_summary[$col_prefix . '_gl'] = $extend_data[$col_prefix . '_gl'];
+        $result_summary[$col_prefix . '_gp'] = $extend_data[$col_prefix . '_gp'];
+    }
+}
+
 echo '<pre>'; // For debugging
 print_r($subject_codes_raw);
 echo '</pre>';
@@ -107,7 +131,7 @@ foreach ($subject_codes_raw as $sub_code) {
     $subject_setup_stmt->execute();
     $subject_setup_result = $subject_setup_stmt->get_result();
     $full_marks = ($subject_setup_result->num_rows > 0) ? $subject_setup_result->fetch_assoc()['fullmarks'] : 100;
-    
+
     $col_prefix = 'sub_' . $subject_counter; // Use the dedicated counter for column prefix
     $total_mark = $result_summary[$col_prefix . '_total'] ?? 0;
 
@@ -130,44 +154,9 @@ echo '<pre>'; // For debugging
 print_r($marks_data);
 echo '</pre>';
 
-// Combine Bangla and English if they exist as separate parts
-$final_marks_data = [];
-$bangla_combined = ['subject' => 'Bangla', 'full' => 0, 'obtained' => 0, 'gp' => 0, 'count' => 0];
-$english_combined = ['subject' => 'English', 'full' => 0, 'obtained' => 0, 'gp' => 0, 'count' => 0];
-$other_subjects = [];
 
-foreach ($marks_data as $mark) {
-    if (stripos($mark['subject'], 'Bangla') !== false) {
-        $bangla_combined['full'] += $mark['full'];
-        $bangla_combined['obtained'] += $mark['obtained'];
-        $bangla_combined['gp'] += $mark['gp'];
-        $bangla_combined['count']++;
-    } elseif (stripos($mark['subject'], 'English') !== false) {
-        $english_combined['full'] += $mark['full'];
-        $english_combined['obtained'] += $mark['obtained'];
-        $english_combined['gp'] += $mark['gp'];
-        $english_combined['count']++;
-    } else {
-        $other_subjects[] = $mark;
-    }
-}
 
-if ($bangla_combined['count'] > 0) {
-    $bangla_combined['gp'] = $result_summary['ben_gp'] ?? 0; // Use combined GP from DB
-    $bangla_combined['grade'] = $result_summary['ben_gl'] ?? 'N/A';
-    $final_marks_data[] = $bangla_combined;
-}
-if ($english_combined['count'] > 0) {
-    $english_combined['gp'] = $result_summary['eng_gp'] ?? 0; // Use combined GP from DB
-    $english_combined['grade'] = $result_summary['eng_gl'] ?? 'N/A';
-    $final_marks_data[] = $english_combined;
-}
 
-$marks_data = array_merge($final_marks_data, $other_subjects);
-
-echo '<pre>'; // For debugging
-print_r($marks_data);
-echo '</pre>';
 
 ?>
 <!DOCTYPE html>
@@ -266,7 +255,7 @@ echo '</pre>';
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($marks_data as $mark) : ?>
+                <?php foreach ($marks_data as $mark): ?>
                     <tr>
                         <td class="text-start"><?php echo htmlspecialchars($mark['subject']); ?></td>
                         <td><?php echo htmlspecialchars($mark['full']); ?></td>
@@ -281,7 +270,8 @@ echo '</pre>';
                     <th colspan="2" class="text-end">Total Marks:</th>
                     <th><?php echo htmlspecialchars($result_summary['totalmarks']); ?></th>
                     <th class="text-end">GPA:</th>
-                    <th><?php echo htmlspecialchars(number_format($result_summary['gpa'], 2)); ?> (<?php echo htmlspecialchars($result_summary['gla']); ?>)</th>
+                    <th><?php echo htmlspecialchars(number_format($result_summary['gpa'], 2)); ?>
+                        (<?php echo htmlspecialchars($result_summary['gla']); ?>)</th>
                 </tr>
             </tfoot>
         </table>
