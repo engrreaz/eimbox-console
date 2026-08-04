@@ -78,6 +78,10 @@ $subject_codes_raw = explode('.', $all_subjects_str_normalized);
 $processed_subject_codes = []; // To track unique subject codes already processed
 $subject_counter = 0; // Counter for 'sub_X' column names
 
+echo '<pre>'; // For debugging
+print_r($subject_codes_raw);
+echo '</pre>';
+
 foreach ($subject_codes_raw as $sub_code) {
     // Trim whitespace and ensure it's a non-empty, numeric subject code
     $sub_code = trim($sub_code);
@@ -121,6 +125,10 @@ foreach ($subject_codes_raw as $sub_code) {
         'gp' => number_format($result_summary[$col_prefix . '_gp'] ?? 0, 2),
     ];
 }
+
+echo '<pre>'; // For debugging
+print_r($marks_data);
+echo '</pre>';
 
 // Combine Bangla and English if they exist as separate parts
 $final_marks_data = [];
