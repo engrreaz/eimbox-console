@@ -107,7 +107,7 @@ for ($i = 1; $i <= 10; $i++) {
 }
 
 echo '<pre>'; // For debugging
-print_r($result_summary);
+print_r($extended_marks);
 echo '</pre>';
 
 foreach ($subject_codes_raw as $sub_code) {
