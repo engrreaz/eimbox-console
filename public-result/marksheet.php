@@ -132,6 +132,9 @@ if ($english_combined['count'] > 0) {
 
 $marks_data = array_merge($final_marks_data, $other_subjects);
 
+echo '<pre>';
+print_r($marks_data);
+echo '</pre>';
 ?>
 <!DOCTYPE html>
 <html lang="en">
