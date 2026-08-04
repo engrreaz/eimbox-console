@@ -311,7 +311,7 @@ foreach ($subject_codes_raw as $sub_code) {
                     <th>CA</th>
                     <th>Obtained Marks</th>
                     <th>Grade</th> 
-                    <th>Grade Point</th> 
+                    <th colspan="2">Grade Point</th> 
                 </tr>
             </thead>
             <tbody>
