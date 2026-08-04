@@ -313,7 +313,7 @@ echo '</pre>';
                             $colspan = '';
                             ?>
 <tr>
-                        <td class="text-start" <?php echo $colspan; ?>><?php echo htmlspecialchars($mark['subject']); ?></td>
+                        <td class="text-start" <?php echo $colspan; ?>><?php echo $mark['subject']; ?></td>
                         <td><?php echo htmlspecialchars($mark['full']); ?></td>
                         <td><?php echo htmlspecialchars($mark['sub']); ?></td>
                         <td><?php echo htmlspecialchars($mark['obj']); ?></td>
