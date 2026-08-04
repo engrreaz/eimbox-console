@@ -183,7 +183,7 @@ foreach ($subject_codes_raw as $sub_code) {
 
     if ($sub_code == 1000) {
        $marks_data[$sub_code] = [
-                'subcode' => $sub_code,
+                'subcode' =>  '<b>' . $sub_code . '</b>',
                 'subject' => $subject_name,
                 'full' => 0,
                 'obtained' => 0,
