@@ -142,7 +142,18 @@ foreach ($subject_codes_raw as $sub_code) {
     $subject_setup_result = $subject_setup_stmt->get_result();
     $full_marks = ($subject_setup_result->num_rows > 0) ? $subject_setup_result->fetch_assoc()['fullmarks'] : 100;
 
-    $col_prefix = 'sub_' . $subject_counter; // Use the dedicated counter for column prefix
+    // Find the column prefix (e.g., 'sub_1', 'sub_2') that holds this sub_code
+    $col_prefix = null;
+    $keys = array_keys($result_summary, $sub_code);
+    if (!empty($keys)) {
+        // Find the key that starts with 'sub_' and is not a mark/gp/gl column
+        foreach ($keys as $key) {
+            if (strpos($key, 'sub_') === 0 && !preg_match('/_(sub|obj|pra|ca|total|gp|gl)$/', $key)) {
+                $col_prefix = $key;
+                break;
+            }
+        }
+    }
     $total_mark = $result_summary[$col_prefix . '_total'] ?? 0;
 
     // Skip subjects with 0 marks if they are not compulsory
@@ -153,7 +164,7 @@ foreach ($subject_codes_raw as $sub_code) {
 
     if ($sub_code > 1000) {
         $key = array_search($sub_code, array_column($extended_marks, 'subcode'));
-        if ($key !== false) {
+        if ($key !== false && $col_prefix === null) { // Only process if not found in main sheet
             $marks_data[$sub_code] = [
                 'subcode' => $sub_code,
                 'subject' => $subject_name,
@@ -170,8 +181,12 @@ foreach ($subject_codes_raw as $sub_code) {
         }
     }
 
+    if ($col_prefix === null) {
+        continue; // If no column found for this subject code, skip it.
+    }
+
     echo $col_prefix . ' - ' . $sub_code . ' - ' . $subject_name . ' - ' . $full_marks . ' - ' . $total_mark . '<br>'; // For debugging
-    $marks_data[$sub_code] = [
+    $marks_data[] = [
         'subcode' => $sub_code,
         'subject' => $subject_name,
         'full' => $full_marks,
