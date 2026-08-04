@@ -323,7 +323,7 @@ foreach ($subject_codes_raw as $sub_code) {
                     if((int)htmlspecialchars($mark['obtained']) > 0 || $flag == false)
                          { 
                         if((int)htmlspecialchars($mark['subcode']) == 1000) {
-                            $colspan = ' colspan="8"';
+                            $colspan = ' colspan="9"';
                             $flag = true;
                             ?>
                             <tr>
