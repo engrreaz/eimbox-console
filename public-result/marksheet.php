@@ -327,7 +327,7 @@ foreach ($subject_codes_raw as $sub_code) {
                             $flag = true;
                             ?>
                             <tr>
-                        <td class="text-start fw-bold" <?php echo $colspan; ?>><?php echo htmlspecialchars($mark['subject']); ?></td>
+                        <td class="text-start fw-bold" <?php echo $colspan; ?>><?php echo htmlspecialchars($mark['subcode']); ?></td>
                        
                     </tr>
                     <?php
