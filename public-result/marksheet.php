@@ -81,7 +81,7 @@ $subject_counter = 0; // Counter for 'sub_X' column names
 
 
 $extend_id = $result_summary['id'] ?? 0;
-$extend_stmt = $conn->prepare("SELECT * FROM tabulatingsheetex WHERE tsheetid = ?");
+$extend_stmt = $conn->prepare("SELECT * FROM tabulatingsheetex WHERE tsheet_id = ?");
 $extend_stmt->bind_param("i", $extend_id);
 $extend_stmt->execute();
 $extend_result = $extend_stmt->get_result();
