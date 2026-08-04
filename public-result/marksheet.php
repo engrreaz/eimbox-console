@@ -291,6 +291,10 @@ echo '</pre>';
                     <tr>
                         <td class="text-start"><?php echo htmlspecialchars($mark['subject']); ?></td>
                         <td><?php echo htmlspecialchars($mark['full']); ?></td>
+                        <td><?php echo htmlspecialchars($mark['sub']); ?></td>
+                        <td><?php echo htmlspecialchars($mark['obj']); ?></td>
+                        <td><?php echo htmlspecialchars($mark['pra']); ?></td>
+                        <td><?php echo htmlspecialchars($mark['ca']); ?></td>
                         <td><?php echo htmlspecialchars($mark['obtained']); ?></td>
                         <td><?php echo htmlspecialchars($mark['grade']); ?></td>
                         <td><?php echo htmlspecialchars($mark['gp']); ?></td>
