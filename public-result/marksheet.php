@@ -108,6 +108,10 @@ for ($i = 1; $i <= 10; $i++) {
 }
 
 echo '<pre>'; // For debugging
+print_r($subject_codes_raw);
+echo '</pre>';
+
+echo '<pre>'; // For debugging
 print_r($extended_marks);
 echo '</pre>';
 
