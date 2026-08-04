@@ -142,6 +142,7 @@ foreach ($subject_codes_raw as $sub_code) {
     }
 
     $marks_data[] = [
+        'subcode' => $sub_code,
         'subject' => $subject_name,
         'full' => $full_marks,
         'obtained' => $total_mark,
