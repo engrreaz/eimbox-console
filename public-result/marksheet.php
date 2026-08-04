@@ -289,7 +289,8 @@ echo '</pre>';
             <tbody>
                 <?php foreach ($marks_data as $mark): ?>
                     <?php 
-                    if((int)htmlspecialchars($mark['obtained']) > 0): 
+                    // if((int)htmlspecialchars($mark['obtained']) > 0)
+                         { 
                         if((int)htmlspecialchars($mark['subcode']) == 1000) {
                             $colspan = ' colspan="9"';
                         } else {
@@ -309,7 +310,7 @@ echo '</pre>';
                         <td><?php echo htmlspecialchars($mark['grade']); ?></td>
                         <td><?php echo htmlspecialchars($mark['gp']); ?></td>
                     </tr>
-                    <?php endif; ?>
+                    <?php } ?>
                 <?php endforeach; ?>
             </tbody>
             <tfoot class="table-light">
