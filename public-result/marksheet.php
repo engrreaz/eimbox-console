@@ -245,7 +245,7 @@ foreach ($subject_codes_raw as $sub_code) {
 
         .marks-table th,
         .marks-table td {
-            padding: 8px 12px;
+            padding: 4px;
         }
 
         @media print {
@@ -309,7 +309,7 @@ foreach ($subject_codes_raw as $sub_code) {
                     <th>Obj</th>
                     <th>Pra</th>
                     <th>CA</th>
-                    <th>Obtained Marks</th>
+                    <th>Total</th>
                     
                     <th colspan="2">Grade</th> <th></th> 
                 </tr>
