@@ -181,6 +181,21 @@ foreach ($subject_codes_raw as $sub_code) {
         }
     }
 
+    if ($sub_code == 1000) {
+       $marks_data[$sub_code] = [
+                'subcode' => $sub_code,
+                'subject' => $subject_name,
+                'full' => 0,
+                'obtained' => 0,
+                'sub' =>0,
+                'obj' => 0,
+                'pra' => 0,
+                'ca' => 0,
+                'grade' => 0,
+                'gp' => 0
+       ];
+    }
+
     if ($col_prefix === null) {
         continue; // If no column found for this subject code, skip it.
     }
