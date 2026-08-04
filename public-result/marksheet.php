@@ -87,11 +87,14 @@ $extend_stmt->execute();
 $extend_result = $extend_stmt->get_result();
 $extend_data = $extend_result->fetch_assoc() ?? [];
 
+$result_summary = [];
 for ($i = 1; $i <= 10; $i++) {
     $col_prefix = 'sub_' . $i;
     if (isset($extend_data[$col_prefix . '_total'])) {
         $subcode = 1000 + (int) $extend_data[$col_prefix] ?? null;
+        $result_summary['subcode'] = $subcode;
         $result_summary[$col_prefix . 'sub'] = $extend_data[$col_prefix . 'sub'];
+        $result_summary[$col_prefix . 'full'] = $extend_data['sub_fm_' . $i] ?? 0;
         $result_summary[$col_prefix . 'obj'] = $extend_data[$col_prefix . 'obj'];
         $result_summary[$col_prefix . 'pra'] = $extend_data[$col_prefix . 'pra'];
         $result_summary[$col_prefix . 'ca'] = $extend_data[$col_prefix . 'ca'];
@@ -141,11 +144,34 @@ foreach ($subject_codes_raw as $sub_code) {
         // For now, we are showing all subjects from 'allsubject' field.
     }
 
+if($sub_code>1000) {
+    $key = array_search($sub_code, array_column($extended_marks, 'subcode'));
+    if ($key !== false) {
+        $marks_data[] = [
+            'subcode' => $sub_code,
+            'subject' => $subject_name,
+            'full' => $extended_marks[$key]['full'],
+            'obtained' => $extended_marks[$key]['total'],
+            'sub' => $extended_marks[$key]['sub'],
+            'obj' => $extended_marks[$key]['obj'],
+            'pra' => $extended_marks[$key]['pra'],
+            'ca' => $extended_marks[$key]['ca'],
+            'grade' => $extended_marks[$key]['gl'],
+            'gp' => number_format($extended_marks[$key]['gp'], 2),
+        ];
+        continue; // Move to the next subject in the loop
+    }
+}
+
     $marks_data[] = [
         'subcode' => $sub_code,
         'subject' => $subject_name,
         'full' => $full_marks,
         'obtained' => $total_mark,
+        'sub' => $result_summary[$col_prefix . '_sub'] ?? 0,
+        'obj' => $result_summary[$col_prefix . '_obj'] ?? 0,
+        'pra' => $result_summary[$col_prefix . '_pra'] ?? 0,
+        'ca' => $result_summary[$col_prefix . '_ca'] ?? 0,
         'grade' => $result_summary[$col_prefix . '_gl'] ?? 'N/A',
         'gp' => number_format($result_summary[$col_prefix . '_gp'] ?? 0, 2),
     ];
