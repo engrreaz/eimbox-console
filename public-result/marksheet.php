@@ -144,24 +144,24 @@ foreach ($subject_codes_raw as $sub_code) {
         // For now, we are showing all subjects from 'allsubject' field.
     }
 
-if($sub_code>1000) {
-    $key = array_search($sub_code, array_column($extended_marks, 'subcode'));
-    if ($key !== false) {
-        $marks_data[] = [
-            'subcode' => $sub_code,
-            'subject' => $subject_name,
-            'full' => $extended_marks[$key]['full'],
-            'obtained' => $extended_marks[$key]['total'],
-            'sub' => $extended_marks[$key]['sub'],
-            'obj' => $extended_marks[$key]['obj'],
-            'pra' => $extended_marks[$key]['pra'],
-            'ca' => $extended_marks[$key]['ca'],
-            'grade' => $extended_marks[$key]['gl'],
-            'gp' => number_format($extended_marks[$key]['gp'], 2),
-        ];
-        continue; // Move to the next subject in the loop
+    if ($sub_code > 1000) {
+        $key = array_search($sub_code, array_column($$result_summary, 'subcode'));
+        if ($key !== false) {
+            $marks_data[] = [
+                'subcode' => $sub_code,
+                'subject' => $subject_name,
+                'full' => $result_summary[$key]['full'],
+                'obtained' => $result_summary[$key]['total'],
+                'sub' => $result_summary[$key]['sub'],
+                'obj' => $result_summary[$key]['obj'],
+                'pra' => $result_summary[$key]['pra'],
+                'ca' => $result_summary[$key]['ca'],
+                'grade' => $result_summary[$key]['gl'],
+                'gp' => number_format($result_summary[$key]['gp'], 2),
+            ];
+            continue; // Move to the next subject in the loop
+        }
     }
-}
 
     $marks_data[] = [
         'subcode' => $sub_code,
