@@ -82,6 +82,7 @@ $subject_counter = 0; // Counter for 'sub_X' column names
 echo $all_subjects_str . '<br>'; // For debugging
 
 $extend_id = $result_summary['id'] ?? 0; // Assuming 'id' from tabulatingsheet is the foreign key
+echo 'Extend ID: ' . $extend_id . '<br>'; // For debugging
 $extend_stmt = $conn->prepare("SELECT * FROM tabulatingsheetex WHERE tsheet_id = ?");
 $extend_stmt->bind_param("i", $extend_id);
 $extend_stmt->execute();
