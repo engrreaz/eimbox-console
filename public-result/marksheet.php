@@ -304,7 +304,7 @@ foreach ($subject_codes_raw as $sub_code) {
             <thead class="table-light">
                 <tr>
                     <th>Subject Name</th>
-                    <th>Full Marks</th>
+                    <th>Full<br>Marks</th>
                     <th>Sub</th>
                     <th>Obj</th>
                     <th>Pra</th>
