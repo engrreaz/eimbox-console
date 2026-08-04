@@ -28,7 +28,6 @@ if (empty($sccode) || empty($rollno) || empty($exam) || empty($classname) || emp
 $conn->set_charset("utf8");
 
 // Institute Info
-
 $institute_info['address'] ='ABC' . ', ' . 'EDE' . ', ' . 'XXX';
 
 // Student Info
