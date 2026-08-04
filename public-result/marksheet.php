@@ -93,11 +93,11 @@ for ($i = 1; $i <= 10; $i++) {
     // Check if the subject code exists and is valid
     if (!empty($extend_data[$col_prefix])) {
         $extended_marks[] = [
-            'subcode' => (int) $extend_data[$col_prefix],
-            'sub' => $extend_data[$col_prefix . 'sub'] ?? 0,
-            'obj' => $extend_data[$col_prefix . 'obj'] ?? 0,
-            'pra' => $extend_data[$col_prefix . 'pra'] ?? 0,
-            'ca' => $extend_data[$col_prefix . 'ca'] ?? 0,
+            'subcode' => (int) $extend_data[$col_prefix]+1000,
+            'sub' => $extend_data[$col_prefix . '_sub'] ?? 0,
+            'obj' => $extend_data[$col_prefix . '_obj'] ?? 0,
+            'pra' => $extend_data[$col_prefix . '_pra'] ?? 0,
+            'ca' => $extend_data[$col_prefix . '_ca'] ?? 0,
             'total' => $extend_data[$col_prefix . '_total'] ?? 0,
             'gp' => $extend_data[$col_prefix . '_gp'] ?? 0,
             'gl' => $extend_data[$col_prefix . '_gl'] ?? 'F',
