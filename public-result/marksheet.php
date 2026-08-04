@@ -79,10 +79,10 @@ $subject_codes_raw = explode('.', $all_subjects_str_normalized);
 $processed_subject_codes = []; // To track unique subject codes already processed
 $subject_counter = 0; // Counter for 'sub_X' column names
 
-echo $all_subjects_str . '<br>'; // For debugging
+
 
 $extend_id = $result_summary['id'] ?? 0; // Assuming 'id' from tabulatingsheet is the foreign key
-echo 'Extend ID: ' . $extend_id . '<br>'; // For debugging
+
 $extend_stmt = $conn->prepare("SELECT * FROM tabulatingsheetex WHERE tsheet_id = ?");
 $extend_stmt->bind_param("i", $extend_id);
 $extend_stmt->execute();
@@ -108,13 +108,9 @@ for ($i = 1; $i <= 10; $i++) {
     }
 }
 
-echo '<pre>'; // For debugging
-print_r($subject_codes_raw);
-echo '</pre>';
 
-echo '<pre>'; // For debugging
-print_r($extended_marks);
-echo '</pre>';
+$sub_count = count($subject_codes_raw);
+
 
 foreach ($subject_codes_raw as $sub_code) {
     // Trim whitespace and ensure it's a non-empty, numeric subject code
@@ -200,7 +196,6 @@ foreach ($subject_codes_raw as $sub_code) {
         continue; // If no column found for this subject code, skip it.
     }
 
-    echo $col_prefix . ' - ' . $sub_code . ' - ' . $subject_name . ' - ' . $full_marks . ' - ' . $total_mark . '<br>'; // For debugging
     $marks_data[$sub_code] = [
         'subcode' => $sub_code,
         'subject' => $subject_name,
@@ -214,10 +209,6 @@ foreach ($subject_codes_raw as $sub_code) {
         'gp' => number_format($result_summary[$col_prefix . '_gp'] ?? 0, 2),
     ];
 }
-
-echo '<pre>'; // For debugging
-print_r($marks_data);
-echo '</pre>';
 
 
 
@@ -321,6 +312,7 @@ echo '</pre>';
                     <th>Obtained Marks</th>
                     <th>Grade</th>
                     <th>Grade Point</th>
+                    <th rowspan="<?= $sub_count; ?>"></th>
                 </tr>
             </thead>
             <tbody>
