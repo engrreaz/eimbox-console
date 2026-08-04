@@ -170,6 +170,7 @@ foreach ($subject_codes_raw as $sub_code) {
         }
     }
 
+    echo $col_prefix . ' - ' . $sub_code . ' - ' . $subject_name . ' - ' . $full_marks . ' - ' . $total_mark . '<br>'; // For debugging
     $marks_data[$sub_code] = [
         'subcode' => $sub_code,
         'subject' => $subject_name,
