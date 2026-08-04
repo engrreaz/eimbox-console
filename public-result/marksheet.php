@@ -93,11 +93,11 @@ for ($i = 1; $i <= 10; $i++) {
     if (isset($extend_data[$col_prefix . '_total'])) {
         $subcode = 1000 + (int) $extend_data[$col_prefix] ?? null;
         $result_summary['subcode'] = $subcode;
-        $result_summary[$col_prefix . 'sub'] = $extend_data[$col_prefix . 'sub'];
-        $result_summary[$col_prefix . 'full'] = $extend_data['sub_fm_' . $i] ?? 0;
-        $result_summary[$col_prefix . 'obj'] = $extend_data[$col_prefix . 'obj'];
-        $result_summary[$col_prefix . 'pra'] = $extend_data[$col_prefix . 'pra'];
-        $result_summary[$col_prefix . 'ca'] = $extend_data[$col_prefix . 'ca'];
+        $result_summary[$col_prefix . '_sub'] = $extend_data[$col_prefix . 'sub'];
+        $result_summary[$col_prefix . '_full'] = $extend_data['sub_fm_' . $i] ?? 0;
+        $result_summary[$col_prefix . '_obj'] = $extend_data[$col_prefix . 'obj'];
+        $result_summary[$col_prefix . '_pra'] = $extend_data[$col_prefix . 'pra'];
+        $result_summary[$col_prefix . '_ca'] = $extend_data[$col_prefix . 'ca'];
 
         $result_summary[$col_prefix . '_total'] = $extend_data[$col_prefix . '_total'];
         $result_summary[$col_prefix . '_gl'] = $extend_data[$col_prefix . '_gl'];
