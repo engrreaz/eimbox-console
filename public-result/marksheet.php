@@ -293,13 +293,17 @@ echo '</pre>';
                          { 
                         if((int)htmlspecialchars($mark['subcode']) == 1000) {
                             $colspan = ' colspan="9"';
+                            ?>
+                            <tr>
+                        <td class="text-start" <?php echo $colspan; ?>><?php echo htmlspecialchars($mark['subject']); ?></td>
+                       
+                    </tr>
+                    <?php
+
                         } else {
                             $colspan = '';
-                        }
-                        
-                        
-                        ?>
-                    <tr>
+                            ?>
+<tr>
                         <td class="text-start" <?php echo $colspan; ?>><?php echo htmlspecialchars($mark['subject']); ?></td>
                         <td><?php echo htmlspecialchars($mark['full']); ?></td>
                         <td><?php echo htmlspecialchars($mark['sub']); ?></td>
@@ -310,6 +314,13 @@ echo '</pre>';
                         <td><?php echo htmlspecialchars($mark['grade']); ?></td>
                         <td><?php echo htmlspecialchars($mark['gp']); ?></td>
                     </tr>
+
+<?php
+                        }
+                        
+                        
+                        ?>
+                    
                     <?php } ?>
                 <?php endforeach; ?>
             </tbody>
