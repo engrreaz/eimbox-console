@@ -347,7 +347,7 @@ foreach ($subject_codes_raw as $sub_code) {
                         <td><?php echo htmlspecialchars($mark['gp']); ?></td>
                         <?php if (!$summary_cell_added): ?>
                             <td rowspan="<?php echo $sub_count; ?>" class="align-middle">
-                                <div class="p-2" style="border-left: 1px solid #dee2e6;">
+                                <div class="p-2" >
                                     <p class="mb-1">Total Marks: <strong><?php echo htmlspecialchars($result_summary['totalmarks']); ?></strong></p>
                                     <p class="mb-1">GPA: <strong><?php echo htmlspecialchars(number_format($result_summary['gpa'], 2)); ?></strong></p>
                                     <p class="mb-1">Grade: <strong><?php echo htmlspecialchars($result_summary['gla']); ?></strong></p>
