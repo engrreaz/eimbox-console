@@ -80,28 +80,29 @@ $processed_subject_codes = []; // To track unique subject codes already processe
 $subject_counter = 0; // Counter for 'sub_X' column names
 
 
-$extend_id = $result_summary['id'] ?? 0;
-$extend_stmt = $conn->prepare("SELECT * FROM tabulatingsheetex WHERE tsheet_id = ?");
+$extend_id = $result_summary['id'] ?? 0; // Assuming 'id' from tabulatingsheet is the foreign key
+$extend_stmt = $conn->prepare("SELECT * FROM tabulatingsheetex WHERE tsheetid = ?");
 $extend_stmt->bind_param("i", $extend_id);
 $extend_stmt->execute();
 $extend_result = $extend_stmt->get_result();
 $extend_data = $extend_result->fetch_assoc() ?? [];
 
-$result_summary = [];
+$extended_marks = []; // Create a new array for extended subjects
 for ($i = 1; $i <= 10; $i++) {
     $col_prefix = 'sub_' . $i;
-    if (isset($extend_data[$col_prefix . '_total'])) {
-        $subcode = 1000 + (int) $extend_data[$col_prefix] ?? null;
-        $result_summary['subcode'] = $subcode;
-        $result_summary[$col_prefix . '_sub'] = $extend_data[$col_prefix . 'sub'];
-        $result_summary[$col_prefix . '_full'] = $extend_data['sub_fm_' . $i] ?? 0;
-        $result_summary[$col_prefix . '_obj'] = $extend_data[$col_prefix . 'obj'];
-        $result_summary[$col_prefix . '_pra'] = $extend_data[$col_prefix . 'pra'];
-        $result_summary[$col_prefix . '_ca'] = $extend_data[$col_prefix . 'ca'];
-
-        $result_summary[$col_prefix . '_total'] = $extend_data[$col_prefix . '_total'];
-        $result_summary[$col_prefix . '_gl'] = $extend_data[$col_prefix . '_gl'];
-        $result_summary[$col_prefix . '_gp'] = $extend_data[$col_prefix . '_gp'];
+    // Check if the subject code exists and is valid
+    if (!empty($extend_data[$col_prefix])) {
+        $extended_marks[] = [
+            'subcode' => (int) $extend_data[$col_prefix],
+            'sub' => $extend_data[$col_prefix . 'sub'] ?? 0,
+            'obj' => $extend_data[$col_prefix . 'obj'] ?? 0,
+            'pra' => $extend_data[$col_prefix . 'pra'] ?? 0,
+            'ca' => $extend_data[$col_prefix . 'ca'] ?? 0,
+            'total' => $extend_data[$col_prefix . '_total'] ?? 0,
+            'gp' => $extend_data[$col_prefix . '_gp'] ?? 0,
+            'gl' => $extend_data[$col_prefix . '_gl'] ?? 'F',
+            'full' => $extend_data['sub_fm_' . $i] ?? 100,
+        ];
     }
 }
 
@@ -145,19 +146,19 @@ foreach ($subject_codes_raw as $sub_code) {
     }
 
     if ($sub_code > 1000) {
-        $key = array_search($sub_code, array_column($result_summary, 'subcode'));
+        $key = array_search($sub_code, array_column($extended_marks, 'subcode'));
         if ($key !== false) {
-            $marks_data[$sub_code] = [
+            $marks_data[] = [
                 'subcode' => $sub_code,
                 'subject' => $subject_name,
-                'full' => $result_summary[$key]['full'],
-                'obtained' => $result_summary[$key]['total'],
-                'sub' => $result_summary[$key]['sub'],
-                'obj' => $result_summary[$key]['obj'],
-                'pra' => $result_summary[$key]['pra'],
-                'ca' => $result_summary[$key]['ca'],
-                'grade' => $result_summary[$key]['gl'],
-                'gp' => number_format($result_summary[$key]['gp'], 2),
+                'full' => $extended_marks[$key]['full'],
+                'obtained' => $extended_marks[$key]['total'],
+                'sub' => $extended_marks[$key]['sub'],
+                'obj' => $extended_marks[$key]['obj'],
+                'pra' => $extended_marks[$key]['pra'],
+                'ca' => $extended_marks[$key]['ca'],
+                'grade' => $extended_marks[$key]['gl'],
+                'gp' => number_format($extended_marks[$key]['gp'], 2),
             ];
             continue; // Move to the next subject in the loop
         }
