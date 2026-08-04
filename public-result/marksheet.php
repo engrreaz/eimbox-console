@@ -287,12 +287,15 @@ echo '</pre>';
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($marks_data as $mark): ?>
+                <?php
+                $flag = false;
+                 foreach ($marks_data as $mark): ?>
                     <?php 
-                    if((int)htmlspecialchars($mark['obtained']) > 0)
+                    if((int)htmlspecialchars($mark['obtained']) > 0 && $flag == true)
                          { 
                         if((int)htmlspecialchars($mark['subcode']) == 1000) {
                             $colspan = ' colspan="9"';
+                            $flag = true;
                             ?>
                             <tr>
                         <td class="text-start" <?php echo $colspan; ?>><?php echo htmlspecialchars($mark['subject']); ?></td>
