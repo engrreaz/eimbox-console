@@ -1,0 +1,259 @@
+<?php
+require_once '../core/config.php';
+require_once '../core/db.php';
+require_once '../core/functions.php'; // Assuming you have a functions file for grade calculations
+
+// 1. URL থেকে ডেটা গ্রহণ করা
+$sccode      = $_GET['sccode'] ?? '';
+$slot        = $_GET['slot'] ?? '';
+$sessionyear = $_GET['sessionyear'] ?? '';
+$exam        = $_GET['exam'] ?? '';
+$classname   = $_GET['classname'] ?? '';
+$sectionname = $_GET['sectionname'] ?? '';
+$rollno      = $_GET['rollno'] ?? '';
+
+// 2. ন্যূনতম তথ্য যাচাই করা
+function showError($message) {
+    echo "<!DOCTYPE html><html><head><title>Error</title><link rel='stylesheet' href='../assets/vendor/css/core.css' /></head><body>";
+    echo "<div class='container'><div class='alert alert-danger mt-5'>" . htmlspecialchars($message) . "</div></div>";
+    echo "</body></html>";
+    exit;
+}
+
+if (empty($sccode) || empty($rollno) || empty($exam) || empty($classname) || empty($sessionyear) || empty($slot)) {
+    showError('প্রয়োজনীয় তথ্য পাওয়া যায়নি। অনুগ্রহ করে সঠিক তথ্য দিয়ে আবার চেষ্টা করুন।');
+}
+
+// 3. ডেটাবেস থেকে তথ্য আনা
+$conn->set_charset("utf8");
+
+// Institute Info
+
+$institute_info['address'] ='ABC' . ', ' . 'EDE' . ', ' . 'XXX';
+
+// Student Info
+$stmt = $conn->prepare("
+    SELECT s.*, si.stid FROM students s
+    JOIN sessioninfo si ON s.stid = si.stid
+    WHERE si.sccode = ? AND si.sessionyear = ? AND si.classname = ? AND si.sectionname = ? AND si.rollno = ?
+");
+$stmt->bind_param("sssss", $sccode, $sessionyear, $classname, $sectionname, $rollno);
+$stmt->execute();
+$student_result = $stmt->get_result();
+if ($student_result->num_rows === 0) {
+    showError('Student not found with the provided details.');
+}
+$student_info = $student_result->fetch_assoc();
+$stid = $student_info['stid'];
+
+// Result Info from tabulatingsheet
+$stmt = $conn->prepare("
+    SELECT * FROM tabulatingsheet 
+    WHERE sccode = ? AND sessionyear = ? AND exam = ? AND classname = ? AND sectionname = ? AND stid = ?
+");
+$stmt->bind_param("ssssss", $sccode, $sessionyear, $exam, $classname, $sectionname, $stid);
+$stmt->execute();
+$result_res = $stmt->get_result();
+if ($result_res->num_rows === 0) {
+    showError('Result data not found for this student.');
+}
+$result_summary = $result_res->fetch_assoc();
+
+// Marks Data
+$marks_data = [];
+$all_subjects_str = $result_summary['allsubject'];
+$subject_codes = explode('/', $all_subjects_str);
+
+foreach ($subject_codes as $i => $sub_code) {
+    if (empty($sub_code) || !is_numeric($sub_code)) continue;
+
+    $subject_details_stmt = $conn->prepare("SELECT subject FROM subjects WHERE subcode = ?");
+    $subject_details_stmt->bind_param("i", $sub_code);
+    $subject_details_stmt->execute();
+    $subject_details_result = $subject_details_stmt->get_result();
+    $subject_name = ($subject_details_result->num_rows > 0) ? $subject_details_result->fetch_assoc()['subject'] : 'Unknown Subject';
+
+    $subject_setup_stmt = $conn->prepare("SELECT fullmarks FROM subsetup WHERE sccode = ? AND sessionyear = ? AND classname = ? AND subject = ?");
+    $subject_setup_stmt->bind_param("sssi", $sccode, $sessionyear, $classname, $sub_code);
+    $subject_setup_stmt->execute();
+    $subject_setup_result = $subject_setup_stmt->get_result();
+    $full_marks = ($subject_setup_result->num_rows > 0) ? $subject_setup_result->fetch_assoc()['fullmarks'] : 100;
+
+    $col_prefix = 'sub_' . ($i + 1);
+    $total_mark = $result_summary[$col_prefix . '_total'] ?? 0;
+
+    // Skip subjects with 0 marks if they are not compulsory
+    if ($total_mark == 0) {
+        // Add logic here to check if the subject is optional and can be skipped.
+        // For now, we are showing all subjects from 'allsubject' field.
+    }
+
+    $marks_data[] = [
+        'subject' => $subject_name,
+        'full' => $full_marks,
+        'obtained' => $total_mark,
+        'grade' => $result_summary[$col_prefix . '_gl'] ?? 'N/A',
+        'gp' => number_format($result_summary[$col_prefix . '_gp'] ?? 0, 2),
+    ];
+}
+
+// Combine Bangla and English if they exist as separate parts
+$final_marks_data = [];
+$bangla_combined = ['subject' => 'Bangla', 'full' => 0, 'obtained' => 0, 'gp' => 0, 'count' => 0];
+$english_combined = ['subject' => 'English', 'full' => 0, 'obtained' => 0, 'gp' => 0, 'count' => 0];
+$other_subjects = [];
+
+foreach ($marks_data as $mark) {
+    if (stripos($mark['subject'], 'Bangla') !== false) {
+        $bangla_combined['full'] += $mark['full'];
+        $bangla_combined['obtained'] += $mark['obtained'];
+        $bangla_combined['gp'] += $mark['gp'];
+        $bangla_combined['count']++;
+    } elseif (stripos($mark['subject'], 'English') !== false) {
+        $english_combined['full'] += $mark['full'];
+        $english_combined['obtained'] += $mark['obtained'];
+        $english_combined['gp'] += $mark['gp'];
+        $english_combined['count']++;
+    } else {
+        $other_subjects[] = $mark;
+    }
+}
+
+if ($bangla_combined['count'] > 0) {
+    $bangla_combined['gp'] = $result_summary['ben_gp'] ?? 0; // Use combined GP from DB
+    $bangla_combined['grade'] = $result_summary['ben_gl'] ?? 'N/A';
+    $final_marks_data[] = $bangla_combined;
+}
+if ($english_combined['count'] > 0) {
+    $english_combined['gp'] = $result_summary['eng_gp'] ?? 0; // Use combined GP from DB
+    $english_combined['grade'] = $result_summary['eng_gl'] ?? 'N/A';
+    $final_marks_data[] = $english_combined;
+}
+
+$marks_data = array_merge($final_marks_data, $other_subjects);
+
+?>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Marksheet</title>
+    <link rel="stylesheet" href="../assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="../assets/css/eimbox.css" />
+    <style>
+        body {
+            background-color: #f4f4f4;
+        }
+
+        .marksheet-container {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 30px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .institute-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .marks-table th,
+        .marks-table td {
+            padding: 8px 12px;
+        }
+
+        @media print {
+            body {
+                background-color: #fff;
+            }
+
+            .marksheet-container {
+                margin: 0;
+                padding: 10px;
+                border: none;
+                box-shadow: none;
+            }
+
+            .btn {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="marksheet-container">
+        <!-- Institute Header -->
+        <div class="institute-header">
+            <h2><?php echo htmlspecialchars($institute_info['school_name']); ?></h2>
+            <p><?php echo htmlspecialchars($institute_info['address']); ?></p>
+            <h4>ACADEMIC TRANSCRIPT</h4>
+            <h5><?php echo htmlspecialchars($exam); ?> - <?php echo htmlspecialchars($sessionyear); ?></h5>
+        </div>
+
+        <!-- Student Information -->
+        <table class="table table-sm table-bordered mb-4">
+            <tr>
+                <th>Student's Name</th>
+                <td><?php echo htmlspecialchars($student_info['stnameeng']); ?></td>
+                <th>Roll No</th>
+                <td><?php echo htmlspecialchars($rollno); ?></td>
+            </tr>
+            <tr>
+                <th>Father's Name</th>
+                <td><?php echo htmlspecialchars($student_info['fname']); ?></td>
+                <th>Class</th>
+                <td><?php echo htmlspecialchars($classname); ?></td>
+            </tr>
+            <tr>
+                <th>Mother's Name</th>
+                <td><?php echo htmlspecialchars($student_info['mname']); ?></td>
+                <th>Section</th>
+                <td><?php echo htmlspecialchars($sectionname); ?></td>
+            </tr>
+        </table>
+
+        <!-- Marks Table -->
+        <table class="table table-bordered table-sm marks-table text-center">
+            <thead class="table-light">
+                <tr>
+                    <th>Subject Name</th>
+                    <th>Full Marks</th>
+                    <th>Obtained Marks</th>
+                    <th>Grade</th>
+                    <th>Grade Point</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($marks_data as $mark) : ?>
+                    <tr>
+                        <td class="text-start"><?php echo htmlspecialchars($mark['subject']); ?></td>
+                        <td><?php echo htmlspecialchars($mark['full']); ?></td>
+                        <td><?php echo htmlspecialchars($mark['obtained']); ?></td>
+                        <td><?php echo htmlspecialchars($mark['grade']); ?></td>
+                        <td><?php echo htmlspecialchars($mark['gp']); ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+            <tfoot class="table-light">
+                <tr>
+                    <th colspan="2" class="text-end">Total Marks:</th>
+                    <th><?php echo htmlspecialchars($result_summary['totalmarks']); ?></th>
+                    <th class="text-end">GPA:</th>
+                    <th><?php echo htmlspecialchars(number_format($result_summary['gpa'], 2)); ?> (<?php echo htmlspecialchars($result_summary['gla']); ?>)</th>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="d-flex justify-content-end mt-4">
+            <button class="btn btn-primary" onclick="window.print()">Print Result</button>
+        </div>
+
+    </div>
+</body>
+
+</html>
