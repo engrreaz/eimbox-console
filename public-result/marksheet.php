@@ -79,6 +79,7 @@ $subject_codes_raw = explode('.', $all_subjects_str_normalized);
 $processed_subject_codes = []; // To track unique subject codes already processed
 $subject_counter = 0; // Counter for 'sub_X' column names
 
+echo $all_subjects_str . '<br>'; // For debugging
 
 $extend_id = $result_summary['id'] ?? 0; // Assuming 'id' from tabulatingsheet is the foreign key
 $extend_stmt = $conn->prepare("SELECT * FROM tabulatingsheetex WHERE tsheet_id = ?");
