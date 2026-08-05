@@ -12,14 +12,33 @@ $eicontact = $scmobile;
   }
 
   @media print {
+    /* Ensure html and body take full page dimensions */
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden; /* Prevent scrollbars in print preview */
+    }
     body {
       margin: 0;
       padding: 0;
+    }
+    /* Override any padding from .page-a4 class when printing */
+    .page-a4 {
+      padding: 0 !important;
     }
     .full-box {
       position: absolute;
       top: 0;
       left: 0;
+      width: 100%; /* Ensure it takes full available width */
+      height: 100%; /* Ensure it takes full available height */
+      margin: 0; /* Explicitly remove any auto margin in print */
+      padding: 0 !important; /* Remove any padding that might be applied */
+      background-size: cover; /* Ensure background covers the full area */
+      background-position: center center; /* Ensure background is centered */
+      background-repeat: no-repeat; /* Ensure no repetition */
     }
   }
 
