@@ -109,11 +109,11 @@ foreach ($glRows as $r) {
 
 <!-- ===================================================== -->
 <div class="full-box-2"
-    style="width:<?= $paper ?>;margin:auto;text-align:center;font-family:'Segoe UI';page-break-after:always">
+    style="width:<?= $paper ?>;margin:auto;padding-top:15mm; text-align:center;font-family:'Segoe UI';page-break-after:always">
 
     <!-- ================= HEADER ================= -->
      <img src="https://www.eimbox.com/logo/<?= $sccode ?>.png" style="width:100px;"/>
-     <h3><?= $scname ?></h3>
+     <h3 style="font-weight:900;"><?= $scname ?></h3>
 
 
     <h2 style="color:#005678;margin:8px 0">Result : At a Glance</h2>
