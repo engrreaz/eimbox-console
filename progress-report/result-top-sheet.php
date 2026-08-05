@@ -7,8 +7,8 @@
 $row = fetchRow($conn, "
     SELECT 
         COUNT(*) total_students,
-        count(totalmarks>0) appeared,
-        count(gpa>0) passed
+        SUM(totalmarks>0) appeared,
+        SUM(gpa>0) passed
     FROM tabulatingsheet
     WHERE sccode='$sccode'
       AND exam='$exam'

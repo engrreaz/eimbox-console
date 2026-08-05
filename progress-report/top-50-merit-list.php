@@ -4,9 +4,9 @@
 
 $txt = '';
 if ($secname == '') {
-    $sql000111 = "SELECT count(gla) as sts FROM tabulatingsheet where  sccode='$sccode' and exam='$exam' and classname='$cn' and sessionyear = '$sy' ";
+    $sql000111 = "SELECT count(gla) as sts FROM tabulatingsheet where  sccode='$sccode' and exam='$exam' and classname='$cn' and sessionyear = '$sessionyear' ";
 } else {
-    $sql000111 = "SELECT count(gla) as sts FROM tabulatingsheet where  sccode='$sccode' and exam='$exam' and classname='$cn' and sectionname='$secname' and sessionyear = '$sy' ";
+    $sql000111 = "SELECT count(gla) as sts FROM tabulatingsheet where  sccode='$sccode' and exam='$exam' and classname='$cn' and sectionname='$secname' and sessionyear = '$sessionyear' ";
 }
 
 $result000111 = $conn->query($sql000111);
@@ -17,9 +17,9 @@ if ($result000111->num_rows > 0) {
 }
 
 if ($secname == '') {
-    $sql000111 = "SELECT count(gla) as sts FROM tabulatingsheet where  sccode='$sccode' and exam='$exam' and classname='$cn'  and sessionyear = '$sy' and totalmarks>0 ";
+    $sql000111 = "SELECT count(gla) as sts FROM tabulatingsheet where  sccode='$sccode' and exam='$exam' and classname='$cn'  and sessionyear = '$sessionyear' and totalmarks>0 ";
 } else {
-    $sql000111 = "SELECT count(gla) as sts FROM tabulatingsheet where  sccode='$sccode' and exam='$exam' and classname='$cn' and sectionname='$secname' and sessionyear = '$sy' and totalmarks>0 ";
+    $sql000111 = "SELECT count(gla) as sts FROM tabulatingsheet where  sccode='$sccode' and exam='$exam' and classname='$cn' and sectionname='$secname' and sessionyear = '$sessionyear' and totalmarks>0 ";
 }
 
 $result000111 = $conn->query($sql000111);
@@ -32,9 +32,9 @@ if ($result000111->num_rows > 0) {
 $abs = $stsd - $stappear;
 
 if ($secname == '') {
-    $sql000111 = "SELECT count(gla) as sts FROM tabulatingsheet where  sccode='$sccode' and exam='$exam' and classname='$cn'  and sessionyear = '$sy'  and gpa>0";
+    $sql000111 = "SELECT count(gla) as sts FROM tabulatingsheet where  sccode='$sccode' and exam='$exam' and classname='$cn'  and sessionyear = '$sessionyear'  and gpa>0";
 } else {
-    $sql000111 = "SELECT count(gla) as sts FROM tabulatingsheet where  sccode='$sccode' and exam='$exam' and classname='$cn' and sectionname='$secname' and sessionyear = '$sy'  and gpa>0";
+    $sql000111 = "SELECT count(gla) as sts FROM tabulatingsheet where  sccode='$sccode' and exam='$exam' and classname='$cn' and sectionname='$secname' and sessionyear = '$sessionyear'  and gpa>0";
 }
 
 $result000111 = $conn->query($sql000111);
@@ -45,9 +45,9 @@ if ($result000111->num_rows > 0) {
 }
 
 if ($secname == '') {
-    $sql000111 = "SELECT gla, count(gla) as sts FROM tabulatingsheet where  sccode='$sccode' and exam='$exam' and classname='$cn'  and sessionyear = '$sy' group by gla order by gla ";
+    $sql000111 = "SELECT gla, count(gla) as sts FROM tabulatingsheet where  sccode='$sccode' and exam='$exam' and classname='$cn'  and sessionyear = '$sessionyear' group by gla order by gla ";
 } else {
-    $sql000111 = "SELECT gla, count(gla) as sts FROM tabulatingsheet where  sccode='$sccode' and exam='$exam' and classname='$cn' and sectionname='$secname' and sessionyear = '$sy' group by gla order by gla ";
+    $sql000111 = "SELECT gla, count(gla) as sts FROM tabulatingsheet where  sccode='$sccode' and exam='$exam' and classname='$cn' and sectionname='$secname' and sessionyear = '$sessionyear' group by gla order by gla ";
 }
 
 $result000111 = $conn->query($sql000111);
@@ -164,9 +164,9 @@ if ($result00->num_rows > 0) {
         <tbody>
             <?php
             if ($secname == '') {
-                $sql000111 = "SELECT * from tabulatingsheet where  sccode='$sccode'  and classname='$cn'  and exam='$exam' and sessionyear = '$sy' and totalmarks>0  order by cast(meritplace as int)";
+                $sql000111 = "SELECT * from tabulatingsheet where  sccode='$sccode'  and classname='$cn'  and exam='$exam' and sessionyear = '$sessionyear' and totalmarks>0  order by cast(meritplace as int)";
             } else {
-                $sql000111 = "SELECT * from tabulatingsheet where  sccode='$sccode'  and classname='$cn' and sectionname='$secname' and exam='$exam' and sessionyear = '$sy' and totalmarks>0  order by (meritplace * 1)";
+                $sql000111 = "SELECT * from tabulatingsheet where  sccode='$sccode'  and classname='$cn' and sectionname='$secname' and exam='$exam' and sessionyear = '$sessionyear' and totalmarks>0  order by (meritplace * 1)";
             }
 
             //  echo $sql000111;

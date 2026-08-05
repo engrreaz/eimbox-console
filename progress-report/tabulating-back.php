@@ -10,7 +10,7 @@ $eicontact = $scmobile;
   <div>
     <h1 class="title-main">Tabulation Sheet</h1>
     <div class="title-exam">
-      <?= htmlspecialchars($exam) ?> Examination - <?= htmlspecialchars($sy) ?>
+      <?= htmlspecialchars($exam) ?> Examination - <?= htmlspecialchars($sessionyear) ?>
     </div>
     <div class="title-class">
       CLASS: <b><?= htmlspecialchars($cn) ?></b> | <b><?= htmlspecialchars($secname) ?></b>
