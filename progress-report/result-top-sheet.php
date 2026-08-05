@@ -18,17 +18,7 @@ $row = fetchRow($conn, "
       AND slot='$slot'
 ");
 
-echo "SELECT 
-        COUNT(*) total_students,
-        SUM(totalmarks>0) appeared,
-        SUM(gpa>0) passed
-    FROM tabulatingsheet
-    WHERE sccode='$sccode'
-      AND exam='$exam'
-      AND classname='$cn'
-      AND sectionname='$secname'
-      AND sessionyear='$sessionyear'
-      AND slot='$slot'";
+
 
 
 $stsd = (int) ($row['total_students'] ?? 0);
