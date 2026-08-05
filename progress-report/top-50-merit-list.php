@@ -83,7 +83,13 @@ if ($result00->num_rows > 0) {
 
 ?>
 
-
+<style>
+    th, td {
+        border: 1px solid black;
+        padding: 2px;
+        border-collapse: collapse;
+    }
+</style>
 
 
 <div class="full-box-2">
