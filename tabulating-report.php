@@ -222,8 +222,8 @@ if ($sccode == '134579' && $slot != 'School') {
 <div id="print-box">
     <?php if ($topsheet == 'true'):
 
-        include 'progress-report/result-top-sheet.php';
-        include 'progress-report/top-50-merit-list.php';
+        // include 'progress-report/result-top-sheet.php';
+        // include 'progress-report/top-50-merit-list.php';
         include 'progress-report/tabulating-cover.php';
         include 'progress-report/tabulating-back.php';
     elseif ($topsheet == 'over'):
