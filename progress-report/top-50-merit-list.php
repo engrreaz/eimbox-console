@@ -80,21 +80,6 @@ if ($result00->num_rows > 0) {
     }
 }
 
-?>
-
-<style>
-    @page {
-        size: A4 landscape;
-        margin: 10mm;
-    }
-
-    @media print {
-        .full-box-2 {
-            width: 100%;
-            height: 100%;
-        }
-    }
-</style>
 
 ?>
 
@@ -103,7 +88,7 @@ if ($result00->num_rows > 0) {
 
 <div class="full-box-2">
 
-    <table width="280mm" style="margin:5mm 7mm 5mm 10mm; border:1;">
+    <table width="100%" style="margin:5mm 15mm; border:1;">
         <tr>
             <td style="padding:2px;">
                 <table width="100%" id="topdata">
@@ -160,7 +145,7 @@ if ($result00->num_rows > 0) {
         line-height:12px;
     }
 </style>
-    <table style="margin:5mm 15mm; border:1px solid black; width:100%;">
+    <table style="margin:5mm 10mm; border:1px solid black; width:100%;">
         <thead>
             <th style="padding:5px; text-align:center;">Merit <br><small>(Section)</small> </th>
             <th style="font-size:11px; text-align:center;">Name of Students</th>
