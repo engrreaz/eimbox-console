@@ -14,7 +14,7 @@ $row = fetchRow($conn, "
       AND exam='$exam'
       AND classname='$cn'
       AND sectionname='$secname'
-      AND sessionyear='$sy'
+      AND sessionyear='$sessionyear'
       AND slot='$slot'
 ");
 
@@ -45,7 +45,7 @@ $gradeDist = fetchAll($conn, "
       AND exam='$exam'
       AND classname='$cn'
       AND sectionname='$secname'
-      AND sessionyear='$sy'
+      AND sessionyear='$sessionyear'
       AND totalmarks>0
     GROUP BY gla
     ORDER BY gla
@@ -59,7 +59,7 @@ $failDist = fetchAll($conn, "
       AND exam='$exam'
       AND classname='$cn'
       AND sectionname='$secname'
-      AND sessionyear='$sy'
+      AND sessionyear='$sessionyear'
       AND totalmarks>0
       AND totalfail>0
     GROUP BY totalfail
@@ -81,7 +81,7 @@ $subsetup = fetchAll($conn, "
     WHERE sccode='$sccode'
       AND classname='$cn'
       AND sectionname='$secname'
-      AND sessionyear='$sy'
+      AND sessionyear='$sessionyear'
     ORDER BY subject
 ");
 
@@ -93,7 +93,7 @@ $subHigh = fetchAll($conn, "
       AND classname='$cn'
       AND sectionname='$secname'
       AND exam='$exam'
-      AND sessionyear='$sy'
+      AND sessionyear='$sessionyear'
     GROUP BY subject
 ");
 $subHighMap = idxBy($subHigh, 'subject');
@@ -124,7 +124,7 @@ foreach ($glRows as $r) {
 
 
     <h2 style="color:#005678;margin:8px 0">Result : At a Glance</h2>
-    <h3 style="color:#008765;margin:0"><?= htmlspecialchars($exam) ?> Examination - <?= htmlspecialchars($sy) ?></h3>
+    <h3 style="color:#008765;margin:0"><?= htmlspecialchars($exam) ?> Examination - <?= htmlspecialchars($sessionyear) ?></h3>
 
     <!-- ================= CLASS INFO ================= -->
     <table width="100%" style="margin:10px 15mm">
