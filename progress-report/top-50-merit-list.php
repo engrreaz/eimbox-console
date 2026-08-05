@@ -80,6 +80,21 @@ if ($result00->num_rows > 0) {
     }
 }
 
+?>
+
+<style>
+    @page {
+        size: A4 landscape;
+        margin: 10mm;
+    }
+
+    @media print {
+        .full-box-2 {
+            width: 100%;
+            height: 100%;
+        }
+    }
+</style>
 
 ?>
 
