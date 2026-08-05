@@ -106,7 +106,7 @@ if ($result00->num_rows > 0) {
 
     <table  style=" border:1; margin:5mm 10mm 5mm 15mm; width:calc(100% - 30mm);">
         <tr>
-            <td style="padding:2px;">
+            <td >
                 <table  id="topdata" style="width:100%;">
                     <tr>
                         <td style="padding:3px 0; text-align:center;">

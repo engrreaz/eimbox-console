@@ -137,6 +137,7 @@ $eicontact = $scmobile;
   </div>
 
   <div class="school-box">
+    <img src="https://www.eimbox.com/logo/<?= $sccode ?>.png" style="width:80px; text-align:center;"/>
     <div class="school-name"><?= htmlspecialchars($einame) ?></div>
     <div class="school-info"><?= htmlspecialchars($eiadd) ?></div>
     <div class="school-info"><?= htmlspecialchars($eicontact) ?></div>
