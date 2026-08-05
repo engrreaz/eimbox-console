@@ -19,10 +19,6 @@ $row = fetchRow($conn, "
 ");
 
 
-echo  '<pre>';
-print_r($row);
-echo  '</pre>';
-exit;
 
 
 $stsd = (int) ($row['total_students'] ?? 0);
