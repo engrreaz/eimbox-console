@@ -37,7 +37,7 @@ function idxBy($array, $key)
 $slot = $_GET['slot'] ?? $_COOKIE['chain-slot'] ?? '';
 $sessionyear = $_GET['session'] ?? $_COOKIE['chain-session'] ?? '';
 $cn = $_GET['class'] ?? $_COOKIE['chain-class'] ?? '';
-$secname = $_GET['section'] ?? $_COOKIE['chian-section'] ?? '';
+$secname = $_GET['sectionname'] ?? $_COOKIE['chian-section'] ?? '';
 $exam = $_GET['exam'] ?? $_COOKIE['chain-exam'] ?? '';
 
 if (!$sessionyear || !$cn || !$exam) {
