@@ -46,7 +46,7 @@ if (!$sessionyear || !$cn || !$exam) {
 }
 
 $topsheet = $_GET['top'] ?? 'false';
-$paper = '320mm';
+$paper = '297mm';
 $etdt = $cur;
 
 /* =======================
