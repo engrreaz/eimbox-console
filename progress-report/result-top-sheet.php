@@ -158,7 +158,7 @@ foreach ($glRows as $r) {
 
             <!-- GRADING SYSTEM -->
             <td>
-                <table border="1"  style="font-size:11px;color:#1c702c">
+                <table border="1"  style="font-size:11px;color:#1c702c; width:100%;">
                     <tr>
                         <th>Grade</th>
                         <th>Point</th>
@@ -207,7 +207,7 @@ foreach ($glRows as $r) {
     <!-- ================= SUBJECT ANALYSIS ================= -->
     <h3 style="margin-top:10px">Subject Wise Grading Analysis</h3>
 
-    <table border="1"  style="margin:5px 15mm;font-size:12px">
+    <table border="1"  style="width:calc(100% - 30mm);margin:5px 15mm;font-size:12px">
         <tr style="font-weight:bold;color:green">
             <td>Code</td>
             <td>Subject</td>
