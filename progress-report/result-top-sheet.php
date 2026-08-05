@@ -122,14 +122,14 @@ foreach ($glRows as $r) {
     <!-- ================= CLASS INFO ================= -->
     <table  style="width:calc(100% - 30mm); margin:10px 15mm">
         <tr style="font-weight:bold;color:#e02a67">
-            <td>Class Info</td>
-            <td>Grading Statistics</td>
-            <td>Fail Statistics</td>
-            <td>Grading System</td>
+            <td style="padding:2px; text-align:center;">Class Info</td>
+            <td style="padding:2px; text-align:center;">Grading Statistics</td>
+            <td style="padding:2px; text-align:center;">Fail Statistics</td>
+            <td style="padding:2px; text-align:center;">Grading System</td>
         </tr>
         <tr>
             <!-- CLASS INFO -->
-            <td>
+            <td style="padding:5px 10px;">
                 Class : <b><?= $cn ?></b><br>
                 Section : <b><?= $secname ?></b><br>
                 Total Student : <b><?= $stsd ?></b><br>
@@ -139,7 +139,7 @@ foreach ($glRows as $r) {
             </td>
 
             <!-- GRADE DIST -->
-            <td>
+            <td  style="padding:5px 10px;">
                 <?php foreach ($gradeDist as $g):
                     $rate = $stappear ? ($g['cnt'] * 100 / $stappear) : 0; ?>
                     <?= $g['gla'] ?> : <b><?= $g['cnt'] ?></b>
@@ -148,7 +148,7 @@ foreach ($glRows as $r) {
             </td>
 
             <!-- FAIL DIST -->
-            <td>
+            <td style="padding:5px 10px;">
                 <?php
                 $failTotal = array_sum(array_column($failDist, 'cnt'));
                 foreach ($failDist as $f):
@@ -160,7 +160,7 @@ foreach ($glRows as $r) {
             </td>
 
             <!-- GRADING SYSTEM -->
-            <td>
+            <td style="padding:5px 10px;">
                 <table border="1"  style="font-size:11px;color:#1c702c; width:100%;">
                     <tr>
                         <th>Grade</th>
