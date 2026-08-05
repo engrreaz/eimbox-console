@@ -11,6 +11,14 @@ $eicontact = $scmobile;
     margin: 0;
   }
 
+  @media print {
+    .full-box {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+    }
+  }
+
   /* ===== FULL PAGE COVER ===== */
   .full-box {
     width: 297mm;
