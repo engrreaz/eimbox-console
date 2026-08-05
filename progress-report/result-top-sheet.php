@@ -168,9 +168,9 @@ foreach ($glRows as $r) {
             <td style="padding:5px;">
                 <table border="1" class="grading-system-table" style="font-size:11px;color:#1c702c; width:100%;">
                     <tr>
-                        <th>Grade</th>
-                        <th>Point</th>
-                        <th>Marks</th>
+                        <th style="text-align:center;">Grade</th>
+                        <th style="text-align:center;">Point</th>
+                        <th style="text-align:center;">Marks</th>
                     </tr>
                     <tr>
                         <td style="text-align:center;">A+</td>
@@ -217,17 +217,17 @@ foreach ($glRows as $r) {
 
     <table border="1"  style="width:calc(100% - 30mm);margin:5px 15mm;font-size:12px">
         <tr style="font-weight:bold;color:green">
-            <td>Code</td>
-            <td>Subject</td>
-            <td>Full</td>
-            <td>Highest</td>
-            <td>A+</td>
-            <td>A</td>
-            <td>A-</td>
-            <td>B</td>
-            <td>C</td>
-            <td>D</td>
-            <td>F</td>
+            <td style="text-align:center;">Code</td>
+            <td style="text-align:center;">Subject</td>
+            <td style="text-align:center;">Full</td>
+            <td style="text-align:center;">Highest</td>
+            <td style="text-align:center;">A+</td>
+            <td style="text-align:center;">A</td>
+            <td style="text-align:center;">A-</td>
+            <td style="text-align:center;">B</td>
+            <td style="text-align:center;">C</td>
+            <td style="text-align:center;">D</td>
+            <td style="text-align:center;">F</td>
         </tr>
 
         <?php foreach ($subsetup as $ss):
@@ -250,17 +250,17 @@ foreach ($glRows as $r) {
             $f = $stappear - ($ap + $a + $am + $b + $c + $d);
             ?>
             <tr>
-                <td align="center"><?= $code ?></td>
-                <td><?= htmlspecialchars($name) ?> <b>[<?= htmlspecialchars($sh) ?>]</b></td>
-                <td align="center"><?= $fm ?></td>
-                <td align="center"><?= $hi ?></td>
-                <td align="center"><?= $ap ?></td>
-                <td align="center"><?= $a ?></td>
-                <td align="center"><?= $am ?></td>
-                <td align="center"><?= $b ?></td>
-                <td align="center"><?= $c ?></td>
-                <td align="center"><?= $d ?></td>
-                <td align="center" style="color:red"><?= $f ?></td>
+                <td style="text-align:center;"><?= $code ?></td>
+                <td style="text-align:center;"><?= htmlspecialchars($name) ?> <b>[<?= htmlspecialchars($sh) ?>]</b></td>
+                <td style="text-align:center;"><?= $fm ?></td>
+                <td style="text-align:center;"><?= $hi ?></td>
+                <td style="text-align:center;"><?= $ap ?></td>
+                <td style="text-align:center;"><?= $a ?></td>
+                <td style="text-align:center;"><?= $am ?></td>
+                <td style="text-align:center;"><?= $b ?></td>
+                <td style="text-align:center;"><?= $c ?></td>
+                <td style="text-align:center;"><?= $d ?></td>
+                <td style="text-align:center; color:red"><?= $f ?></td>
             </tr>
         <?php endforeach; ?>
     </table>
