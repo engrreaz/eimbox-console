@@ -117,7 +117,7 @@ foreach ($glRows as $r) {
     <h3 style="color:#008765;margin:0"><?= htmlspecialchars($exam) ?> Examination - <?= htmlspecialchars($sessionyear) ?></h3>
 
     <!-- ================= CLASS INFO ================= -->
-    <table width="100%" style="margin:10px 15mm">
+    <table  style="margin:10px 15mm">
         <tr style="font-weight:bold;color:#e02a67">
             <td>Class Info</td>
             <td>Grading Statistics</td>
@@ -158,7 +158,7 @@ foreach ($glRows as $r) {
 
             <!-- GRADING SYSTEM -->
             <td>
-                <table border="1" width="100%" style="font-size:11px;color:#1c702c">
+                <table border="1"  style="font-size:11px;color:#1c702c">
                     <tr>
                         <th>Grade</th>
                         <th>Point</th>
@@ -207,7 +207,7 @@ foreach ($glRows as $r) {
     <!-- ================= SUBJECT ANALYSIS ================= -->
     <h3 style="margin-top:10px">Subject Wise Grading Analysis</h3>
 
-    <table border="1" width="100%" style="margin:5px 15mm;font-size:12px">
+    <table border="1"  style="margin:5px 15mm;font-size:12px">
         <tr style="font-weight:bold;color:green">
             <td>Code</td>
             <td>Subject</td>
