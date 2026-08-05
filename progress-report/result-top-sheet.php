@@ -204,22 +204,4 @@ foreach ($glRows as $r) {
     <!-- ================= SUBJECT ANALYSIS ================= -->
     <h3 style="margin-top:10px">Subject Wise Grading Analysis</h3>
 
-    <table border="1" width="100%" style="margin:5px 15mm;font-size:12px">
-        <tr style="font-weight:bold;color:green">
-            <td>Code</td>
-            <td>Subject</td>
-            <td>Full</td>
-            <td>Highest</td>
-            <td>A+</td>
-            <td>A</td>
-            <td>A-</td>
-            <td>B</td>
-            <td>C</td>
-            <td>D</td>
-            <td>F</td>
-        </tr>
-
-       
-    </table>
-
 </div>
