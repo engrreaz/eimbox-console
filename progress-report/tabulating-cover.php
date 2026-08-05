@@ -35,7 +35,7 @@ $eicontact = $scmobile;
     background-image: url('progress-report/background/cover-01.jpg');
     background-size: cover;
     background-position: center center;
-    background-repeat: no-repeat;
+    background-repeat: repeat;
   }
 
   .full-box-2 {
