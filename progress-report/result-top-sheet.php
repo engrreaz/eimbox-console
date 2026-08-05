@@ -111,6 +111,9 @@ foreach ($glRows as $r) {
 <div class="full-box-2"
     style="width:<?= $paper ?>;margin:auto;text-align:center;font-family:'Segoe UI';page-break-after:always">
 
+    <!-- ================= HEADER ================= -->
+     <img src="https://www.eimbox.com/logo/<?= $sccode ?>.png" style="width:100px;"/>
+     <h3><?= $scname ?></h3>
 
 
     <h2 style="color:#005678;margin:8px 0">Result : At a Glance</h2>
@@ -205,7 +208,7 @@ foreach ($glRows as $r) {
     </table>
 
     <!-- ================= SUBJECT ANALYSIS ================= -->
-    <h3 style="margin-top:10px">Subject Wise Grading Analysis</h3>
+    <h3 style="margin-top:10px; page-break-before: always;">Subject Wise Grading Analysis</h3>
 
     <table border="1"  style="width:calc(100% - 30mm);margin:5px 15mm;font-size:12px">
         <tr style="font-weight:bold;color:green">
