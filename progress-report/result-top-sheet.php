@@ -219,39 +219,7 @@ foreach ($glRows as $r) {
             <td>F</td>
         </tr>
 
-        <?php foreach ($subsetup as $ss):
-            $code = $ss['subject'];
-            $fm = $ss['fullmarks'];
-
-            $info = $subMap[$code] ?? [];
-            $name = ($info['subject'] ?? '') . ' / ' . ($info['subben'] ?? '');
-            $sh = $info['subshname'] ?? '';
-
-            $hi = $subHighMap[$code]['hi'] ?? 0;
-
-            $g = $glMap[$code] ?? [];
-            $ap = $g['A+'] ?? 0;
-            $a = $g['A'] ?? 0;
-            $am = $g['A-'] ?? 0;
-            $b = $g['B'] ?? 0;
-            $c = $g['C'] ?? 0;
-            $d = $g['D'] ?? 0;
-            $f = $stappear - ($ap + $a + $am + $b + $c + $d);
-            ?>
-            <tr>
-                <td align="center"><?= $code ?></td>
-                <td><?= htmlspecialchars($name) ?> <b>[<?= htmlspecialchars($sh) ?>]</b></td>
-                <td align="center"><?= $fm ?></td>
-                <td align="center"><?= $hi ?></td>
-                <td align="center"><?= $ap ?></td>
-                <td align="center"><?= $a ?></td>
-                <td align="center"><?= $am ?></td>
-                <td align="center"><?= $b ?></td>
-                <td align="center"><?= $c ?></td>
-                <td align="center"><?= $d ?></td>
-                <td align="center" style="color:red"><?= $f ?></td>
-            </tr>
-        <?php endforeach; ?>
+       
     </table>
 
 </div>
