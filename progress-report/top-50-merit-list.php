@@ -94,12 +94,13 @@ if ($result00->num_rows > 0) {
 
 <div class="full-box-2" style="padding-top:15mm;">
 
-<img src="https://www.eimbox.com/logo/<?= $sccode ?>.png" style="width:100px;"/>
-     <h3 style="font-weight:900;"><?= $scname ?></h3>
+
+<img src="https://www.eimbox.com/logo/<?= $sccode ?>.png" style="width:100px; margin:auto;"/>
+     <h3 style="font-weight:900; text-align: center;;"><?= $scname ?></h3>
 
 
-    <h2 style="color:#005678;margin:8px 0">Merit List</h2>
-    <h5 style="color:#008765;margin:0"><?= htmlspecialchars($exam) ?> Examination - <?= htmlspecialchars($sessionyear) ?></h5>
+    <h2 style="color:#005678; margin:8px 0; text-align:center;">Merit List</h2>
+    <h5 style="color:#008765;margin:0; text-align:center;"><?= htmlspecialchars($exam) ?> Examination - <?= htmlspecialchars($sessionyear) ?></h5>
 
 
     <table  style=" border:1; margin:5mm 10mm 5mm 15mm; width:calc(100% - 30mm);">
