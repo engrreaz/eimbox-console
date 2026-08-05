@@ -92,39 +92,47 @@ if ($result00->num_rows > 0) {
 </style>
 
 
-<div class="full-box-2">
+<div class="full-box-2" style="padding-top:15mm;">
+
+<img src="https://www.eimbox.com/logo/<?= $sccode ?>.png" style="width:100px;"/>
+     <h3 style="font-weight:900;"><?= $scname ?></h3>
+
+
+    <h2 style="color:#005678;margin:8px 0">Merit List</h2>
+    <h5 style="color:#008765;margin:0"><?= htmlspecialchars($exam) ?> Examination - <?= htmlspecialchars($sessionyear) ?></h5>
+
 
     <table  style=" border:1; margin:5mm 10mm 5mm 15mm; width:calc(100% - 30mm);">
         <tr>
             <td style="padding:2px;">
                 <table  id="topdata" style="width:100%;">
                     <tr>
-                        <td>
+                        <td style="padding:3px 0;">
                             Class : <b>
                                 <?php echo $cn; ?>
                             </b>
                         </td>
-                        <td>
+                        <td style="padding:3px 0;">
                             Section/Group : <b>
                                 <?php echo $secname; ?>
                             </b>
                         </td>
-                        <td>
+                        <td style="padding:3px 0;">
                             Total Student : <b>
                                 <?php echo $stsd; ?>
                             </b>
                         </td>
-                        <td>
+                        <td style="padding:3px 0;">
                             Appear in Exam : <b>
                                 <?php echo $stappear; ?>
                             </b>
                         </td>
-                        <td>
+                        <td style="padding:3px 0;">
                             Pass : <b>
                                 <?php echo $passst; ?>
                             </b>
                         </td>
-                        <td>
+                        <td style="padding:3px 0;">
                             Passing Rate : <b>
                                 <?php
                                 if ($stappear > 0) {
@@ -149,6 +157,9 @@ if ($result00->num_rows > 0) {
 <style>
     th {
         line-height:12px;
+    }
+    .cent {
+        text-align: center;
     }
 </style>
     <table style="margin:5mm 10mm 5mm 15mm; border:1px solid black; width:calc(100% - 30mm);">
