@@ -94,7 +94,7 @@ if ($result00->num_rows > 0) {
 
 <div class="full-box-2">
 
-    <table  style=" border:1;">
+    <table  style=" border:1; margin:5mm 10mm 5mm 15mm; width:calc(100% - 30mm);">
         <tr>
             <td style="padding:2px;">
                 <table  id="topdata">
@@ -151,7 +151,7 @@ if ($result00->num_rows > 0) {
         line-height:12px;
     }
 </style>
-    <table style="margin:5mm 10mm 5mm 15mm; border:1px solid black; width:272mm;">
+    <table style="margin:5mm 10mm 5mm 15mm; border:1px solid black; width:calc(100% - 30mm);">
         <thead>
             <th style="padding:5px; text-align:center;">Merit <br><small>(Section)</small> </th>
             <th style="font-size:11px; text-align:center;">Name of Students</th>
