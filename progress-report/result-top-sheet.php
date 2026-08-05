@@ -129,78 +129,83 @@ foreach ($glRows as $r) {
         </tr>
         <tr>
             <!-- CLASS INFO -->
-            <td style="padding:5px 10px;">
-                Class : <b><?= $cn ?></b><br>
-                Section : <b><?= $secname ?></b><br>
-                Total Student : <b><?= $stsd ?></b><br>
-                Appeared : <b><?= $stappear ?></b><br>
-                Pass : <b><?= $passst ?></b><br>
-                Pass Rate : <b><?= number_format($passrate, 2) ?>%</b>
+            <td style="padding:5px;">
+                <table style="width:100%; border:0; border-collapse:collapse;">
+                    <tr><td style="border:0; text-align:right; padding-right:5px;">Class :</td><td style="border:0; text-align:left;"><b><?= $cn ?></b></td></tr>
+                    <tr><td style="border:0; text-align:right; padding-right:5px;">Section :</td><td style="border:0; text-align:left;"><b><?= $secname ?></b></td></tr>
+                    <tr><td style="border:0; text-align:right; padding-right:5px;">Total Student :</td><td style="border:0; text-align:left;"><b><?= $stsd ?></b></td></tr>
+                    <tr><td style="border:0; text-align:right; padding-right:5px;">Appeared :</td><td style="border:0; text-align:left;"><b><?= $stappear ?></b></td></tr>
+                    <tr><td style="border:0; text-align:right; padding-right:5px;">Pass :</td><td style="border:0; text-align:left;"><b><?= $passst ?></b></td></tr>
+                    <tr><td style="border:0; text-align:right; padding-right:5px;">Pass Rate :</td><td style="border:0; text-align:left;"><b><?= number_format($passrate, 2) ?>%</b></td></tr>
+                </table>
             </td>
 
             <!-- GRADE DIST -->
-            <td  style="padding:5px 10px;">
-                <?php foreach ($gradeDist as $g):
-                    $rate = $stappear ? ($g['cnt'] * 100 / $stappear) : 0; ?>
-                    <?= $g['gla'] ?> : <b><?= $g['cnt'] ?></b>
-                    (<?= number_format($rate, 2) ?>%)<br>
-                <?php endforeach; ?>
+            <td style="padding:5px;">
+                <table style="width:100%; border:0; border-collapse:collapse;">
+                    <?php foreach ($gradeDist as $g):
+                        $rate = $stappear ? ($g['cnt'] * 100 / $stappear) : 0; ?>
+                        <tr><td style="border:0; text-align:right; padding-right:5px;"><?= $g['gla'] ?> :</td>
+                        <td style="border:0; text-align:left;"><b><?= $g['cnt'] ?></b> (<?= number_format($rate, 2) ?>%)</td></tr>
+                    <?php endforeach; ?>
+                </table>
             </td>
 
             <!-- FAIL DIST -->
-            <td style="padding:5px 10px;">
-                <?php
-                $failTotal = array_sum(array_column($failDist, 'cnt'));
-                foreach ($failDist as $f):
-                    $rate = $failTotal ? ($f['cnt'] * 100 / $failTotal) : 0; ?>
-                    <?= $f['totalfail'] ?> Subject(s) :
-                    <b><?= $f['cnt'] ?></b>
-                    (<?= number_format($rate, 2) ?>%)<br>
-                <?php endforeach; ?>
+            <td style="padding:5px;">
+                <table style="width:100%; border:0; border-collapse:collapse;">
+                    <?php
+                    $failTotal = array_sum(array_column($failDist, 'cnt'));
+                    foreach ($failDist as $f):
+                        $rate = $failTotal ? ($f['cnt'] * 100 / $failTotal) : 0; ?>
+                        <tr><td style="border:0; text-align:right; padding-right:5px;"><?= $f['totalfail'] ?> Subject(s) :</td>
+                        <td style="border:0; text-align:left;"><b><?= $f['cnt'] ?></b> (<?= number_format($rate, 2) ?>%)</td></tr>
+                    <?php endforeach; ?>
+                </table>
             </td>
 
             <!-- GRADING SYSTEM -->
-            <td style="padding:5px 10px;">
-                <table border="1"  style="font-size:11px;color:#1c702c; width:100%;">
+            <td style="padding:5px;">
+                <table border="1" class="grading-system-table" style="font-size:11px;color:#1c702c; width:100%;">
                     <tr>
                         <th>Grade</th>
                         <th>Point</th>
                         <th>Marks</th>
                     </tr>
                     <tr>
-                        <td>A+</td>
-                        <td>5.00</td>
-                        <td>80+</td>
+                        <td style="text-align:center;">A+</td>
+                        <td style="text-align:center;">5.00</td>
+                        <td style="text-align:center;">80+</td>
                     </tr>
                     <tr>
-                        <td>A</td>
-                        <td>4.00</td>
-                        <td>70–79</td>
+                        <td style="text-align:center;">A</td>
+                        <td style="text-align:center;">4.00</td>
+                        <td style="text-align:center;">70–79</td>
                     </tr>
                     <tr>
-                        <td>A-</td>
-                        <td>3.50</td>
-                        <td>60–69</td>
+                        <td style="text-align:center;">A-</td>
+                        <td style="text-align:center;">3.50</td>
+                        <td style="text-align:center;">60–69</td>
                     </tr>
                     <tr>
-                        <td>B</td>
-                        <td>3.00</td>
-                        <td>50–59</td>
+                        <td style="text-align:center;">B</td>
+                        <td style="text-align:center;">3.00</td>
+                        <td style="text-align:center;">50–59</td>
                     </tr>
                     <tr>
-                        <td>C</td>
-                        <td>2.00</td>
-                        <td>40–49</td>
+                        <td style="text-align:center;">C</td>
+                        <td style="text-align:center;">2.00</td>
+                        <td style="text-align:center;">40–49</td>
                     </tr>
                     <tr>
-                        <td>D</td>
-                        <td>1.00</td>
-                        <td>33–39</td>
+                        <td style="text-align:center;">D</td>
+                        <td style="text-align:center;">1.00</td>
+                        <td style="text-align:center;">33–39</td>
                     </tr>
                     <tr>
-                        <td>F</td>
-                        <td>0.00</td>
-                        <td>0–32</td>
+                        <td style="text-align:center;">F</td>
+                        <td style="text-align:center;">0.00</td>
+                        <td style="text-align:center;">0–32</td>
                     </tr>
                 </table>
             </td>
