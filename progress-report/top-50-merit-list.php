@@ -158,9 +158,7 @@ if ($result00->num_rows > 0) {
     th {
         line-height:12px;
     }
-    .cent {
-        text-align: center;
-    }
+  
 </style>
     <table style="margin:5mm 10mm 5mm 15mm; border:1px solid black; width:calc(100% - 30mm);">
         <thead>
