@@ -158,7 +158,7 @@ if ($result00->num_rows > 0) {
     th {
         line-height:12px;
     }
-  
+    
 </style>
     <table style="margin:5mm 10mm 5mm 15mm; border:1px solid black; width:calc(100% - 30mm);">
         <thead>
@@ -227,39 +227,39 @@ if ($result00->num_rows > 0) {
 
                     ?>
                     <tr>
-                        <td class="cent">
+                        <td style="text-align:center;" class="cent">
                             <?php echo $meritplace; ?>
                         </td>
 
                         <td class="cent" style="text-align:left;">
                             <?php echo $stnameeng; ?>
                         </td>
-                        <td class="cent">
+                        <td style="text-align:center;" class="cent">
                             <?php echo $rollno; ?>
                         </td>
-                        <td class="cent">
+                        <td style="text-align:center;" class="cent">
                             <?php echo $snm; ?>
                         </td>
-                        <td class="cent">
+                        <td style="text-align:center;" class="cent">
                             <?php echo $totalmarks;
 
                             ?>
                         </td>
 
-                        <td class="cent">
+                        <td style="text-align:center;" class="cent">
                             <?php echo $gpa; ?>
                         </td>
 
-                        <td class="cent">
+                        <td style="text-align:center;" class="cent">
                             <?php echo $gla; ?>
                         </td>
-                        <td class="cent">
+                        <td style="text-align:center;" class="cent">
                             <?php echo $meritplacecomb; ?>
                         </td>
-                        <td class="cent">
+                        <td style="text-align:center;" class="cent">
                             <?php $meritplacegen = ''; echo $meritplacegen; ?>
                         </td>
-                        <td class="cent <?php echo $clc; ?>">
+                        <td style="text-align:center;" class="cent <?php echo $clc; ?>">
                             <?php echo $txt; ?>
                         </td>
 
