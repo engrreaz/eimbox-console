@@ -109,32 +109,32 @@ if ($result00->num_rows > 0) {
             <td style="padding:2px;">
                 <table  id="topdata" style="width:100%;">
                     <tr>
-                        <td style="padding:3px 0;">
+                        <td style="padding:3px 0; text-align:center;">
                             Class : <b>
                                 <?php echo $cn; ?>
                             </b>
                         </td>
-                        <td style="padding:3px 0;">
+                        <td style="padding:3px 0; text-align:center;">
                             Section/Group : <b>
                                 <?php echo $secname; ?>
                             </b>
                         </td>
-                        <td style="padding:3px 0;">
+                        <td style="padding:3px 0; text-align:center;">
                             Total Student : <b>
                                 <?php echo $stsd; ?>
                             </b>
                         </td>
-                        <td style="padding:3px 0;">
+                        <td style="padding:3px 0; text-align:center;">
                             Appear in Exam : <b>
                                 <?php echo $stappear; ?>
                             </b>
                         </td>
-                        <td style="padding:3px 0;">
+                        <td style="padding:3px 0; text-align:center;">
                             Pass : <b>
                                 <?php echo $passst; ?>
                             </b>
                         </td>
-                        <td style="padding:3px 0;">
+                        <td style="padding:3px 0; text-align:center;">
                             Passing Rate : <b>
                                 <?php
                                 if ($stappear > 0) {
@@ -233,7 +233,7 @@ if ($result00->num_rows > 0) {
                             <?php echo $meritplace; ?>
                         </td>
 
-                        <td class="cent" style="text-align:left;">
+                        <td class="cent" style="text-align:left; padding-left:5px;">
                             <?php echo $stnameeng; ?>
                         </td>
                         <td style="text-align:center;" class="cent">
