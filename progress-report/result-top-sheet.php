@@ -117,7 +117,7 @@ foreach ($glRows as $r) {
     <h3 style="color:#008765;margin:0"><?= htmlspecialchars($exam) ?> Examination - <?= htmlspecialchars($sessionyear) ?></h3>
 
     <!-- ================= CLASS INFO ================= -->
-    <table  style="width:100%; margin:10px 15mm">
+    <table  style="width:calc(100% - 30mm); margin:10px 15mm">
         <tr style="font-weight:bold;color:#e02a67">
             <td>Class Info</td>
             <td>Grading Statistics</td>
