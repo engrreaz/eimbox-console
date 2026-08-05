@@ -12,10 +12,14 @@ $eicontact = $scmobile;
   }
 
   @media print {
-    .full-box {
+    body {
       margin: 0;
-      width: 100%;
-      height: 100%;
+      padding: 0;
+    }
+    .full-box {
+      position: absolute;
+      top: 0;
+      left: 0;
     }
   }
 
@@ -32,10 +36,10 @@ $eicontact = $scmobile;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
 
-    background-image: url('progress-report/background/cover-01.jpg');
+    background-image: url('progress-report/background/cover-02.jpg');
     background-size: cover;
     background-position: center center;
-    background-repeat: repeat;
+    background-repeat: no-repeat;
   }
 
   .full-box-2 {
