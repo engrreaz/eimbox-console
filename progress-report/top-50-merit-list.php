@@ -145,7 +145,7 @@ if ($result00->num_rows > 0) {
         line-height:12px;
     }
 </style>
-    <table style="margin:5mm 10mm; border:1px solid black; width:100%;">
+    <table style="margin:5mm 10mm 5mm 15mm; border:1px solid black; width:272mm;">
         <thead>
             <th style="padding:5px; text-align:center;">Merit <br><small>(Section)</small> </th>
             <th style="font-size:11px; text-align:center;">Name of Students</th>
