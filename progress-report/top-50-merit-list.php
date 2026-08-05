@@ -92,10 +92,11 @@ if ($result00->num_rows > 0) {
 </style>
 
 
-<div class="full-box-2" style="padding-top:15mm;">
+<div class="full-box-2" style="padding-top:15mm; text-align:center;">
 
 
 <img src="https://www.eimbox.com/logo/<?= $sccode ?>.png" style="width:100px; text-align:center;"/>
+
      <h3 style="font-weight:900; text-align: center;;"><?= $scname ?></h3>
 
 
