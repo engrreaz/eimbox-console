@@ -27,7 +27,7 @@ echo "SELECT
       AND exam='$exam'
       AND classname='$cn'
       AND sectionname='$secname'
-      AND sessionyear='$sy'
+      AND sessionyear='$sessionyear'
       AND slot='$slot'";
 
 
