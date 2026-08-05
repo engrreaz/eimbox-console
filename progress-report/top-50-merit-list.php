@@ -103,7 +103,7 @@ if ($result00->num_rows > 0) {
 
 <div class="full-box-2">
 
-    <table width="100%" style="margin:5mm 15mm; border:1;">
+    <table width="280mm" style="margin:5mm 7mm 5mm 10mm; border:1;">
         <tr>
             <td style="padding:2px;">
                 <table width="100%" id="topdata">
