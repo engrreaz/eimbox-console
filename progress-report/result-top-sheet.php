@@ -18,6 +18,13 @@ $row = fetchRow($conn, "
       AND slot='$slot'
 ");
 
+
+echo  '<pre>';
+print_r($row);
+echo  '</pre>';
+exit;
+
+
 $stsd = (int) ($row['total_students'] ?? 0);
 $stappear = (int) ($row['appeared'] ?? 0);
 $passst = (int) ($row['passed'] ?? 0);
@@ -203,5 +210,55 @@ foreach ($glRows as $r) {
 
     <!-- ================= SUBJECT ANALYSIS ================= -->
     <h3 style="margin-top:10px">Subject Wise Grading Analysis</h3>
+
+    <table border="1" width="100%" style="margin:5px 15mm;font-size:12px">
+        <tr style="font-weight:bold;color:green">
+            <td>Code</td>
+            <td>Subject</td>
+            <td>Full</td>
+            <td>Highest</td>
+            <td>A+</td>
+            <td>A</td>
+            <td>A-</td>
+            <td>B</td>
+            <td>C</td>
+            <td>D</td>
+            <td>F</td>
+        </tr>
+
+        <?php foreach ($subsetup as $ss):
+            $code = $ss['subject'];
+            $fm = $ss['fullmarks'];
+
+            $info = $subMap[$code] ?? [];
+            $name = ($info['subject'] ?? '') . ' / ' . ($info['subben'] ?? '');
+            $sh = $info['subshname'] ?? '';
+
+            $hi = $subHighMap[$code]['hi'] ?? 0;
+
+            $g = $glMap[$code] ?? [];
+            $ap = $g['A+'] ?? 0;
+            $a = $g['A'] ?? 0;
+            $am = $g['A-'] ?? 0;
+            $b = $g['B'] ?? 0;
+            $c = $g['C'] ?? 0;
+            $d = $g['D'] ?? 0;
+            $f = $stappear - ($ap + $a + $am + $b + $c + $d);
+            ?>
+            <tr>
+                <td align="center"><?= $code ?></td>
+                <td><?= htmlspecialchars($name) ?> <b>[<?= htmlspecialchars($sh) ?>]</b></td>
+                <td align="center"><?= $fm ?></td>
+                <td align="center"><?= $hi ?></td>
+                <td align="center"><?= $ap ?></td>
+                <td align="center"><?= $a ?></td>
+                <td align="center"><?= $am ?></td>
+                <td align="center"><?= $b ?></td>
+                <td align="center"><?= $c ?></td>
+                <td align="center"><?= $d ?></td>
+                <td align="center" style="color:red"><?= $f ?></td>
+            </tr>
+        <?php endforeach; ?>
+    </table>
 
 </div>
