@@ -193,6 +193,11 @@
                 });
         });
 
+        // নন-অ্যাডমিনদের জন্য, এক্সাম সিলেক্ট করলেই রিপোর্ট লোড হবে
+        if (!isAdmin) {
+            examSelect.addEventListener('change', () => loadReportData(sessionSelect.value, examSelect.value));
+        }
+
         // Trigger change for report section on page load
         reportSessionSelect.dispatchEvent(new Event('change'));
 
@@ -367,7 +372,10 @@
 
         // Event listener for the load report button
         if (isAdmin) {
+            // অ্যাডমিনদের জন্য, বাটন ক্লিক করলে বা এক্সাম সিলেক্ট করলে রিপোর্ট লোড হবে
             loadReportBtn.addEventListener('click', () => loadReportData(reportSessionSelect.value, reportExamSelect.value));
+            reportExamSelect.addEventListener('change', () => loadReportData(reportSessionSelect.value, reportExamSelect.value));
+
         } else {
             // For non-admins, load the report automatically for the current year and latest exam
             fetch(`api/get_exams.php?sessionyear=${defaultSession}`)

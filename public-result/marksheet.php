@@ -271,8 +271,9 @@ foreach ($subject_codes_raw as $sub_code) {
     <div class="marksheet-container">
         <!-- Institute Header -->
         <div class="institute-header">
-            <h2><?php echo htmlspecialchars($institute_info['school_name']); ?></h2>
-            <p><?php echo htmlspecialchars($institute_info['address']); ?></p>
+            <img src="https://eimbox.com/logo/<?php echo $sccode; ?>.png" alt="Institute Logo" style="max-height: 80px; margin-bottom: 10px;">
+            <h2><?php echo $scname; ?></h2>
+            <p><?php echo $scaddress; ?></p>
             <h4>ACADEMIC TRANSCRIPT</h4>
             <h5><?php echo htmlspecialchars($exam); ?> - <?php echo htmlspecialchars($sessionyear); ?></h5>
         </div>
