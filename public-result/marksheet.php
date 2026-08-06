@@ -272,7 +272,7 @@ foreach ($subject_codes_raw as $sub_code) {
         <!-- Institute Header -->
         <div class="institute-header">
             <img src="https://eimbox.com/logo/<?php echo $sccode; ?>.png" alt="Institute Logo" style="max-height: 80px; margin-bottom: 10px;">
-            <h2><?php echo $scname; ?></h2>
+            <h4 class="fw-bold"><?php echo $scname; ?></h4>
             <p><?php echo $scaddress; ?></p>
             <h4>ACADEMIC TRANSCRIPT</h4>
             <h5><?php echo htmlspecialchars($exam); ?> - <?php echo htmlspecialchars($sessionyear); ?></h5>
