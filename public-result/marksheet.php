@@ -375,13 +375,19 @@ foreach ($subject_codes_raw as $sub_code) {
             </tbody>
             <tfoot class="table-light">
 
-            <div class="row mt-3">
-                <div class="col">jjjj</div>
-                <div class="col text-end">dddddd</div>
-            </div>
+          
                 <!-- Footer can be used for other summary if needed, or removed -->
             </tfoot>
         </table>
+
+          <div class="row mt-3">
+            <div class="col text-start"></div>
+                <div class="col">Class Teacher</div>
+                <div class="col text-end ">
+                    <?php echo htmlspecialchars($institute_info['headname']); ?><br>
+                    <?php echo htmlspecialchars($institute_info['headtitle']); ?>
+                </div>
+            </div>
 
         <div class="d-flex justify-content-end mt-4">
             <button class="btn btn-primary" onclick="window.print()">Print Result</button>
