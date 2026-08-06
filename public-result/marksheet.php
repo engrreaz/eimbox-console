@@ -351,7 +351,7 @@ foreach ($subject_codes_raw as $sub_code) {
                         <?php if (!$summary_cell_added): ?>
                             <td rowspan="<?php echo $sub_count; ?>" class="align-middle">
                                 <div class="p-2" >
-                                    <p class="mb-1">Total Marks: <strong><?php echo htmlspecialchars($result_summary['totalmarks']); ?></strong></p>
+                                    <p class="mb-1">Total Marks: <strong><?php echo htmlspecialchars($result_summary['totalmarks']); ?></strong> out of <?php echo htmlspecialchars($result_summary['fullmarks']); ?></p>
                                     <p class="mb-1">GPA: <strong><?php echo htmlspecialchars(number_format($result_summary['gpa'], 2)); ?></strong></p>
                                     <p class="mb-1">Grade: <strong><?php echo htmlspecialchars($result_summary['gla']); ?></strong></p>
                                     <?php if($result_summary['gla'] === 'F'): ?>
