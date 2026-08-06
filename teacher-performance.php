@@ -31,7 +31,7 @@
                     <div class="col-md-4 d-flex align-items-end">
                         <button type="button" id="startAnalysisBtn" class="btn btn-primary w-100">
                             <i class="bi bi-play-circle me-2"></i>Start Analysis
-                        </button> 
+                        </button>
                     </div>
                 </div>
             </form>
@@ -40,7 +40,8 @@
         <div class="card-footer" id="progressSection" style="display: none;">
             <h6 id="progressTitle">Processing...</h6>
             <div class="progress" style="height: 20px;">
-                <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
+                    style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
             </div>
             <div id="progressStatus" class="mt-2 small text-muted"></div>
         </div>
@@ -54,30 +55,30 @@
         <div class="card-body">
             <!-- Filters for viewing results (Only for Admins) -->
             <?php if (($_SESSION['is_admin'] ?? 0) >= 4): ?>
-            <div class="row g-3 mb-4">
-                <div class="col-md-4">
-                    <label for="reportSessionYear" class="form-label">Session Year</label>
-                    <select id="reportSessionYear" class="form-select">
-                        <?php
-                        $current_year = date('Y');
-                        for ($i = $current_year; $i >= $current_year - 5; $i--) {
-                            echo "<option value='$i'>$i</option>";
-                        }
-                        ?>
-                    </select>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <label for="reportSessionYear" class="form-label">Session Year</label>
+                        <select id="reportSessionYear" class="form-select">
+                            <?php
+                            $current_year = date('Y');
+                            for ($i = $current_year; $i >= $current_year - 5; $i--) {
+                                echo "<option value='$i'>$i</option>";
+                            }
+                            ?>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="reportExamId" class="form-label">Examination</label>
+                        <select id="reportExamId" class="form-select" disabled>
+                            <option value="">Select Session First</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="button" id="loadReportBtn" class="btn btn-info w-100">
+                            <i class="bi bi-eye me-2"></i>View Report
+                        </button>
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <label for="reportExamId" class="form-label">Examination</label>
-                    <select id="reportExamId" class="form-select" disabled>
-                        <option value="">Select Session First</option>
-                    </select>
-                </div>
-                <div class="col-md-4 d-flex align-items-end">
-                    <button type="button" id="loadReportBtn" class="btn btn-info w-100">
-                        <i class="bi bi-eye me-2"></i>View Report
-                    </button>
-                </div>
-            </div>
             <?php endif; ?>
 
             <!-- Chart Section -->
@@ -99,7 +100,8 @@
                     </thead>
                     <tbody id="reportTableBody">
                         <tr>
-                            <td colspan="6" class="text-center text-muted">No data to display. Run an analysis to see the report.</td>
+                            <td colspan="6" class="text-center text-muted">No data to display. Run an analysis to see
+                                the report.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -135,7 +137,7 @@
         return null;
     }
 
-    document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", function () {
         const sessionSelect = document.getElementById('sessionYear');
         const examSelect = document.getElementById('examId');
         const analysisForm = document.getElementById('analysisForm');
@@ -185,17 +187,17 @@
                 });
         }
 
-        sessionSelect.addEventListener('change', function() {
+        sessionSelect.addEventListener('change', function () {
             setCookie('analysis_session', this.value, 7);
             loadExams(this, examSelect);
         });
 
-        examSelect.addEventListener('change', function() {
+        examSelect.addEventListener('change', function () {
             setCookie('analysis_exam', this.value, 7);
         });
 
         // Load exams for the report section
-        reportSessionSelect.addEventListener('change', function() {
+        reportSessionSelect.addEventListener('change', function () {
             setCookie('report_session', this.value, 7);
             loadExams(this, reportExamSelect, () => {
                 // Restore selected exam after options are loaded
@@ -206,7 +208,7 @@
             });
         });
 
-        reportExamSelect.addEventListener('change', function() {
+        reportExamSelect.addEventListener('change', function () {
             setCookie('report_exam', this.value, 7);
         });
 
@@ -237,7 +239,7 @@
         reportSessionSelect.dispatchEvent(new Event('change'));
 
         // Handle form submission to create a job
-        document.getElementById('startAnalysisBtn').addEventListener('click', function() {
+        document.getElementById('startAnalysisBtn').addEventListener('click', function () {
             const formData = new FormData(analysisForm);
 
             // Reset and show progress bar
@@ -248,9 +250,9 @@
             progressStatus.textContent = 'Please wait while the analysis job is being created.';
 
             fetch('api/create_job.php', {
-                    method: 'POST',
-                    body: formData
-                })
+                method: 'POST',
+                body: formData
+            })
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success' && data.jobid) {
@@ -259,14 +261,18 @@
                         // Start polling for job status
                         pollJobStatus(data.jobid, formData.get('sessionyear'), formData.get('examid'));
 
-                        // **NEW:** Trigger the background runner asynchronously
-                        fetch('api/run_job_async.php');
+                        setTimeout(() => {
 
-                    }else {
+                            // **NEW:** Trigger the background runner asynchronously
+                            fetch('api/run_job_async.php');
+                        }, 500); // 500ms delay
+                    } else {
                         progressTitle.textContent = 'Error';
                         progressStatus.textContent = data.message || 'Failed to create job.';
                         progressBar.classList.add('bg-danger');
                     }
+
+
                 })
                 .catch(error => {
                     console.error('Error creating job:', error);
