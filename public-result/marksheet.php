@@ -382,8 +382,9 @@ foreach ($subject_codes_raw as $sub_code) {
 
           <div class="row mt-3">
             <div class="col text-start"></div>
-                <div class="col">Class Teacher</div>
-                <div class="col text-end ">
+                <div class="col text-center">Class Teacher</div>
+                            <div class="col text-start"></div>
+                <div class="col text-center ">
                     <?php echo htmlspecialchars($institute_info['headname']); ?><br>
                     <?php echo htmlspecialchars($institute_info['headtitle']); ?>
                 </div>
