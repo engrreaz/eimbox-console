@@ -375,7 +375,7 @@ foreach ($subject_codes_raw as $sub_code) {
             </tbody>
             <tfoot class="table-light">
 
-            <div class="row">
+            <div class="row mt-3">
                 <div class="col">jjjj</div>
                 <div class="col text-end">dddddd</div>
             </div>
