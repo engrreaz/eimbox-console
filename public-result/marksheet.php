@@ -285,6 +285,9 @@ foreach ($subject_codes_raw as $sub_code) {
                 <td><?php echo htmlspecialchars($student_info['stnameeng']); ?></td>
                 <th>Roll No</th>
                 <td><?php echo htmlspecialchars($rollno); ?></td>
+                <td rowspan="3">
+                    <img src="https://eimbox.com/students/<?php echo $stid; ?>.jpg" alt="Student Photo" style="max-width: 100px; max-height: 120px;">
+                </td>
             </tr>
             <tr>
                 <th>Father's Name</th>
@@ -380,7 +383,7 @@ foreach ($subject_codes_raw as $sub_code) {
             </tfoot>
         </table>
 
-          <div class="row mt-3">
+          <div class="row mt-5">
             <div class="col text-start"></div>
                 <div class="col text-center">Class Teacher</div>
                             <div class="col text-start"></div>
