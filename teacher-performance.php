@@ -113,6 +113,28 @@
 
 <!-- ----------------------------------- -->
 <script>
+    // Helper functions to manage cookies
+    function setCookie(name, value, days) {
+        let expires = "";
+        if (days) {
+            const date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            expires = "; expires=" + date.toUTCString();
+        }
+        document.cookie = name + "=" + (value || "") + expires + "; path=/";
+    }
+
+    function getCookie(name) {
+        const nameEQ = name + "=";
+        const ca = document.cookie.split(';');
+        for (let i = 0; i < ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+        }
+        return null;
+    }
+
     document.addEventListener("DOMContentLoaded", function() {
         const sessionSelect = document.getElementById('sessionYear');
         const examSelect = document.getElementById('examId');
@@ -133,64 +155,59 @@
         let performanceChartInstance; // To hold the chart instance
 
         // Load exams when session changes
-        sessionSelect.addEventListener('change', function() {
-            const session = this.value;
-            examSelect.disabled = true;
-            examSelect.innerHTML = '<option value="">Loading...</option>';
+        function loadExams(sessionElement, examElement, callback) {
+            const session = sessionElement.value;
+            examElement.disabled = true;
+            examElement.innerHTML = '<option value="">Loading...</option>';
 
             if (!session) {
-                examSelect.innerHTML = '<option value="">Select Session First</option>';
+                examElement.innerHTML = '<option value="">Select Session First</option>';
                 return;
             }
 
-            // AJAX call to get exams for the selected session
-            // You need to create this PHP file: api/get_exams.php
             fetch(`api/get_exams.php?sessionyear=${session}`)
                 .then(response => response.json())
                 .then(data => {
-                    examSelect.innerHTML = '<option value="">Select Examination</option>';
+                    examElement.innerHTML = '<option value="">Select Examination</option>';
                     if (data.status === 'success') {
                         data.exams.forEach(exam => {
-                            examSelect.innerHTML += `<option value="${exam.id}">${exam.examtitle}</option>`;
+                            examElement.innerHTML += `<option value="${exam.id}">${exam.examtitle}</option>`;
                         });
-                        examSelect.disabled = false;
+                        examElement.disabled = false;
+                        if (callback) callback();
                     } else {
-                        examSelect.innerHTML = `<option value="">${data.message}</option>`;
+                        examElement.innerHTML = `<option value="">${data.message}</option>`;
                     }
                 })
                 .catch(error => {
                     console.error('Error fetching exams:', error);
-                    examSelect.innerHTML = '<option value="">Error loading exams</option>';
+                    examElement.innerHTML = '<option value="">Error loading exams</option>';
                 });
+        }
+
+        sessionSelect.addEventListener('change', function() {
+            setCookie('analysis_session', this.value, 7);
+            loadExams(this, examSelect);
         });
 
-        // Trigger change on page load to populate exams for the default session
-        sessionSelect.dispatchEvent(new Event('change'));
+        examSelect.addEventListener('change', function() {
+            setCookie('analysis_exam', this.value, 7);
+        });
 
         // Load exams for the report section
         reportSessionSelect.addEventListener('change', function() {
-            const session = this.value;
-            reportExamSelect.disabled = true;
-            reportExamSelect.innerHTML = '<option value="">Loading...</option>';
+            setCookie('report_session', this.value, 7);
+            loadExams(this, reportExamSelect, () => {
+                // Restore selected exam after options are loaded
+                const savedExam = getCookie('report_exam');
+                if (savedExam) {
+                    reportExamSelect.value = savedExam;
+                }
+            });
+        });
 
-            if (!session) {
-                reportExamSelect.innerHTML = '<option value="">Select Session First</option>';
-                return;
-            }
-
-            fetch(`api/get_exams.php?sessionyear=${session}`)
-                .then(response => response.json())
-                .then(data => {
-                    reportExamSelect.innerHTML = '<option value="">Select Examination</option>';
-                    if (data.status === 'success') {
-                        data.exams.forEach(exam => {
-                            reportExamSelect.innerHTML += `<option value="${exam.id}">${exam.examtitle}</option>`;
-                        });
-                        reportExamSelect.disabled = false;
-                    } else {
-                        reportExamSelect.innerHTML = `<option value="">${data.message}</option>`;
-                    }
-                });
+        reportExamSelect.addEventListener('change', function() {
+            setCookie('report_exam', this.value, 7);
         });
 
         // নন-অ্যাডমিনদের জন্য, এক্সাম সিলেক্ট করলেই রিপোর্ট লোড হবে
@@ -198,7 +215,25 @@
             examSelect.addEventListener('change', () => loadReportData(sessionSelect.value, examSelect.value));
         }
 
-        // Trigger change for report section on page load
+        // On Page Load: Restore selections and load data
+        const savedAnalysisSession = getCookie('analysis_session');
+        if (savedAnalysisSession) {
+            sessionSelect.value = savedAnalysisSession;
+            loadExams(sessionSelect, examSelect, () => {
+                const savedAnalysisExam = getCookie('analysis_exam');
+                if (savedAnalysisExam) {
+                    examSelect.value = savedAnalysisExam;
+                }
+            });
+        } else {
+            loadExams(sessionSelect, examSelect);
+        }
+
+        const savedReportSession = getCookie('report_session');
+        if (savedReportSession) {
+            reportSessionSelect.value = savedReportSession;
+        }
+        // Trigger change to load exams for the report section
         reportSessionSelect.dispatchEvent(new Event('change'));
 
         // Handle form submission to create a job
