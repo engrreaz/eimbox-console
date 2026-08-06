@@ -29,9 +29,9 @@
                         </select>
                     </div>
                     <div class="col-md-4 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary w-100">
+                        <button type="button" id="startAnalysisBtn" class="btn btn-primary w-100">
                             <i class="bi bi-play-circle me-2"></i>Start Analysis
-                        </button>
+                        </button> 
                     </div>
                 </div>
             </form>
@@ -237,10 +237,10 @@
         reportSessionSelect.dispatchEvent(new Event('change'));
 
         // Handle form submission to create a job
-        analysisForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
+        document.getElementById('startAnalysisBtn').addEventListener('click', function() {
+            const formData = new FormData(analysisForm);
 
+            // Reset and show progress bar
             progressSection.style.display = 'block';
             progressTitle.textContent = 'Creating job...';
             progressBar.style.width = '0%';
