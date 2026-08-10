@@ -153,7 +153,7 @@
 
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
-                                <div class="card">
+                                <div class="card h-100">
                                     <div class="card-header">
                                         <h5 class="card-title mb-0">Top 10 Students</h5>
                                     </div>
@@ -168,7 +168,7 @@
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="card">
+                                <div class="card h-100">
                                     <div class="card-header">
                                         <h5 class="card-title mb-0">Top 3 Classes (by CPI)</h5>
                                     </div>
@@ -186,7 +186,7 @@
 
                         <div class="row g-3 mb-4">
                             <div class="col-md-12">
-                                <div class="card">
+                                <div class="card h-100">
                                     <div class="card-header">
                                         <h5 class="card-title mb-0">Grade Distribution</h5>
                                     </div>
@@ -576,7 +576,7 @@
                 $('#weakestSubjectsList').html(weakestSubjectsHtml || '<li>N/A</li>');
 
                 // Top 10 Students
-                $('#topStudentsTableBody').closest('.card').find('.card-title').text('Top 10 Students');
+                $('#topStudentsTableBody').closest('.card').find('.card-header .card-title').text('Top 10 Students');
                 let topStudentsHtml = '';
                 data.top_students.forEach((student, index) => {
                     topStudentsHtml += `
@@ -591,7 +591,7 @@
                 $('#topStudentsTableBody').html(topStudentsHtml || '<tr><td colspan="4" class="text-center text-muted">No top students found.</td></tr>');
 
                 // Top 3 Classes
-                $('#topClassesTableBody').closest('.card').find('.card-title').text('Top 3 Classes (by CPI)');
+                $('#topClassesTableBody').closest('.card').find('.card-header .card-title').text('Top 3 Classes (by CPI)');
                 let topClassesHtml = '';
                 data.top_classes.forEach(cls => {
                     topClassesHtml += `
@@ -605,7 +605,7 @@
                 $('#topClassesTableBody').html(topClassesHtml || '<tr><td colspan="3" class="text-center text-muted">No top classes found.</td></tr>');
 
                 // Grade Distribution Chart
-                $('#gradeDistributionChart').closest('.card').find('.card-title').text('Grade Distribution');
+                $('#gradeDistributionChart').closest('.card').find('.card-header .card-title').text('Grade Distribution');
                 const grades = data.grade_distribution.map(item => item.grade);
                 const studentCounts = data.grade_distribution.map(item => item.student_count);
 
