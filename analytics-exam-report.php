@@ -463,7 +463,7 @@
                         <tr>
                             <td class="${rankClass}">${classRank}</td>
                             <td>${sectionRank}</td>
-                            <td>${row.stname}</td>
+                            <td>${row.stnameeng}</td>
                             <td>${row.classname} - ${row.sectionname}</td>
                             <td>${row.rollno}</td>
                             <td>${parseFloat(row.total_marks_obtained).toFixed(2)}</td>
