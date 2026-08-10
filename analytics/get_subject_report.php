@@ -3,6 +3,9 @@ header('Content-Type: application/json');
 session_start();
 require_once '../core/config.php';
 require_once '../core/db.php';
+require_once '../core/global_values.php';
+
+$sctype = $_GET['sctype'] ?? null;
 
 $dataset_id = (int)($_GET['dataset_id'] ?? 0);
 $sccode = $_SESSION['sccode'] ?? null;
