@@ -27,14 +27,14 @@ $sql = "
     JOIN 
         subjects AS s ON aosp.subject_code = s.subcode AND (s.sccode = ? OR s.sccode = '0')
     WHERE 
-        aosp.dataset_id = ?
+        aosp.dataset_id = ? AND s.sccategory = ?
     GROUP BY s.subject
     ORDER BY 
         sdf DESC;
 ";
 
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("si", $sccode, $dataset_id);
+$stmt->bind_param("sis", $sccode, $dataset_id, $sctype);
 $stmt->execute();
 $result = $stmt->get_result();
 $report_data = $result->fetch_all(MYSQLI_ASSOC);
