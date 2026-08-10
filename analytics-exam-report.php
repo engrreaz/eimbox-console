@@ -552,11 +552,15 @@
                 const data = response.data;
 
                 // Summary
+                $('#totalStudents').closest('.card-body').find('.card-title').text(`Total Students (${data.summary.total_students})`);
                 $('#totalStudents').text(data.summary.total_students);
+                $('#overallPassRate').closest('.card-body').find('.card-title').text(`Pass Rate (${data.summary.total_passed_students}/${data.summary.total_students})`);
                 $('#overallPassRate').text(data.summary.pass_rate.toFixed(2) + '%');
+                $('#overallAvgMarks').closest('.card-body').find('.card-title').text('Overall Average Marks');
                 $('#overallAvgMarks').text(data.summary.overall_avg_marks_percentage.toFixed(2));
 
                 // Gender-based Performance
+                $('#malePassRate').closest('.card').find('.card-title').text(`Gender Performance (M: ${data.gender_performance.total_males}, F: ${data.gender_performance.total_females})`);
                 $('#malePassRate').text(data.gender_performance.male_pass_rate.toFixed(2));
                 $('#maleAvgMarks').text(data.gender_performance.avg_male_marks.toFixed(2));
                 $('#femalePassRate').text(data.gender_performance.female_pass_rate.toFixed(2));
@@ -564,6 +568,7 @@
 
                 // Areas for Improvement
                 $('#atRiskStudentsCount').text(data.at_risk_count);
+                $('#atRiskStudentsCount').closest('.card').find('.card-title').text(`Areas for Improvement`);
                 let weakestSubjectsHtml = '';
                 data.weakest_subjects.forEach(sub => {
                     weakestSubjectsHtml += `<li>${sub.subject_name} (${sub.failure_rate.toFixed(2)}% Failure)</li>`;
