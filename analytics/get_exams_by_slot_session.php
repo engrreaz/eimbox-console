@@ -26,7 +26,7 @@ $stmt->execute();
 $result = $stmt->get_result();
 
 $exams = $result->fetch_all(MYSQLI_ASSOC);
-
+ 
 echo json_encode([
     'exams' => $exams
 ]);
