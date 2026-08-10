@@ -17,6 +17,44 @@ if ($dataset_id == 0) {
 }
 
 /* ----------------------------------------------------------
+   Optimization: Pre-calculate averages to prevent slow subqueries
+---------------------------------------------------------- */
+
+// 1. Create a temporary table to hold the average marks for each subject group.
+$conn->query("DROP TEMPORARY TABLE IF EXISTS temp_subject_avg");
+$create_temp_table_sql = "
+CREATE TEMPORARY TABLE temp_subject_avg (
+    sccode VARCHAR(10),
+    sessionyear VARCHAR(10),
+    classname VARCHAR(50),
+    sectionname VARCHAR(50),
+    subject VARCHAR(50),
+    avg_mark_for_subject DECIMAL(10, 2),
+    PRIMARY KEY (sccode, sessionyear, classname, sectionname, subject)
+);
+";
+$conn->query($create_temp_table_sql);
+
+// 2. Populate the temporary table with average marks.
+$populate_temp_table_sql = "
+INSERT INTO temp_subject_avg (sccode, sessionyear, classname, sectionname, subject, avg_mark_for_subject)
+SELECT
+    sm.sccode,
+    sm.sessionyear,
+    sm.classname,
+    sm.sectionname,
+    sm.subject,
+    AVG(sm.markobt)
+FROM stmark sm
+WHERE sm.sccode = ? AND sm.sessionyear = ? AND sm.examid IN (" . $examid_list_str . ")
+GROUP BY sm.sccode, sm.sessionyear, sm.classname, sm.sectionname, sm.subject;
+";
+$stmt_avg = $conn->prepare($populate_temp_table_sql);
+$stmt_avg->bind_param("ss", $sccode, $sessionyear);
+$stmt_avg->execute();
+$stmt_avg->close();
+
+/* ----------------------------------------------------------
    Insert / Update Analytics
 ---------------------------------------------------------- */
 
@@ -196,40 +234,12 @@ SELECT
 
     /* Above Average Count */
     SUM(
-        CASE
-            WHEN sm.markobt >
-            (
-                SELECT AVG(sm2.markobt)
-                FROM stmark sm2
-                WHERE sm2.sccode      = ss.sccode
-                  AND sm2.sessionyear = ss.sessionyear
-                  AND sm2.classname   = ss.classname
-                  AND sm2.sectionname = ss.sectionname
-                  AND sm2.subject     = ss.subject
-                  AND sm2.examid      IN (" . $examid_list_str . ")
-            )
-            THEN 1
-            ELSE 0
-        END
+        CASE WHEN sm.markobt > t.avg_mark_for_subject THEN 1 ELSE 0 END
     ),
 
     /* Below Average Count */
     SUM(
-        CASE
-            WHEN sm.markobt <
-            (
-                SELECT AVG(sm2.markobt)
-                FROM stmark sm2
-                WHERE sm2.sccode      = ss.sccode
-                  AND sm2.sessionyear = ss.sessionyear
-                  AND sm2.classname   = ss.classname
-                  AND sm2.sectionname = ss.sectionname
-                  AND sm2.subject     = ss.subject
-                  AND sm2.examid      IN (" . $examid_list_str . ")
-            )
-            THEN 1
-            ELSE 0
-        END
+        CASE WHEN sm.markobt < t.avg_mark_for_subject THEN 1 ELSE 0 END
     )
 
 FROM subsetup ss
@@ -244,6 +254,13 @@ LEFT JOIN stmark sm
 
 LEFT JOIN students st
        ON sm.stid = st.stid AND sm.sccode = st.sccode
+
+LEFT JOIN temp_subject_avg t
+       ON ss.sccode = t.sccode
+      AND ss.sessionyear = t.sessionyear
+      AND ss.classname = t.classname
+      AND ss.sectionname = t.sectionname
+      AND ss.subject = t.subject
 
 
 WHERE
@@ -317,4 +334,7 @@ if (!$stmt->execute()) {
 }
 
 $stmt->close();
+
+// Clean up the temporary table
+$conn->query("DROP TEMPORARY TABLE IF EXISTS temp_subject_avg");
 ?>
