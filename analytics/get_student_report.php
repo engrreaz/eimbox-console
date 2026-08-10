@@ -12,7 +12,7 @@ if (empty($dataset_id) || empty($sccode)) {
     echo json_encode(['status' => 'error', 'message' => 'Missing required parameters.']);
     exit;
 }
-
+error_log($sctype . '/' . $sccategory);
 // Debugging: Log received parameters
 
 $sql = "
