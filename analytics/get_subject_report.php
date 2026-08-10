@@ -35,7 +35,7 @@ $sql = "
     ORDER BY 
         sdf DESC;
 ";
-
+error_log($sql);
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("sis", $sccode, $dataset_id, $sctype);
 $stmt->execute();
