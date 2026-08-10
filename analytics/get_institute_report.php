@@ -28,7 +28,7 @@ $sql_summary = "
         asp.dataset_id = ? AND asp.sccode = ?;
 ";
 $stmt_summary = $conn->prepare($sql_summary);
-$stmt_summary->bind_param("is", $dataset_id, $sccode);
+$stmt_summary->bind_param("ii", $dataset_id, $sccode);
 $stmt_summary->execute();
 $summary_result = $stmt_summary->get_result()->fetch_assoc();
 $stmt_summary->close();
@@ -60,7 +60,7 @@ $sql_gender = "
         dataset_id = ? AND sccode = ?;
 ";
 $stmt_gender = $conn->prepare($sql_gender);
-$stmt_gender->bind_param("is", $dataset_id, $sccode);
+$stmt_gender->bind_param("ii", $dataset_id, $sccode);
 $stmt_gender->execute();
 $gender_result = $stmt_gender->get_result()->fetch_assoc();
 $stmt_gender->close();
@@ -84,7 +84,7 @@ $sql_top_students = "
     LIMIT 10;
 ";
 $stmt_top_students = $conn->prepare($sql_top_students);
-$stmt_top_students->bind_param("is", $dataset_id, $sccode);
+$stmt_top_students->bind_param("ii", $dataset_id, $sccode);
 $stmt_top_students->execute();
 $top_students_result = $stmt_top_students->get_result()->fetch_all(MYSQLI_ASSOC);
 foreach ($top_students_result as &$student) {
@@ -104,7 +104,7 @@ $sql_top_classes = "
     LIMIT 3;
 ";
 $stmt_top_classes = $conn->prepare($sql_top_classes);
-$stmt_top_classes->bind_param("is", $dataset_id, $sccode);
+$stmt_top_classes->bind_param("ii", $dataset_id, $sccode);
 $stmt_top_classes->execute();
 $top_classes_result = $stmt_top_classes->get_result()->fetch_all(MYSQLI_ASSOC);
 foreach ($top_classes_result as &$class) {
@@ -121,10 +121,10 @@ $sql_weakest_subjects = "
     JOIN subjects AS s ON aosp.subject_code = s.subcode AND (s.sccode = ? OR s.sccode = '0')
     WHERE aosp.dataset_id = ?
     ORDER BY aosp.failure_rate DESC
-    LIMIT 3;
+    LIMIT 5;
 ";
 $stmt_weakest_subjects = $conn->prepare($sql_weakest_subjects);
-$stmt_weakest_subjects->bind_param("si", $sccode, $dataset_id);
+$stmt_weakest_subjects->bind_param("ii", $sccode, $dataset_id);
 $stmt_weakest_subjects->execute();
 $weakest_subjects_result = $stmt_weakest_subjects->get_result()->fetch_all(MYSQLI_ASSOC);
 foreach ($weakest_subjects_result as &$subject) {
@@ -143,7 +143,7 @@ $sql_grade_distribution = "
     ORDER BY FIELD(grade, 'A+', 'A', 'A-', 'B', 'C', 'D', 'F');
 ";
 $stmt_grade_distribution = $conn->prepare($sql_grade_distribution);
-$stmt_grade_distribution->bind_param("is", $dataset_id, $sccode);
+$stmt_grade_distribution->bind_param("ii", $dataset_id, $sccode);
 $stmt_grade_distribution->execute();
 $grade_distribution_result = $stmt_grade_distribution->get_result()->fetch_all(MYSQLI_ASSOC);
 foreach ($grade_distribution_result as &$grade) {
