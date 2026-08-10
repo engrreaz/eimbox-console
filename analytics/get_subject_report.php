@@ -36,7 +36,7 @@ $sql = "
         sdf DESC;
 ";
 error_log($sql);
-error_log($sccode  . '/' . $dataset_id . '/' . $sctype);
+error_log($sccode  . '/' . $dataset_id . '/' . $sctype . '/' .$sccategory);
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("iis", $sccode, $dataset_id, $sctype);
 $stmt->execute();
