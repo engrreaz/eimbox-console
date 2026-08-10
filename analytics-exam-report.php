@@ -522,7 +522,7 @@
                 response.data.forEach(row => {
                     tableContent += `
                         <tr>
-                            <td>${row.subject_name}</td>
+                            <td>${row.subject_code} &mdash; ${row.subject_name}</td>
                             <td>${row.total_students_appeared}</td>
                             <td>${parseFloat(row.overall_avg_marks).toFixed(2)}</td>
                             <td>${parseFloat(100 - row.failure_rate).toFixed(2)}%</td>
