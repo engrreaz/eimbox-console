@@ -1,0 +1,80 @@
+[
+    {
+        "file": "analytics-exam-step-0.php",
+        "title": "Initializing Analysis",
+        "icon": "bi-power",
+        "increment": 5
+    },
+    {
+        "file": "analytics-exam-step-1.php",
+        "title": "Analyzing Subject Performance (CSI)",
+        "icon": "bi-journal-bookmark",
+        "increment": 15
+    },
+    {
+        "file": "analytics-exam-step-2.php",
+        "title": "Calculating Class Academic Index (CAI)",
+        "icon": "bi-collection",
+        "increment": 10
+    },
+    {
+        "file": "analytics-exam-step-3.php",
+        "title": "Calculating Subject Performance Index (SPI)",
+        "icon": "bi-journal-text",
+        "increment": 10
+    },
+    {
+        "file": "analytics-exam-step-4.php",
+        "title": "Calculating Class Performance Index (CPI)",
+        "icon": "bi-award",
+        "increment": 5
+    },
+    {
+        "file": "analytics-exam-step-5.php",
+        "title": "Calculating Teacher Performance",
+        "icon": "bi-flag",
+        "increment": 10
+    },
+    {
+        "file": "analytics-exam-step-6.php",
+        "title": "Calculating Subject Difficulty Factor (SDF)",
+        "icon": "bi-sliders",
+        "increment": 10
+    },
+    {
+        "file": "analytics-exam-step-7.php",
+        "title": "Calculating Combined Difficulty Index (CDI)",
+        "icon": "bi-intersect",
+        "increment": 5
+    },
+    {
+        "file": "analytics-exam-step-8.php",
+        "title": "Finalizing Teacher Performance (TPI & TIA)",
+        "icon": "bi-award-fill",
+        "increment": 10
+    },
+    {
+        "file": "analytics-exam-step-9.php",
+        "title": "Generating Student Merit List",
+        "icon": "bi-person-check",
+        "increment": 10
+    },
+    {
+        "file": "analytics-exam-step-10.php",
+        "title": "Identifying At-Risk Students",
+        "icon": "bi-exclamation-triangle",
+        "increment": 3
+    },
+    {
+        "file": "analytics-exam-step-11.php",
+        "title": "Calculating GPA & Grades",
+        "icon": "bi-mortarboard",
+        "increment": 4
+    },
+    {
+        "file": "analytics-exam-step-12.php",
+        "title": "Calculating Teacher Impact (TCI/TSI)",
+        "icon": "bi-bullseye",
+        "increment": 3
+    }
+]
