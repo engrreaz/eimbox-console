@@ -156,7 +156,7 @@ $stmt_grade_distribution->close();
 // 7. At-Risk Students Count
 $sql_at_risk = "SELECT COUNT(*) AS at_risk_count FROM analytics_at_risk_students WHERE dataset_id = ? AND sccode = ?;";
 $stmt_at_risk = $conn->prepare($sql_at_risk);
-$stmt_at_risk->bind_param("is", $dataset_id, $sccode);
+$stmt_at_risk->bind_param("ii", $dataset_id, $sccode);
 $stmt_at_risk->execute();
 $report_data['at_risk_count'] = (float)($stmt_at_risk->get_result()->fetch_assoc()['at_risk_count'] ?? 0);
 $stmt_at_risk->close();
