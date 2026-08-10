@@ -37,7 +37,7 @@ $sql = "
 ";
 error_log($sql);
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("sis", $sccode, $dataset_id, $sctype);
+$stmt->bind_param("iis", $sccode, $dataset_id, $sctype);
 $stmt->execute();
 $result = $stmt->get_result();
 $report_data = $result->fetch_all(MYSQLI_ASSOC);
