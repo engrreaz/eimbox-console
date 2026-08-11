@@ -26,24 +26,6 @@ if (!isset($sccode) || !isset($examids)) {
 // তাহলে সেই ডেটাসেটের সাথে সম্পর্কিত সমস্ত ডেটা মুছে ফেলা হবে।
 // ******************************************************************
 
-// প্রথমে, বর্তমান প্যারামিটারগুলোর সাথে মিলে যাওয়া dataset_id গুলো খুঁজে বের করি
-$find_old_datasets_sql = "SELECT datasetid FROM analytics_dataset WHERE sccode = ? AND sessionyear = ? AND examid = ? AND slot = ?";
-$stmt_find_old = $conn->prepare($find_old_datasets_sql);
-if (!$stmt_find_old) {
-    throw new Exception("Failed to prepare statement for finding old datasets: " . $conn->error);
-}
-$stmt_find_old->bind_param("ssss", $sccode, $sessionyear, $examid_list_str, $slot);
-$stmt_find_old->execute();
-$old_datasets_result = $stmt_find_old->get_result();
-$old_dataset_ids = [];
-while ($row = $old_datasets_result->fetch_assoc()) {
-    $old_dataset_ids[] = $row['datasetid'];
-}
-$stmt_find_old->close();
-
-if (!empty($old_dataset_ids)) {
-    $ids_to_delete = implode(',', $old_dataset_ids);
-
     // সংশ্লিষ্ট টেবিলগুলো থেকে ডেটা মুছে ফেলি
     $tables_to_clear = [
         'analytics_at_risk_students',
@@ -54,11 +36,11 @@ if (!empty($old_dataset_ids)) {
         'analytics_teacher_performance'
     ];
     foreach ($tables_to_clear as $table) {
-        $conn->query("DELETE FROM $table WHERE dataset_id IN ($ids_to_delete)");
+        $conn->query("DELETE FROM $table ");
     }
     // analytics_dataset টেবিল থেকে পুরনো রেকর্ডগুলো মুছে ফেলি
-    $conn->query("DELETE FROM analytics_dataset WHERE datasetid IN ($ids_to_delete)");
-}
+    $conn->query("DELETE FROM analytics_dataset ");
+
 
 
 // ******************************************************************
