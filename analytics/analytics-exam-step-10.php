@@ -13,6 +13,7 @@ if (!isset($dataset_id)) {
     die("This script cannot be accessed directly.");
 }
 
+
 $sql = "
 INSERT INTO analytics_at_risk_students (
     dataset_id, sccode, stid, classname, sectionname, 
@@ -40,6 +41,8 @@ ON DUPLICATE KEY UPDATE
     grade = VALUES(grade),
     reason = VALUES(reason);
 ";
+
+
 
 $stmt = $conn->prepare($sql);
 if (!$stmt) throw new Exception("Prepare failed: " . $conn->error);
