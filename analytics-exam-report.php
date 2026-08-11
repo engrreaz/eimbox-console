@@ -45,8 +45,8 @@
                 </div>
                 <div class="col-md-4">
                     <label for="examId" class="form-label">Examination</label>
-                    <select id="examId" name="examid[]" class="form-select" multiple disabled>
-                        <!-- Options will be loaded by JS -->
+                    <select id="reportId" name="reportId" class="form-select" disabled>
+                        <option value="">Select Slot & Session First</option>
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -313,56 +313,57 @@
     $(document).ready(function () {
         const slotSelect = $('#slot');
         const sessionSelect = $('#sessionYear');
-        const examSelect = $('#examId');
+        const reportSelect = $('#reportId');
         const viewReportBtn = $('#viewReportBtn');
 
-        function fetchExams() {
+        function fetchGeneratedReports() {
             const slot = slotSelect.val();
             const session = sessionSelect.val();
 
             if (slot && session) {
-                examSelect.prop('disabled', true).html('<option value="">Loading...</option>');
+                reportSelect.prop('disabled', true).html('<option value="">Loading Reports...</option>');
                 $.ajax({
-                    url: 'analytics/get_exams_by_slot_session.php',
-                    type: 'POST',
+                    url: 'analytics/get_generated_reports.php',
+                    type: 'GET',
                     dataType: 'json',
                     data: { slot: slot, sessionyear: session },
                     success: function (data) {
-                        examSelect.prop('disabled', false).html(''); // Clear options
-                        if (data && data.exams && data.exams.length > 0) {
-                            $.each(data.exams, function (index, exam) {
-                                examSelect.append($('<option>', { value: exam.id, text: exam.examtitle }));
+                        reportSelect.prop('disabled', false).html('<option value="">Select a generated report</option>');
+                        if (data && data.reports && data.reports.length > 0) {
+                            $.each(data.reports, function (index, report) {
+                                reportSelect.append($('<option>', { value: report.dataset_id, text: report.report_name }));
                             });
-                            const savedExam = getCookie('analytics_report_exam');
-                            if (savedExam) {
-                                examSelect.val(savedExam.split(','));
+                            const savedReport = getCookie('analytics_report_id');
+                            if (savedReport) {
+                                reportSelect.val(savedReport);
                             }
                         } else {
-                            examSelect.html('<option value="">No exams found</option>');
+                            reportSelect.html('<option value="">No reports found for this criteria</option>');
                         }
+                        checkSelections();
                     }
                 });
             } else {
-                examSelect.prop('disabled', true).html('');
+                reportSelect.prop('disabled', true).html('<option value="">Select Slot & Session First</option>');
             }
         }
 
         function checkSelections() {
             const slot = slotSelect.val();
             const session = sessionSelect.val();
-            const exams = examSelect.val();
-            viewReportBtn.prop('disabled', !(slot && session && exams && exams.length > 0));
+            const reportId = reportSelect.val();
+            viewReportBtn.prop('disabled', !(slot && session && reportId));
         }
 
         // Restore selections from cookies
         slotSelect.val(getCookie('analytics_report_slot'));
         sessionSelect.val(getCookie('analytics_report_session'));
-        fetchExams();
+        fetchGeneratedReports();
 
         // Event listeners
-        slotSelect.on('change', function() { setCookie('analytics_report_slot', $(this).val(), 7); fetchExams(); checkSelections(); });
-        sessionSelect.on('change', function() { setCookie('analytics_report_session', $(this).val(), 7); fetchExams(); checkSelections(); });
-        examSelect.on('change', function() { setCookie('analytics_report_exam', $(this).val(), 7); checkSelections(); });
+        slotSelect.on('change', function() { setCookie('analytics_report_slot', $(this).val(), 7); fetchGeneratedReports(); });
+        sessionSelect.on('change', function() { setCookie('analytics_report_session', $(this).val(), 7); fetchGeneratedReports(); });
+        reportSelect.on('change', function() { setCookie('analytics_report_id', $(this).val(), 7); checkSelections(); });
 
         viewReportBtn.on('click', function() {
             $('#reportContainer').slideDown();
@@ -376,42 +377,21 @@
     let currentDatasetId = null;
 
     async function loadReports() {
-        const slot = $('#slot').val();
-        const sessionyear = $('#sessionYear').val();
-        const examids = $('#examId').val(); // This is an array
-        const examid_list_str = examids.join(','); // Convert to comma-separated string
+        currentDatasetId = $('#reportId').val();
 
-        if (!slot || !sessionyear || !examids || examids.length === 0) {
-            alert('Please select Slot, Session, and Examination.');
+        if (!currentDatasetId) {
+            alert('Please select a generated report to view.');
             return;
         }
 
-        // Fetch the dataset_id first
-        try {
-            const datasetIdResponse = await $.ajax({
-                url: 'analytics/get_latest_dataset.php',
-                type: 'GET', // Use GET for fetching data
-                dataType: 'json',
-                data: { examid: examid_list_str, slot: slot, sessionyear: sessionyear }
-            });
-
-            currentDatasetId = datasetIdResponse.dataset_id;
-
-            if (currentDatasetId) {
-                $('#printAllBtn').attr('href', `analytics-print-all.php?dataset_id=${currentDatasetId}`);
-                // Load individual reports using the fetched dataset_id
-                loadInstituteReport(currentDatasetId);
-                loadTeacherReport(currentDatasetId);
-                loadStudentReport(currentDatasetId);
-                loadClassReport(currentDatasetId);
-                loadSubjectReport(currentDatasetId);
-            } else {
-                alert('No analysis report found for the selected criteria. Please run analysis first.');
-                $('#printAllBtn').attr('href', '#');
-            }
-        } catch (error) {
-            console.error("Error fetching dataset ID:", error);
-            alert('Failed to retrieve analysis report. Please try again.');
+        if (currentDatasetId) {
+            $('#printAllBtn').attr('href', `analytics-print-all.php?dataset_id=${currentDatasetId}`);
+            // Load individual reports using the fetched dataset_id
+            loadInstituteReport(currentDatasetId);
+            loadTeacherReport(currentDatasetId);
+            loadStudentReport(currentDatasetId);
+            loadClassReport(currentDatasetId);
+            loadSubjectReport(currentDatasetId);
         }
     }
 
