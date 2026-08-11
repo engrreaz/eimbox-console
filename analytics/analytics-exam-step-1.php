@@ -39,7 +39,7 @@ $conn->query($create_temp_enrolled_table_sql);
 // 1.2. Populate the temporary table with enrolled student counts.
 $populate_temp_enrolled_sql = "
 INSERT INTO temp_enrolled_students (sccode, sessionyear, classname, sectionname, enrolled_count, male_enrolled_count, female_enrolled_count)
-SELECT si.sccode, si.sessionyear, si.classname, si.sectionname, COUNT(si.stid) AS enrolled_count, SUM(CASE WHEN s.gender = 'Male' THEN 1 ELSE 0 END) AS male_enrolled_count, SUM(CASE WHEN s.gender = 'Female' THEN 1 ELSE 0 END) AS female_enrolled_count
+SELECT si.sccode, si.sessionyear, si.classname, si.sectionname, COUNT(si.stid) AS enrolled_count, SUM(CASE WHEN s.gender IN ('Male', 'Boy') THEN 1 ELSE 0 END) AS male_enrolled_count, SUM(CASE WHEN s.gender IN ('Female', 'Girl') THEN 1 ELSE 0 END) AS female_enrolled_count
 FROM sessioninfo si JOIN students s ON si.stid = s.stid AND si.sccode = s.sccode
 WHERE si.sccode = ? AND si.sessionyear = ? AND si.slot = ?
 GROUP BY si.sccode, si.sessionyear, si.classname, si.sectionname;
@@ -208,16 +208,16 @@ SELECT
     ),
 
     /* Male Pass Count */
-    SUM(CASE WHEN sm.markobt >= 33 AND st.gender = 'Male' THEN 1 ELSE 0 END),
+    SUM(CASE WHEN (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 >= 33 AND st.gender IN ('Male', 'Boy') THEN 1 ELSE 0 END),
 
     /* Female Pass Count */
-    SUM(CASE WHEN sm.markobt >= 33 AND st.gender = 'Female' THEN 1 ELSE 0 END),
+    SUM(CASE WHEN (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 >= 33 AND st.gender IN ('Female', 'Girl') THEN 1 ELSE 0 END),
 
     /* Male Avg Marks */
-    COALESCE(AVG(CASE WHEN st.gender = 'Male' THEN (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 END), 0),
+    COALESCE(AVG(CASE WHEN st.gender IN ('Male', 'Boy') THEN (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 END), 0),
 
     /* Female Avg Marks */
-    COALESCE(AVG(CASE WHEN st.gender = 'Female' THEN (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 END), 0),
+    COALESCE(AVG(CASE WHEN st.gender IN ('Female', 'Girl') THEN (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 END), 0),
 
 
 
@@ -225,8 +225,8 @@ SELECT
     ROUND(
         (
             SUM(
-                CASE
-                    WHEN sm.markobt >= 33 THEN 1
+                CASE -- Changed to use percentage for pass rate
+                    WHEN (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 >= 33 THEN 1
                     ELSE 0
                 END
             ) * 100
