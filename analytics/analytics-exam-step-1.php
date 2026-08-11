@@ -300,6 +300,13 @@ LEFT JOIN temp_subject_avg t
       AND ss.subject = t.subject
       -- Changed to use the new temporary table column for percentage average
 
+LEFT JOIN temp_enrolled_students tes
+       ON ss.sccode = tes.sccode
+      AND ss.sessionyear = tes.sessionyear
+      AND ss.classname = tes.classname
+      AND ss.sectionname = tes.sectionname
+
+
 WHERE
         ss.sccode      = ?
     AND ss.sessionyear = ?
