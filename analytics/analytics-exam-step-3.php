@@ -37,20 +37,20 @@ $query = "
         sessionyear,
         ? AS examid, -- This will now be a string list of IDs
         subject_code,
-        COALESCE(SUM(student_count), 0) AS total_students_appeared, -- মোট ছাত্র
-        COALESCE(SUM(total_marks_obtained) / NULLIF(SUM(student_count), 0), 0) AS overall_avg_marks, -- সামগ্রিক গড় নম্বর
+        COALESCE(SUM(appeared_student_count), 0) AS total_students_appeared, -- মোট ছাত্র যারা পরীক্ষায় অংশ নিয়েছে
+        COALESCE(SUM(total_marks_obtained) / NULLIF(SUM(appeared_student_count), 0), 0) AS overall_avg_marks, -- সামগ্রিক গড় নম্বর (যারা অংশ নিয়েছে তাদের মধ্যে)
         COALESCE(SUM(total_marks_obtained) / NULLIF(SUM(total_full_marks), 0) * 100, 0) AS overall_marks_percentage, -- সামগ্রিক নম্বরের হার
         100 - COALESCE(SUM(total_marks_obtained) / NULLIF(SUM(total_full_marks), 0) * 100, 0) AS difficulty_factor, -- কাঠিন্য ফ্যাক্টর
         COALESCE(SUM(fail_count), 0) AS fail_count, -- মোট ফেল
-        COALESCE(SUM(fail_count) * 100 / NULLIF(SUM(student_count), 0), 0) AS failure_rate, -- ফেলের হার
+        COALESCE(SUM(fail_count) * 100 / NULLIF(SUM(appeared_student_count), 0), 0) AS failure_rate, -- ফেলের হার (যারা অংশ নিয়েছে তাদের মধ্যে)
         -- Median Calculation: This is a simplified median for grouped data.
         -- For a more precise median, a more complex query or procedural approach would be needed.
         COALESCE(AVG(marks_percentage), 0) AS median, -- Using average of percentages as an approximation for median
         COALESCE(AVG(variance), 0) AS variance, -- ভ্যারিয়েন্স (গড়)
         COALESCE(AVG(std_deviation), 0) AS std_deviation, -- স্ট্যান্ডার্ড ডেভিয়েশন (গড়)
         -- Low Performance Ratio Calculation (assuming marks < 50% is low performance)
-        COALESCE(
-            SUM(CASE WHEN marks_percentage < 50 THEN student_count ELSE 0 END) * 100 / NULLIF(SUM(student_count), 0),
+        COALESCE( -- Low performance ratio (among those who appeared)
+            SUM(CASE WHEN marks_percentage < 50 THEN appeared_student_count ELSE 0 END) * 100 / NULLIF(SUM(appeared_student_count), 0),
             0
         ) AS low_gpa_ratio
     FROM

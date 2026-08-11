@@ -20,6 +20,35 @@ if ($dataset_id == 0) {
    Optimization: Pre-calculate averages to prevent slow subqueries
 ---------------------------------------------------------- */
 
+// 1.1. Create a temporary table to hold enrolled student counts for each class/section.
+$conn->query("DROP TEMPORARY TABLE IF EXISTS temp_enrolled_students");
+$create_temp_enrolled_table_sql = "
+CREATE TEMPORARY TABLE temp_enrolled_students (
+    sccode VARCHAR(10),
+    sessionyear VARCHAR(10),
+    classname VARCHAR(50),
+    sectionname VARCHAR(50),
+    enrolled_count INT DEFAULT 0,
+    male_enrolled_count INT DEFAULT 0,
+    female_enrolled_count INT DEFAULT 0,
+    PRIMARY KEY (sccode, sessionyear, classname, sectionname)
+);
+";
+$conn->query($create_temp_enrolled_table_sql);
+
+// 1.2. Populate the temporary table with enrolled student counts.
+$populate_temp_enrolled_sql = "
+INSERT INTO temp_enrolled_students (sccode, sessionyear, classname, sectionname, enrolled_count, male_enrolled_count, female_enrolled_count)
+SELECT si.sccode, si.sessionyear, si.classname, si.sectionname, COUNT(si.stid) AS enrolled_count, SUM(CASE WHEN s.gender = 'Male' THEN 1 ELSE 0 END) AS male_enrolled_count, SUM(CASE WHEN s.gender = 'Female' THEN 1 ELSE 0 END) AS female_enrolled_count
+FROM sessioninfo si JOIN students s ON si.stid = s.stid AND si.sccode = s.sccode
+WHERE si.sccode = ? AND si.sessionyear = ? AND si.slot = ?
+GROUP BY si.sccode, si.sessionyear, si.classname, si.sectionname;
+";
+$stmt_enrolled = $conn->prepare($populate_temp_enrolled_sql);
+$stmt_enrolled->bind_param("sss", $sccode, $sessionyear, $slot);
+$stmt_enrolled->execute();
+$stmt_enrolled->close();
+
 // 1. Create a temporary table to hold the average marks for each subject group.
 $conn->query("DROP TEMPORARY TABLE IF EXISTS temp_subject_avg");
 $create_temp_table_sql = "
@@ -74,6 +103,7 @@ INSERT INTO analytics_subject_performance
     -- Gender based columns
     male_count,
     female_count,
+    appeared_student_count, -- New column for students who actually appeared
 
     student_count,
 
@@ -120,13 +150,16 @@ SELECT
     ss.tid,
 
     /* Male Count */
-    SUM(CASE WHEN st.gender = 'Male' THEN 1 ELSE 0 END),
+    COALESCE(tes.male_enrolled_count, 0),
 
     /* Female Count */
-    SUM(CASE WHEN st.gender = 'Female' THEN 1 ELSE 0 END),
+    COALESCE(tes.female_enrolled_count, 0),
 
+    /* Appeared Student Count (Students with marks) */
     COUNT(sm.markobt),
 
+    /* Student Count (Total Enrolled) */
+    COALESCE(tes.enrolled_count, 0),
     COALESCE(SUM(sm.markobt),0),
     COALESCE(SUM(sm.fullmark),0),
 
@@ -284,6 +317,7 @@ ON DUPLICATE KEY UPDATE
 
     male_count            = VALUES(male_count),
     female_count          = VALUES(female_count),
+    appeared_student_count = VALUES(appeared_student_count), -- New column update
     male_pass_count       = VALUES(male_pass_count),
     female_pass_count     = VALUES(female_pass_count),
     male_avg_marks        = VALUES(male_avg_marks),
