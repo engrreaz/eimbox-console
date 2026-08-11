@@ -60,22 +60,16 @@
         "increment": 5
     },
     {
-        "file": "analytics-exam-step-9.php",
-        "title": "Generating Student Merit List",
-        "icon": "bi-person-check",
-        "increment": 10
-    },
-    {
-        "file": "analytics-exam-step-10.php",
-        "title": "Identifying At-Risk Students",
-        "icon": "bi-exclamation-triangle",
-        "increment": 3
-    },
-    {
         "file": "analytics-exam-step-11.php",
         "title": "Calculating GPA & Grades",
         "icon": "bi-mortarboard",
         "increment": 4
+    },
+    {
+        "file": "analytics-exam-step-9.php",
+        "title": "Generating Student Merit List",
+        "icon": "bi-person-check",
+        "increment": 10
     },
     {
         "file": "analytics-exam-step-12.php",
@@ -88,5 +82,11 @@
         "title": "Calculating Student Risk Score",
         "icon": "bi-shield-exclamation",
         "increment": 5
+    },
+    {
+        "file": "analytics-exam-step-10.php",
+        "title": "Identifying At-Risk Students",
+        "icon": "bi-exclamation-triangle",
+        "increment": 3
     }
 ]
