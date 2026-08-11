@@ -60,7 +60,7 @@ SELECT
 
     asp.tid,
 
-    SUM(asp.student_count) AS total_students_taught,
+    SUM(asp.appeared_student_count) AS total_students_taught,
 
     COUNT(DISTINCT asp.subject_code) AS total_subjects_taught,
 
@@ -77,7 +77,7 @@ SELECT
     COALESCE(
         SUM(asp.total_marks_obtained)
         /
-        NULLIF(SUM(asp.student_count), 0),
+        NULLIF(SUM(asp.appeared_student_count), 0),
         0
     ) AS overall_avg_marks,
 
@@ -86,7 +86,7 @@ SELECT
     COALESCE(
         SUM(asp.pass_count) * 100
         /
-        NULLIF(SUM(asp.student_count), 0),
+        NULLIF(SUM(asp.appeared_student_count), 0),
         0
     ) AS overall_pass_rate,
 
@@ -95,7 +95,7 @@ SELECT
     COALESCE(
         SUM(asp.excellent_count) * 100
         /
-        NULLIF(SUM(asp.student_count), 0),
+        NULLIF(SUM(asp.appeared_student_count), 0),
         0
     ) AS overall_excellent_rate,
 
