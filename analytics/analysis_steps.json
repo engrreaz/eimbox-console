@@ -54,6 +54,12 @@
         "increment": 10
     },
     {
+        "file": "analytics-exam-step-8a.php",
+        "title": "Calculating Teacher Subject Index (TSPI)",
+        "icon": "bi-person-video3",
+        "increment": 5
+    },
+    {
         "file": "analytics-exam-step-9.php",
         "title": "Generating Student Merit List",
         "icon": "bi-person-check",
@@ -76,5 +82,11 @@
         "title": "Calculating Teacher Impact (TCI/TSI)",
         "icon": "bi-bullseye",
         "increment": 3
+    },
+    {
+        "file": "analytics-exam-step-13.php",
+        "title": "Calculating Student Risk Score",
+        "icon": "bi-shield-exclamation",
+        "increment": 5
     }
 ]
