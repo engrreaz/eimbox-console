@@ -239,7 +239,7 @@ SELECT
         (
             SUM(
                 CASE
-                    WHEN sm.markobt < 33 THEN 1
+                    WHEN (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 < 33 THEN 1
                     ELSE 0
                 END
             ) * 100
