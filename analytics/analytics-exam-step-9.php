@@ -21,40 +21,44 @@ if (!isset($dataset_id) || !isset($examid_list_str)) {
 $insert_sql = "
 INSERT INTO analytics_student_performance (
     dataset_id, sccode, sessionyear, examid, stid, classname, sectionname, rollno,
-    total_marks_obtained, total_full_marks, percentage, failed_subjects
+    total_marks_obtained, total_full_marks, percentage, failed_subjects,
+    failed_subject_codes, failed_subject_names
 )
 SELECT
     ? AS dataset_id,
-    sm.sccode,
-    sm.sessionyear,
-    ? AS examid,
-    sm.stid,
-    si.classname,
-    si.sectionname,
-    si.rollno,
     SUM(sm.markobt) AS total_marks_obtained,
     SUM(sm.fullmark) AS total_full_marks,
     (SUM(sm.markobt) / SUM(sm.fullmark)) * 100 AS percentage,
-    SUM(CASE WHEN sm.markobt < 33 THEN 1 ELSE 0 END) AS failed_subjects
+    SUM(CASE WHEN (sm.markobt / sm.fullmark * 100) < 33 THEN 1 ELSE 0 END) AS failed_subjects,
+    GROUP_CONCAT(CASE WHEN (sm.markobt / sm.fullmark * 100) < 33 THEN sm.subject ELSE NULL END SEPARATOR ', ') AS failed_subject_codes,
+    GROUP_CONCAT(CASE WHEN (sm.markobt / sm.fullmark * 100) < 33 THEN sub.subject ELSE NULL END SEPARATOR ', ') AS failed_subject_names
 FROM stmark sm
 JOIN sessioninfo si ON sm.stid = si.stid AND sm.sccode = si.sccode AND sm.sessionyear = si.sessionyear AND sm.slot = si.slot
+LEFT JOIN subjects sub ON sm.subject = sub.subcode AND (sub.sccode = sm.sccode OR sub.sccode = '0')
 WHERE sm.sccode = ?
   AND sm.sessionyear = ?
   AND sm.examid IN (" . $examid_list_str . ")
   AND sm.slot = ?
-GROUP BY sm.sccode, sm.sessionyear, sm.stid, si.classname, si.sectionname, si.rollno
+GROUP BY sm.sccode, sm.sessionyear, sm.stid, si.classname, si.sectionname, si.rollno, examid
 ON DUPLICATE KEY UPDATE
     total_marks_obtained = VALUES(total_marks_obtained),
     total_full_marks = VALUES(total_full_marks),
     percentage = VALUES(percentage),
-    failed_subjects = VALUES(failed_subjects);
+    failed_subjects = VALUES(failed_subjects),
+    failed_subject_codes = VALUES(failed_subject_codes),
+    failed_subject_names = VALUES(failed_subject_names);
 ";
+
+
+
+
 
 
 $stmt_insert = $conn->prepare($insert_sql);
 if (!$stmt_insert) throw new Exception("Prepare failed (insert): " . $conn->error);
 $stmt_insert->bind_param("issss", $dataset_id, $examid_list_str, $sccode, $sessionyear, $slot);
 $stmt_insert->execute();
+$affected_rows = $stmt_insert->affected_rows;
 $stmt_insert->close();
 
 // 2. Update ranks for students who have not failed

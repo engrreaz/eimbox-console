@@ -17,7 +17,8 @@ if (!isset($dataset_id)) {
 $sql = "
 INSERT INTO analytics_at_risk_students (
     dataset_id, sccode, stid, classname, sectionname, 
-    failed_subject_count, risk_score, gpa, grade, reason
+    failed_subject_count, risk_score, gpa, grade, reason,
+    failed_subject_code, failed_subject_list
 )
 SELECT
     dataset_id,
@@ -29,7 +30,9 @@ SELECT
     risk_score,
     gpa,
     grade,
-    CONCAT('Failed in ', failed_subjects, ' subject(s)') AS reason
+    CONCAT('Failed in ', failed_subjects, ' subject(s)') AS reason,
+    failed_subject_codes,
+    failed_subject_names
 FROM
     analytics_student_performance
 WHERE
@@ -39,7 +42,9 @@ ON DUPLICATE KEY UPDATE
     risk_score = VALUES(risk_score),
     gpa = VALUES(gpa),
     grade = VALUES(grade),
-    reason = VALUES(reason);
+    reason = VALUES(reason),
+    failed_subject_code = VALUES(failed_subject_code),
+    failed_subject_list = VALUES(failed_subject_list);
 ";
 
 
