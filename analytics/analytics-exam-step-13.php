@@ -46,8 +46,8 @@ $sql = "
     JOIN analytics_subject_performance asp
         ON sm.sccode = asp.sccode
         AND sm.sessionyear = asp.sessionyear
-        AND sm.classname COLLATE utf8mb4_unicode_ci = asp.classname COLLATE utf8mb4_unicode_ci
-        AND sm.sectionname COLLATE utf8mb4_unicode_ci = asp.sectionname COLLATE utf8mb4_unicode_ci
+        AND sm.classname = asp.classname
+        AND sm.sectionname = asp.sectionname
         AND sm.subject = asp.subject_code
         AND asp.dataset_id = ?
     WHERE
