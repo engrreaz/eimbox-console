@@ -36,12 +36,12 @@ SELECT
     SUM(sm.markobt) AS total_marks_obtained,
     SUM(sm.fullmark) AS total_full_marks,
     (SUM(sm.markobt) / SUM(sm.fullmark)) * 100 AS percentage,
-    SUM(CASE WHEN (sm.markobt / sm.fullmark * 100) < 33 THEN 1 ELSE 0 END) AS failed_subjects,
+    COUNT(DISTINCT CASE WHEN (sm.markobt / sm.fullmark * 100) < 33 THEN sm.subject END) AS failed_subjects,
     GROUP_CONCAT(DISTINCT CASE WHEN (sm.markobt / sm.fullmark * 100) < 33 THEN sm.subject ELSE NULL END SEPARATOR ', ') AS failed_subject_codes,
     GROUP_CONCAT(DISTINCT CASE WHEN (sm.markobt / sm.fullmark * 100) < 33 THEN sub.subject ELSE NULL END SEPARATOR ', ') AS failed_subject_names
 FROM stmark sm
 JOIN sessioninfo si ON sm.stid = si.stid AND sm.sccode = si.sccode AND sm.sessionyear = si.sessionyear AND sm.slot = si.slot
-LEFT JOIN subjects sub ON sm.subject = sub.subcode AND (sub.sccode = sm.sccode OR sub.sccode = '0')
+LEFT JOIN subjects sub ON sm.subject = sub.subcode AND (sub.sccode = sm.sccode OR sub.sccode = '0') AND sccategory = '$sctype'
 WHERE sm.sccode = ?
   AND sm.sessionyear = ?
   AND sm.examid IN (" . $examid_list_str . ")
