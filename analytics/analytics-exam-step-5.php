@@ -180,7 +180,7 @@ if (!$stmt) {
 }
 
 $stmt->bind_param(
-    "isi",
+    "ssi",
     $examid_list_str,
     $slot,
     $dataset_id
