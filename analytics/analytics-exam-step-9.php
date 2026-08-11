@@ -37,8 +37,8 @@ SELECT
     SUM(sm.fullmark) AS total_full_marks,
     (SUM(sm.markobt) / SUM(sm.fullmark)) * 100 AS percentage,
     SUM(CASE WHEN (sm.markobt / sm.fullmark * 100) < 33 THEN 1 ELSE 0 END) AS failed_subjects,
-    GROUP_CONCAT(CASE WHEN (sm.markobt / sm.fullmark * 100) < 33 THEN sm.subject ELSE NULL END SEPARATOR ', ') AS failed_subject_codes,
-    GROUP_CONCAT(CASE WHEN (sm.markobt / sm.fullmark * 100) < 33 THEN sub.subject ELSE NULL END SEPARATOR ', ') AS failed_subject_names
+    GROUP_CONCAT(DISTINCT CASE WHEN (sm.markobt / sm.fullmark * 100) < 33 THEN sm.subject ELSE NULL END SEPARATOR ', ') AS failed_subject_codes,
+    GROUP_CONCAT(DISTINCT CASE WHEN (sm.markobt / sm.fullmark * 100) < 33 THEN sub.subject ELSE NULL END SEPARATOR ', ') AS failed_subject_names
 FROM stmark sm
 JOIN sessioninfo si ON sm.stid = si.stid AND sm.sccode = si.sccode AND sm.sessionyear = si.sessionyear AND sm.slot = si.slot
 LEFT JOIN subjects sub ON sm.subject = sub.subcode AND (sub.sccode = sm.sccode OR sub.sccode = '0')
@@ -46,7 +46,7 @@ WHERE sm.sccode = ?
   AND sm.sessionyear = ?
   AND sm.examid IN (" . $examid_list_str . ")
   AND sm.slot = ?
-GROUP BY sm.sccode, sm.sessionyear, sm.stid, si.classname, si.sectionname, si.rollno, examid
+GROUP BY sm.sccode, sm.sessionyear, sm.stid, si.classname, si.sectionname, si.rollno
 ON DUPLICATE KEY UPDATE
     total_marks_obtained = VALUES(total_marks_obtained),
     total_full_marks = VALUES(total_full_marks),
