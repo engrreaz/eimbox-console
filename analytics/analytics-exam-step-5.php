@@ -166,42 +166,8 @@ GROUP BY
     asp.sccode,
     asp.sessionyear,
     asp.tid
-
-ON DUPLICATE KEY UPDATE
-
-    total_students_taught =
-        VALUES(total_students_taught),
-
-    total_subjects_taught =
-        VALUES(total_subjects_taught),
-
-    total_classes_taught =
-        VALUES(total_classes_taught),
-
-    overall_avg_marks =
-        VALUES(overall_avg_marks),
-
-    overall_pass_rate =
-        VALUES(overall_pass_rate),
-
-    overall_excellent_rate =
-        VALUES(overall_excellent_rate),
-
-    avg_class_difficulty_factor =
-        VALUES(avg_class_difficulty_factor),
-
-    teacher_impact_index =
-        VALUES(teacher_impact_index),
-
-    avg_variance =
-        VALUES(avg_variance),
-
-    avg_std_deviation =
-        VALUES(avg_std_deviation),
-
-    updated_at =
-        CURRENT_TIMESTAMP
-
+    -- ON DUPLICATE KEY UPDATE is removed to ensure each dataset/teacher/exam combo is unique.
+    -- The table should have a unique key on (dataset_id, tid, examid) to prevent duplicates.
 ";
 
 $stmt = $conn->prepare($sql);
