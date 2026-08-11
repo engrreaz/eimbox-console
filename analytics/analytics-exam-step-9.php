@@ -26,6 +26,13 @@ INSERT INTO analytics_student_performance (
 )
 SELECT
     ? AS dataset_id,
+    sm.sccode,
+    sm.sessionyear,
+    ? AS examid,
+    sm.stid,
+    si.classname,
+    si.sectionname,
+    si.rollno,
     SUM(sm.markobt) AS total_marks_obtained,
     SUM(sm.fullmark) AS total_full_marks,
     (SUM(sm.markobt) / SUM(sm.fullmark)) * 100 AS percentage,
