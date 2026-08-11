@@ -45,17 +45,12 @@ $query = "
         COALESCE(SUM(fail_count) * 100 / NULLIF(SUM(student_count), 0), 0) AS failure_rate, -- ফেলের হার
         -- Median Calculation: This is a simplified median for grouped data.
         -- For a more precise median, a more complex query or procedural approach would be needed.
-        COALESCE(AVG(avg_marks), 0) AS median, -- Using average of averages as an approximation for median
+        COALESCE(AVG(marks_percentage), 0) AS median, -- Using average of percentages as an approximation for median
         COALESCE(AVG(variance), 0) AS variance, -- ভ্যারিয়েন্স (গড়)
         COALESCE(AVG(std_deviation), 0) AS std_deviation, -- স্ট্যান্ডার্ড ডেভিয়েশন (গড়)
-        -- Low GPA Ratio Calculation (assuming marks < 50 is low performance)
+        -- Low Performance Ratio Calculation (assuming marks < 50% is low performance)
         COALESCE(
-            SUM(
-                CASE
-                    WHEN (total_marks_obtained / NULLIF(student_count, 0)) < 50 THEN student_count
-                    ELSE 0
-                END
-            ) * 100 / NULLIF(SUM(student_count), 0),
+            SUM(CASE WHEN marks_percentage < 50 THEN student_count ELSE 0 END) * 100 / NULLIF(SUM(student_count), 0),
             0
         ) AS low_gpa_ratio
     FROM

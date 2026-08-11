@@ -81,6 +81,7 @@ INSERT INTO analytics_subject_performance
     total_full_marks,
 
     avg_marks,
+    marks_percentage,
     max_marks,
     min_marks,
 
@@ -131,25 +132,28 @@ SELECT
 
     COALESCE(AVG(sm.markobt),0),
 
-    COALESCE(MAX(sm.markobt),0),
+    /* Marks Percentage */
+    COALESCE(SUM(sm.markobt) / NULLIF(SUM(sm.fullmark), 0) * 100, 0),
+
+    COALESCE(MAX((sm.markobt / NULLIF(sm.fullmark, 1)) * 100), 0),
 
     COALESCE(
         MIN(
             CASE
-                WHEN sm.markobt > 0 THEN sm.markobt
+                WHEN sm.markobt > 0 THEN (sm.markobt / NULLIF(sm.fullmark, 1)) * 100
             END
         ),
     0),
 
-    COALESCE(VAR_POP(sm.markobt),0),
+    COALESCE(VAR_POP((sm.markobt / NULLIF(sm.fullmark, 1)) * 100), 0),
 
-    COALESCE(STDDEV_POP(sm.markobt),0),
+    COALESCE(STDDEV_POP((sm.markobt / NULLIF(sm.fullmark, 1)) * 100), 0),
 
-    COALESCE(MAX(sm.markobt),0) -
+    COALESCE(MAX((sm.markobt / NULLIF(sm.fullmark, 1)) * 100), 0) -
     COALESCE(
         MIN(
             CASE
-                WHEN sm.markobt > 0 THEN sm.markobt
+                WHEN sm.markobt > 0 THEN (sm.markobt / NULLIF(sm.fullmark, 1)) * 100
             END
         ),
     0),
@@ -157,7 +161,7 @@ SELECT
     /* Pass Count */
     SUM(
         CASE
-            WHEN sm.markobt >= 33 THEN 1
+            WHEN (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 >= 33 THEN 1
             ELSE 0
         END
     ),
@@ -165,7 +169,7 @@ SELECT
     /* Fail Count */
     SUM(
         CASE
-            WHEN sm.markobt < 33 THEN 1
+            WHEN (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 < 33 THEN 1
             ELSE 0
         END
     ),
@@ -290,6 +294,7 @@ ON DUPLICATE KEY UPDATE
     total_full_marks      = VALUES(total_full_marks),
 
     avg_marks             = VALUES(avg_marks),
+    marks_percentage      = VALUES(marks_percentage),
     max_marks             = VALUES(max_marks),
     min_marks             = VALUES(min_marks),
 

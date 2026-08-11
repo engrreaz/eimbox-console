@@ -39,7 +39,7 @@ $query = "
         classname,
         sectionname,
         COUNT(DISTINCT subject_code) AS total_subjects,
-        COALESCE(AVG(avg_marks), 0) AS avg_of_subject_averages,
+        COALESCE(AVG(marks_percentage), 0) AS avg_of_subject_averages,
         COALESCE(MAX(student_count), 0) AS total_students_appeared, -- Assuming student count is consistent across subjects
         COALESCE(SUM(total_marks_obtained) / NULLIF(SUM(total_full_marks), 0) * 100, 0) AS overall_marks_percentage,
         100 - COALESCE(SUM(total_marks_obtained) / NULLIF(SUM(total_full_marks), 0) * 100, 0) AS difficulty_factor,
