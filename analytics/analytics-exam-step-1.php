@@ -29,7 +29,7 @@ CREATE TEMPORARY TABLE temp_subject_avg (
     classname VARCHAR(50),
     sectionname VARCHAR(50),
     subject VARCHAR(50),
-    avg_mark_for_subject DECIMAL(10, 2),
+    avg_mark_percentage_for_subject DECIMAL(10, 2), -- Changed to store percentage
     PRIMARY KEY (sccode, sessionyear, classname, sectionname, subject)
 );
 ";
@@ -37,14 +37,14 @@ $conn->query($create_temp_table_sql);
 
 // 2. Populate the temporary table with average marks.
 $populate_temp_table_sql = "
-INSERT INTO temp_subject_avg (sccode, sessionyear, classname, sectionname, subject, avg_mark_for_subject)
+INSERT INTO temp_subject_avg (sccode, sessionyear, classname, sectionname, subject, avg_mark_percentage_for_subject)
 SELECT
     sm.sccode,
     sm.sessionyear,
     sm.classname,
     sm.sectionname,
     sm.subject,
-    AVG(sm.markobt)
+    AVG((sm.markobt / NULLIF(sm.fullmark, 0)) * 100) -- Calculate average percentage
 FROM stmark sm
 WHERE sm.sccode = ? AND sm.sessionyear = ? AND sm.examid IN (" . $examid_list_str . ")
 GROUP BY sm.sccode, sm.sessionyear, sm.classname, sm.sectionname, sm.subject;
@@ -181,10 +181,10 @@ SELECT
     SUM(CASE WHEN sm.markobt >= 33 AND st.gender = 'Female' THEN 1 ELSE 0 END),
 
     /* Male Avg Marks */
-    COALESCE(AVG(CASE WHEN st.gender = 'Male' THEN sm.markobt END), 0),
+    COALESCE(AVG(CASE WHEN st.gender = 'Male' THEN (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 END), 0),
 
     /* Female Avg Marks */
-    COALESCE(AVG(CASE WHEN st.gender = 'Female' THEN sm.markobt END), 0),
+    COALESCE(AVG(CASE WHEN st.gender = 'Female' THEN (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 END), 0),
 
 
 
@@ -217,7 +217,7 @@ SELECT
     /* Excellent Count (>=70) */
     SUM(
         CASE
-            WHEN sm.markobt >= 70 THEN 1
+            WHEN (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 >= 70 THEN 1
             ELSE 0
         END
     ),
@@ -227,8 +227,8 @@ SELECT
     ROUND(
         (
             SUM(
-                CASE
-                    WHEN sm.markobt >= 70 THEN 1
+                CASE -- Changed to use percentage for excellent rate
+                    WHEN (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 >= 70 THEN 1
                     ELSE 0
                 END
             ) * 100
@@ -238,12 +238,12 @@ SELECT
 
     /* Above Average Count */
     SUM(
-        CASE WHEN sm.markobt > t.avg_mark_for_subject THEN 1 ELSE 0 END
+        CASE WHEN (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 > t.avg_mark_percentage_for_subject THEN 1 ELSE 0 END
     ),
 
     /* Below Average Count */
     SUM(
-        CASE WHEN sm.markobt < t.avg_mark_for_subject THEN 1 ELSE 0 END
+        CASE WHEN (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 < t.avg_mark_percentage_for_subject THEN 1 ELSE 0 END
     )
 
 FROM subsetup ss
@@ -265,7 +265,7 @@ LEFT JOIN temp_subject_avg t
       AND ss.classname = t.classname
       AND ss.sectionname = t.sectionname
       AND ss.subject = t.subject
-
+      -- Changed to use the new temporary table column for percentage average
 
 WHERE
         ss.sccode      = ?
