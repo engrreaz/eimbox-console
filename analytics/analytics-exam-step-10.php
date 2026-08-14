@@ -44,7 +44,7 @@ ON DUPLICATE KEY UPDATE
     grade = VALUES(grade),
     reason = VALUES(reason),
     failed_subject_code = VALUES(failed_subject_code),
-    failed_subject_list = VALUES(failed_subject_list);
+    failed_subject_list = VALUES(failed_subject_list)
 ";
 
 

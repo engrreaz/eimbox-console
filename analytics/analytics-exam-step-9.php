@@ -20,8 +20,10 @@ if (!isset($dataset_id) || !isset($examid_list_str)) {
 
 $insert_sql = "
 INSERT INTO analytics_student_performance (
-    dataset_id, sccode, sessionyear, examid, stid, classname, sectionname, rollno,
+    dataset_id, sccode, sessionyear, examid, stid, classname, sectionname, rollno, 
     total_marks_obtained, total_full_marks, percentage, failed_subjects,
+    gpa, grade, class_rank, section_rank,
+    predicted_gpa, predicted_grade, a_plus_probability,
     failed_subject_codes, failed_subject_names
 )
 SELECT
@@ -37,6 +39,13 @@ SELECT
     SUM(sm.fullmark) AS total_full_marks,
     (SUM(sm.markobt) / SUM(sm.fullmark)) * 100 AS percentage,
     COUNT(DISTINCT CASE WHEN (sm.markobt / sm.fullmark * 100) < 33 THEN sm.subject END) AS failed_subjects,
+    COALESCE(ts.gpa, 0) AS gpa,
+    COALESCE(ts.gla, 'F') AS grade,
+    COALESCE(ts.meritnumcomb, 0) AS class_rank,
+    COALESCE(ts.meritnum, 0) AS section_rank,
+    0 AS predicted_gpa,
+    NULL AS predicted_grade,
+    0 AS a_plus_probability,
     GROUP_CONCAT(DISTINCT CASE WHEN (sm.markobt / sm.fullmark * 100) < 33 THEN sm.subject ELSE NULL END ORDER BY sm.subject SEPARATOR ', ') AS failed_subject_codes,
     GROUP_CONCAT(DISTINCT CASE WHEN (sm.markobt / sm.fullmark * 100) < 33 THEN sub.subject ELSE NULL END ORDER BY sm.subject SEPARATOR ', ') AS failed_subject_names
 FROM stmark sm
@@ -47,6 +56,14 @@ LEFT JOIN subjects sub ON sm.subject = sub.subcode
     AND sub.id = (SELECT id FROM subjects s2
                   WHERE s2.subcode = sm.subject AND (s2.sccode = sm.sccode OR s2.sccode = '0') AND s2.sccategory = '$sctype'
                   ORDER BY s2.sccode DESC LIMIT 1)
+LEFT JOIN examlist el ON el.id IN (" . $examid_list_str . ")
+LEFT JOIN tabulatingsheet ts ON sm.stid = ts.stid 
+    AND sm.sccode = ts.sccode 
+    AND sm.sessionyear = ts.sessionyear 
+    AND sm.slot = ts.slot
+    AND si.classname = ts.classname
+    AND si.sectionname = ts.sectionname
+    AND el.examtitle = ts.exam
 WHERE sm.sccode = ?
   AND sm.sessionyear = ?
   AND sm.examid IN (" . $examid_list_str . ")
@@ -57,6 +74,10 @@ ON DUPLICATE KEY UPDATE
     total_full_marks = VALUES(total_full_marks),
     percentage = VALUES(percentage),
     failed_subjects = VALUES(failed_subjects),
+    gpa = VALUES(gpa),
+    grade = VALUES(grade),
+    class_rank = VALUES(class_rank),
+    section_rank = VALUES(section_rank),
     failed_subject_codes = VALUES(failed_subject_codes),
     failed_subject_names = VALUES(failed_subject_names);
 ";
@@ -72,40 +93,5 @@ $stmt_insert->bind_param("issss", $dataset_id, $examid_list_str, $sccode, $sessi
 $stmt_insert->execute();
 $affected_rows = $stmt_insert->affected_rows;
 $stmt_insert->close();
-
-// 2. Update ranks for students who have not failed
-$rank_sql = "
-UPDATE analytics_student_performance AS asp
-JOIN (
-    SELECT
-        id,
-        -- Rank within the entire class
-        RANK() OVER (PARTITION BY classname ORDER BY total_marks_obtained DESC) as calculated_class_rank,
-        -- Rank within the specific section
-        RANK() OVER (PARTITION BY classname, sectionname ORDER BY total_marks_obtained DESC) as calculated_section_rank
-    FROM analytics_student_performance
-    WHERE dataset_id = ? AND failed_subjects = 0
-) AS ranked_students ON asp.id = ranked_students.id
-SET
-    asp.class_rank = ranked_students.calculated_class_rank,
-    asp.section_rank = ranked_students.calculated_section_rank
-WHERE
-    asp.dataset_id = ?;
-";
-
-
-$stmt_rank = $conn->prepare($rank_sql);
-if (!$stmt_rank) throw new Exception("Prepare failed (rank): " . $conn->error);
-$stmt_rank->bind_param("ii", $dataset_id, $dataset_id);
-$stmt_rank->execute();
-$stmt_rank->close();
-
-// Set rank to 0 for failed students
-$fail_rank_sql = "UPDATE analytics_student_performance SET class_rank = 0, section_rank = 0 WHERE dataset_id = ? AND failed_subjects > 0";
-$stmt_fail_rank = $conn->prepare($fail_rank_sql);
-if (!$stmt_fail_rank) throw new Exception("Prepare failed (fail_rank): " . $conn->error);
-$stmt_fail_rank->bind_param("i", $dataset_id);
-$stmt_fail_rank->execute();
-$stmt_fail_rank->close();
 
 ?>

@@ -156,7 +156,7 @@ SELECT
     COALESCE(tes.female_enrolled_count, 0),
 
     /* Appeared Student Count (Students with marks) */
-    COUNT(sm.markobt),
+    SUM(CASE WHEN sm.presence = 1 THEN 1 ELSE 0 END),
 
     /* Student Count (Total Enrolled) */
     COALESCE(tes.enrolled_count, 0),
@@ -230,7 +230,7 @@ SELECT
                     ELSE 0
                 END
             ) * 100
-        ) / NULLIF(COUNT(sm.markobt),0),
+        ) / NULLIF(SUM(CASE WHEN sm.presence = 1 THEN 1 ELSE 0 END),0),
     2),
 
     /* Fail Rate */
@@ -243,7 +243,7 @@ SELECT
                     ELSE 0
                 END
             ) * 100
-        ) / NULLIF(COUNT(sm.markobt),0),
+        ) / NULLIF(SUM(CASE WHEN sm.presence = 1 THEN 1 ELSE 0 END),0),
     2),
     0),
 
@@ -265,7 +265,7 @@ SELECT
                     ELSE 0
                 END
             ) * 100
-        ) / NULLIF(COUNT(sm.markobt),0),
+        ) / NULLIF(SUM(CASE WHEN sm.presence = 1 THEN 1 ELSE 0 END),0),
     2),
 0),
 
