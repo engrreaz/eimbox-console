@@ -12,7 +12,8 @@ if (empty($dataset_id) || empty($sccode)) {
 }
 
 // Fetch all data using the new script
-$api_url = 'http://' . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . '/analytics/get_full_report_data.php?dataset_id=' . $dataset_id;
+$base_path = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+$api_url = 'http://' . $_SERVER['HTTP_HOST'] . $base_path . '/analytics/get_full_report_data.php?dataset_id=' . $dataset_id;
 error_log($api_url);
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $api_url);
