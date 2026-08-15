@@ -3,6 +3,7 @@ header('Content-Type: application/json');
 session_start();
 require_once '../core/config.php';
 require_once '../core/db.php';
+require_once '../core/global_values.php';
 
 function fetch_data($conn, $sql, $params = [], $types = "") {
     $stmt = $conn->prepare($sql);
