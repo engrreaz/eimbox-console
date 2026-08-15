@@ -4,7 +4,7 @@
     <!-- Section for starting the analysis job -->
     <div class="card mb-4">
         <div class="card-header">
-            <h5 class="card-title mb-0">Run Teacher Performance Analysis</h5>
+            <h5 class="card-title mb-0">Run Exam Performance Analysis</h5>
         </div>
         <div class="card-body">
             <div class="row g-3 align-items-end">
@@ -47,16 +47,32 @@
                         <!-- Options will be loaded by JS -->
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <button type="button" id="startAnalysisBtn" class="btn btn-primary w-100 p-3" disabled>
                         <i class="bi bi-play-circle me-2"></i>Start Analysis
                     </button>
+                </div>
+                <div class="col-md-1">
+                    <button type="button" id="checkValidityBtn" class="btn btn-outline-info w-100 p-3" disabled title="Check Data Validity"><i class="bi bi-shield-check"></i></button>
                 </div>
                 <div class="col-md-2">
                     <button type="button" id="viewHistoryBtn" class="btn btn-outline-secondary w-100 p-3 fs-5" data-bs-toggle="modal" data-bs-target="#historyModal" disabled title="View Analysis History">
                         <i class="bi bi-clock-history"></i>
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section for displaying validation results -->
+    <div class="card mb-4" id="validationResultsSection" style="display: none;">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0"><i class="bi bi-clipboard2-data-fill me-2"></i>Data Validity Report</h5>
+            <button type="button" class="btn-close" id="closeValidationReport" aria-label="Close"></button>
+        </div>
+        <div class="card-body">
+            <div id="validationStatus" class="text-center p-4">
+                <!-- Validation results will be loaded here -->
             </div>
         </div>
     </div>
