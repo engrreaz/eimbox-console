@@ -19,6 +19,7 @@ $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $api_url);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 curl_setopt($ch, CURLOPT_COOKIE, 'PHPSESSID=' . session_id()); // Pass session cookie
+curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // Follow redirects
 $json_data = curl_exec($ch);
 
 if (curl_errno($ch)) {
