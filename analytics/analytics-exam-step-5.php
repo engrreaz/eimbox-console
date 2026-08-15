@@ -108,13 +108,10 @@ SELECT
 
     /* Teacher Impact Index */
 
-    1 +
-    (
-        COALESCE(
-            AVG(acp.difficulty_factor),
-            0
-        ) / 100
-    ) AS teacher_impact_index,
+    -- Teacher Impact Index: এটি শিক্ষকের পারফরম্যান্সকে ক্লাসের কাঠিন্যের সাথে সামঞ্জস্য করে।
+    -- যদি ক্লাসের গড় নম্বর কম হয় (অর্থাৎ ক্লাস কঠিন), তাহলে TII > 1 হবে, যা TIA স্কোরকে বুস্ট করবে।
+    -- আমরা এখানে সরাসরি গড় নম্বর ব্যবহার করছি, কারণ difficulty_factor এর নতুন সূত্রটি ভিন্ন স্কেলে মান দিতে পারে।
+    1 + (100 - COALESCE(AVG(acp.overall_marks_percentage), 50)) / 100 AS teacher_impact_index,
 
     /* Average Variance */
 

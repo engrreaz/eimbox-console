@@ -41,8 +41,13 @@ $query = "
         COUNT(DISTINCT subject_code) AS total_subjects,
         COALESCE(AVG(marks_percentage), 0) AS avg_of_subject_averages, -- Average of subject percentages
         COALESCE(MAX(appeared_student_count), 0) AS total_students_appeared, -- Corrected: Use MAX instead of SUM
-        COALESCE(SUM(total_marks_obtained) / NULLIF(SUM(total_full_marks), 0) * 100, 0) AS overall_marks_percentage,
-        100 - COALESCE(SUM(total_marks_obtained) / NULLIF(SUM(total_full_marks), 0) * 100, 0) AS difficulty_factor,
+        COALESCE(SUM(total_marks_obtained) / NULLIF(SUM(total_full_marks), 0) * 100, 0) AS overall_marks_percentage, -- সামগ্রিক নম্বরের হার
+        -- উন্নত CDF গণনা: (গড় নম্বরের ঘাটতি * ০.৫) + (ফেলের হার * ০.৩) + (ভ্যারিয়েন্স * ০.২)
+        (
+            (100 - (COALESCE(SUM(total_marks_obtained) / NULLIF(SUM(total_full_marks), 0) * 100, 0))) * 0.5 +
+            (COALESCE(SUM(fail_count) * 100 / NULLIF(SUM(appeared_student_count), 0), 0)) * 0.3 +
+            (COALESCE(AVG(variance), 0)) * 0.2
+        ) AS difficulty_factor,
         1  + (100 - COALESCE(SUM(total_marks_obtained) / NULLIF(SUM(total_full_marks), 0) * 100, 0)) / 100 AS teacher_impact_index
     FROM
         analytics_subject_performance
