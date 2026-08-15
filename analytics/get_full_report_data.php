@@ -94,10 +94,21 @@ try {
     $full_report['subject_performance'] = fetch_data($conn, $sql_subjects, [$sccode, $dataset_id], "si");
 
     // 7. Student Merit List
+    // Optimization: Fetch only top 50 and bottom 50 students to prevent timeouts on large datasets.
     $sql_students = "
-        SELECT s.stnameeng, asp.* FROM analytics_student_performance AS asp
-        JOIN students AS s ON asp.stid = s.stid AND asp.sccode = s.sccode
-        WHERE asp.dataset_id = ? AND asp.sccode = ? ORDER BY asp.class_rank ASC, asp.total_marks_obtained DESC;
+        (SELECT s.stnameeng, asp.*, 'top' as type
+         FROM analytics_student_performance AS asp
+         JOIN students AS s ON asp.stid = s.stid AND asp.sccode = s.sccode
+         WHERE asp.dataset_id = ? AND asp.sccode = ?
+         ORDER BY asp.class_rank ASC, asp.total_marks_obtained DESC
+         LIMIT 50)
+        UNION ALL
+        (SELECT s.stnameeng, asp.*, 'bottom' as type
+         FROM analytics_student_performance AS asp
+         JOIN students AS s ON asp.stid = s.stid AND asp.sccode = s.sccode
+         WHERE asp.dataset_id = ? AND asp.sccode = ?
+         ORDER BY asp.class_rank DESC, asp.total_marks_obtained ASC
+         LIMIT 50);
     ";
     $full_report['student_merit_list'] = fetch_data($conn, $sql_students, [$dataset_id, $sccode], "is");
 
