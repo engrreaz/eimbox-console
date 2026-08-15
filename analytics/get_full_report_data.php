@@ -30,7 +30,7 @@ try {
     $full_report = [];
 
     // 1. Institute Summary (from get_institute_report.php)
-    $sql_summary = "SELECT * FROM analytics_dataset WHERE id = ? AND sccode = ?";
+    $sql_summary = "SELECT * FROM analytics_dataset WHERE datasetid = ? AND sccode = ?";
     $full_report['dataset_info'] = fetch_data($conn, $sql_summary, [$dataset_id, $sccode], "is")[0] ?? [];
 
     $sql_institute_summary = "
