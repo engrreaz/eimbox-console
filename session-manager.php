@@ -5,6 +5,7 @@ require_once 'header.php';
 $sessionyear = $_GET['sessionyear'] ?? null;
 $slot = $_GET['slot'] ?? null;
 $filter = $_GET['filter'] ?? null;
+$examids_raw = $_GET['examids'] ?? null; // Get examids from URL
 
 $students = [];
 $page_title = "Session Manager";
@@ -14,6 +15,13 @@ if ($sessionyear && $slot && $filter) {
     if ($filter === 'orphan_students') {
         $page_title = "Orphan Students";
         $filter_description = "Showing students from session <strong>$sessionyear</strong> ({$slot}) who have marks but are not assigned to any class/section.";
+
+        // Prepare examid list for SQL IN clause
+        $examid_list_str = '';
+        if ($examids_raw) {
+            $examids = explode(',', $examids_raw);
+            $examid_list_str = implode(',', array_map('intval', $examids));
+        }
 
         // 2. Build and execute the query to find students in stmark but not in sessioninfo for the given session
         $sql = "
@@ -29,7 +37,7 @@ if ($sessionyear && $slot && $filter) {
             WHERE
                 sm.sccode = ?
                 AND sm.sessionyear = ?
-                AND sm.slot = ?
+                AND sm.slot = ? " . ($examid_list_str ? "AND sm.examid IN ($examid_list_str)" : "") . "
                 AND si.stid IS NULL
             GROUP BY
                 sm.stid, s.stnameeng, s.stnameben, s.guarmobile

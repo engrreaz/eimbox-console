@@ -162,7 +162,7 @@ if ($count > 0) {
     $results[] = [
         'type' => 'error', 
         'message' => "Found <strong>$count</strong> students with marks who are not assigned to any class/section in `sessioninfo`.",
-        'url' => "session-manager.php?sessionyear=$sessionyear&slot=$slot&filter=orphan_students", // Example URL
+        'url' => "session-manager.php?sessionyear=$sessionyear&slot=$slot&filter=orphan_students&examids=$examid_list_str", // Pass examids
         'url_text' => 'Manage Sessions'
     ];
     $total_issues += $count;
