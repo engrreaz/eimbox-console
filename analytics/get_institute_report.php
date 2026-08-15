@@ -46,30 +46,34 @@ $report_data['summary'] = [
 ];
 
 // 2. Gender-based Performance (Aggregated from subject performance)
+// Corrected query to get accurate gender-based stats from student-level data
 $sql_gender = "
     SELECT
-        SUM(male_count) AS total_males,
-        SUM(female_count) AS total_females,
-        SUM(male_pass_count) AS passed_males,
-        SUM(female_pass_count) AS passed_females,
-        AVG(male_avg_marks) AS avg_male_marks,
-        AVG(female_avg_marks) AS avg_female_marks
+        SUM(CASE WHEN s.gender IN ('Male', 'Boy') THEN 1 ELSE 0 END) AS total_males,
+        SUM(CASE WHEN s.gender IN ('Female', 'Girl') THEN 1 ELSE 0 END) AS total_females,
+        SUM(CASE WHEN s.gender IN ('Male', 'Boy') AND asp.failed_subjects = 0 THEN 1 ELSE 0 END) AS passed_males,
+        SUM(CASE WHEN s.gender IN ('Female', 'Girl') AND asp.failed_subjects = 0 THEN 1 ELSE 0 END) AS passed_females,
+        AVG(CASE WHEN s.gender IN ('Male', 'Boy') THEN asp.percentage END) AS avg_male_marks,
+        AVG(CASE WHEN s.gender IN ('Female', 'Girl') THEN asp.percentage END) AS avg_female_marks
     FROM
-        analytics_subject_performance
+        analytics_student_performance asp
+    JOIN
+        students s ON asp.stid = s.stid AND asp.sccode = s.sccode
     WHERE
-        dataset_id = ? AND sccode = ?;
+        asp.dataset_id = ? AND asp.sccode = ?;
 ";
 $stmt_gender = $conn->prepare($sql_gender);
 $stmt_gender->bind_param("ii", $dataset_id, $sccode);
 $stmt_gender->execute();
 $gender_result = $stmt_gender->get_result()->fetch_assoc();
 $stmt_gender->close();
-
+$total_males_count = (float)($gender_result['total_males'] ?? 0);
+$total_females_count = (float)($gender_result['total_females'] ?? 0);
 $report_data['gender_performance'] = [
-    'total_males' => (float)($gender_result['total_males'] ?? 0),
-    'total_females' => (float)($gender_result['total_females'] ?? 0),
-    'male_pass_rate' => (float)(($gender_result['total_males'] > 0) ? ($gender_result['passed_males'] / $gender_result['total_males']) * 100 : 0),
-    'female_pass_rate' => (float)(($gender_result['total_females'] > 0) ? ($gender_result['passed_females'] / $gender_result['total_females']) * 100 : 0),
+    'total_males' => $total_males_count,
+    'total_females' => $total_females_count,
+    'male_pass_rate' => (float)(($total_males_count > 0) ? (($gender_result['passed_males'] ?? 0) / $total_males_count) * 100 : 0),
+    'female_pass_rate' => (float)(($total_females_count > 0) ? (($gender_result['passed_females'] ?? 0) / $total_females_count) * 100 : 0),
     'avg_male_marks' => (float)($gender_result['avg_male_marks'] ?? 0),
     'avg_female_marks' => (float)($gender_result['avg_female_marks'] ?? 0),
 ];
