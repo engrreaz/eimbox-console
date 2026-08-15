@@ -191,6 +191,7 @@
                                 // Trigger report load if exam is pre-selected
                                 if (examSelect.val()) {
                                     $('#startAnalysisBtn').prop('disabled', false);
+                                    $('#checkValidityBtn').prop('disabled', false);
                                     loadLatestReport();
                                 }
                             }
@@ -228,6 +229,7 @@
             changeTimeout = setTimeout(() => {
                 if (examSelect.val()) {
                     $('#startAnalysisBtn').prop('disabled', false);
+                    $('#checkValidityBtn').prop('disabled', false);
                     loadLatestReport();
                 }
             }, 500); // Debounce to avoid rapid firing
@@ -236,6 +238,48 @@
         slotSelect.on('change', () => { fetchExams(); handleSelectionChange(); });
         sessionSelect.on('change', () => { fetchExams(); handleSelectionChange(); });
         examSelect.on('change', handleSelectionChange);
+
+        // --- Validity Check Logic ---
+        $('#checkValidityBtn').on('click', function() {
+            const slot = $('#slot').val();
+            const sessionyear = $('#sessionYear').val();
+            const examid = $('#examId').val();
+
+            $('#validationResultsSection').slideDown();
+            const validationStatusDiv = $('#validationStatus');
+            validationStatusDiv.html('<div class="d-flex align-items-center justify-content-center p-3"><span class="spinner-border text-primary me-2"></span> <span>Checking data validity...</span></div>');
+
+            $.ajax({
+                url: 'analytics/check_data_validity.php',
+                type: 'POST',
+                dataType: 'json',
+                data: { slot, sessionyear, examid },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        let html = '<ul class="list-group list-group-flush">';
+                        response.issues.forEach(issue => { 
+                            let icon = issue.type === 'error' ? 'bi-x-octagon-fill text-danger' : (issue.type === 'warning' ? 'bi-exclamation-triangle-fill text-warning' : 'bi-check-circle-fill text-success');
+                            let linkHtml = '';
+                            if (issue.url && issue.url_text) {
+                                linkHtml = `<a href="${issue.url}" target="_blank" class="btn btn-sm btn-outline-primary ms-auto">${issue.url_text} <i class="bi bi-box-arrow-up-right"></i></a>`;
+                            }
+                            html += `<li class="list-group-item d-flex align-items-center"><i class="bi ${icon} me-3 fs-4"></i> <div class="me-3">${issue.message}</div> ${linkHtml}</li>`;
+                        });
+                        html += '</ul>';
+                        validationStatusDiv.html(html);
+                    } else {
+                        validationStatusDiv.html(`<div class="alert alert-danger">${response.message}</div>`);
+                    }
+                },
+                error: function() {
+                    validationStatusDiv.html('<div class="alert alert-danger">An error occurred while checking data validity.</div>');
+                }
+            });
+        });
+
+        $('#closeValidationReport').on('click', function() {
+            $('#validationResultsSection').slideUp();
+        });
     });
 
     // --- Analysis Process Logic ---
