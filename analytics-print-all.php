@@ -12,18 +12,35 @@ if (empty($dataset_id) || empty($sccode)) {
 }
 
 // Fetch all data using the new script
-$api_url = 'http://' . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . 'analytics/get_full_report_data.php?dataset_id=' . $dataset_id;
+$api_url = 'http://' . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . '/analytics/get_full_report_data.php?dataset_id=' . $dataset_id;
 error_log($api_url);
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $api_url);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 curl_setopt($ch, CURLOPT_COOKIE, 'PHPSESSID=' . session_id()); // Pass session cookie
 $json_data = curl_exec($ch);
+
+if (curl_errno($ch)) {
+    $error_msg = curl_error($ch);
+    curl_close($ch);
+    die('Failed to fetch report data (cURL error): ' . $error_msg);
+}
+
+$http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 curl_close($ch);
+
+if ($http_code !== 200) {
+    die('Failed to fetch report data (HTTP error ' . $http_code . '): ' . $json_data);
+}
+
 $response = json_decode($json_data, true);
 
-if ($response['status'] !== 'success') {
-    die('Failed to fetch report data: ' . ($response['message'] ?? 'Unknown error'));
+if (json_last_error() !== JSON_ERROR_NONE) {
+    die('Failed to decode JSON response: ' . json_last_error_msg() . ' - Raw data: ' . $json_data);
+}
+
+if (!isset($response['status']) || $response['status'] !== 'success') {
+    die('Failed to fetch report data: ' . ($response['message'] ?? 'Unknown error in API response'));
 }
 
 $data = $response['data'];
