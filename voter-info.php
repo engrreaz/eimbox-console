@@ -53,6 +53,11 @@ if (!empty($class) && !empty($sessionyear)) {
         font-size: 14px;
     }
 
+    .editable {
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
     @media print {
         body {
             -webkit-print-color-adjust: exact !important;
@@ -110,10 +115,9 @@ if (!empty($class) && !empty($sessionyear)) {
                         <tr class="txt-right">
                             <td>SL</td>
                             <td>Student's Name</td>
-                            <td>Father's Name</td>
-                            <td>Mother's Name</td>
-                            <td>Father's NID</td>
-                            <td>Mother's NID</td>
+                            <td>Parents' Name</td>
+                            <td>Parents' NID</td>
+                            <td>Address</td>
                             <td>Mobile No</td>
                             <td>Signature</td>
                         </tr>
@@ -126,13 +130,18 @@ if (!empty($class) && !empty($sessionyear)) {
                             <tr>
                                 <td class="txt-right"><?= $sl++ ?></td>
                                 <td>
-                                    <?= htmlspecialchars($student['stnameeng']) ?><br>
-                                    <?= htmlspecialchars($student['stnameben']) ?>
+                                    <div class="editable" data-stid="<?= $student['stid'] ?>" data-field="stnameeng"><?= htmlspecialchars($student['stnameeng']) ?></div>
+                                    <div class="editable" data-stid="<?= $student['stid'] ?>" data-field="stnameben"><?= htmlspecialchars($student['stnameben']) ?></div>
                                 </td>
-                                <td><?= htmlspecialchars($student['fname']) ?></td>
-                                <td><?= htmlspecialchars($student['mname']) ?></td>
-                                <td><?= htmlspecialchars($student['fnid']) ?></td>
-                                <td><?= htmlspecialchars($student['mnid']) ?></td>
+                                <td>
+                                    <div class="editable" data-stid="<?= $student['stid'] ?>" data-field="fname">F: <?= htmlspecialchars($student['fname']) ?></div>
+                                    <div class="editable" data-stid="<?= $student['stid'] ?>" data-field="mname">M: <?= htmlspecialchars($student['mname']) ?></div>
+                                </td>
+                                <td>
+                                    <div class="editable" data-stid="<?= $student['stid'] ?>" data-field="fnid">F: <?= htmlspecialchars($student['fnid']) ?></div>
+                                    <div class="editable" data-stid="<?= $student['stid'] ?>" data-field="mnid">M: <?= htmlspecialchars($student['mnid']) ?></div>
+                                </td>
+                                <td><?= htmlspecialchars($student['previll'] . ', ' . $student['prepo']) ?></td>
                                 <td>
                                     <?php
                                     $mobiles = array_unique(array_filter([$student['guarmobile'], $student['fmobile'], $student['mmobile']]));
@@ -155,6 +164,75 @@ if (!empty($class) && !empty($sessionyear)) {
 </div>
 
 <?php require_once 'footer.php'; ?>
+
+<script>
+    $(document).on('click', '.editable', function () {
+        var cell = $(this);
+
+        // যদি সেলটি ইতিমধ্যে ইনপুট মোডে থাকে, তাহলে কিছু করবেনা
+        if (cell.find('input').length) {
+            return;
+        }
+
+        var originalContent = cell.text().trim();
+        var stid = cell.data('stid');
+        var field = cell.data('field');
+
+        // ইনপুট ফিল্ড তৈরি করা
+        var input = $('<input type="text" class="form-control form-control-sm" />');
+        input.val(originalContent);
+
+        // সেল কন্টেন্ট ইনপুট দিয়ে পরিবর্তন করা
+        cell.html(input);
+        input.focus();
+
+        // ইনপুট থেকে ফোকাস সরে গেলে (blur) ডেটা সেভ হবে
+        input.on('blur', function () {
+            var newValue = $(this).val().trim();
+
+            // যদি ডেটা পরিবর্তন না হয়, তাহলে আগের অবস্থায় ফিরে যাবে
+            if (newValue === originalContent) {
+                cell.text(originalContent);
+                return;
+            }
+
+            // AJAX এর মাধ্যমে ডেটা সেভ করা
+            $.ajax({
+                url: 'backend/update_voter_info.php',
+                method: 'POST',
+                data: {
+                    stid: stid,
+                    field: field,
+                    value: newValue
+                },
+                dataType: 'json',
+                beforeSend: function () {
+                    cell.html('<i class="bi bi-arrow-repeat"></i> Saving...');
+                },
+                success: function (response) {
+                    if (response.status === 'success') {
+                        cell.text(newValue);
+                        showToast('success', 'Information updated successfully.', 'Updated');
+                    } else {
+                        cell.text(originalContent); // ব্যর্থ হলে আগের ডেটা ফিরিয়ে আনা
+                        showToast('danger', response.message || 'Update failed!', 'Error');
+                    }
+                },
+                error: function () {
+                    cell.text(originalContent);
+                    showToast('danger', 'An error occurred on the server.', 'Server Error');
+                }
+            });
+        });
+
+        // Enter চাপলেও blur ট্রিগার হবে
+        input.on('keypress', function (e) {
+            if (e.which === 13) {
+                $(this).blur();
+            }
+        });
+    });
+</script>
 </body>
 
 </html>
