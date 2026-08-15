@@ -1,13 +1,21 @@
 <?php
-require_once 'vendor/autoload.php'; // mPDF
+session_start();
+
+$output_mode = $_GET['output'] ?? 'html'; // 'html' or 'pdf'
+
+if ($output_mode === 'pdf') {
+    require_once 'vendor/autoload.php'; // mPDF
+}
+
 require_once 'core/config.php';
 require_once 'core/db.php';
-session_start();
 
 $dataset_id = (int)($_GET['dataset_id'] ?? 0);
 $sccode = $_SESSION['sccode'] ?? null;
 
 if (empty($dataset_id) || empty($sccode)) {
+    // If not generating PDF, include header for proper page display
+    if ($output_mode === 'html') require_once 'header.php';
     die('<div class="alert alert-danger">Error: No Dataset ID provided.</div>');
 }
 
@@ -56,328 +64,202 @@ function create_bar($value, $max_value = 100, $color = '#007bff', $height = '18p
                 </div>
             </div>";
 }
-
-// mPDF setup
-$mpdf = new \Mpdf\Mpdf([
-    'mode' => 'utf-8',
-    'format' => 'A4',
-    'margin_left' => 10,
-    'margin_right' => 10,
-    'margin_top' => 20,
-    'margin_bottom' => 20,
-    'margin_header' => 10,
-    'margin_footer' => 10,
-]);
-
-$mpdf->SetAuthor('EIMBox');
-$mpdf->SetCreator('EIMBox Analytics Engine');
-$mpdf->SetTitle('Exam Analytics Report');
-$mpdf->SetHeader('Exam Analytics Report | {PAGENO}');
-$mpdf->SetFooter('Generated on: {DATE j-m-Y h:i A}');
-
-// CSS for the report
-$stylesheet = file_get_contents('assets/css/bootstrap.min.css'); // Use bootstrap for basic styling
-$stylesheet .= "
-    body { font-family: sans-serif; }
-    .report-section { page-break-before: always; }
-    h1, h2, h3 { color: #333; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
-    table { width: 100%; border-collapse: collapse; font-size: 11px; }
-    th, td { border: 1px solid #ddd; padding: 5px; text-align: left; }
-    th { background-color: #f2f2f2; }
-    .summary-card { border: 1px solid #eee; padding: 10px; text-align: center; width: 30%; float: left; margin: 1%; }
-    .clearfix { clear: both; }
-    .text-danger { color: #dc3545; }
-    .text-success { color: #28a745; }
-";
-$mpdf->WriteHTML($stylesheet, \Mpdf\HTMLParserMode::HEADER_CSS);
-
-// --- Report Content ---
-
-// Page 1: Institute Overview
-$html = '<h1>Institute Performance Overview</h1>';
-$summary = $data['institute_summary'];
-$html .= "
-    <div class='summary-card'>
-        <h4>Total Students</h4>
-        <p style='font-size: 24px;'>" . ($summary['total_students'] ?? 0) . "</p>
-    </div>
-    <div class='summary-card'>
-        <h4>Pass Rate</h4>
-        <p style='font-size: 24px;'>" . number_format($summary['pass_rate'] ?? 0, 2) . "%</p>
-    </div>
-    <div class='summary-card'>
-        <h4>Average Marks</h4>
-        <p style='font-size: 24px;'>" . number_format($summary['overall_avg_marks_percentage'] ?? 0, 2) . "%</p>
-    </div>
-    <div class='clearfix'></div>
-";
-
-$html .= "<h3>Grade Distribution</h3>";
-$html .= "<table><thead><tr><th>Grade</th><th>Number of Students</th><th>Percentage</th></tr></thead><tbody>";
-$total_students = $summary['total_students'] ?? 1;
-foreach ($data['grade_distribution'] as $grade) {
-    $percentage = ($grade['student_count'] / $total_students) * 100;
-    $html .= "<tr>
-                <td>{$grade['grade']}</td>
-                <td>{$grade['student_count']}</td>
-                <td>" . create_bar($percentage) . "</td>
-              </tr>";
+function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary') {
+    $percentage = ($value / $max_value) * 100;
+    return "<div class='progress' style='height: 18px; background-color: #e9ecef; width: 100px;'>
+                <div class='progress-bar {$color_class}' role='progressbar' style='width: {$percentage}%;' aria-valuenow='{$value}' aria-valuemin='0' aria-valuemax='{$max_value}'>
+                    <span style='font-size: 10px; color: white;'>" . number_format($value, 2) . "</span>
+                </div>
+            </div>";
 }
-$html .= "</tbody></table>";
+if ($output_mode === 'pdf') {
+    // mPDF setup
+    $mpdf = new \Mpdf\Mpdf([
+        'mode' => 'utf-8',
+        'format' => 'A4',
+        'margin_left' => 10,
+        'margin_right' => 10,
+        'margin_top' => 20,
+        'margin_bottom' => 20,
+        'margin_header' => 10,
+        'margin_footer' => 10,
+    ]);
 
-$html .= "<h3>Weakest Subjects (Highest Failure Rate)</h3>";
-$html .= "<table><thead><tr><th>Subject</th><th>Failure Rate</th></tr></thead><tbody>";
-foreach ($data['weakest_subjects'] as $subject) {
-    $html .= "<tr>
-                <td>" . htmlspecialchars($subject['subject_name']) . "</td>
-                <td class='text-danger'>" . number_format($subject['failure_rate'], 2) . "%</td>
-              </tr>";
+    $mpdf->SetAuthor('EIMBox');
+    $mpdf->SetCreator('EIMBox Analytics Engine');
+    $mpdf->SetTitle('Exam Analytics Report');
+
+    // Fetch school name for header
+    $sc_info_sql = "SELECT scname FROM scinfo WHERE sccode = ? LIMIT 1";
+    $stmt_sc = $conn->prepare($sc_info_sql);
+    $stmt_sc->bind_param("s", $sccode);
+    $stmt_sc->execute();
+    $sc_name = $stmt_sc->get_result()->fetch_assoc()['scname'] ?? 'Analytics Report';
+    $stmt_sc->close();
+
+    $mpdf->SetHeader($sc_name . ' | Exam Analytics Report | {PAGENO}');
+    $mpdf->SetFooter('Generated by EIMBox on: {DATE j-m-Y h:i A}');
+
+    // CSS for the report
+    $stylesheet = file_get_contents('assets/css/bootstrap.min.css'); // Use bootstrap for basic styling
+    $stylesheet .= "
+        body { font-family: sans-serif; }
+        .report-section { page-break-before: always; }
+        h1, h2, h3 { color: #333; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th, td { border: 1px solid #ddd; padding: 5px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .summary-card { border: 1px solid #eee; padding: 10px; text-align: center; width: 30%; float: left; margin: 1%; }
+        .clearfix { clear: both; }
+        .text-danger { color: #dc3545; }
+        .text-success { color: #28a745; }
+    ";
+    $mpdf->WriteHTML($stylesheet, \Mpdf\HTMLParserMode::HEADER_CSS);
+    // --- PDF Generation Logic ---
+    generate_report_content($mpdf, $data, 'pdf');
+
+    $mpdf->Output('Exam_Analytics_Report.pdf', 'I');
+    exit;
 }
-$html .= "</tbody></table>";
-$mpdf->WriteHTML($html);
 
+function generate_report_content($mpdf_instance, $data, $mode = 'html') {
+    $html = '';
+    $bar_function = ($mode === 'pdf') ? 'create_bar' : 'create_bar_html';
 
-// Page 2: Teacher Performance
-$mpdf->AddPage();
-$html = '<h1>Teacher Performance Report</h1>';
-$html .= '<table><thead><tr><th>Rank</th><th>Teacher</th><th>Avg. Marks</th><th>Pass Rate</th><th>TPI</th><th>TIA</th><th>TCI</th><th>TSI</th></tr></thead><tbody>';
-foreach ($data['teacher_performance'] as $index => $teacher) {
-    $html .= "<tr>
-                <td>" . ($index + 1) . "</td>
-                <td>" . htmlspecialchars($teacher['tname']) . "<br><small>" . htmlspecialchars($teacher['position']) . "</small></td>
-                <td>" . create_bar($teacher['overall_avg_marks']) . "</td>
-                <td>" . create_bar($teacher['overall_pass_rate']) . "</td>
-                <td>" . number_format($teacher['tpi'], 2) . "</td>
-                <td style='font-weight: bold;'>" . number_format($teacher['tia'], 2) . "</td>
-                <td class='" . ($teacher['tci_score'] > 0 ? 'text-success' : 'text-danger') . "'>" . number_format($teacher['tci_score'], 2) . "</td>
-                <td class='" . ($teacher['tsi_score'] > 0 ? 'text-success' : 'text-danger') . "'>" . number_format($teacher['tsi_score'], 2) . "</td>
-              </tr>";
-}
-$html .= '</tbody></table>';
-$mpdf->WriteHTML($html);
+    // --- Page 1: Institute Overview ---
+    $html .= '<h1>Institute Performance Overview</h1>';
+    $summary = $data['institute_summary'];
+    $html .= "
+        <div class='row g-3 mb-4'>
+            <div class='col-md-4'><div class='card text-center'><div class='card-body'><h4>Total Students</h4><p style='font-size: 24px;'>" . ($summary['total_students'] ?? 0) . "</p></div></div></div>
+            <div class='col-md-4'><div class='card text-center'><div class='card-body'><h4>Pass Rate</h4><p style='font-size: 24px;'>" . number_format($summary['pass_rate'] ?? 0, 2) . "%</p></div></div></div>
+            <div class='col-md-4'><div class='card text-center'><div class='card-body'><h4>Average Marks</h4><p style='font-size: 24px;'>" . number_format($summary['overall_avg_marks_percentage'] ?? 0, 2) . "%</p></div></div></div>
+        </div>";
 
-
-// Page 3: Class Performance
-$mpdf->AddPage();
-$html = '<h1>Class Performance Report</h1>';
-$html .= '<table><thead><tr><th>Rank</th><th>Class</th><th>Students</th><th>Avg. Marks</th><th>CPI Score</th><th>Difficulty (CDF)</th></tr></thead><tbody>';
-foreach ($data['class_performance'] as $class) {
-    $html .= "<tr>
-                <td>" . $class['class_rank'] . "</td>
-                <td>" . htmlspecialchars($class['classname'] . ' - ' . $class['sectionname']) . "</td>
-                <td>" . $class['total_students_appeared'] . "</td>
-                <td>" . create_bar($class['overall_marks_percentage']) . "</td>
-                <td style='font-weight: bold;'>" . number_format($class['cpi_score'], 2) . "</td>
-                <td>" . create_bar($class['difficulty_factor'], 100, '#dc3545') . "</td>
-              </tr>";
-}
-$html .= '</tbody></table>';
-$mpdf->WriteHTML($html);
-
-
-// Page 4: Subject Performance
-$mpdf->AddPage();
-$html = '<h1>Subject Performance Report</h1>';
-$html .= '<table><thead><tr><th>Subject</th><th>Students</th><th>Avg. Marks</th><th>Pass %</th><th>Fail %</th><th>Difficulty (SDF)</th></tr></thead><tbody>';
-foreach ($data['subject_performance'] as $subject) {
-    $pass_rate = 100 - $subject['failure_rate'];
-    $html .= "<tr>
-                <td>" . htmlspecialchars($subject['subject_name']) . "</td>
-                <td>" . $subject['total_students_appeared'] . "</td>
-                <td>" . create_bar($subject['overall_marks_percentage']) . "</td>
-                <td class='text-success'>" . number_format($pass_rate, 2) . "%</td>
-                <td class='text-danger'>" . number_format($subject['failure_rate'], 2) . "%</td>
-                <td>" . create_bar($subject['subject_difficulty_factor'], 100, '#ffc107') . "</td>
-              </tr>";
-}
-$html .= '</tbody></table>';
-$mpdf->WriteHTML($html);
-
-
-// Page 5: Student Merit List
-$mpdf->AddPage();
-$html = '<h1>Student Merit List</h1>';
-$html .= '<table><thead><tr><th>Rank</th><th>Student</th><th>Class</th><th>Roll</th><th>Total Marks</th><th>Percentage</th><th>GPA</th><th>Grade</th></tr></thead><tbody>';
-foreach ($data['student_merit_list'] as $student) {
-    $is_fail = $student['failed_subjects'] > 0;
-    $rank = $is_fail ? 'F' : $student['class_rank'];
-    $row_class = $is_fail ? "style='background-color: #ffebee;'" : "";
-
-    $html .= "<tr $row_class>
-                <td style='font-weight: bold;'>" . $rank . "</td>
-                <td>" . htmlspecialchars($student['stnameeng']) . "</td>
-                <td>" . htmlspecialchars($student['classname'] . ' - ' . $student['sectionname']) . "</td>
-                <td>" . $student['rollno'] . "</td>
-                <td>" . number_format($student['total_marks_obtained'], 2) . "</td>
-                <td>" . number_format($student['percentage'], 2) . "%</td>
-                <td>" . number_format($student['gpa'], 2) . "</td>
-                <td>" . $student['grade'] . "</td>
-              </tr>";
-}
-$html .= '</tbody></table>';
-$mpdf->WriteHTML($html);
-
-
-// Output the PDF
-$mpdf->Output('Exam_Analytics_Report.pdf', 'I');
-exit;
-
-?>
-<style>
-    body { background-color: #fff; }
-    .report-section { page-break-after: always; margin-bottom: 2rem; }
-    .report-section:last-child { page-break-after: auto; }
-    @media print {
-        .no-print { display: none; }
+    $html .= "<div class='row g-3'><div class='col-md-6'><h3>Grade Distribution</h3>";
+    $html .= "<table class='table table-sm'><thead><tr><th>Grade</th><th>Number of Students</th><th>Percentage</th></tr></thead><tbody>";
+    $total_students = $summary['total_students'] > 0 ? $summary['total_students'] : 1;
+    foreach ($data['grade_distribution'] as $grade) {
+        $percentage = ($grade['student_count'] / $total_students) * 100;
+        $html .= "<tr><td>{$grade['grade']}</td><td>{$grade['student_count']}</td><td>" . $bar_function($percentage) . "</td></tr>";
     }
-</style>
+    $html .= "</tbody></table></div>";
 
-<div class="container mt-4">
-    <div class="no-print mb-3">
-        <button onclick="window.print()" class="btn btn-primary">Print Report</button>
-        <a href="analytics-exam-report.php" class="btn btn-secondary">Back to Reports</a>
-    </div>
-
-    <!-- Institute Overview (Placeholder) -->
-    <div class="report-section">
-        <h3>প্রাতিষ্ঠানিক সামগ্রিক প্রতিবেদন</h3>
-        <p>মোট শিক্ষার্থী: <strong><?= $institute_summary['total_students'] ?? 'N/A' ?></strong></p>
-        <p>মোট পাস: <strong><?= $institute_summary['total_passed'] ?? 'N/A' ?></strong></p>
-        <p>পাসের হার: <strong><?= ($institute_summary['total_students'] > 0) ? number_format(($institute_summary['total_passed'] / $institute_summary['total_students']) * 100, 2) : '0.00' ?>%</strong></p>
-        <!-- Add more summary data here as needed -->
-    </div>
-
-    <!-- Teacher Performance -->
-    <div class="report-section">
-        <h3>Teacher Performance Report</h3>
-        <table class="table table-bordered table-sm">
-            <thead>
-                <tr>
-                    <th>Rank</th><th>Teacher</th><th>Avg. Marks</th><th>Pass Rate</th><th>TIA</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (!empty($teacher_data)): foreach ($teacher_data as $index => $row): ?>
-                    <tr>
-                        <td><?= $index + 1 ?></td>
-                        <td><?= htmlspecialchars($row['tname']) ?></td>
-                        <td><?= number_format($row['overall_avg_marks'], 2) ?></td>
-                        <td><?= number_format($row['overall_pass_rate'], 2) ?>%</td>
-                        <td><?= number_format($row['teacher_impact_adjustment'], 2) ?></td>
-                    </tr>
-                <?php endforeach; else: ?>
-                    <tr><td colspan="5" class="text-center">No data found.</td></tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Student Merit List -->
-    <div class="report-section">
-        <h3>Student Merit List</h3>
-        <table class="table table-bordered table-sm">
-            <thead>
-                <tr>
-                    <th>Rank</th><th>Student</th><th>Class</th><th>Total Marks</th><th>GPA</th><th>Grade</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (!empty($student_data)): foreach ($student_data as $row): ?>
-                    <tr>
-                        <td><?= $row['failed_subjects'] > 0 ? 'F' : $row['class_rank'] ?></td>
-                        <td><?= htmlspecialchars($row['stname']) ?></td>
-                        <td><?= htmlspecialchars($row['classname']) ?>-<?= htmlspecialchars($row['sectionname']) ?></td>
-                        <td><?= number_format($row['total_marks_obtained'], 2) ?></td>
-                        <td><?= number_format($row['gpa'], 2) ?></td>
-                        <td><?= htmlspecialchars($row['grade']) ?></td>
-                    </tr>
-                <?php endforeach; else: ?>
-                    <tr><td colspan="6" class="text-center">No data found.</td></tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
-
-</div>
-
-<?php require_once 'footer-plain.php'; ?>
-
-?>
-<style>
-    body { background-color: #fff; }
-    .report-section { page-break-after: always; margin-bottom: 2rem; }
-    .report-section:last-child { page-break-after: auto; }
-    @media print {
-        .no-print { display: none; }
+    $html .= "<div class='col-md-6'><h3>Weakest Subjects</h3>";
+    $html .= "<table class='table table-sm'><thead><tr><th>Subject</th><th>Failure Rate</th></tr></thead><tbody>";
+    foreach ($data['weakest_subjects'] as $subject) {
+        $html .= "<tr><td>" . htmlspecialchars($subject['subject_name']) . "</td><td class='text-danger'>" . number_format($subject['failure_rate'], 2) . "%</td></tr>";
     }
-</style>
+    $html .= "</tbody></table></div></div><div class='page-break'></div>";
 
-<div class="container mt-4">
-    <div class="no-print mb-3">
-        <button onclick="window.print()" class="btn btn-primary">Print Report</button>
-        <a href="analytics-exam-report.php" class="btn btn-secondary">Back to Reports</a>
+    // --- Page 2: Teacher Performance ---
+    $html .= '<h1>Teacher Performance Report</h1>';
+    $html .= '<table class="table table-bordered table-sm"><thead><tr><th>Rank</th><th>Teacher</th><th>Avg. Marks</th><th>Pass Rate</th><th>TPI</th><th>TIA</th><th>TCI</th><th>TSI</th></tr></thead><tbody>';
+    foreach ($data['teacher_performance'] as $index => $teacher) {
+        $html .= "<tr>
+                    <td>" . ($index + 1) . "</td>
+                    <td>" . htmlspecialchars($teacher['tname']) . "<br><small>" . htmlspecialchars($teacher['position']) . "</small></td>
+                    <td>" . $bar_function($teacher['overall_avg_marks']) . "</td>
+                    <td>" . $bar_function($teacher['overall_pass_rate']) . "</td>
+                    <td>" . number_format($teacher['tpi'], 2) . "</td>
+                    <td style='font-weight: bold;'>" . number_format($teacher['tia'], 2) . "</td>
+                    <td class='" . ($teacher['tci_score'] > 0 ? 'text-success' : 'text-danger') . "'>" . number_format($teacher['tci_score'], 2) . "</td>
+                    <td class='" . ($teacher['tsi_score'] > 0 ? 'text-success' : 'text-danger') . "'>" . number_format($teacher['tsi_score'], 2) . "</td>
+                  </tr>";
+    }
+    $html .= '</tbody></table><div class="page-break"></div>';
+
+    // --- Page 3: Class Performance ---
+    $html .= '<h1>Class Performance Report</h1>';
+    $html .= '<table class="table table-bordered table-sm"><thead><tr><th>Rank</th><th>Class</th><th>Students</th><th>Avg. Marks</th><th>CPI Score</th><th>Difficulty (CDF)</th></tr></thead><tbody>';
+    foreach ($data['class_performance'] as $class) {
+        $html .= "<tr>
+                    <td>" . $class['class_rank'] . "</td>
+                    <td>" . htmlspecialchars($class['classname'] . ' - ' . $class['sectionname']) . "</td>
+                    <td>" . $class['total_students_appeared'] . "</td>
+                    <td>" . $bar_function($class['overall_marks_percentage']) . "</td>
+                    <td style='font-weight: bold;'>" . number_format($class['cpi_score'], 2) . "</td>
+                    <td>" . $bar_function($class['difficulty_factor'], 100, $mode === 'pdf' ? '#dc3545' : 'bg-danger') . "</td>
+                  </tr>";
+    }
+    $html .= '</tbody></table><div class="page-break"></div>';
+
+    // --- Page 4: Subject Performance ---
+    $html .= '<h1>Subject Performance Report</h1>';
+    $html .= '<table class="table table-bordered table-sm"><thead><tr><th>Subject</th><th>Students</th><th>Avg. Marks</th><th>Pass %</th><th>Fail %</th><th>Difficulty (SDF)</th></tr></thead><tbody>';
+    foreach ($data['subject_performance'] as $subject) {
+        $pass_rate = 100 - $subject['failure_rate'];
+        $html .= "<tr>
+                    <td>" . htmlspecialchars($subject['subject_name']) . "</td>
+                    <td>" . $subject['total_students_appeared'] . "</td>
+                    <td>" . $bar_function($subject['overall_marks_percentage']) . "</td>
+                    <td class='text-success'>" . number_format($pass_rate, 2) . "%</td>
+                    <td class='text-danger'>" . number_format($subject['failure_rate'], 2) . "%</td>
+                    <td>" . $bar_function($subject['subject_difficulty_factor'], 100, $mode === 'pdf' ? '#ffc107' : 'bg-warning') . "</td>
+                  </tr>";
+    }
+    $html .= '</tbody></table><div class="page-break"></div>';
+
+    // --- Page 5: Student Merit List ---
+    $html .= '<h1>Student Merit List (Top 50 & Bottom 50)</h1>';
+    $html .= '<table class="table table-bordered table-sm"><thead><tr><th>Rank</th><th>Student</th><th>Class</th><th>Roll</th><th>Total Marks</th><th>Percentage</th><th>GPA</th><th>Grade</th></tr></thead><tbody>';
+    foreach ($data['student_merit_list'] as $student) {
+        $is_fail = $student['failed_subjects'] > 0;
+        $rank = $is_fail ? 'F' : $student['class_rank'];
+        $row_class = $is_fail ? ($mode === 'pdf' ? "style='background-color: #ffebee;'" : "class='table-danger'") : "";
+        $html .= "<tr $row_class>
+                    <td style='font-weight: bold;'>" . $rank . "</td>
+                    <td>" . htmlspecialchars($student['stnameeng']) . "</td>
+                    <td>" . htmlspecialchars($student['classname'] . ' - ' . $student['sectionname']) . "</td>
+                    <td>" . $student['rollno'] . "</td>
+                    <td>" . number_format($student['total_marks_obtained'], 2) . "</td>
+                    <td>" . number_format($student['percentage'], 2) . "%</td>
+                    <td>" . number_format($student['gpa'], 2) . "</td>
+                    <td>" . $student['grade'] . "</td>
+                  </tr>";
+    }
+    $html .= '</tbody></table>';
+
+    if ($mode === 'pdf' && $mpdf_instance) {
+        $sections = explode('<div class="page-break"></div>', $html);
+        foreach ($sections as $i => $section_html) {
+            if ($i > 0) $mpdf_instance->AddPage();
+            $mpdf_instance->WriteHTML($section_html);
+        }
+    } else {
+        return $html;
+    }
+}
+
+if ($output_mode === 'html') {
+    require_once 'header.php';
+    ?>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .page-break { page-break-before: always; }
+            .card { border: none !important; box-shadow: none !important; }
+        }
+        .page-break {
+             display: none;
+        }
+    </style>
+    <div class="container-xxl flex-grow-1 container-p-y">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center no-print">
+                <h5 class="mb-0">Full Analytics Report</h5>
+                <div>
+                    <a href="analytics-exam-report.php" class="btn btn-secondary"><i class="bi bi-arrow-left me-1"></i> Back</a>
+                    <button onclick="window.print()" class="btn btn-primary"><i class="bi bi-printer me-1"></i> Print</button>
+                    <a href="?dataset_id=<?= $dataset_id ?>&output=pdf" target="_blank" class="btn btn-success"><i class="bi bi-file-pdf me-1"></i> Download PDF</a>
+                </div>
+            </div>
+            <div class="card-body">
+                <?php echo generate_report_content(null, $data, 'html'); ?>
+            </div>
+        </div>
     </div>
-
-    <!-- Institute Overview (Placeholder) -->
-    <div class="report-section">
-        <h3>প্রাতিষ্ঠানিক সামগ্রিক প্রতিবেদন</h3>
-        <p>মোট শিক্ষার্থী: <strong><?= $institute_summary['total_students'] ?? 'N/A' ?></strong></p>
-        <p>মোট পাস: <strong><?= $institute_summary['total_passed'] ?? 'N/A' ?></strong></p>
-        <p>পাসের হার: <strong><?= ($institute_summary['total_students'] > 0) ? number_format(($institute_summary['total_passed'] / $institute_summary['total_students']) * 100, 2) : '0.00' ?>%</strong></p>
-        <!-- Add more summary data here as needed -->
-    </div>
-
-    <!-- Teacher Performance -->
-    <div class="report-section">
-        <h3>Teacher Performance Report</h3>
-        <table class="table table-bordered table-sm">
-            <thead>
-                <tr>
-                    <th>Rank</th><th>Teacher</th><th>Avg. Marks</th><th>Pass Rate</th><th>TIA</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (!empty($teacher_data)): foreach ($teacher_data as $index => $row): ?>
-                    <tr>
-                        <td><?= $index + 1 ?></td>
-                        <td><?= htmlspecialchars($row['tname']) ?></td>
-                        <td><?= number_format($row['overall_avg_marks'], 2) ?></td>
-                        <td><?= number_format($row['overall_pass_rate'], 2) ?>%</td>
-                        <td><?= number_format($row['teacher_impact_adjustment'], 2) ?></td>
-                    </tr>
-                <?php endforeach; else: ?>
-                    <tr><td colspan="5" class="text-center">No data found.</td></tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Student Merit List -->
-    <div class="report-section">
-        <h3>Student Merit List</h3>
-        <table class="table table-bordered table-sm">
-            <thead>
-                <tr>
-                    <th>Rank</th><th>Student</th><th>Class</th><th>Total Marks</th><th>GPA</th><th>Grade</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (!empty($student_data)): foreach ($student_data as $row): ?>
-                    <tr>
-                        <td><?= $row['failed_subjects'] > 0 ? 'F' : $row['class_rank'] ?></td>
-                        <td><?= htmlspecialchars($row['stname']) ?></td>
-                        <td><?= htmlspecialchars($row['classname']) ?>-<?= htmlspecialchars($row['sectionname']) ?></td>
-                        <td><?= number_format($row['total_marks_obtained'], 2) ?></td>
-                        <td><?= number_format($row['gpa'], 2) ?></td>
-                        <td><?= htmlspecialchars($row['grade']) ?></td>
-                    </tr>
-                <?php endforeach; else: ?>
-                    <tr><td colspan="6" class="text-center">No data found.</td></tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
-
-</div>
-
-<?php require_once 'footer-plain.php'; ?>
+    <?php
+    require_once 'footer.php';
+}
+?>
