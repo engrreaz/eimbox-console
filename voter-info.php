@@ -174,14 +174,14 @@ if (!empty($class) && !empty($sessionyear)) {
             return;
         }
 
-        var originalText = cell.text().trim();
+        var originalContent = cell.text().trim();
         var stid = cell.data('stid');
         var field = cell.data('field');
 
         // F: বা M: প্রিফিক্স থাকলে সেটা বাদ দিয়ে শুধু মূল টেক্সট নেওয়া
-        var contentToEdit = originalText;
-        if (originalText.startsWith('F: ') || originalText.startsWith('M: ')) {
-            contentToEdit = originalText.substring(3);
+        var contentToEdit = originalContent;
+        if (originalContent.startsWith('F: ') || originalContent.startsWith('M: ')) {
+            contentToEdit = originalContent.substring(3);
         }
 
         // ইনপুট ফিল্ড তৈরি করা
@@ -198,7 +198,7 @@ if (!empty($class) && !empty($sessionyear)) {
 
             // যদি ডেটা পরিবর্তন না হয়, তাহলে আগের অবস্থায় ফিরে যাবে
             if (newValue === contentToEdit) {
-                cell.text(originalText);
+                cell.text(originalContent);
                 return;
             }
 
@@ -218,21 +218,21 @@ if (!empty($class) && !empty($sessionyear)) {
                 success: function (response) {
                     if (response.status === 'success') {
                         // প্রিফিক্সসহ নতুন ভ্যালু দেখানো
-                        var newDisplayText = newValue;
-                        if (originalText.startsWith('F: ')) {
-                            newDisplayText = 'F: ' + newValue;
-                        } else if (originalText.startsWith('M: ')) {
-                            newDisplayText = 'M: ' + newValue;
+                        var newContent = newValue;
+                        if (originalContent.startsWith('F: ')) {
+                            newContent = 'F: ' + newValue;
+                        } else if (originalContent.startsWith('M: ')) {
+                            newContent = 'M: ' + newValue;
                         }
-                        cell.text(newDisplayText);
+                        cell.text(newContent);
                         showToast('success', 'Information updated successfully.', 'Updated');
                     } else {
-                        cell.text(originalText); // ব্যর্থ হলে আগের ডেটা ফিরিয়ে আনা
+                        cell.text(originalContent); // ব্যর্থ হলে আগের ডেটা ফিরিয়ে আনা
                         showToast('danger', response.message || 'Update failed!', 'Error');
                     }
                 },
                 error: function () {
-                    cell.text(originalText);
+                    cell.text(originalContent);
                     showToast('danger', 'An error occurred on the server.', 'Server Error');
                 }
             });
