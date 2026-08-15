@@ -174,13 +174,19 @@ if (!empty($class) && !empty($sessionyear)) {
             return;
         }
 
-        var originalContent = cell.text().trim();
+        var originalText = cell.text().trim();
         var stid = cell.data('stid');
         var field = cell.data('field');
 
+        // F: বা M: প্রিফিক্স থাকলে সেটা বাদ দিয়ে শুধু মূল টেক্সট নেওয়া
+        var contentToEdit = originalText;
+        if (originalText.startsWith('F: ') || originalText.startsWith('M: ')) {
+            contentToEdit = originalText.substring(3);
+        }
+
         // ইনপুট ফিল্ড তৈরি করা
         var input = $('<input type="text" class="form-control form-control-sm" />');
-        input.val(originalContent);
+        input.val(contentToEdit);
 
         // সেল কন্টেন্ট ইনপুট দিয়ে পরিবর্তন করা
         cell.html(input);
@@ -191,8 +197,8 @@ if (!empty($class) && !empty($sessionyear)) {
             var newValue = $(this).val().trim();
 
             // যদি ডেটা পরিবর্তন না হয়, তাহলে আগের অবস্থায় ফিরে যাবে
-            if (newValue === originalContent) {
-                cell.text(originalContent);
+            if (newValue === contentToEdit) {
+                cell.text(originalText);
                 return;
             }
 
@@ -211,15 +217,22 @@ if (!empty($class) && !empty($sessionyear)) {
                 },
                 success: function (response) {
                     if (response.status === 'success') {
-                        cell.text(newValue);
+                        // প্রিফিক্সসহ নতুন ভ্যালু দেখানো
+                        var newDisplayText = newValue;
+                        if (originalText.startsWith('F: ')) {
+                            newDisplayText = 'F: ' + newValue;
+                        } else if (originalText.startsWith('M: ')) {
+                            newDisplayText = 'M: ' + newValue;
+                        }
+                        cell.text(newDisplayText);
                         showToast('success', 'Information updated successfully.', 'Updated');
                     } else {
-                        cell.text(originalContent); // ব্যর্থ হলে আগের ডেটা ফিরিয়ে আনা
+                        cell.text(originalText); // ব্যর্থ হলে আগের ডেটা ফিরিয়ে আনা
                         showToast('danger', response.message || 'Update failed!', 'Error');
                     }
                 },
                 error: function () {
-                    cell.text(originalContent);
+                    cell.text(originalText);
                     showToast('danger', 'An error occurred on the server.', 'Server Error');
                 }
             });
