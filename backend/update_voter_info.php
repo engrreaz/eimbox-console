@@ -26,7 +26,9 @@ $allowed_fields = [
     'fname',
     'mname',
     'fnid',
-    'mnid'
+    'mnid',
+    'previll',
+    'prepo'
 ];
 
 if (!in_array($field, $allowed_fields)) {

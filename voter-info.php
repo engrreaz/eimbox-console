@@ -141,7 +141,10 @@ if (!empty($class) && !empty($sessionyear)) {
                                     <div class="editable" data-stid="<?= $student['stid'] ?>" data-field="fnid">F: <?= htmlspecialchars($student['fnid']) ?></div>
                                     <div class="editable" data-stid="<?= $student['stid'] ?>" data-field="mnid">M: <?= htmlspecialchars($student['mnid']) ?></div>
                                 </td>
-                                <td><?= htmlspecialchars($student['previll'] . ', ' . $student['prepo']) ?></td>
+                                <td>
+                                    <div class="editable" data-stid="<?= $student['stid'] ?>" data-field="previll">Vill: <?= htmlspecialchars($student['previll']) ?></div>
+                                    <div class="editable" data-stid="<?= $student['stid'] ?>" data-field="prepo">PO: <?= htmlspecialchars($student['prepo']) ?></div>
+                                </td>
                                 <td>
                                     <?php
                                     $mobiles = array_unique(array_filter([$student['guarmobile'], $student['fmobile'], $student['mmobile']]));
@@ -180,8 +183,12 @@ if (!empty($class) && !empty($sessionyear)) {
 
         // প্রিফিক্স (যেমন "F: ") বাদ দিয়ে শুধুমাত্র মূল টেক্সট নেওয়া
         var contentToEdit = originalText;
-        if (originalText.startsWith('F: ') || originalText.startsWith('M: ')) {
+        if (originalText.startsWith('F: ') || originalText.startsWith('M: ') ) {
             contentToEdit = originalText.substring(3);
+        } else if (originalText.startsWith('Vill: ')) {
+            contentToEdit = originalText.substring(6);
+        } else if (originalText.startsWith('PO: ')) {
+            contentToEdit = originalText.substring(4);
         }
 
         // ইনপুট ফিল্ড তৈরি করা
@@ -223,6 +230,10 @@ if (!empty($class) && !empty($sessionyear)) {
                             newDisplayText = 'F: ' + newValue;
                         } else if (originalText.startsWith('M: ')) {
                             newDisplayText = 'M: ' + newValue;
+                        } else if (originalText.startsWith('Vill: ')) {
+                            newDisplayText = 'Vill: ' + newValue;
+                        } else if (originalText.startsWith('PO: ')) {
+                            newDisplayText = 'PO: ' + newValue;
                         }
                         cell.text(newDisplayText);
                         showToast('success', 'Information updated successfully.', 'Updated');
