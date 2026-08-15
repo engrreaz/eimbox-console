@@ -124,6 +124,7 @@ $sql_weakest_subjects = "
     FROM analytics_overall_subject_performance AS aosp
     JOIN subjects AS s ON aosp.subject_code = s.subcode AND (s.sccode = ? OR s.sccode = '0')
     WHERE aosp.dataset_id = ?
+    GROUP BY aosp.subject_code, aosp.failure_rate
     ORDER BY aosp.failure_rate DESC
     LIMIT 5;
 ";

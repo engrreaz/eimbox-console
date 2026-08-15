@@ -36,7 +36,7 @@ SELECT
 FROM
     analytics_student_performance
 WHERE
-    dataset_id = ? AND failed_subjects > 0
+    dataset_id = ? AND failed_subjects > 0 AND risk_score > 25
 ON DUPLICATE KEY UPDATE
     failed_subject_count = VALUES(failed_subject_count),
     risk_score = VALUES(risk_score),
