@@ -94,23 +94,28 @@ try {
     $full_report['subject_performance'] = fetch_data($conn, $sql_subjects, [$sccode, $dataset_id], "si");
 
     // 7. Student Merit List
-    // Optimization: Fetch only top 50 and bottom 50 students to prevent timeouts on large datasets.
-    $sql_students = "
-        (SELECT s.stnameeng, asp.*, 'top' as type
-         FROM analytics_student_performance AS asp
-         JOIN students AS s ON asp.stid = s.stid AND asp.sccode = s.sccode
-         WHERE asp.dataset_id = ? AND asp.sccode = ?
-         ORDER BY asp.class_rank ASC, asp.total_marks_obtained DESC
-         LIMIT 50)
-        UNION ALL
-        (SELECT s.stnameeng, asp.*, 'bottom' as type
-         FROM analytics_student_performance AS asp
-         JOIN students AS s ON asp.stid = s.stid AND asp.sccode = s.sccode
-         WHERE asp.dataset_id = ? AND asp.sccode = ?
-         ORDER BY asp.class_rank DESC, asp.total_marks_obtained ASC
-         LIMIT 50);
+    // Optimization: Fetch top 50 and bottom 50 students in separate queries to avoid slow UNION on large tables.
+    $sql_top_students = "
+        SELECT s.stnameeng, asp.*, 'top' as type
+        FROM analytics_student_performance AS asp
+        JOIN students AS s ON asp.stid = s.stid AND asp.sccode = s.sccode
+        WHERE asp.dataset_id = ? AND asp.sccode = ?
+        ORDER BY asp.class_rank ASC, asp.total_marks_obtained DESC
+        LIMIT 50;
     ";
-    $full_report['student_merit_list'] = fetch_data($conn, $sql_students, [$dataset_id, $sccode], "is");
+    $top_students = fetch_data($conn, $sql_top_students, [$dataset_id, $sccode], "is");
+
+    $sql_bottom_students = "
+        SELECT s.stnameeng, asp.*, 'bottom' as type
+        FROM analytics_student_performance AS asp
+        JOIN students AS s ON asp.stid = s.stid AND asp.sccode = s.sccode
+        WHERE asp.dataset_id = ? AND asp.sccode = ?
+        ORDER BY asp.class_rank DESC, asp.total_marks_obtained ASC
+        LIMIT 50;
+    ";
+    $bottom_students = fetch_data($conn, $sql_bottom_students, [$dataset_id, $sccode], "is");
+
+    $full_report['student_merit_list'] = array_merge($top_students, $bottom_students);
 
     echo json_encode(['status' => 'success', 'data' => $full_report]);
 } catch (Exception $e) {
