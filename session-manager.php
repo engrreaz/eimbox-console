@@ -33,7 +33,10 @@ if ($sessionyear && $slot && $filter) {
                 COUNT(sm.subject) as subject_count
             FROM stmark sm
             JOIN students s ON sm.stid = s.stid AND sm.sccode = s.sccode
-            LEFT JOIN sessioninfo si ON sm.stid = si.stid AND sm.sccode = si.sccode AND sm.sessionyear = ? AND sm.slot = ?
+            LEFT JOIN sessioninfo si 
+                ON sm.stid = si.stid 
+                AND sm.sccode = si.sccode 
+                AND si.sessionyear = ? AND si.slot = ?
             WHERE
                 sm.sccode = ?
                 AND sm.sessionyear = ?
