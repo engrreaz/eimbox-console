@@ -141,15 +141,21 @@ if ($count > 0) {
 $stmt->close();
 
 // 6. Check for students in stmark who are not in sessioninfo
+// This query checks if a student who appeared in the exam exists in sessioninfo for the *specific session year*.
+// If a student is enrolled in a different year but not the current one, they will be correctly flagged as an orphan for this session.
 $sql_orphan_marks = "
     SELECT COUNT(DISTINCT sm.stid) AS count
     FROM stmark sm
-    LEFT JOIN sessioninfo si ON sm.stid = si.stid AND sm.sccode = si.sccode AND sm.sessionyear = si.sessionyear AND sm.slot = si.slot
+    LEFT JOIN sessioninfo si 
+        ON sm.stid = si.stid 
+        AND sm.sccode = si.sccode 
+        AND si.sessionyear = ?  -- Join specifically for the selected session year
+        AND si.slot = ?         -- And slot
     WHERE sm.sccode = ? AND sm.sessionyear = ? AND sm.slot = ? AND sm.examid IN ($examid_list_str)
     AND si.stid IS NULL;
 ";
 $stmt = $conn->prepare($sql_orphan_marks);
-$stmt->bind_param("iss", $sccode, $sessionyear, $slot);
+$stmt->bind_param("ssiss", $sessionyear, $slot, $sccode, $sessionyear, $slot);
 $stmt->execute();
 $count = $stmt->get_result()->fetch_assoc()['count'] ?? 0;
 if ($count > 0) {
