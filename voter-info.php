@@ -135,7 +135,7 @@ if (!empty($class) && !empty($sessionyear)) {
                                 <td><?= htmlspecialchars($student['mnid']) ?></td>
                                 <td>
                                     <?php
-                                    $mobiles = array_filter([$student['guarmobile'], $student['fmobile'], $student['mmobile']]);
+                                    $mobiles = array_unique(array_filter([$student['guarmobile'], $student['fmobile'], $student['mmobile']]));
                                     echo htmlspecialchars(implode(', ', $mobiles));
                                     ?>
                                 </td>
