@@ -21,7 +21,7 @@ if ($sessionyear && $slot && $filter) {
                 s.stid,
                 s.stnameeng,
                 s.gender,
-                s.mnumber,
+                s.mmobile,
                 si.classname,
                 si.sectionname,
                 si.rollno
