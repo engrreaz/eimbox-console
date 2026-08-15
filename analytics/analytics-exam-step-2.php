@@ -40,7 +40,7 @@ $query = "
         sectionname,
         COUNT(DISTINCT subject_code) AS total_subjects,
         COALESCE(AVG(marks_percentage), 0) AS avg_of_subject_averages, -- Average of subject percentages
-        COALESCE(SUM(appeared_student_count), 0) AS total_students_appeared, -- Sum of students who appeared for exams in this class/section
+        COALESCE(MAX(appeared_student_count), 0) AS total_students_appeared, -- Corrected: Use MAX instead of SUM
         COALESCE(SUM(total_marks_obtained) / NULLIF(SUM(total_full_marks), 0) * 100, 0) AS overall_marks_percentage,
         100 - COALESCE(SUM(total_marks_obtained) / NULLIF(SUM(total_full_marks), 0) * 100, 0) AS difficulty_factor,
         1  + (100 - COALESCE(SUM(total_marks_obtained) / NULLIF(SUM(total_full_marks), 0) * 100, 0)) / 100 AS teacher_impact_index
