@@ -28,7 +28,7 @@ if ($dataset_id === 0) {
 // মূল SQL কোয়েরি: এটি `analytics_subject_performance` থেকে ডেটা নিয়ে ক্লাস-ভিত্তিক অ্যাগ্রিগেট গণনা করে।
 $query = "
     INSERT INTO analytics_class_performance (
-        dataset_id, sccode, sessionyear, examid, classname, sectionname,
+        dataset_id, sccode, sessionyear, examid, classname, sectionname, pass_rate, excellent_rate,
         total_subjects, avg_of_subject_averages, total_students_appeared, overall_marks_percentage, difficulty_factor, teacher_impact_index
     )
     SELECT
@@ -38,6 +38,11 @@ $query = "
         ? AS examid, -- This will now be a string list of IDs
         classname,
         sectionname,
+        -- সামগ্রিক পাসের হার
+        COALESCE(SUM(pass_count) * 100 / NULLIF(SUM(appeared_student_count), 0), 0) AS pass_rate,
+        -- সামগ্রিক ভালো ফলাফলের হার (A+)
+        COALESCE(SUM(excellent_count) * 100 / NULLIF(SUM(appeared_student_count), 0), 0) AS excellent_rate,
+
         COUNT(DISTINCT subject_code) AS total_subjects,
         COALESCE(AVG(marks_percentage), 0) AS avg_of_subject_averages, -- Average of subject percentages
         COALESCE(MAX(appeared_student_count), 0) AS total_students_appeared, -- Corrected: Use MAX instead of SUM
@@ -56,6 +61,8 @@ $query = "
     GROUP BY
         sccode, sessionyear, classname, sectionname
     ON DUPLICATE KEY UPDATE
+        pass_rate = VALUES(pass_rate),
+        excellent_rate = VALUES(excellent_rate),
         total_subjects = VALUES(total_subjects),
         avg_of_subject_averages = VALUES(avg_of_subject_averages),
         total_students_appeared = VALUES(total_students_appeared),

@@ -28,15 +28,23 @@ $query = "
     JOIN (
         SELECT
             id,
-            overall_marks_percentage,
-            RANK() OVER (ORDER BY overall_marks_percentage DESC) as performance_rank
+            -- CPI Score Calculation: Weighted average of marks, pass rate, and excellent rate
+            (
+                (COALESCE(overall_marks_percentage, 0) * 0.5) +
+                (COALESCE(pass_rate, 0) * 0.3) +
+                (COALESCE(excellent_rate, 0) * 0.2)
+            ) AS calculated_cpi,
+            -- Rank based on the new calculated CPI score
+            RANK() OVER (ORDER BY 
+                (COALESCE(overall_marks_percentage, 0) * 0.5) + (COALESCE(pass_rate, 0) * 0.3) + (COALESCE(excellent_rate, 0) * 0.2)
+            DESC) as performance_rank
         FROM
             analytics_class_performance
         WHERE
             dataset_id = ?
     ) AS ranked_classes ON acp.id = ranked_classes.id
     SET
-        acp.cpi_score = ranked_classes.overall_marks_percentage,
+        acp.cpi_score = ranked_classes.calculated_cpi,
         acp.class_rank = ranked_classes.performance_rank
     WHERE
         acp.dataset_id = ?;
