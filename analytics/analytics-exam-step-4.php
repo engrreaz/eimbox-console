@@ -35,7 +35,7 @@ $query = "
                 (COALESCE(excellent_rate, 0) * 0.2)
             ) AS calculated_cpi,
             -- Rank based on the new calculated CPI score
-            RANK() OVER (ORDER BY 
+            RANK() OVER (ORDER BY
                 (COALESCE(overall_marks_percentage, 0) * 0.5) + (COALESCE(pass_rate, 0) * 0.3) + (COALESCE(excellent_rate, 0) * 0.2)
             DESC) as performance_rank
         FROM
