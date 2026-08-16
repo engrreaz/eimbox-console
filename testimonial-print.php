@@ -168,7 +168,7 @@ $result = $conn->query($sql);
             ?>
 
             <div class="testimonial-page">
-                <img class="watermark-logo" src="<?= institute_logo_path($sccode) ?>">
+                <img class="watermark-logo" src="<?= institute_logo($sccode) ?>">
 
                 <div class="content-wrapper">
                     <div style="text-align:center;">
