@@ -2,16 +2,18 @@
 require_once 'header.php';
 $output_mode = $_GET['output'] ?? 'html'; // 'html' or 'pdf' - PDF is handled via a separate button now
 
-$dataset_id = (int)($_GET['dataset_id'] ?? 0);
+$dataset_id = (int) ($_GET['dataset_id'] ?? 0);
 $sccode = $_SESSION['sccode'] ?? null;
 
 if (empty($dataset_id) || empty($sccode)) {
     // If not generating PDF, include header for proper page display
-    if ($output_mode === 'html') require_once 'header.php';
+    if ($output_mode === 'html')
+        require_once 'header.php';
     die('<div class="alert alert-danger">Error: No Dataset ID provided.</div>');
 }
 
-function fetch_report_data($endpoint, $dataset_id) {
+function fetch_report_data($endpoint, $dataset_id)
+{
     $base_path = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
     $api_url = 'http://' . $_SERVER['HTTP_HOST'] . $base_path . '/analytics/' . $endpoint . '?dataset_id=' . $dataset_id;
 
@@ -62,7 +64,8 @@ $data['student_merit_list'] = fetch_report_data('get_student_report.php', $datas
 
 
 // Helper function for creating progress bars
-function create_bar($value, $max_value = 100, $color = '#007bff', $height = '18px') {
+function create_bar($value, $max_value = 100, $color = '#007bff', $height = '18px')
+{
     $percentage = ($value / $max_value) * 100;
     return "<div style='background-color: #e9ecef; border-radius: 5px; width: 100px; height: $height;'>
                 <div style='width: {$percentage}%; background-color: $color; height: 100%; border-radius: 5px; text-align: center; color: white; font-size: 10px; line-height: $height;'>
@@ -70,7 +73,8 @@ function create_bar($value, $max_value = 100, $color = '#007bff', $height = '18p
                 </div>
             </div>";
 }
-function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary') {
+function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
+{
     $percentage = ($value / $max_value) * 100;
     return "<div class='progress' style='height: 18px; background-color: #e9ecef; width: 100px;'>
                 <div class='progress-bar {$color_class}' role='progressbar' style='width: {$percentage}%;' aria-valuenow='{$value}' aria-valuemin='0' aria-valuemax='{$max_value}'>
@@ -128,7 +132,8 @@ if ($output_mode === 'pdf') {
     exit;
 }
 
-function generate_report_content($mpdf_instance, $data, $mode = 'html') {
+function generate_report_content($mpdf_instance, $data, $mode = 'html')
+{
     $html = '';
     $bar_function = ($mode === 'pdf') ? 'create_bar' : 'create_bar_html';
 
@@ -229,7 +234,8 @@ function generate_report_content($mpdf_instance, $data, $mode = 'html') {
     if ($mode === 'pdf' && $mpdf_instance) {
         $sections = explode('<div class="page-break"></div>', $html);
         foreach ($sections as $i => $section_html) {
-            if ($i > 0) $mpdf_instance->AddPage();
+            if ($i > 0)
+                $mpdf_instance->AddPage();
             $mpdf_instance->WriteHTML($section_html);
         }
     } else {
@@ -242,13 +248,24 @@ if ($output_mode === 'html') {
     ?>
     <style>
         @media print {
-            .no-print { display: none !important; }
-            .page-break { page-break-before: always; }
-            .card { border: none !important; box-shadow: none !important; }
+            .no-print {
+                display: none !important;
+            }
+
+            .page-break {
+                page-break-before: always;
+            }
+
+            .card {
+                border: none !important;
+                box-shadow: none !important;
+            }
         }
+
         .page-break {
             page-break-before: always;
         }
+
         .loading-placeholder {
             display: flex;
             justify-content: center;
@@ -264,8 +281,10 @@ if ($output_mode === 'html') {
             <div class="card-header d-flex justify-content-between align-items-center no-print">
                 <h5 class="mb-0">Full Analytics Report</h5>
                 <div>
-                    <a href="analytics-exam-report.php" class="btn btn-secondary"><i class="bi bi-arrow-left me-1"></i> Back</a>
-                    <button onclick="window.print()" class="btn btn-primary"><i class="bi bi-printer me-1"></i> Print</button>
+                    <a href="analytics-exam-report.php" class="btn btn-secondary"><i class="bi bi-arrow-left me-1"></i>
+                        Back</a>
+                    <button onclick="window.print()" class="btn btn-primary"><i class="bi bi-printer me-1"></i>
+                        Print</button>
                     <!-- PDF download button can be added later if needed -->
                 </div>
             </div>
@@ -284,76 +303,76 @@ if ($output_mode === 'html') {
         </div>
     </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const datasetId = <?= json_encode($dataset_id) ?>;
-    const loadingHTML = `<div class="loading-placeholder"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>`;
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const datasetId = <?= json_encode($dataset_id) ?>;
+            const loadingHTML = `<div class="loading-placeholder"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>`;
 
-    const reportSections = [
-        { id: 'institute-report', endpoint: 'get_institute_report.php' },
-        { id: 'teacher-report', endpoint: 'get_teacher_report.php' },
-        { id: 'class-report', endpoint: 'get_class_report.php' },
-        { id: 'subject-report', endpoint: 'get_subject_report.php' },
-        { id: 'student-report', endpoint: 'get_student_report.php' }
-    ];
+            const reportSections = [
+                { id: 'institute-report', endpoint: 'get_institute_report.php' },
+                { id: 'teacher-report', endpoint: 'get_teacher_report.php' },
+                { id: 'class-report', endpoint: 'get_class_report.php' },
+                { id: 'subject-report', endpoint: 'get_subject_report.php' },
+                { id: 'student-report', endpoint: 'get_student_report.php' }
+            ];
 
-    // Function to fetch and render a single report
-    async function loadReport(section) {
-        const container = document.getElementById(section.id);
-        container.innerHTML = loadingHTML;
+            // Function to fetch and render a single report
+            async function loadReport(section) {
+                const container = document.getElementById(section.id);
+                container.innerHTML = loadingHTML;
 
-        try {
-            const response = await fetch(`analytics/${section.endpoint}?dataset_id=${datasetId}`);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                try {
+                    const response = await fetch(`analytics/${section.endpoint}?dataset_id=${datasetId}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const result = await response.json();
+
+                    if (result.status === 'success') {
+                        // This is a simplified renderer. You would replace this with
+                        // a function that generates the correct HTML for each report type.
+                        container.innerHTML = renderReport(section.id, result.data);
+                    } else {
+                        throw new Error(result.message || 'API returned an error.');
+                    }
+                } catch (error) {
+                    container.innerHTML = `<div class="alert alert-danger">Failed to load ${section.id}: ${error.message}</div>`;
+                }
             }
-            const result = await response.json();
 
-            if (result.status === 'success') {
-                // This is a simplified renderer. You would replace this with
-                // a function that generates the correct HTML for each report type.
-                container.innerHTML = renderReport(section.id, result.data);
-            } else {
-                throw new Error(result.message || 'API returned an error.');
+            // A simple function to render report data into HTML.
+            // In a real application, you'd have specific rendering logic for each report.
+            function renderReport(sectionId, data) {
+                let title = sectionId.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
+                let html = `<h1>${title}</h1>`;
+                if (Array.isArray(data) && data.length > 0) {
+                    html += '<table class="table table-bordered table-sm">';
+                    // Headers
+                    html += '<thead><tr>';
+                    Object.keys(data[0]).forEach(key => html += `<th>${key}</th>`);
+                    html += '</tr></thead>';
+                    // Body
+                    html += '<tbody>';
+                    data.forEach(row => {
+                        html += '<tr>';
+                        Object.values(row).forEach(value => html += `<td>${(typeof value === 'object' ? JSON.stringify(value) : value)}</td>`);
+                        html += '</tr>';
+                    });
+                    html += '</tbody></table>';
+                } else {
+                    html += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                }
+                return html;
             }
-        } catch (error) {
-            container.innerHTML = `<div class="alert alert-danger">Failed to load ${section.id}: ${error.message}</div>`;
-        }
-    }
 
-    // A simple function to render report data into HTML.
-    // In a real application, you'd have specific rendering logic for each report.
-    function renderReport(sectionId, data) {
-        let title = sectionId.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
-        let html = `<h1>${title}</h1>`;
-        if (Array.isArray(data) && data.length > 0) {
-            html += '<table class="table table-bordered table-sm">';
-            // Headers
-            html += '<thead><tr>';
-            Object.keys(data[0]).forEach(key => html += `<th>${key}</th>`);
-            html += '</tr></thead>';
-            // Body
-            html += '<tbody>';
-            data.forEach(row => {
-                html += '<tr>';
-                Object.values(row).forEach(value => html += `<td>${(typeof value === 'object' ? JSON.stringify(value) : value)}</td>`);
-                html += '</tr>';
-            });
-            html += '</tbody></table>';
-        } else {
-            html += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
-        }
-        return html;
-    }
+            // Load all reports sequentially
+            (async () => {
+                for (const section of reportSections) {
+                    await loadReport(section);
+                }
+            })();
+        });
+    </script>
 
-    // Load all reports sequentially
-    (async () => {
-        for (const section of reportSections) {
-            await loadReport(section);
-        }
-    })();
-});
-</script>
-
-<?php require_once 'footer.php'; ?>
+    <?php require_once 'footer.php'; ?>
 <?php } ?>
