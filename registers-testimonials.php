@@ -98,7 +98,7 @@ $exam2 = $_GET['exam'] ?? 'SSC';
                                             echo '<button class="btn btn-sm btn-success" onclick="printSingle(' . $row['stid'] . ')">Print</button>';
                                         } else if (empty($row['regdno']) || empty($row['sscroll'])) {
                                             // Modify বাটন, যা মডাল খুলবে
-                                            echo '<button class="btn btn-sm btn-danger" onclick="openModifyModal(\'' . $row['stid'] . '\', \'' . $row['sscroll'] . '\', \'' . $row['regdno'] . '\')">Modify</button>';
+                                            echo '<button class="btn btn-sm btn-danger" onclick="openModifyModal(\'' . $row['stid'] . '\', \'' . addslashes($row['stnameeng']) . '\', \'' . addslashes($row['stnameben']) . '\', \'' . addslashes($row['fname']) . '\', \'' . addslashes($row['mname']) . '\', \'' . $row['sscroll'] . '\', \'' . $row['regdno'] . '\', \'' . $row['gpa'] . '\')">Modify</button>';
                                         } else if ($row['gpa'] < 1) {
                                             // রেজাল্ট এন্ট্রি বাটন
                                             echo '<button class="btn btn-sm btn-warning" onclick="resultEntry(' . $row['sscroll'] . ')">Result</button>';
@@ -135,13 +135,35 @@ $exam2 = $_GET['exam'] ?? 'SSC';
             <div class="modal-body">
                 <form id="modifyStudentForm">
                     <input type="hidden" id="modal_stid" name="stid">
-                    <div class="mb-3">
-                        <label for="modal_sscroll" class="form-label">Board Roll</label>
-                        <input type="text" class="form-control" id="modal_sscroll" name="sscroll" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="modal_regdno" class="form-label">Registration No</label>
-                        <input type="text" class="form-control" id="modal_regdno" name="regdno" required>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="modal_stnameeng" class="form-label">Student Name (Eng)</label>
+                            <input type="text" class="form-control" id="modal_stnameeng" name="stnameeng" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="modal_stnameben" class="form-label">Student Name (Bn)</label>
+                            <input type="text" class="form-control" id="modal_stnameben" name="stnameben">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="modal_fname" class="form-label">Father's Name</label>
+                            <input type="text" class="form-control" id="modal_fname" name="fname">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="modal_mname" class="form-label">Mother's Name</label>
+                            <input type="text" class="form-control" id="modal_mname" name="mname">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="modal_sscroll" class="form-label">Board Roll</label>
+                            <input type="text" class="form-control" id="modal_sscroll" name="sscroll" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="modal_regdno" class="form-label">Registration No</label>
+                            <input type="text" class="form-control" id="modal_regdno" name="regdno" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="modal_gpa" class="form-label">Result (GPA)</label>
+                            <input type="text" class="form-control" id="modal_gpa" name="gpa">
+                        </div>
                     </div>
                 </form>
             </div>
@@ -202,27 +224,33 @@ $exam2 = $_GET['exam'] ?? 'SSC';
         document.querySelectorAll('.st-check').forEach(cb => cb.checked = this.checked);
     });
 
-    function openModifyModal(stid, sscroll, regdno) {
+    function openModifyModal(stid, stnameeng, stnameben, fname, mname, sscroll, regdno, gpa) {
         document.getElementById('modal_stid').value = stid;
+        document.getElementById('modal_stnameeng').value = stnameeng;
+        document.getElementById('modal_stnameben').value = stnameben;
+        document.getElementById('modal_fname').value = fname;
+        document.getElementById('modal_mname').value = mname;
         document.getElementById('modal_sscroll').value = sscroll;
         document.getElementById('modal_regdno').value = regdno;
+        document.getElementById('modal_gpa').value = gpa;
         modifyModal.show();
     }
 
     function saveStudentRegdInfo() {
-        const stid = document.getElementById('modal_stid').value;
-        const sscroll = document.getElementById('modal_sscroll').value;
-        const regdno = document.getElementById('modal_regdno').value;
+        const form = document.getElementById('modifyStudentForm');
+        const formData = new FormData(form);
 
-        if (!sscroll || !regdno) {
-            alert('Board Roll and Registration No cannot be empty.');
+        if (!formData.get('sscroll') || !formData.get('regdno')) {
+            alert('Board Roll and Registration No are required.');
             return;
         }
 
         $.ajax({
             url: 'backend/update-student-regd.php',
             type: 'POST',
-            data: { stid: stid, sscroll: sscroll, regdno: regdno },
+            data: formData,
+            processData: false,
+            contentType: false,
             success: function (response) {
                 alert('Information updated successfully!');
                 modifyModal.hide();
