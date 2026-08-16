@@ -51,7 +51,7 @@ $exam2 = $_GET['exam'] ?? 'SSC';
                         <th>Roll/Regd</th>
                         <th>Result</th>
                         <th class="text-center">Action</th>
-                    </div>
+                    </tr>
                 </thead>
                 <tbody>
                     <?php
