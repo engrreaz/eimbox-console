@@ -1,5 +1,9 @@
 <?php
-require_once 'header-plain.php'; // আপনার ডাটাবেস কানেকশন এবং অন্যান্য গ্লোবাল ভ্যারিয়েবল
+require_once 'core/config.php';
+require_once 'core/db.php';
+require_once 'core/global_values.php';
+
+// আপনার ডাটাবেস কানেকশন এবং অন্যান্য গ্লোবাল ভ্যারিয়েবল
 
 // =================================================================
 // 🔹 টেমপ্লেট রেন্ডারিং ফাংশন
