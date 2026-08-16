@@ -1,13 +1,12 @@
 <?php
-session_start();
 
+require_once 'header.php';
 $output_mode = $_GET['output'] ?? 'html'; // 'html' or 'pdf'
 
 if ($output_mode === 'pdf') {
     require_once 'vendor/autoload.php'; // mPDF
 }
 
-require_once 'header.php';
 
 
 $dataset_id = (int)($_GET['dataset_id'] ?? 0);
