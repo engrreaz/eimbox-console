@@ -2,6 +2,7 @@
 require_once 'core/config.php';
 require_once 'core/db.php';
 require_once 'core/global_values.php';
+require_once 'core/functions.php';
 
 // আপনার ডাটাবেস কানেকশন এবং অন্যান্য গ্লোবাল ভ্যারিয়েবল
 
