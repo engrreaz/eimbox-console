@@ -7,8 +7,8 @@ if ($output_mode === 'pdf') {
     require_once 'vendor/autoload.php'; // mPDF
 }
 
-require_once 'core/config.php';
-require_once 'core/db.php';
+require_once 'header.php';
+
 
 $dataset_id = (int)($_GET['dataset_id'] ?? 0);
 $sccode = $_SESSION['sccode'] ?? null;
