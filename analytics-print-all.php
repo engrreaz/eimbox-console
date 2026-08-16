@@ -60,13 +60,13 @@ function fetch_report_data($endpoint, $dataset_id) {
 $data = [];
 $institute_data = fetch_report_data('get_institute_report.php', $dataset_id);
 $data['institute_summary'] = $institute_data['summary'] ?? [];
-$data['grade_distribution'] = $institute_data['grade_distribution'] ?? [];
-$data['weakest_subjects'] = $institute_data['weakest_subjects'] ?? [];
+// $data['grade_distribution'] = $institute_data['grade_distribution'] ?? [];
+// $data['weakest_subjects'] = $institute_data['weakest_subjects'] ?? [];
 
-$data['teacher_performance'] = fetch_report_data('get_teacher_report.php', $dataset_id);
-$data['class_performance'] = fetch_report_data('get_class_report.php', $dataset_id);
-$data['subject_performance'] = fetch_report_data('get_subject_report.php', $dataset_id);
-$data['student_merit_list'] = fetch_report_data('get_student_report.php', $dataset_id);
+// $data['teacher_performance'] = fetch_report_data('get_teacher_report.php', $dataset_id);
+// $data['class_performance'] = fetch_report_data('get_class_report.php', $dataset_id);
+// $data['subject_performance'] = fetch_report_data('get_subject_report.php', $dataset_id);
+// $data['student_merit_list'] = fetch_report_data('get_student_report.php', $dataset_id);
 
 
 // Helper function for creating progress bars
