@@ -93,20 +93,34 @@ $exam2 = $_GET['exam'] ?? 'SSC';
                                         <?php if ($row['gpa'] > 0) echo $row['gpa'] . ' / ' . $row['gla']; ?>
                                     </td>
                                     <td class="text-center" id="action-cell-<?= $row['stid'] ?>">
-                                        <?php
-                                        if ($is_printable) {
-                                            echo '<button class="btn btn-sm btn-success" onclick="printSingle(' . $row['stid'] . ')">Print</button>';
-                                        } else if (empty($row['regdno']) || empty($row['sscroll'])) {
-                                            // Modify বাটন, যা মডাল খুলবে
-                                            echo '<button class="btn btn-sm btn-danger" onclick="openModifyModal(\'' . $row['stid'] . '\', \'' . addslashes($row['stnameeng']) . '\', \'' . addslashes($row['stnameben']) . '\', \'' . addslashes($row['fname']) . '\', \'' . addslashes($row['mname']) . '\', \'' . $row['sscroll'] . '\', \'' . $row['regdno'] . '\', \'' . $row['gpa'] . '\')">Modify</button>';
-                                        } else if ($row['gpa'] < 1) {
-                                            // রেজাল্ট এন্ট্রি বাটন
-                                            echo '<button class="btn btn-sm btn-warning" onclick="resultEntry(' . $row['sscroll'] . ')">Result</button>';
-                                        } else {
-                                            // ইস্যু বাটন
-                                            echo '<button class="btn btn-sm btn-primary" onclick="issue(' . $row['stid'] . ')">Issue</button>';
-                                        }
-                                        ?>
+                                        <div class="dropdown">
+                                            <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                                                <i class="bi bi-three-dots-vertical"></i>
+                                            </button>
+                                            <div class="dropdown-menu dropdown-menu-end">
+                                                <a class="dropdown-item" href="javascript:void(0);" onclick="openModifyModal('<?= $row['stid'] ?>', '<?= addslashes($row['stnameeng']) ?>', '<?= addslashes($row['stnameben']) ?>', '<?= addslashes($row['fname']) ?>', '<?= addslashes($row['mname']) ?>', '<?= $row['sscroll'] ?>', '<?= $row['regdno'] ?>', '<?= $row['gpa'] ?>')">
+                                                    <i class="bi bi-pencil-square me-2"></i> Update Info
+                                                </a>
+                                                
+                                                <?php if (!empty($row['regdno']) && !empty($row['sscroll'])): ?>
+                                                    <a class="dropdown-item" href="javascript:void(0);" onclick="resultEntry('<?= $row['sscroll'] ?>')">
+                                                        <i class="bi bi-card-list me-2"></i> Update Result
+                                                    </a>
+                                                    
+                                                    <?php if ($row['gpa'] > 0 && !$is_printable): ?>
+                                                        <a class="dropdown-item" href="javascript:void(0);" onclick="issue('<?= $row['stid'] ?>')">
+                                                            <i class="bi bi-file-earmark-check me-2"></i> Issue Testimonial
+                                                        </a>
+                                                    <?php endif; ?>
+                                                <?php endif; ?>
+
+                                                <?php if ($is_printable): ?>
+                                                    <a class="dropdown-item text-success" href="javascript:void(0);" onclick="printSingle('<?= $row['stid'] ?>')">
+                                                        <i class="bi bi-printer me-2"></i> Print
+                                                    </a>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
                                     </td>
                                 </tr>
                                 <?php
