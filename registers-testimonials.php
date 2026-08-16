@@ -68,8 +68,14 @@ $exam2 = $_GET['exam'] ?? 'SSC';
                         if ($result0->num_rows > 0) {
                             while ($row = $result0->fetch_assoc()) {
                                 ?>
+                                <?php
+                                $is_issued_query = "SELECT id FROM testimonial WHERE stid='{$row['stid']}' AND sccode='$sccode' AND pubexam = '$exam2'";
+                                $is_issued_res = $conn->query($is_issued_query);
+                                $is_printable = $is_issued_res->num_rows > 0;
+                                ?>
                                 <tr>
-                                    <td><input type="checkbox" class="form-check-input st-check" value="<?= $row['stid'] ?>"></td>
+                                    <td><input type="checkbox" class="form-check-input st-check"
+                                            value="<?= $row['stid'] ?>" <?= !$is_printable ? 'disabled' : '' ?>></td>
                                     <td><?= $row['rollno'] ?></td>
                                     <td>
                                         <div><?= $row['stnameeng'] ?></div>
@@ -88,15 +94,16 @@ $exam2 = $_GET['exam'] ?? 'SSC';
                                     </td>
                                     <td class="text-center" id="action-cell-<?= $row['stid'] ?>">
                                         <?php
-                                        $test_sql = "SELECT id FROM testimonial WHERE stid='{$row['stid']}' AND sccode='$sccode' AND pubexam = '$exam2'";
-                                        $test_res = $conn->query($test_sql);
-                                        if ($test_res->num_rows > 0) {
+                                        if ($is_printable) {
                                             echo '<button class="btn btn-sm btn-success" onclick="printSingle(' . $row['stid'] . ')">Print</button>';
                                         } else if (empty($row['regdno']) || empty($row['sscroll'])) {
-                                            echo '<button class="btn btn-sm btn-danger" onclick="issue(' . $row['stid'] . ')">Modify</button>';
+                                            // Modify বাটন, যা মডাল খুলবে
+                                            echo '<button class="btn btn-sm btn-danger" onclick="openModifyModal(\'' . $row['stid'] . '\', \'' . $row['sscroll'] . '\', \'' . $row['regdno'] . '\')">Modify</button>';
                                         } else if ($row['gpa'] < 1) {
+                                            // রেজাল্ট এন্ট্রি বাটন
                                             echo '<button class="btn btn-sm btn-warning" onclick="resultEntry(' . $row['sscroll'] . ')">Result</button>';
                                         } else {
+                                            // ইস্যু বাটন
                                             echo '<button class="btn btn-sm btn-primary" onclick="issue(' . $row['stid'] . ')">Issue</button>';
                                         }
                                         ?>
@@ -117,12 +124,43 @@ $exam2 = $_GET['exam'] ?? 'SSC';
     </div>
 </div>
 
+<!-- Modify Student Info Modal -->
+<div class="modal fade" id="modifyStudentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Update Student Information</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="modifyStudentForm">
+                    <input type="hidden" id="modal_stid" name="stid">
+                    <div class="mb-3">
+                        <label for="modal_sscroll" class="form-label">Board Roll</label>
+                        <input type="text" class="form-control" id="modal_sscroll" name="sscroll" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="modal_regdno" class="form-label">Registration No</label>
+                        <input type="text" class="form-control" id="modal_regdno" name="regdno" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="saveStudentRegdInfo()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?php require_once 'footer.php'; ?>
 
 <script>
     function chainBtnFunc() {
         location.reload();
     }
+
+    const modifyModal = new bootstrap.Modal(document.getElementById('modifyStudentModal'));
 
     function issue(stid) {
         var infor = "stid=" + stid + "&year=" + '<?= $sessionyear ?>' + "&sec=" + '<?= $sec2 ?>';
@@ -163,6 +201,38 @@ $exam2 = $_GET['exam'] ?? 'SSC';
     document.getElementById('checkAll').addEventListener('change', function () {
         document.querySelectorAll('.st-check').forEach(cb => cb.checked = this.checked);
     });
+
+    function openModifyModal(stid, sscroll, regdno) {
+        document.getElementById('modal_stid').value = stid;
+        document.getElementById('modal_sscroll').value = sscroll;
+        document.getElementById('modal_regdno').value = regdno;
+        modifyModal.show();
+    }
+
+    function saveStudentRegdInfo() {
+        const stid = document.getElementById('modal_stid').value;
+        const sscroll = document.getElementById('modal_sscroll').value;
+        const regdno = document.getElementById('modal_regdno').value;
+
+        if (!sscroll || !regdno) {
+            alert('Board Roll and Registration No cannot be empty.');
+            return;
+        }
+
+        $.ajax({
+            url: 'backend/update-student-regd.php',
+            type: 'POST',
+            data: { stid: stid, sscroll: sscroll, regdno: regdno },
+            success: function (response) {
+                alert('Information updated successfully!');
+                modifyModal.hide();
+                location.reload(); // রিলোড করে নতুন তথ্য ও বাটন দেখানো
+            },
+            error: function () {
+                alert('An error occurred. Please try again.');
+            }
+        });
+    }
 
     // More JS functions for result entry can be added here if needed.
 </script>
