@@ -19,41 +19,54 @@ if (empty($dataset_id) || empty($sccode)) {
     die('<div class="alert alert-danger">Error: No Dataset ID provided.</div>');
 }
 
-// Fetch all data using the new script
-$base_path = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-$api_url = 'http://' . $_SERVER['HTTP_HOST'] . $base_path . '/analytics/get_full_report_data.php?dataset_id=' . $dataset_id;
-error_log($api_url);
-$ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, $api_url);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-curl_setopt($ch, CURLOPT_COOKIE, 'PHPSESSID=' . session_id()); // Pass session cookie
-curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // Follow redirects
-$json_data = curl_exec($ch);
+function fetch_report_data($endpoint, $dataset_id) {
+    $base_path = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+    $api_url = 'http://' . $_SERVER['HTTP_HOST'] . $base_path . '/analytics/' . $endpoint . '?dataset_id=' . $dataset_id;
 
-if (curl_errno($ch)) {
-    $error_msg = curl_error($ch);
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $api_url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_COOKIE, 'PHPSESSID=' . session_id());
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    $json_data = curl_exec($ch);
+
+    if (curl_errno($ch)) {
+        $error_msg = curl_error($ch);
+        curl_close($ch);
+        die("cURL Error fetching {$endpoint}: " . $error_msg);
+    }
+
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
-    die('Failed to fetch report data (cURL error): ' . $error_msg);
+
+    if ($http_code !== 200) {
+        die("HTTP Error {$http_code} fetching {$endpoint}: " . $json_data);
+    }
+
+    $response = json_decode($json_data, true);
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        die("JSON Decode Error fetching {$endpoint}: " . json_last_error_msg());
+    }
+
+    if (!isset($response['status']) || $response['status'] !== 'success') {
+        die("API Error fetching {$endpoint}: " . ($response['message'] ?? 'Unknown error'));
+    }
+
+    return $response['data'];
 }
 
-$http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
+// Fetch data for each report section step-by-step
+$data = [];
+$institute_data = fetch_report_data('get_institute_report.php', $dataset_id);
+$data['institute_summary'] = $institute_data['summary'] ?? [];
+$data['grade_distribution'] = $institute_data['grade_distribution'] ?? [];
+$data['weakest_subjects'] = $institute_data['weakest_subjects'] ?? [];
 
-if ($http_code !== 200) {
-    die('Failed to fetch report data (HTTP error ' . $http_code . '): ' . $json_data);
-}
+$data['teacher_performance'] = fetch_report_data('get_teacher_report.php', $dataset_id);
+$data['class_performance'] = fetch_report_data('get_class_report.php', $dataset_id);
+$data['subject_performance'] = fetch_report_data('get_subject_report.php', $dataset_id);
+$data['student_merit_list'] = fetch_report_data('get_student_report.php', $dataset_id);
 
-$response = json_decode($json_data, true);
-
-if (json_last_error() !== JSON_ERROR_NONE) {
-    die('Failed to decode JSON response: ' . json_last_error_msg() . ' - Raw data: ' . $json_data);
-}
-
-if (!isset($response['status']) || $response['status'] !== 'success') {
-    die('Failed to fetch report data: ' . ($response['message'] ?? 'Unknown error in API response'));
-}
-
-$data = $response['data'];
 
 // Helper function for creating progress bars
 function create_bar($value, $max_value = 100, $color = '#007bff', $height = '18px') {
