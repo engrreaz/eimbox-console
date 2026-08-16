@@ -1,15 +1,15 @@
 <?php require_once 'header.php'; ?>
 
 <?php
-$year = $_GET['year'] ?? date('Y');
-$cls2 = $_GET['cls'] ?? '';
-$sec2 = $_GET['sec'] ?? '';
+$slot = $_COOKIE['chain-slot'] ?? '';
+$sessionyear = $_COOKIE['chain-session'] ?? date('Y');
+$cls2 = $_COOKIE['chain-class'] ?? '';
+$sec2 = $_COOKIE['chain-section'] ?? '';
 $exam2 = $_GET['exam'] ?? 'SSC';
 ?>
 
 <div class="container-xxl flex-grow-1 container-p-y">
     <h3 class="d-print-none">Testimonial Issue Register</h3>
-
     <div class="card mb-4 d-print-none">
         <div class="card-body">
             <div class="row g-3 align-items-end">
@@ -17,58 +17,17 @@ $exam2 = $_GET['exam'] ?? 'SSC';
                     <label class="form-label">Year</label>
                     <select class="form-select" id="year">
                         <?php
-                        for ($y = date('Y'); $y >= 2024; $y--) {
-                            $selected = ($year == $y) ? 'selected' : '';
+                        for ($y = date('Y'); $y >= 2020; $y--) {
+                            $selected = ($sessionyear == $y) ? 'selected' : '';
                             echo '<option value="' . $y . '"' . $selected . '>' . $y . '</option>';
                         }
                         ?>
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label">Class</label>
-                    <select class="form-select" id="cls">
-                        <option value="">---</option>
-                        <?php
-                        $sql0x = "SELECT areaname FROM areas where sccode='$sccode' and sessionyear='$year' group by areaname order by idno;";
-                        $result0x = $conn->query($sql0x);
-                        if ($result0x->num_rows > 0) {
-                            while ($row0x = $result0x->fetch_assoc()) {
-                                $cls = $row0x["areaname"];
-                                $selected = ($cls == $cls2) ? 'selected' : '';
-                                echo '<option value="' . $cls . '" ' . $selected . ' >' . $cls . '</option>';
-                            }
-                        }
-                        ?>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Section</label>
-                    <select class="form-select" id="sec">
-                        <option value="">---</option>
-                        <?php
-                        $sql0x = "SELECT subarea FROM areas where sccode='$sccode' and sessionyear='$year' and areaname='$cls2' group by subarea order by idno;";
-                        $result0r = $conn->query($sql0x);
-                        if ($result0r->num_rows > 0) {
-                            while ($row0x = $result0r->fetch_assoc()) {
-                                $sec = $row0x["subarea"];
-                                $selected = ($sec == $sec2) ? 'selected' : '';
-                                echo '<option value="' . $sec . '" ' . $selected . ' >' . $sec . '</option>';
-                            }
-                        }
-                        ?>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Exam</label>
-                    <select class="form-select" id="exam">
-                        <option value="SSC" <?= ($exam2 == 'SSC') ? 'selected' : '' ?>>SSC</option>
-                        <option value="HSC" <?= ($exam2 == 'HSC') ? 'selected' : '' ?>>HSC</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <button type="button" class="btn btn-primary w-100" onclick="go();"><i class="bi bi-search me-1"></i>
-                        Show List</button>
-                </div>
+                <?php
+                $chain_param = '-c 12 -t Choose Class & Section -u -r -b Show List';
+                include 'components/slot-tree-ui.php';
+                ?>
             </div>
         </div>
     </div>
@@ -97,7 +56,7 @@ $exam2 = $_GET['exam'] ?? 'SSC';
                 <tbody>
                     <?php
                     if (!empty($cls2) && !empty($sec2)) {
-                        $sql0 = "SELECT si.id as session_id, si.rollno, si.stid, s.* FROM sessioninfo si JOIN students s ON si.stid = s.stid AND si.sccode = s.sccode WHERE si.sessionyear = '$year' AND si.sccode='$sccode' AND si.classname='$cls2' AND si.sectionname = '$sec2' ORDER BY si.rollno";
+                        $sql0 = "SELECT si.id as session_id, si.rollno, si.stid, s.* FROM sessioninfo si JOIN students s ON si.stid = s.stid AND si.sccode = s.sccode WHERE si.sessionyear = '$sessionyear' AND si.sccode='$sccode' AND si.classname='$cls2' AND si.sectionname = '$sec2' ORDER BY si.rollno";
                         $result0 = $conn->query($sql0);
                         if ($result0->num_rows > 0) {
                             while ($row = $result0->fetch_assoc()) {
@@ -154,18 +113,12 @@ $exam2 = $_GET['exam'] ?? 'SSC';
 <?php require_once 'footer.php'; ?>
 
 <script>
-    function go() {
-        var year = document.getElementById('year').value;
-        var cls = document.getElementById('cls').value;
-        var sec = document.getElementById('sec').value;
-        var exam = document.getElementById('exam').value;
-        window.location.href = `registers-testimonials.php?year=${year}&cls=${cls}&sec=${sec}&exam=${exam}`;
+    function chainBtnFunc() {
+        location.reload();
     }
 
     function issue(stid) {
-        var year = document.getElementById("year").value;
-        var sec = document.getElementById("sec").value;
-        var infor = "stid=" + stid + "&year=" + year + "&sec=" + sec;
+        var infor = "stid=" + stid + "&year=" + '<?= $sessionyear ?>' + "&sec=" + '<?= $sec2 ?>';
         var actionCell = $("#action-cell-" + stid);
 
         actionCell.html('<small>Processing...</small>');
@@ -182,8 +135,8 @@ $exam2 = $_GET['exam'] ?? 'SSC';
     }
 
     function printSingle(stid) {
-        var year = document.getElementById('year').value;
-        var sec = document.getElementById('sec').value;
+        var year = '<?= $sessionyear ?>';
+        var sec = '<?= $sec2 ?>';
         var exam = document.getElementById('exam').value;
         window.open(`testimonial-print.php?sec=${sec}&exam=${exam}&year=${year}&stid=${stid}`, '_blank');
     }
@@ -194,8 +147,8 @@ $exam2 = $_GET['exam'] ?? 'SSC';
             alert("Please select at least one student.");
             return;
         }
-        var year = document.getElementById('year').value;
-        var sec = document.getElementById('sec').value;
+        var year = '<?= $sessionyear ?>';
+        var sec = '<?= $sec2 ?>';
         var exam = document.getElementById('exam').value;
         window.open(`testimonial-print.php?sec=${sec}&exam=${exam}&year=${year}&stids=${ids.join(',')}`, '_blank');
     }
