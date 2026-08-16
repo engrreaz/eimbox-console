@@ -59,7 +59,7 @@ function fetch_report_data($endpoint, $dataset_id) {
 // Fetch data for each report section step-by-step
 $data = [];
 $institute_data = fetch_report_data('get_institute_report.php', $dataset_id);
-$data['institute_summary'] = $institute_data['summary'] ?? [];
+// $data['institute_summary'] = $institute_data['summary'] ?? [];
 // $data['grade_distribution'] = $institute_data['grade_distribution'] ?? [];
 // $data['weakest_subjects'] = $institute_data['weakest_subjects'] ?? [];
 
