@@ -28,6 +28,7 @@ function fetch_report_data($endpoint, $dataset_id) {
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($ch, CURLOPT_COOKIE, 'PHPSESSID=' . session_id());
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 300); // 300 সেকেন্ড (৫ মিনিট) টাইমআউট সেট করা হলো
     $json_data = curl_exec($ch);
 
     if (curl_errno($ch)) {
