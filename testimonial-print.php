@@ -1,4 +1,5 @@
 <?php
+session_start(); // Add this line to start the session
 require_once 'core/config.php';
 require_once 'core/db.php';
 require_once 'core/global_values.php';
