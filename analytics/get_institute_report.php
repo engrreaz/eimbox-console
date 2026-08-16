@@ -4,6 +4,9 @@ session_start();
 require_once '../core/config.php';
 require_once '../core/db.php';
 
+// Increase execution time for this script to 5 minutes (300 seconds)
+set_time_limit(300);
+
 $dataset_id = (int)($_GET['dataset_id'] ?? 0);
 $sccode = $_SESSION['sccode'] ?? null;
 
@@ -28,7 +31,7 @@ $sql_summary = "
         asp.dataset_id = ? AND asp.sccode = ?;
 ";
 $stmt_summary = $conn->prepare($sql_summary);
-$stmt_summary->bind_param("ii", $dataset_id, $sccode);
+$stmt_summary->bind_param("is", $dataset_id, $sccode);
 $stmt_summary->execute();
 $summary_result = $stmt_summary->get_result()->fetch_assoc();
 $stmt_summary->close();
@@ -63,7 +66,7 @@ $sql_gender = "
         asp.dataset_id = ? AND asp.sccode = ?;
 ";
 $stmt_gender = $conn->prepare($sql_gender);
-$stmt_gender->bind_param("ii", $dataset_id, $sccode);
+$stmt_gender->bind_param("is", $dataset_id, $sccode);
 $stmt_gender->execute();
 $gender_result = $stmt_gender->get_result()->fetch_assoc();
 $stmt_gender->close();
@@ -82,13 +85,13 @@ $report_data['gender_performance'] = [
 $sql_top_students = "
     SELECT asp.stid, s.stnameeng, asp.classname, asp.sectionname, asp.total_marks_obtained, asp.gpa
     FROM analytics_student_performance AS asp
-    JOIN students AS s ON asp.stid = s.stid AND asp.sccode = s.sccode
+    INNER JOIN students AS s ON asp.stid = s.stid AND asp.sccode = s.sccode
     WHERE asp.dataset_id = ? AND asp.sccode = ? AND asp.failed_subjects = 0
-    ORDER BY asp.total_marks_obtained DESC
+    ORDER BY asp.gpa DESC, asp.total_marks_obtained DESC
     LIMIT 10;
 ";
 $stmt_top_students = $conn->prepare($sql_top_students);
-$stmt_top_students->bind_param("ii", $dataset_id, $sccode);
+$stmt_top_students->bind_param("is", $dataset_id, $sccode);
 $stmt_top_students->execute();
 $top_students_result = $stmt_top_students->get_result()->fetch_all(MYSQLI_ASSOC);
 foreach ($top_students_result as &$student) {
@@ -108,7 +111,7 @@ $sql_top_classes = "
     LIMIT 3;
 ";
 $stmt_top_classes = $conn->prepare($sql_top_classes);
-$stmt_top_classes->bind_param("ii", $dataset_id, $sccode);
+$stmt_top_classes->bind_param("is", $dataset_id, $sccode);
 $stmt_top_classes->execute();
 $top_classes_result = $stmt_top_classes->get_result()->fetch_all(MYSQLI_ASSOC);
 foreach ($top_classes_result as &$class) {
@@ -129,7 +132,7 @@ $sql_weakest_subjects = "
     LIMIT 5;
 ";
 $stmt_weakest_subjects = $conn->prepare($sql_weakest_subjects);
-$stmt_weakest_subjects->bind_param("ii", $sccode, $dataset_id);
+$stmt_weakest_subjects->bind_param("si", $sccode, $dataset_id);
 $stmt_weakest_subjects->execute();
 $weakest_subjects_result = $stmt_weakest_subjects->get_result()->fetch_all(MYSQLI_ASSOC);
 foreach ($weakest_subjects_result as &$subject) {
@@ -148,7 +151,7 @@ $sql_grade_distribution = "
     ORDER BY FIELD(grade, 'A+', 'A', 'A-', 'B', 'C', 'D', 'F');
 ";
 $stmt_grade_distribution = $conn->prepare($sql_grade_distribution);
-$stmt_grade_distribution->bind_param("ii", $dataset_id, $sccode);
+$stmt_grade_distribution->bind_param("is", $dataset_id, $sccode);
 $stmt_grade_distribution->execute();
 $grade_distribution_result = $stmt_grade_distribution->get_result()->fetch_all(MYSQLI_ASSOC);
 foreach ($grade_distribution_result as &$grade) {
@@ -161,7 +164,7 @@ $stmt_grade_distribution->close();
 // 7. At-Risk Students Count
 $sql_at_risk = "SELECT COUNT(*) AS at_risk_count FROM analytics_at_risk_students WHERE dataset_id = ? AND sccode = ?;";
 $stmt_at_risk = $conn->prepare($sql_at_risk);
-$stmt_at_risk->bind_param("ii", $dataset_id, $sccode);
+$stmt_at_risk->bind_param("is", $dataset_id, $sccode);
 $stmt_at_risk->execute();
 $report_data['at_risk_count'] = (float)($stmt_at_risk->get_result()->fetch_assoc()['at_risk_count'] ?? 0);
 $stmt_at_risk->close();
