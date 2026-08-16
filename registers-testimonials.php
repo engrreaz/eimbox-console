@@ -28,6 +28,13 @@ $exam2 = $_GET['exam'] ?? 'SSC';
                 $chain_param = '-c 12 -t Choose Class & Section -u -r -b Show List';
                 include 'components/slot-tree-ui.php';
                 ?>
+                <div class="col-md-2">
+                    <label class="form-label">Exam</label>
+                    <select class="form-select" id="exam">
+                        <option value="SSC" <?= ($exam2 == 'SSC') ? 'selected' : '' ?>>SSC</option>
+                        <option value="HSC" <?= ($exam2 == 'HSC') ? 'selected' : '' ?>>HSC</option>
+                    </select>
+                </div>
             </div>
         </div>
     </div>
@@ -137,7 +144,7 @@ $exam2 = $_GET['exam'] ?? 'SSC';
     function printSingle(stid) {
         var year = '<?= $sessionyear ?>';
         var sec = '<?= $sec2 ?>';
-        var exam = document.getElementById('exam').value;
+        var exam = document.getElementById('exam')?.value || 'SSC';
         window.open(`testimonial-print.php?sec=${sec}&exam=${exam}&year=${year}&stid=${stid}`, '_blank');
     }
 
@@ -149,7 +156,7 @@ $exam2 = $_GET['exam'] ?? 'SSC';
         }
         var year = '<?= $sessionyear ?>';
         var sec = '<?= $sec2 ?>';
-        var exam = document.getElementById('exam').value;
+        var exam = document.getElementById('exam')?.value || 'SSC';
         window.open(`testimonial-print.php?sec=${sec}&exam=${exam}&year=${year}&stids=${ids.join(',')}`, '_blank');
     }
 
