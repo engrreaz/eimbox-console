@@ -223,7 +223,7 @@ $result = $conn->query($sql);
                             </td>
                         </tr>
                         <tr>
-                            <td colspan="2" style="line-height:1.5; font-size:16px; text-align:justify;" valign="top">
+                            <td colspan="2" style="line-height:1.2; font-size:16px; text-align:justify;" valign="top">
                                 <p class="editable dynamic-text">
                                     <?= $testimonial_body ?>
                                 </p>
@@ -246,7 +246,13 @@ $result = $conn->query($sql);
                                             <b><?= $headname; ?></b><br>
                                             <?= $headtitle; ?><br>
                                             <?= $scname; ?><br>
-                                            <?= $scaddress; ?><br>
+                                            <?php
+                                            // ঠিকানা থেকে ডুপ্লিকেট অংশ বাদ দেওয়া
+                                            $address_parts = array_filter(array_map('trim', explode(',', $scaddress)));
+                                            $unique_parts = array_unique($address_parts);
+                                            $unique_address = implode(', ', $unique_parts);
+                                            echo $unique_address;
+                                            ?><br>
                                         </td>
                                     </tr>
                                 </table>
