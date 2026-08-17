@@ -208,7 +208,8 @@ $exam2 = $_GET['exam'] ?? 'SSC';
     const modifyModal = new bootstrap.Modal(document.getElementById('modifyStudentModal'));
 
     function issue(stid) {
-        var infor = "stid=" + stid + "&year=" + '<?= $sessionyear ?>' + "&sec=" + '<?= $sec2 ?>';
+        var exam = document.getElementById('exam').value;
+        var infor = "stid=" + stid + "&year=" + '<?= $sessionyear ?>' + "&sec=" + '<?= $sec2 ?>' + "&exam=" + exam;
         var actionCell = $("#action-cell-" + stid);
 
         actionCell.html('<small>Processing...</small>');

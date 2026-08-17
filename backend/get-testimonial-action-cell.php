@@ -62,4 +62,3 @@ $is_data_updated = !empty($student_data['regdno']) && !empty($student_data['sscr
         <?php endif; ?>
     </div>
 </div>
-<?php
