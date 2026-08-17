@@ -134,6 +134,10 @@ $result = $conn->query($sql);
             transition: background-color 0.2s;
         }
 
+        #settings-panel {
+            transition: transform .3s ease-in-out;
+        }
+
         @media print {
             body {
                 background: none;
@@ -146,7 +150,7 @@ $result = $conn->query($sql);
                 border: none;
             }
 
-            .offcanvas {
+            #settings-panel {
                 display: none !important;
             }
 
@@ -235,51 +239,47 @@ $result = $conn->query($sql);
     }
     ?>
 
-    <!-- Floating Menu -->
+    <!-- Floating Action Button for Print -->
     <div class="fab-wrapper">
-        <button class="fab-main mb-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#settings-panel" aria-controls="settings-panel">
-            <i class="bi bi-gear"></i>
-        </button>
         <button class="fab-main" onclick="window.print()">
             <i class="bi bi-printer"></i>
         </button>
     </div>
 
     <!-- Settings Panel -->
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="settings-panel" aria-labelledby="settingsPanelLabel">
-        <div class="offcanvas-header">
-            <h5 id="settingsPanelLabel">Customize Design</h5>
-            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    <div class="card shadow-lg" id="settings-panel" style="position: fixed; top: 20px; right: 20px; width: 320px; z-index: 1050;">
+        <div class="card-header d-flex justify-content-between align-items-center bg-light py-2">
+            <h6 class="mb-0 fw-bold text-primary"><i class="bi bi-gear-wide-connected me-2"></i>Customize Design</h6>
+            <button type="button" class="btn-close" onclick="document.getElementById('settings-panel').style.display='none'" aria-label="Close"></button>
         </div>
-        <div class="offcanvas-body">
+        <div class="card-body p-3">
             <div class="mb-3">
                 <label for="font-size-slider" class="form-label small">Font Size</label>
-                <input type="range" class="form-range" id="font-size-slider" min="12" max="20" step="1">
+                <input type="range" class="form-range" id="font-size-slider" min="12" max="20" step="1" value="16">
             </div>
             <div class="mb-3">
                 <label for="border-color-picker" class="form-label small">Page Border Color</label>
-                <input type="color" class="form-control form-control-color" id="border-color-picker" title="Choose border color">
+                <input type="color" class="form-control form-control-color" id="border-color-picker" value="#000000" title="Choose border color">
             </div>
             <div class="form-check form-switch mb-2">
-                <input class="form-check-input" type="checkbox" id="toggle-letterhead">
+                <input class="form-check-input" type="checkbox" id="toggle-letterhead" checked>
                 <label class="form-check-label small" for="toggle-letterhead">Show Letter Head</label>
             </div>
             <div class="form-check form-switch mb-2">
-                <input class="form-check-input" type="checkbox" id="toggle-title-img">
+                <input class="form-check-input" type="checkbox" id="toggle-title-img" checked>
                 <label class="form-check-label small" for="toggle-title-img">Show "Testimonial" Title Image</label>
             </div>
             <div class="form-check form-switch mb-2">
-                <input class="form-check-input" type="checkbox" id="toggle-signature">
+                <input class="form-check-input" type="checkbox" id="toggle-signature" checked>
                 <label class="form-check-label small" for="toggle-signature">Show Head's Signature</label>
             </div>
             <div class="form-check form-switch mb-3">
-                <input class="form-check-input" type="checkbox" id="toggle-footer">
+                <input class="form-check-input" type="checkbox" id="toggle-footer" checked>
                 <label class="form-check-label small" for="toggle-footer">Show Footer Section</label>
             </div>
-            <hr>
-            <div class="d-flex justify-content-between">
-                <button class="btn btn-sm btn-primary" onclick="saveAndReload()">Save & Apply</button>
-                <button class="btn btn-sm btn-outline-danger" onclick="resetSettings()">Reset to Default</button>
+            <div class="d-grid gap-2">
+                <button class="btn btn-primary" onclick="saveAndReload()">Save & Apply</button>
+                <button class="btn btn-outline-secondary" onclick="resetSettings()">Reset to Default</button>
             </div>
         </div>
     </div>
