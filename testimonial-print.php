@@ -238,10 +238,10 @@ $result = $conn->query($sql);
                                             <img style="padding: 5px; border: 1px solid #eee;"
                                                 src="https://quickchart.io/qr?text=<?= urlencode($lnk) ?>&size=120" />
                                         </td>
-                                        <td style="width: 30%; vertical-align: bottom;">
+                                        <td style="width: 20%; vertical-align: bottom;">
 
                                         </td>
-                                        <td style="width: 50%; text-align:center; vertical-align: bottom;">
+                                        <td style="width: 60%; text-align:center; vertical-align: bottom;">
                                             <img src="https://eimbox.com/sign/<?= $sccode ?>.png" style="height:40px;" class="head-signature-img"><br>
                                             <b><?= $headname; ?></b><br>
                                             <?= $headtitle; ?><br>
