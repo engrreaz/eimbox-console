@@ -8,7 +8,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stnameben = trim($_POST['stnameben'] ?? '');
     $fname = trim($_POST['fname'] ?? '');
     $mname = trim($_POST['mname'] ?? '');
-    $sscroll = trim($_POST['sscroll'] ?? ''); // This is actually Board Roll
+    $rollno = trim($_POST['rollno'] ?? ''); // This is actually Board Roll
     $regdno = trim($_POST['regdno'] ?? '');
     $gpa = trim($_POST['gpa'] ?? '');
 
@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $passing_year = trim($_POST['passing_year'] ?? '');
 
     // Basic validation
-    if (empty($stid) || empty($sscroll) || empty($regdno)) {
+    if (empty($stid) || empty($rollno) || empty($regdno)) {
         http_response_code(400);
         echo json_encode(["status" => "error", "message" => "Error: Missing required fields (Student ID, Board Roll, Registration No)."]);
         exit;
@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ");
 
     // Bind parameters: 9 for SET, 2 for WHERE. All treated as strings for simplicity. sscroll is used for board roll.
-    $stmt->bind_param("sssssssssss", $stnameeng, $stnameben, $fname, $mname, $sscroll, $regdno, $gpa, $gla, $passing_year, $stid, $sccode);
+    $stmt->bind_param("sssssssssss", $stnameeng, $stnameben, $fname, $mname, $rollno, $regdno, $gpa, $gla, $passing_year, $stid, $sccode);
 
     if ($stmt->execute()) {
         echo json_encode(["status" => "success", "gla" => $gla]);

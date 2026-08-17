@@ -27,7 +27,7 @@ if ($check_result->num_rows === 0) {
     // Fetch additional student data required for the testimonial table
     $student_data_sql = "
         SELECT 
-            s.sscroll, s.regdno, s.sscpassyear, s.gpa, s.gla,
+            s.rollno, s.regdno, s.sscpassyear, s.gpa, s.gla,
             si.groups
         FROM students s
         LEFT JOIN sessioninfo si ON s.stid = si.stid AND s.sccode = si.sccode AND si.sessionyear = ?
@@ -47,7 +47,7 @@ if ($check_result->num_rows === 0) {
     }
 
     // Prepare data for insertion
-    $board_roll = $student_data['sscroll'] ?? null;
+    $board_roll = $student_data['rollno'] ?? null;
     $regd_no = $student_data['regdno'] ?? null;
     $pass_year = $student_data['sscpassyear'] ?? $year;
     $gpa = $student_data['gpa'] ?? 0;

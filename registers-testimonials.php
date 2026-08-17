@@ -108,12 +108,12 @@ $exam2 = $_GET['exam'] ?? 'SSC';
  
                                                  if ($is_printable) {
                                                      // If issued, show all three
-                                                     echo '<a class="dropdown-item" href="javascript:void(0);" onclick="resultEntry(\'' . $row['sscroll'] . '\')"><i class="bi bi-card-list me-2"></i> Update Result</a>';
+                                                     echo '<a class="dropdown-item" href="javascript:void(0);" onclick="resultEntry(\'' . $row['rollno'] . '\')"><i class="bi bi-card-list me-2"></i> Update Result</a>';
                                                      echo '<a class="dropdown-item" href="javascript:void(0);" onclick="issue(\'' . $row['stid'] . '\')"><i class="bi bi-file-earmark-check me-2"></i> Issue Testimonial</a>';
                                                      echo '<a class="dropdown-item text-success" href="javascript:void(0);" onclick="printSingle(\'' . $row['stid'] . '\')"><i class="bi bi-printer me-2"></i> Print</a>';
                                                  } elseif ($is_data_updated) {
                                                      // If data is updated but not issued, show Update Result and Issue Testimonial
-                                                     echo '<a class="dropdown-item" href="javascript:void(0);" onclick="resultEntry(\'' . $row['sscroll'] . '\')"><i class="bi bi-card-list me-2"></i> Update Result</a>';
+                                                     echo '<a class="dropdown-item" href="javascript:void(0);" onclick="resultEntry(\'' . $row['rollno'] . '\')"><i class="bi bi-card-list me-2"></i> Update Result</a>';
                                                      echo '<a class="dropdown-item" href="javascript:void(0);" onclick="issue(\'' . $row['stid'] . '\')"><i class="bi bi-file-earmark-check me-2"></i> Issue Testimonial</a>';
                                                  }
                                                  ?>
@@ -166,7 +166,7 @@ $exam2 = $_GET['exam'] ?? 'SSC';
                         </div>
                         <div class="col-md-4 mb-3">
                             <label for="modal_sscroll" class="form-label">Board Roll</label>
-                            <input type="text" class="form-control" id="modal_sscroll" name="sscroll" required>
+                            <input type="text" class="form-control" id="modal_sscroll" name="rollno" required>
                         </div>
                         <div class="col-md-4 mb-3">
                             <label for="modal_regdno" class="form-label">Registration No</label>
@@ -248,13 +248,13 @@ $exam2 = $_GET['exam'] ?? 'SSC';
         document.querySelectorAll('.st-check').forEach(cb => cb.checked = this.checked);
     });
 
-    function openModifyModal(stid, stnameeng, stnameben, fname, mname, sscroll, regdno, gpa, passing_year) {
+    function openModifyModal(stid, stnameeng, stnameben, fname, mname, rollno, regdno, gpa, passing_year) {
         document.getElementById('modal_stid').value = stid;
         document.getElementById('modal_stnameeng').value = stnameeng;
         document.getElementById('modal_stnameben').value = stnameben;
         document.getElementById('modal_fname').value = fname;
         document.getElementById('modal_mname').value = mname;
-        document.getElementById('modal_sscroll').value = sscroll;
+        document.getElementById('modal_sscroll').value = rollno;
         document.getElementById('modal_regdno').value = regdno;
         document.getElementById('modal_gpa').value = gpa;
         document.getElementById('modal_passing_year').value = passing_year;
@@ -265,7 +265,7 @@ $exam2 = $_GET['exam'] ?? 'SSC';
         const form = document.getElementById('modifyStudentForm');
         const formData = new FormData(form);
 
-        if (!formData.get('sscroll') || !formData.get('regdno')) {
+        if (!formData.get('rollno') || !formData.get('regdno')) {
             alert('Board Roll and Registration No are required.');
             return;
         }
