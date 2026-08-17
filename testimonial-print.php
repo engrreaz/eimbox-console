@@ -78,7 +78,7 @@ $result = $conn->query($sql);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Print Testimonial</title>
-    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
         body {
@@ -133,6 +133,10 @@ $result = $conn->query($sql);
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
             transition: background-color 0.2s;
         }
+        .image-select-label {
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
 
         #settings-panel {
             transition: transform .3s ease-in-out;
@@ -185,7 +189,7 @@ $result = $conn->query($sql);
 
             <div class="testimonial-page">
                 <img class="watermark-logo" src="<?= institute_logo($sccode) ?>">
-
+ 
                 <div class="content-wrapper">
                     <div style="text-align:center;" class="letter-head">
                         <?php include ('templete/letter-head-01.php'); ?>
@@ -198,8 +202,8 @@ $result = $conn->query($sql);
                                 <b><?= date('d F, Y', strtotime($row['testdate'])) ?></b></td>
                         </tr>
                         <tr>
-                            <td colspan="2" style="text-align:center; padding: 20px 0;">
-                                <img src="assets/images/testimonials-02.png" width="250" class="testimonial-title-img" />
+                            <td colspan="2" style="text-align:center; padding: 20px 0;" class="testimonial-title-container">
+                                <img src="assets/testimonial/testimonials-02.png" width="250" class="testimonial-title-img" />
                             </td>
                         </tr>
                         <tr>
@@ -250,7 +254,7 @@ $result = $conn->query($sql);
     </div>
 
     <!-- Settings Panel -->
-    <div class="card" id="settings-panel" style="position: fixed; top: 0; right: 0; width: 320px; height: 100vh; z-index: 1050; display: none; background-color: #f7f7ff; border-radius: 0; box-shadow: -3px 0 10px rgba(0,0,0,0.1);">
+    <div class="card" id="settings-panel" style="position: fixed; top: 0; right: -350px; width: 350px; height: 100vh; z-index: 1050; background-color: #f7f7ff; border-radius: 0; box-shadow: -3px 0 10px rgba(0,0,0,0.1); transition: right 0.3s ease-in-out;">
         <div class="card-header d-flex justify-content-between align-items-center py-2" style="background-color: #f0f0ff;">
             <h6 class="mb-0 fw-bold text-primary"><i class="bi bi-gear-wide-connected me-2"></i>Customize Design</h6>
             <button type="button" class="btn-close" onclick="document.getElementById('settings-panel').style.display='none'" aria-label="Close"></button>
@@ -269,16 +273,65 @@ $result = $conn->query($sql);
                 <label class="form-check-label small" for="toggle-letterhead">Show Letter Head</label>
             </div>
             <div class="form-check form-switch mb-2">
-                <input class="form-check-input" type="checkbox" id="toggle-title-img" checked>
-                <label class="form-check-label small" for="toggle-title-img">Show "Testimonial" Title Image</label>
-            </div>
-            <div class="form-check form-switch mb-2">
                 <input class="form-check-input" type="checkbox" id="toggle-signature" checked>
                 <label class="form-check-label small" for="toggle-signature">Show Head's Signature</label>
             </div>
             <div class="form-check form-switch mb-3">
                 <input class="form-check-input" type="checkbox" id="toggle-footer" checked>
                 <label class="form-check-label small" for="toggle-footer">Show Footer Section</label>
+            </div>
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="toggle-watermark" checked>
+                <label class="form-check-label small" for="toggle-watermark">Show Watermark Logo</label>
+            </div>
+            <hr>
+            <!-- Title Image Selector -->
+            <div class="mb-3">
+                <label class="form-label small">Choose Title</label>
+                <div id="title-style-selector" class="d-flex flex-wrap gap-2">
+                    <label class='image-select-label'>
+                        <input type='radio' name='title_style' value='none' class='d-none'>
+                        <div class='rounded border p-1 bg-white d-flex align-items-center justify-content-center' style='width: 50px; height: 30px;'>
+                           <i class='bi bi-x-lg'></i>
+                        </div>
+                    </label>
+                    <?php
+                    $title_images = glob('assets/testimonial/testimonials-/*.png');
+                    foreach ($title_images as $img) {
+                        $filename = basename($img);
+                        echo "
+                        <label class='image-select-label'>
+                            <input type='radio' name='title_style' value='{$filename}' class='d-none'>
+                            <img src='{$img}' height='30' class='rounded border p-1 bg-white'>
+                        </label>
+                        ";
+                    }
+                    ?>
+                </div>
+            </div>
+
+            <!-- Background Image Selector -->
+            <div class="mb-3">
+                <label class="form-label small">Page Background</label>
+                <div id="background-selector" class="d-flex flex-wrap gap-2">
+                     <label class='image-select-label'>
+                        <input type='radio' name='background_style' value='none' class='d-none'>
+                        <div class='rounded border p-1 bg-white d-flex align-items-center justify-content-center' style='width: 50px; height: 50px;'>
+                           <i class='bi bi-x-lg'></i>
+                        </div>
+                    </label>
+                    <?php
+                    $bg_images = glob('assets/testimonial/testimonial-background-/*.{png,jpg,jpeg}', GLOB_BRACE);
+                    foreach ($bg_images as $img) {
+                        $filename = basename($img);
+                        echo "
+                        <label class='image-select-label'>
+                            <input type='radio' name='background_style' value='{$filename}' class='d-none'>
+                            <img src='{$img}' width='50' height='50' class='rounded border p-1 bg-white' style='object-fit: cover;'>
+                        </label>";
+                    }
+                    ?>
+                </div>
             </div>
             <div class="d-grid gap-2">
                 <button class="btn btn-primary" onclick="saveAndReload()">Save & Apply</button>
@@ -290,10 +343,10 @@ $result = $conn->query($sql);
     <script>
         function toggleSettingsPanel() {
             const panel = document.getElementById('settings-panel');
-            if (panel.style.display === 'none' || panel.style.display === '') {
-                panel.style.display = 'block';
+            if (panel.style.right === '0px') {
+                panel.style.right = '-350px';
             } else {
-                panel.style.display = 'none';
+                panel.style.right = '0px';
             }
         }
 
@@ -332,20 +385,38 @@ $result = $conn->query($sql);
             // UI কন্ট্রোলগুলো আপডেট করা
             document.getElementById('font-size-slider').value = settings.fontSize || 16;
             document.getElementById('border-color-picker').value = settings.borderColor || '#000000';
-            document.getElementById('toggle-letterhead').checked = settings.showLetterhead !== false;
-            document.getElementById('toggle-title-img').checked = settings.showTitleImg !== false;
+            document.getElementById('toggle-letterhead').checked = settings.showLetterhead !== false; 
             document.getElementById('toggle-signature').checked = settings.showSignature !== false;
             document.getElementById('toggle-footer').checked = settings.showFooter !== false;
+            document.getElementById('toggle-watermark').checked = settings.showWatermark !== false;
+            if (settings.titleStyle) document.querySelector(`input[name="title_style"][value="${settings.titleStyle}"]`).checked = true;
+            if (settings.backgroundStyle) document.querySelector(`input[name="background_style"][value="${settings.backgroundStyle}"]`).checked = true;
         }
 
         // DOM-এ সেটিং প্রয়োগ করার ফাংশন
         function applySettings(settings) {
+            // Font size & Border
             document.querySelectorAll('.dynamic-text').forEach(el => el.style.fontSize = (settings.fontSize || 16) + 'px');
             document.querySelectorAll('.testimonial-page').forEach(el => el.style.border = `1px solid ${settings.borderColor || 'transparent'}`);
-            document.querySelectorAll('.letter-head').forEach(el => el.style.display = settings.showLetterhead === false ? 'none' : '');
-            document.querySelectorAll('.testimonial-title-img').forEach(el => el.style.display = settings.showTitleImg === false ? 'none' : '');
+            document.querySelectorAll('.letter-head').forEach(el => el.style.display = settings.showLetterhead === false ? 'none' : ''); 
             document.querySelectorAll('.head-signature-img').forEach(el => el.style.display = settings.showSignature === false ? 'none' : '');
             document.querySelectorAll('.footer-section').forEach(el => el.style.display = settings.showFooter === false ? 'none' : '');
+
+            // Watermark
+            document.querySelectorAll('.watermark-logo').forEach(el => el.style.display = settings.showWatermark === false ? 'none' : '');
+
+            // Title Image & container
+            if (settings.titleStyle && settings.titleStyle !== 'none') {
+                document.querySelectorAll('.testimonial-title-container').forEach(el => el.style.display = '');
+                document.querySelectorAll('.testimonial-title-img').forEach(el => el.src = `assets/testimonial/testimonials-/${settings.titleStyle}`);
+            } else {
+                // If 'none' or not set, hide the container
+                document.querySelectorAll('.testimonial-title-container').forEach(el => el.style.display = 'none');
+            }
+            // Background Image
+            if (settings.backgroundStyle && settings.backgroundStyle !== 'none') {
+                document.querySelectorAll('.testimonial-page').forEach(el => el.style.backgroundImage = `url('assets/testimonial/testimonial-backgrounds/${settings.backgroundStyle}')`);
+            }
         }
 
         // কুকিতে সেটিংস সেভ করে পেজ রিলোড করার ফাংশন
@@ -354,9 +425,11 @@ $result = $conn->query($sql);
                 fontSize: document.getElementById('font-size-slider').value,
                 borderColor: document.getElementById('border-color-picker').value,
                 showLetterhead: document.getElementById('toggle-letterhead').checked,
-                showTitleImg: document.getElementById('toggle-title-img').checked,
                 showSignature: document.getElementById('toggle-signature').checked,
                 showFooter: document.getElementById('toggle-footer').checked,
+                showWatermark: document.getElementById('toggle-watermark').checked,
+                titleStyle: document.querySelector('input[name="title_style"]:checked')?.value || 'testimonials-02.png',
+                backgroundStyle: document.querySelector('input[name="background_style"]:checked')?.value || 'none',
             };
             setCookie('testimonialSettings', JSON.stringify(settings), 30);
             location.reload(); // রিলোড করে নতুন সেটিংস প্রয়োগ করা
@@ -371,7 +444,21 @@ $result = $conn->query($sql);
         }
 
         // পেজ লোড হলে সেটিংস লোড করা
-        document.addEventListener('DOMContentLoaded', loadSettings);
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSettings();
+
+            // Image selector logic
+            document.querySelectorAll('input[name="title_style"], input[name="background_style"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    // Remove active class from all labels in the same group
+                    document.querySelectorAll(`input[name="${this.name}"]`).forEach(r => {
+                        r.parentElement.style.borderColor = 'transparent';
+                    });
+                    // Add active class to the selected one
+                    this.parentElement.style.borderColor = '#696cff';
+                });
+            });
+        });
     </script>
     <script src="assets/js/bootstrap.bundle.min.js"></script>
 </body>
