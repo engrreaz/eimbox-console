@@ -11,7 +11,7 @@ require_once 'core/functions.php';
 // 🔹 টেমপ্লেট রেন্ডারিং ফাংশন
 // এই ফাংশনটি প্লেসহোল্ডার পরিবর্তন করে চূড়ান্ত টেক্সট তৈরি করবে।
 // =================================================================
-function render_testimonial_template($template_body, $data)
+function render_testimonial_template($template_body, $data, $ed_board, $center_name)
 {
     $pronoun_he_she = (in_array($data['gender'], ['Male', 'Boy'])) ? 'He' : 'She';
 
@@ -30,7 +30,8 @@ function render_testimonial_template($template_body, $data)
         '[[PRONOUN_HIS_HER]]' => ($pronoun_he_she === 'He') ? 'His' : 'Her',
         '[[EXAM_NAME]]' => $data['pubexam'] ?? '',
         '[[PASSING_YEAR]]' => $data['passyear'] ?? '',
-        '[[BOARD_NAME]]' => 'Comilla', // এটি ডাইনামিক করা যেতে পারে
+        '[[BOARD_NAME]]' => $ed_board,
+        '[[CENTER_NAME]]' => $center_name,
         '[[ROLL_NO]]' => $data['rollno'] ?? '',
         '[[REGD_NO]]' => $data['regdno'] ?? '',
         '[[SESSION]]' => $data['session'] ?? '',
@@ -56,6 +57,15 @@ $stids_param = $_GET['stids'] ?? $_GET['stid'] ?? '0';
 // ডিফল্ট টেমপ্লেট ডেটাবেস থেকে লোড করা
 $template_query = $conn->query("SELECT template_body FROM testimonial_templates WHERE is_default = 1 AND sccode IN (0, '$sccode') ORDER BY sccode DESC LIMIT 1");
 $default_template_body = $template_query->fetch_assoc()['template_body'] ?? 'Default template not found in database.';
+
+// scinfo থেকে বোর্ড এবং সেন্টারের নাম আনা
+$scinfo_query = $conn->prepare("SELECT ed_board, center_name FROM scinfo WHERE sccode = ?");
+$scinfo_query->bind_param("s", $sccode);
+$scinfo_query->execute();
+$scinfo_result = $scinfo_query->get_result()->fetch_assoc();
+$scinfo_query->close();
+$ed_board = $scinfo_result['ed_board'] ?? 'N/A';
+$center_name = $scinfo_result['center_name'] ?? 'N/A';
 
 $stids = array_filter(array_map('intval', explode(',', $stids_param)));
 
@@ -184,7 +194,7 @@ $result = $conn->query($sql);
             $render_data = array_merge($row, $student_data);
 
             // টেমপ্লেট রেন্ডার করা
-            $testimonial_body = render_testimonial_template($default_template_body, $render_data);
+            $testimonial_body = render_testimonial_template($default_template_body, $render_data, $ed_board, $center_name);
             ?>
 
             <div class="testimonial-page">
