@@ -1,5 +1,6 @@
 <?php
-require_once '../core/init.php';
+ob_start(); // Start output buffering
+require_once '../core/init.php'; 
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -60,6 +61,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->bind_param("sssssssssss", $stnameeng, $stnameben, $fname, $mname, $rollno, $regdno, $gpa, $gla, $passing_year, $stid, $sccode);
 
     if ($stmt->execute()) {
+        ob_end_clean(); // Clean (discard) the buffer
+        header('Content-Type: application/json'); // Re-set header just in case
+
         echo json_encode(["status" => "success", "gla" => $gla]);
     } else {
         http_response_code(500);
