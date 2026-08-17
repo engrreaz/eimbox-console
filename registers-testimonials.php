@@ -243,7 +243,7 @@ if ($scinfo_query) {
             success: function (response) {
                 if (response.status === 'success') {
                     showToast('success', response.message, 'Success');
-                    actionCell.html(response.action_html);
+                //    actionCell.html(response.action_html);
                 } else {
                     showToast('error', response.message, 'Error');
                     actionCell.html('Failed'); // Or restore previous state
