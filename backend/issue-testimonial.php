@@ -24,13 +24,40 @@ $check_stmt->execute();
 $check_result = $check_stmt->get_result();
 
 if ($check_result->num_rows === 0) {
-    // If not issued, insert a new record
+    // Fetch additional student data required for the testimonial table
+    $student_data_sql = "
+        SELECT 
+            s.sscroll, s.regdno, s.sscpassyear, s.gpa, s.gla,
+            si.groups
+        FROM students s
+        LEFT JOIN sessioninfo si ON s.stid = si.stid AND s.sccode = si.sccode AND si.sessionyear = ?
+        WHERE s.stid = ? AND s.sccode = ?
+        LIMIT 1
+    ";
+    $stmt_student = $conn->prepare($student_data_sql);
+    $stmt_student->bind_param("sss", $year, $stid, $sccode);
+    $stmt_student->execute();
+    $student_data = $stmt_student->get_result()->fetch_assoc();
+    $stmt_student->close();
+
+    // Prepare data for insertion
+    $board_roll = $student_data['sscroll'] ?? null;
+    $regd_no = $student_data['regdno'] ?? null;
+    $pass_year = $student_data['sscpassyear'] ?? $year;
+    $gpa = $student_data['gpa'] ?? 0;
+    $grade = $student_data['gla'] ?? 'F';
+    $group = $student_data['groups'] ?? $sec; // Fallback to section if group not found
+
     $issue_date = date('Y-m-d');
+    $issue_time = date('Y-m-d H:i:s');
+
+    // If not issued, insert a new record with all the details
     $insert_stmt = $conn->prepare(
-        "INSERT INTO testimonial (stid, sccode, passyear, pubexam, testdate, issueby) VALUES (?, ?, ?, ?, ?, ?)"
+        "INSERT INTO testimonial (sccode, stid, pubexam, rollno, regdno, passyear, gpa, grade, testdate, groupsection, issueby, issuetime) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
     if ($insert_stmt) {
-        $insert_stmt->bind_param("ssssss", $stid, $sccode, $year, $exam, $issue_date, $entryby);
+        $insert_stmt->bind_param("ssssssssssss", $sccode, $stid, $exam, $board_roll, $regd_no, $pass_year, $gpa, $grade, $issue_date, $group, $entryby, $issue_time);
         $insert_stmt->execute();
         $insert_stmt->close();
     }
