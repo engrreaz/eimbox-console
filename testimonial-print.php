@@ -134,33 +134,6 @@ $result = $conn->query($sql);
             transition: background-color 0.2s;
         }
 
-        .fab-main:hover {
-            background-color: #5355d8;
-        }
-
-        #settings-panel {
-            position: fixed;
-            top: 0;
-            right: -350px;
-            width: 300px;
-            height: 100%;
-            background: #fff;
-            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.15);
-            padding: 20px;
-            transition: right 0.3s ease-in-out;
-            z-index: 10000;
-            overflow-y: auto;
-        }
-
-        #settings-panel.open {
-            right: 0;
-        }
-
-        #settings-panel h5 {
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
-        }
-
         @media print {
             body {
                 background: none;
@@ -171,6 +144,10 @@ $result = $conn->query($sql);
                 box-shadow: none;
                 min-height: 0;
                 border: none;
+            }
+
+            .offcanvas {
+                display: none !important;
             }
 
             .fab-wrapper {
@@ -260,7 +237,7 @@ $result = $conn->query($sql);
 
     <!-- Floating Menu -->
     <div class="fab-wrapper">
-        <button class="fab-main mb-2" onclick="toggleSettings()">
+        <button class="fab-main mb-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#settings-panel" aria-controls="settings-panel">
             <i class="bi bi-gear"></i>
         </button>
         <button class="fab-main" onclick="window.print()">
@@ -269,65 +246,97 @@ $result = $conn->query($sql);
     </div>
 
     <!-- Settings Panel -->
-    <div id="settings-panel">
-        <h5>Customize Design</h5>
-        <div class="mb-3">
-            <label class="form-label small">Font Size</label>
-            <input type="range" class="form-range" id="font-size-slider" min="12" max="20" step="1">
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="settings-panel" aria-labelledby="settingsPanelLabel">
+        <div class="offcanvas-header">
+            <h5 id="settingsPanelLabel">Customize Design</h5>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
-        <div class="mb-3">
-            <label class="form-label small">Page Border</label>
-            <input type="color" class="form-control form-control-color" id="border-color-picker" title="Choose border color">
+        <div class="offcanvas-body">
+            <div class="mb-3">
+                <label for="font-size-slider" class="form-label small">Font Size</label>
+                <input type="range" class="form-range" id="font-size-slider" min="12" max="20" step="1">
+            </div>
+            <div class="mb-3">
+                <label for="border-color-picker" class="form-label small">Page Border Color</label>
+                <input type="color" class="form-control form-control-color" id="border-color-picker" title="Choose border color">
+            </div>
+            <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox" id="toggle-letterhead">
+                <label class="form-check-label small" for="toggle-letterhead">Show Letter Head</label>
+            </div>
+            <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox" id="toggle-title-img">
+                <label class="form-check-label small" for="toggle-title-img">Show "Testimonial" Title Image</label>
+            </div>
+            <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox" id="toggle-signature">
+                <label class="form-check-label small" for="toggle-signature">Show Head's Signature</label>
+            </div>
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="toggle-footer">
+                <label class="form-check-label small" for="toggle-footer">Show Footer Section</label>
+            </div>
+            <hr>
+            <div class="d-flex justify-content-between">
+                <button class="btn btn-sm btn-primary" onclick="saveAndReload()">Save & Apply</button>
+                <button class="btn btn-sm btn-outline-danger" onclick="resetSettings()">Reset to Default</button>
+            </div>
         </div>
-        <div class="form-check form-switch mb-2">
-            <input class="form-check-input" type="checkbox" id="toggle-letterhead">
-            <label class="form-check-label small" for="toggle-letterhead">Show Letter Head</label>
-        </div>
-        <div class="form-check form-switch mb-2">
-            <input class="form-check-input" type="checkbox" id="toggle-title-img">
-            <label class="form-check-label small" for="toggle-title-img">Show "Testimonial" Title Image</label>
-        </div>
-        <div class="form-check form-switch mb-2">
-            <input class="form-check-input" type="checkbox" id="toggle-signature">
-            <label class="form-check-label small" for="toggle-signature">Show Head's Signature</label>
-        </div>
-        <div class="form-check form-switch mb-3">
-            <input class="form-check-input" type="checkbox" id="toggle-footer">
-            <label class="form-check-label small" for="toggle-footer">Show Footer Section</label>
-        </div>
-        <button class="btn btn-sm btn-outline-danger" onclick="resetSettings()">Reset to Default</button>
     </div>
 
     <script>
-        const settingsPanel = document.getElementById('settings-panel');
-        const body = document.body;
+        // Helper functions for cookies
+        function setCookie(name, value, days) {
+            let expires = "";
+            if (days) {
+                const date = new Date();
+                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                expires = "; expires=" + date.toUTCString();
+            }
+            document.cookie = name + "=" + (value || "") + expires + "; path=/";
+        }
+
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+
+        function deleteCookie(name) {
+            document.cookie = name + '=; Max-Age=-99999999;';
+        }
 
         // কুকি থেকে সেটিংস লোড করার ফাংশন
         function loadSettings() {
             const settings = JSON.parse(getCookie('testimonialSettings') || '{}');
             applySettings(settings);
 
-            // UI আপডেট করা
+            // UI কন্ট্রোলগুলো আপডেট করা
             document.getElementById('font-size-slider').value = settings.fontSize || 16;
-            document.getElementById('border-color-picker').value = settings.borderColor || '#ffffff';
+            document.getElementById('border-color-picker').value = settings.borderColor || '#000000';
             document.getElementById('toggle-letterhead').checked = settings.showLetterhead !== false;
             document.getElementById('toggle-title-img').checked = settings.showTitleImg !== false;
             document.getElementById('toggle-signature').checked = settings.showSignature !== false;
             document.getElementById('toggle-footer').checked = settings.showFooter !== false;
         }
 
-        // সেটিং প্রয়োগ করার ফাংশন
+        // DOM-এ সেটিং প্রয়োগ করার ফাংশন
         function applySettings(settings) {
             document.querySelectorAll('.dynamic-text').forEach(el => el.style.fontSize = (settings.fontSize || 16) + 'px');
-            document.querySelectorAll('.testimonial-page').forEach(el => el.style.borderColor = settings.borderColor || 'transparent');
+            document.querySelectorAll('.testimonial-page').forEach(el => el.style.border = `1px solid ${settings.borderColor || 'transparent'}`);
             document.querySelectorAll('.letter-head').forEach(el => el.style.display = settings.showLetterhead === false ? 'none' : '');
             document.querySelectorAll('.testimonial-title-img').forEach(el => el.style.display = settings.showTitleImg === false ? 'none' : '');
             document.querySelectorAll('.head-signature-img').forEach(el => el.style.display = settings.showSignature === false ? 'none' : '');
             document.querySelectorAll('.footer-section').forEach(el => el.style.display = settings.showFooter === false ? 'none' : '');
         }
 
-        // কুকিতে সেটিংস সেভ করার ফাংশন
-        function saveSettings() {
+        // কুকিতে সেটিংস সেভ করে পেজ রিলোড করার ফাংশন
+        function saveAndReload() {
             const settings = {
                 fontSize: document.getElementById('font-size-slider').value,
                 borderColor: document.getElementById('border-color-picker').value,
@@ -337,29 +346,20 @@ $result = $conn->query($sql);
                 showFooter: document.getElementById('toggle-footer').checked,
             };
             setCookie('testimonialSettings', JSON.stringify(settings), 30);
-            applySettings(settings);
+            location.reload(); // রিলোড করে নতুন সেটিংস প্রয়োগ করা
         }
 
         // সেটিংস রিসেট করার ফাংশন
         function resetSettings() {
-            deleteCookie('testimonialSettings');
-            loadSettings();
+            if (confirm('Are you sure you want to reset all settings to default?')) {
+                deleteCookie('testimonialSettings');
+                location.reload();
+            }
         }
-
-        // সেটিংস প্যানেল টগল
-        function toggleSettings() {
-            settingsPanel.classList.toggle('open');
-        }
-
-        // ইভেন্ট লিসেনার যোগ করা
-        document.querySelectorAll('#settings-panel input').forEach(input => {
-            input.addEventListener('input', saveSettings);
-        });
 
         // পেজ লোড হলে সেটিংস লোড করা
         document.addEventListener('DOMContentLoaded', loadSettings);
     </script>
-    <script src="assets/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
