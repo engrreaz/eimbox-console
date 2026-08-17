@@ -360,6 +360,7 @@ $result = $conn->query($sql);
         // পেজ লোড হলে সেটিংস লোড করা
         document.addEventListener('DOMContentLoaded', loadSettings);
     </script>
+    <script src="assets/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
