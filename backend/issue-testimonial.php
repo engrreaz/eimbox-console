@@ -40,6 +40,12 @@ if ($check_result->num_rows === 0) {
     $student_data = $stmt_student->get_result()->fetch_assoc();
     $stmt_student->close();
 
+    // যদি ছাত্রের ডেটা না পাওয়া যায়, তাহলে একটি এরর মেসেজ দিয়ে প্রসেস বন্ধ করা হবে।
+    if (!$student_data) {
+        echo "Error: Student data not found for STID: $stid. Cannot issue testimonial.";
+        exit;
+    }
+
     // Prepare data for insertion
     $board_roll = $student_data['sscroll'] ?? null;
     $regd_no = $student_data['regdno'] ?? null;
@@ -56,10 +62,6 @@ if ($check_result->num_rows === 0) {
         "INSERT INTO testimonial (sccode, stid, pubexam, rollno, regdno, passyear, gpa, grade, testdate, groupsection, issueby, issuetime) 
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
-
-
-    echo $insert_stmt;
-    echo $sccode . '/' . $stid . '/' . $exam . '/' . $board_roll . '/' . $regd_no . '/' . $pass_year . '/' . $gpa . '/' . $grade . '/' . $issue_date . '/' . $group . '/' . $entryby . '/' . $issue_time;
 
     if ($insert_stmt) {
         $insert_stmt->bind_param("ssssssssssss", $sccode, $stid, $exam, $board_roll, $regd_no, $pass_year, $gpa, $grade, $issue_date, $group, $entryby, $issue_time);
