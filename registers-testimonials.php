@@ -101,7 +101,7 @@ $exam2 = $_GET['exam'] ?? 'SSC';
                                              <div class="dropdown-menu dropdown-menu-end">
                                                  <?php
                                                  // Condition: Data is updated (regdno, sscroll, and gpa are present)
-                                                 $is_data_updated = !empty($row['regdno']) && !empty($row['sscroll']) && $row['gpa'] > 0;
+                                                 $is_data_updated = !empty($row['regdno']) && !empty($row['rollno']) && $row['gpa'] > 0;
  
                                                  // Always show Update Info
                                                  echo '<a class="dropdown-item" href="javascript:void(0);" onclick="openModifyModal(\'' . $row['stid'] . '\', \'' . addslashes($row['stnameeng']) . '\', \'' . addslashes($row['stnameben']) . '\', \'' . addslashes($row['fname']) . '\', \'' . addslashes($row['mname']) . '\', \'' . $row['rollno'] . '\', \'' . $row['regdno'] . '\', \'' . $row['gpa'] . '\', \'' . $row['sscpassyear'] . '\')"><i class="bi bi-pencil-square me-2"></i> Update Info</a>';
