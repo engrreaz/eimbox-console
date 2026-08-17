@@ -8,7 +8,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stnameben = trim($_POST['stnameben'] ?? '');
     $fname = trim($_POST['fname'] ?? '');
     $mname = trim($_POST['mname'] ?? '');
-    $sscroll = trim($_POST['sscroll'] ?? '');
+    $sscroll = trim($_POST['rollno'] ?? '');
     $regdno = trim($_POST['regdno'] ?? '');
     $gpa = trim($_POST['gpa'] ?? '');
 
@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         UPDATE students 
         SET 
             stnameeng = ?, stnameben = ?, fname = ?, mname = ?, 
-            sscroll = ?, regdno = ?, gpa = ?
+            roll = ?, regdno = ?, gpa = ?
         WHERE 
             stid = ? AND sccode = ?
     ");
