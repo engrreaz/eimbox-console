@@ -56,6 +56,11 @@ if ($check_result->num_rows === 0) {
         "INSERT INTO testimonial (sccode, stid, pubexam, rollno, regdno, passyear, gpa, grade, testdate, groupsection, issueby, issuetime) 
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
+
+
+    echo $insert_stmt;
+    echo $sccode . '/' . $stid . '/' . $exam . '/' . $board_roll . '/' . $regd_no . '/' . $pass_year . '/' . $gpa . '/' . $grade . '/' . $issue_date . '/' . $group . '/' . $entryby . '/' . $issue_time;
+
     if ($insert_stmt) {
         $insert_stmt->bind_param("ssssssssssss", $sccode, $stid, $exam, $board_roll, $regd_no, $pass_year, $gpa, $grade, $issue_date, $group, $entryby, $issue_time);
         $insert_stmt->execute();
