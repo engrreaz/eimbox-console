@@ -394,7 +394,7 @@ $result = $conn->query($sql);
             document.querySelectorAll('.watermark-logo').forEach(el => el.style.display = settings.showWatermark === false ? 'none' : '');
 
             // Title Image & container
-            const titleStyle = settings.titleStyle || 'testimonials-02.png';
+            const titleStyle = settings.titleStyle || 'testimonials-00.png';
             document.querySelectorAll('.testimonial-title-img').forEach(el => el.src = `assets/testimonial/${titleStyle}`);
             
             // Background Image
