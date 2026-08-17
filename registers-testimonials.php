@@ -86,7 +86,7 @@ $exam2 = $_GET['exam'] ?? 'SSC';
                                         <div>M: <span id="mname_<?= $row['stid'] ?>"><?= $row['mname'] ?></span></div>
                                     </td>
                                     <td>
-                                        <div>Board Roll: <span id="board_roll_<?= $row['stid'] ?>"><?= $row['sscroll'] ?></span></div>
+                                        <div>Board Roll: <span id="board_roll_<?= $row['stid'] ?>"><?= $row['rollno'] ?></span></div>
                                         <div>Regd No: <span id="regd_no_<?= $row['stid'] ?>"><?= $row['regdno'] ?></span></div>
                                     </td>
                                     <td>
@@ -256,6 +256,7 @@ $exam2 = $_GET['exam'] ?? 'SSC';
         document.getElementById('modal_sscroll').value = sscroll;
         document.getElementById('modal_regdno').value = regdno;
         document.getElementById('modal_gpa').value = gpa;
+        document.getElementById('modal_passing_year').value = passing_year;
         document.getElementById('modal_passing_year').value = passing_year;
         modifyModal.show();
     }

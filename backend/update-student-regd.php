@@ -8,7 +8,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stnameben = trim($_POST['stnameben'] ?? '');
     $fname = trim($_POST['fname'] ?? '');
     $mname = trim($_POST['mname'] ?? '');
-    $sscroll = trim($_POST['sscroll'] ?? '');
+    $sscroll = trim($_POST['sscroll'] ?? ''); // This is actually Board Roll
     $regdno = trim($_POST['regdno'] ?? '');
     $gpa = trim($_POST['gpa'] ?? '');
 
@@ -49,12 +49,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         UPDATE students 
         SET 
             stnameeng = ?, stnameben = ?, fname = ?, mname = ?, 
-            rollno = ?, regdno = ?, gpa = ?, gla = ?, sscpassyear = ?
+            sscroll = ?, regdno = ?, gpa = ?, gla = ?, sscpassyear = ?
         WHERE 
             stid = ? AND sccode = ? 
     ");
 
-    // Bind parameters: 9 for SET, 2 for WHERE. All treated as strings for simplicity.
+    // Bind parameters: 9 for SET, 2 for WHERE. All treated as strings for simplicity. sscroll is used for board roll.
     $stmt->bind_param("sssssssssss", $stnameeng, $stnameben, $fname, $mname, $sscroll, $regdno, $gpa, $gla, $passing_year, $stid, $sccode);
 
     if ($stmt->execute()) {
