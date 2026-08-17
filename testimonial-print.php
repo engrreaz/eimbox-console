@@ -91,8 +91,8 @@ $result = $conn->query($sql);
             background: white;
             width: 210mm;
             min-height: 297mm; /* Use min-height to avoid content overflow issues */
-            margin: 20px auto;
-            padding: 20mm 20mm 15mm;
+            margin: 20px auto; 
+            padding: 25.4mm; /* 1 inch margin */
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
             position: relative;
             page-break-after: always;
@@ -264,10 +264,6 @@ $result = $conn->query($sql);
                 <label for="font-size-slider" class="form-label small">Font Size</label>
                 <input type="range" class="form-range" id="font-size-slider" min="12" max="20" step="1" value="16">
             </div>
-            <div class="mb-3">
-                <label for="border-color-picker" class="form-label small">Page Border Color</label>
-                <input type="color" class="form-control form-control-color" id="border-color-picker" value="#000000" title="Choose border color">
-            </div>
             <div class="form-check form-switch mb-2">
                 <input class="form-check-input" type="checkbox" id="toggle-letterhead" checked>
                 <label class="form-check-label small" for="toggle-letterhead">Show Letter Head</label>
@@ -287,16 +283,10 @@ $result = $conn->query($sql);
             <hr>
             <!-- Title Image Selector -->
             <div class="mb-3">
-                <label class="form-label small">Choose Title</label>
+                <label class="form-label small">Choose Title Style</label>
                 <div id="title-style-selector" class="d-flex flex-wrap gap-2">
-                    <label class='image-select-label'>
-                        <input type='radio' name='title_style' value='none' class='d-none'>
-                        <div class='rounded border p-1 bg-white d-flex align-items-center justify-content-center' style='width: 50px; height: 30px;'>
-                           <i class='bi bi-x-lg'></i>
-                        </div>
-                    </label>
                     <?php
-                    $title_images = glob('assets/testimonial/testimonials-/*.png');
+                    $title_images = glob('assets/testimonial/testimonials-*.png');
                     foreach ($title_images as $img) {
                         $filename = basename($img);
                         echo "
@@ -314,14 +304,8 @@ $result = $conn->query($sql);
             <div class="mb-3">
                 <label class="form-label small">Page Background</label>
                 <div id="background-selector" class="d-flex flex-wrap gap-2">
-                     <label class='image-select-label'>
-                        <input type='radio' name='background_style' value='none' class='d-none'>
-                        <div class='rounded border p-1 bg-white d-flex align-items-center justify-content-center' style='width: 50px; height: 50px;'>
-                           <i class='bi bi-x-lg'></i>
-                        </div>
-                    </label>
                     <?php
-                    $bg_images = glob('assets/testimonial/testimonial-background-/*.{png,jpg,jpeg}', GLOB_BRACE);
+                    $bg_images = glob('assets/testimonial/testimonial-background-*.{png,jpg,jpeg}', GLOB_BRACE);
                     foreach ($bg_images as $img) {
                         $filename = basename($img);
                         echo "
@@ -384,20 +368,24 @@ $result = $conn->query($sql);
 
             // UI কন্ট্রোলগুলো আপডেট করা
             document.getElementById('font-size-slider').value = settings.fontSize || 16;
-            document.getElementById('border-color-picker').value = settings.borderColor || '#000000';
             document.getElementById('toggle-letterhead').checked = settings.showLetterhead !== false; 
             document.getElementById('toggle-signature').checked = settings.showSignature !== false;
             document.getElementById('toggle-footer').checked = settings.showFooter !== false;
             document.getElementById('toggle-watermark').checked = settings.showWatermark !== false;
-            if (settings.titleStyle) document.querySelector(`input[name="title_style"][value="${settings.titleStyle}"]`).checked = true;
-            if (settings.backgroundStyle) document.querySelector(`input[name="background_style"][value="${settings.backgroundStyle}"]`).checked = true;
+            
+            // Title and Background style selection
+            const titleStyle = settings.titleStyle || 'testimonials-02.png';
+            const backgroundStyle = settings.backgroundStyle || 'testimonial-background-00.png';
+            
+            document.querySelector(`input[name="title_style"][value="${titleStyle}"]`).checked = true;
+            document.querySelector(`input[name="background_style"][value="${backgroundStyle}"]`).checked = true;
+
         }
 
         // DOM-এ সেটিং প্রয়োগ করার ফাংশন
         function applySettings(settings) {
             // Font size & Border
             document.querySelectorAll('.dynamic-text').forEach(el => el.style.fontSize = (settings.fontSize || 16) + 'px');
-            document.querySelectorAll('.testimonial-page').forEach(el => el.style.border = `1px solid ${settings.borderColor || 'transparent'}`);
             document.querySelectorAll('.letter-head').forEach(el => el.style.display = settings.showLetterhead === false ? 'none' : ''); 
             document.querySelectorAll('.head-signature-img').forEach(el => el.style.display = settings.showSignature === false ? 'none' : '');
             document.querySelectorAll('.footer-section').forEach(el => el.style.display = settings.showFooter === false ? 'none' : '');
@@ -406,16 +394,15 @@ $result = $conn->query($sql);
             document.querySelectorAll('.watermark-logo').forEach(el => el.style.display = settings.showWatermark === false ? 'none' : '');
 
             // Title Image & container
-            if (settings.titleStyle && settings.titleStyle !== 'none') {
-                document.querySelectorAll('.testimonial-title-container').forEach(el => el.style.display = '');
-                document.querySelectorAll('.testimonial-title-img').forEach(el => el.src = `assets/testimonial/testimonials-/${settings.titleStyle}`);
-            } else {
-                // If 'none' or not set, hide the container
-                document.querySelectorAll('.testimonial-title-container').forEach(el => el.style.display = 'none');
-            }
+            const titleStyle = settings.titleStyle || 'testimonials-02.png';
+            document.querySelectorAll('.testimonial-title-img').forEach(el => el.src = `assets/testimonial/${titleStyle}`);
+            
             // Background Image
-            if (settings.backgroundStyle && settings.backgroundStyle !== 'none') {
-                document.querySelectorAll('.testimonial-page').forEach(el => el.style.backgroundImage = `url('assets/testimonial/testimonial-backgrounds/${settings.backgroundStyle}')`);
+            const backgroundStyle = settings.backgroundStyle || 'testimonial-background-00.png';
+            if (backgroundStyle !== 'none') {
+                document.querySelectorAll('.testimonial-page').forEach(el => {
+                    el.style.backgroundImage = `url('assets/testimonial/${backgroundStyle}')`;
+                });
             }
         }
 
@@ -423,13 +410,12 @@ $result = $conn->query($sql);
         function saveAndReload() {
             const settings = {
                 fontSize: document.getElementById('font-size-slider').value,
-                borderColor: document.getElementById('border-color-picker').value,
                 showLetterhead: document.getElementById('toggle-letterhead').checked,
                 showSignature: document.getElementById('toggle-signature').checked,
                 showFooter: document.getElementById('toggle-footer').checked,
                 showWatermark: document.getElementById('toggle-watermark').checked,
-                titleStyle: document.querySelector('input[name="title_style"]:checked')?.value || 'testimonials-02.png',
-                backgroundStyle: document.querySelector('input[name="background_style"]:checked')?.value || 'none',
+                titleStyle: document.querySelector('input[name="title_style"]:checked')?.value,
+                backgroundStyle: document.querySelector('input[name="background_style"]:checked')?.value,
             };
             setCookie('testimonialSettings', JSON.stringify(settings), 30);
             location.reload(); // রিলোড করে নতুন সেটিংস প্রয়োগ করা
@@ -447,16 +433,21 @@ $result = $conn->query($sql);
         document.addEventListener('DOMContentLoaded', function() {
             loadSettings();
 
+            function highlightSelection(radio) {
+                 // Remove active class from all labels in the same group
+                 document.querySelectorAll(`input[name="${radio.name}"]`).forEach(r => {
+                    r.parentElement.style.borderColor = 'transparent';
+                });
+                // Add active class to the selected one
+                radio.parentElement.style.borderColor = '#696cff';
+            }
+
             // Image selector logic
             document.querySelectorAll('input[name="title_style"], input[name="background_style"]').forEach(radio => {
-                radio.addEventListener('change', function() {
-                    // Remove active class from all labels in the same group
-                    document.querySelectorAll(`input[name="${this.name}"]`).forEach(r => {
-                        r.parentElement.style.borderColor = 'transparent';
-                    });
-                    // Add active class to the selected one
-                    this.parentElement.style.borderColor = '#696cff';
-                });
+                // Highlight on change
+                radio.addEventListener('change', () => highlightSelection(radio));
+                // Highlight on load if checked
+                if(radio.checked) highlightSelection(radio);
             });
         });
     </script>
