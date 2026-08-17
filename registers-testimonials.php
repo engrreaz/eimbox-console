@@ -318,6 +318,10 @@ if ($scinfo_query) {
                     modifyModal.hide();
 
                     const stid = formData.get('stid');
+                    const stnameeng = formData.get('stnameeng');
+                    const stnameben = formData.get('stnameben');
+                    const fname = formData.get('fname');
+                    const mname = formData.get('mname');
                     // Update table cells instantly
                     document.getElementById('board_roll_' + stid).textContent = formData.get('rollno');
                     document.getElementById('regd_no_' + stid).textContent = formData.get('regdno');
@@ -325,6 +329,11 @@ if ($scinfo_query) {
                     document.getElementById('gla_' + stid).textContent = formData.get('gpa') > 0 ? ' / ' + response.gla : '';
                     document.getElementById('fname_' + stid).textContent = formData.get('fname');
                     document.getElementById('mname_' + stid).textContent = formData.get('mname');
+
+                    // Update student name in the table
+                    const studentNameCell = document.getElementById('student-row-' + stid).cells[2];
+                    studentNameCell.innerHTML = `<div>${stnameeng}</div><small class="text-muted">${stnameben}</small>`;
+
 
                     // Fetch and update the action cell
                     $.get(`backend/get-testimonial-action-cell.php?stid=${stid}&exam=${$('#exam').val()}`, function(actionHtml) {
