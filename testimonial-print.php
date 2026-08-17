@@ -239,16 +239,19 @@ $result = $conn->query($sql);
     }
     ?>
 
-    <!-- Floating Action Button for Print -->
+    <!-- Floating Action Buttons -->
     <div class="fab-wrapper">
+        <button class="fab-main mb-2" onclick="toggleSettingsPanel()">
+            <i class="bi bi-gear"></i>
+        </button>
         <button class="fab-main" onclick="window.print()">
             <i class="bi bi-printer"></i>
         </button>
     </div>
 
     <!-- Settings Panel -->
-    <div class="card shadow-lg" id="settings-panel" style="position: fixed; top: 20px; right: 20px; width: 320px; z-index: 1050;">
-        <div class="card-header d-flex justify-content-between align-items-center bg-light py-2">
+    <div class="card shadow-lg" id="settings-panel" style="position: fixed; top: 20px; right: 20px; width: 320px; z-index: 1050; display: none; background-color: #f7f7ff;">
+        <div class="card-header d-flex justify-content-between align-items-center py-2" style="background-color: #f0f0ff;">
             <h6 class="mb-0 fw-bold text-primary"><i class="bi bi-gear-wide-connected me-2"></i>Customize Design</h6>
             <button type="button" class="btn-close" onclick="document.getElementById('settings-panel').style.display='none'" aria-label="Close"></button>
         </div>
@@ -285,6 +288,16 @@ $result = $conn->query($sql);
     </div>
 
     <script>
+        function toggleSettingsPanel() {
+            const panel = document.getElementById('settings-panel');
+            if (panel.style.display === 'none' || panel.style.display === '') {
+                panel.style.display = 'block';
+            } else {
+                panel.style.display = 'none';
+            }
+        }
+
+
         // Helper functions for cookies
         function setCookie(name, value, days) {
             let expires = "";
