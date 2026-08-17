@@ -52,18 +52,18 @@ $exam2 = $_GET['exam'] ?? 'SSC';
                 <thead class="table-light">
                     <tr>
                         <th><input type="checkbox" id="checkAll" class="form-check-input"></th>
-                        <th>Roll</th>
+                        <th>Class Roll</th>
                         <th>Student Name</th>
                         <th>Parents</th>
-                        <th>Roll/Regd</th>
-                        <th>Result</th>
+                        <th>Board Roll / Regd No</th>
+                        <th>Result (GPA/Grade)</th>
                         <th class="text-center">Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php
                     if (!empty($cls2) && !empty($sec2)) {
-                        $sql0 = "SELECT si.id as session_id, si.rollno, si.stid, s.* FROM sessioninfo si JOIN students s ON si.stid = s.stid AND si.sccode = s.sccode WHERE si.sessionyear = '$sessionyear' AND si.sccode='$sccode' AND si.classname='$cls2' AND si.sectionname = '$sec2' ORDER BY si.rollno";
+                        $sql0 = "SELECT si.id as session_id, si.rollno, si.stid, s.*, s.sscpassyear FROM sessioninfo si JOIN students s ON si.stid = s.stid AND si.sccode = s.sccode WHERE si.sessionyear = '$sessionyear' AND si.sccode='$sccode' AND si.classname='$cls2' AND si.sectionname = '$sec2' ORDER BY si.rollno";
                         $result0 = $conn->query($sql0);
                         if ($result0->num_rows > 0) {
                             while ($row = $result0->fetch_assoc()) {
@@ -76,21 +76,22 @@ $exam2 = $_GET['exam'] ?? 'SSC';
                                 <tr>
                                     <td><input type="checkbox" class="form-check-input st-check"
                                             value="<?= $row['stid'] ?>" <?= !$is_printable ? 'disabled' : '' ?>></td>
-                                    <td><?= $row['rollno'] ?></td>
+                                    <td id="class_roll_<?= $row['stid'] ?>"><?= $row['rollno'] ?></td>
                                     <td>
                                         <div><?= $row['stnameeng'] ?></div>
                                         <small class="text-muted"><?= $row['stnameben'] ?></small>
                                     </td>
                                     <td>
-                                        <div>F: <?= $row['fname'] ?></div>
-                                        <div>M: <?= $row['mname'] ?></div>
+                                        <div>F: <span id="fname_<?= $row['stid'] ?>"><?= $row['fname'] ?></span></div>
+                                        <div>M: <span id="mname_<?= $row['stid'] ?>"><?= $row['mname'] ?></span></div>
                                     </td>
                                     <td>
-                                        <div>Roll: <?= $row['sscroll'] ?></div>
-                                        <div>Regd: <?= $row['regdno'] ?></div>
+                                        <div>Board Roll: <span id="board_roll_<?= $row['stid'] ?>"><?= $row['sscroll'] ?></span></div>
+                                        <div>Regd No: <span id="regd_no_<?= $row['stid'] ?>"><?= $row['regdno'] ?></span></div>
                                     </td>
                                     <td>
-                                        <?php if ($row['gpa'] > 0) echo $row['gpa'] . ' / ' . $row['gla']; ?>
+                                        <span id="gpa_<?= $row['stid'] ?>"><?= $row['gpa'] > 0 ? $row['gpa'] : '' ?></span>
+                                        <span id="gla_<?= $row['stid'] ?>"><?= $row['gpa'] > 0 ? ' / ' . $row['gla'] : '' ?></span>
                                     </td>
                                      <td class="text-center" id="action-cell-<?= $row['stid'] ?>">
                                          <div class="dropdown">
@@ -103,7 +104,7 @@ $exam2 = $_GET['exam'] ?? 'SSC';
                                                  $is_data_updated = !empty($row['regdno']) && !empty($row['sscroll']) && $row['gpa'] > 0;
  
                                                  // Always show Update Info
-                                                 echo '<a class="dropdown-item" href="javascript:void(0);" onclick="openModifyModal(\'' . $row['stid'] . '\', \'' . addslashes($row['stnameeng']) . '\', \'' . addslashes($row['stnameben']) . '\', \'' . addslashes($row['fname']) . '\', \'' . addslashes($row['mname']) . '\', \'' . $row['sscroll'] . '\', \'' . $row['regdno'] . '\', \'' . $row['gpa'] . '\')"><i class="bi bi-pencil-square me-2"></i> Update Info</a>';
+                                                 echo '<a class="dropdown-item" href="javascript:void(0);" onclick="openModifyModal(\'' . $row['stid'] . '\', \'' . addslashes($row['stnameeng']) . '\', \'' . addslashes($row['stnameben']) . '\', \'' . addslashes($row['fname']) . '\', \'' . addslashes($row['mname']) . '\', \'' . $row['sscroll'] . '\', \'' . $row['regdno'] . '\', \'' . $row['gpa'] . '\', \'' . $row['passyear'] . '\')"><i class="bi bi-pencil-square me-2"></i> Update Info</a>';
  
                                                  if ($is_printable) {
                                                      // If issued, show all three
@@ -175,6 +176,17 @@ $exam2 = $_GET['exam'] ?? 'SSC';
                             <label for="modal_gpa" class="form-label">Result (GPA)</label>
                             <input type="text" class="form-control" id="modal_gpa" name="gpa">
                         </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="modal_passing_year" class="form-label">Passing Year</label>
+                            <select class="form-select" id="modal_passing_year" name="passing_year">
+                                <?php
+                                $current_year = date('Y');
+                                for ($y = $current_year; $y >= $current_year - 10; $y--) { // Show current year and 10 years back
+                                    echo '<option value="' . $y . '">' . $y . '</option>';
+                                }
+                                ?>
+                            </select>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -244,6 +256,7 @@ $exam2 = $_GET['exam'] ?? 'SSC';
         document.getElementById('modal_sscroll').value = sscroll;
         document.getElementById('modal_regdno').value = regdno;
         document.getElementById('modal_gpa').value = gpa;
+        document.getElementById('modal_passing_year').value = passing_year;
         modifyModal.show();
     }
 
