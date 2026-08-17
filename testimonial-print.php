@@ -209,7 +209,7 @@ $result = $conn->query($sql);
                                                 src="https://quickchart.io/qr?text=<?= urlencode($lnk) ?>&size=120" />
                                         </td>
                                         <td style="width: 80%; text-align:right; vertical-align: bottom;">
-                                            <img src="<?= headmaster_signature_path($sccode) ?>" style="height:40px;"><br>
+                                            <img src="https://eimbox.com/sign/<?= $sccode ?>.png" style="height:40px;"><br>
                                             <b><?= $headname; ?></b><br>
                                             <?= $headtitle; ?><br>
                                             <?= $scname; ?><br>
