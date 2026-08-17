@@ -290,6 +290,14 @@ $result = $conn->query($sql);
                 <label for="font-size-slider" class="form-label small">Font Size</label>
                 <input type="range" class="form-range" id="font-size-slider" min="12" max="20" step="1" value="16">
             </div>
+            <div class="mb-3">
+                <label for="line-height-slider" class="form-label small">Line Height</label>
+                <input type="range" class="form-range" id="line-height-slider" min="1.2" max="2.0" step="0.05" value="1.6">
+            </div>
+            <div class="mb-3">
+                <label for="page-margin-slider" class="form-label small">Page Margin (mm)</label>
+                <input type="range" class="form-range" id="page-margin-slider" min="15" max="30" step="1" value="25">
+            </div>
             <div class="form-check form-switch mb-2">
                 <input class="form-check-input" type="checkbox" id="toggle-letterhead" checked>
                 <label class="form-check-label small" for="toggle-letterhead">Show Letter Head</label>
@@ -398,6 +406,8 @@ $result = $conn->query($sql);
 
             // UI কন্ট্রোলগুলো আপডেট করা
             document.getElementById('font-size-slider').value = settings.fontSize || 16;
+            document.getElementById('line-height-slider').value = settings.lineHeight || 1.6;
+            document.getElementById('page-margin-slider').value = settings.pageMargin || 25;
             document.getElementById('toggle-letterhead').checked = settings.showLetterhead !== false; 
             document.getElementById('toggle-signature').checked = settings.showSignature !== false;
             document.getElementById('toggle-footer').checked = settings.showFooter !== false;
@@ -416,7 +426,8 @@ $result = $conn->query($sql);
         // DOM-এ সেটিং প্রয়োগ করার ফাংশন
         function applySettings(settings) {
             // Font size & Border
-            document.querySelectorAll('.dynamic-text').forEach(el => el.style.fontSize = (settings.fontSize || 16) + 'px');
+            document.querySelectorAll('.dynamic-text').forEach(el => el.style.cssText += `font-size: ${(settings.fontSize || 16)}px; line-height: ${settings.lineHeight || 1.6};`);
+            document.querySelectorAll('.testimonial-page').forEach(el => el.style.padding = `${(settings.pageMargin || 25)}mm`);
             document.querySelectorAll('.letter-head').forEach(el => el.style.display = settings.showLetterhead === false ? 'none' : ''); 
             document.querySelectorAll('.head-signature-img').forEach(el => el.style.display = settings.showSignature === false ? 'none' : '');
             document.querySelectorAll('.footer-section').forEach(el => el.style.display = settings.showFooter === false ? 'none' : '');
@@ -444,6 +455,8 @@ $result = $conn->query($sql);
         function saveAndReload() {
             const settings = {
                 fontSize: document.getElementById('font-size-slider').value,
+                lineHeight: document.getElementById('line-height-slider').value,
+                pageMargin: document.getElementById('page-margin-slider').value,
                 showLetterhead: document.getElementById('toggle-letterhead').checked,
                 showSignature: document.getElementById('toggle-signature').checked,
                 showFooter: document.getElementById('toggle-footer').checked,
