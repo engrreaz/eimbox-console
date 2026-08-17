@@ -129,4 +129,5 @@ echo json_encode([
     'action_html' => $action_html
 ]);
 
+exit; // Terminate script to prevent any further output
 ?>
