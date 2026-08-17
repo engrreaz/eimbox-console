@@ -1,8 +1,6 @@
 <?php
 require_once '../core/init.php'; // Includes config, db, global_values, functions
 
-header('Content-Type: text/html');
-
 $stid = $_GET['stid'] ?? null;
 $exam2 = $_GET['exam'] ?? 'SSC'; // Assuming exam is passed from frontend
 $sccode = $_SESSION['sccode'] ?? null; // Get sccode from session
