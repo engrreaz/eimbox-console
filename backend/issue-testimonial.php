@@ -27,7 +27,7 @@ if ($check_result->num_rows === 0) {
     // If not issued, insert a new record
     $issue_date = date('Y-m-d');
     $insert_stmt = $conn->prepare(
-        "INSERT INTO testimonial (stid, sccode, sessionyear, pubexam, issuedate, entryby) VALUES (?, ?, ?, ?, ?, ?)"
+        "INSERT INTO testimonial (stid, sccode, passyear, pubexam, issuedate, entryby) VALUES (?, ?, ?, ?, ?, ?)"
     );
     if ($insert_stmt) {
         $insert_stmt->bind_param("ssssss", $stid, $sccode, $year, $exam, $issue_date, $entryby);
