@@ -280,7 +280,7 @@ if ($scinfo_query) {
     }
 
     document.getElementById('checkAll').addEventListener('change', function () {
-        document.querySelectorAll('.st-check').forEach(cb => cb.checked = this.checked);
+        document.querySelectorAll('.st-check:not(:disabled)').forEach(cb => cb.checked = this.checked);
     });
 
     function openModifyModal(stid, stnameeng, stnameben, fname, mname, rollno, regdno, gpa, passing_year) {

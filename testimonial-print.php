@@ -157,9 +157,14 @@ $result = $conn->query($sql);
     if ($result->num_rows > 0) {
         while ($row = $result->fetch_assoc()) {
             // শিক্ষার্থীর তথ্য সংগ্রহ
-            $student_info_sql = "SELECT * FROM students WHERE sccode='$sccode' AND stid='{$row['stid']}'";
-            $student_result = $conn->query($student_info_sql);
-            $student_data = $student_result->fetch_assoc();
+            $student_stmt = $conn->prepare("SELECT * FROM students WHERE sccode = ? AND stid = ?");
+            if ($student_stmt) {
+                $student_stmt->bind_param("ss", $sccode, $row['stid']);
+                $student_stmt->execute();
+                $student_data = $student_stmt->get_result()->fetch_assoc();
+                $student_stmt->close();
+            }
+            $student_data = $student_data ?? []; // যদি কোনো কারণে ডেটা না পাওয়া যায়
 
             // রেন্ডারিং এর জন্য ডেটা অ্যারে তৈরি
             $render_data = array_merge($row, $student_data);
