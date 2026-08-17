@@ -104,7 +104,7 @@ $exam2 = $_GET['exam'] ?? 'SSC';
                                                  $is_data_updated = !empty($row['regdno']) && !empty($row['sscroll']) && $row['gpa'] > 0;
  
                                                  // Always show Update Info
-                                                 echo '<a class="dropdown-item" href="javascript:void(0);" onclick="openModifyModal(\'' . $row['stid'] . '\', \'' . addslashes($row['stnameeng']) . '\', \'' . addslashes($row['stnameben']) . '\', \'' . addslashes($row['fname']) . '\', \'' . addslashes($row['mname']) . '\', \'' . $row['sscroll'] . '\', \'' . $row['regdno'] . '\', \'' . $row['gpa'] . '\', \'' . $row['sscpassyear'] . '\')"><i class="bi bi-pencil-square me-2"></i> Update Info</a>';
+                                                 echo '<a class="dropdown-item" href="javascript:void(0);" onclick="openModifyModal(\'' . $row['stid'] . '\', \'' . addslashes($row['stnameeng']) . '\', \'' . addslashes($row['stnameben']) . '\', \'' . addslashes($row['fname']) . '\', \'' . addslashes($row['mname']) . '\', \'' . $row['rollno'] . '\', \'' . $row['regdno'] . '\', \'' . $row['gpa'] . '\', \'' . $row['sscpassyear'] . '\')"><i class="bi bi-pencil-square me-2"></i> Update Info</a>';
  
                                                  if ($is_printable) {
                                                      // If issued, show all three
