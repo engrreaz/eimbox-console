@@ -27,8 +27,7 @@ if ($check_result->num_rows === 0) {
     // Fetch additional student data required for the testimonial table
     $student_data_sql = "
         SELECT 
-            s.rollno, s.regdno, s.sscpassyear, s.gpa, s.gla,
-            si.groups
+            s.rollno, s.regdno, s.sscpassyear, s.gpa, s.gla
         FROM students s
         LEFT JOIN sessioninfo si ON s.stid = si.stid AND s.sccode = si.sccode AND si.sessionyear = ?
         WHERE s.stid = ? AND s.sccode = ?
@@ -52,7 +51,7 @@ if ($check_result->num_rows === 0) {
     $pass_year = $student_data['sscpassyear'] ?? $year;
     $gpa = $student_data['gpa'] ?? 0;
     $grade = $student_data['gla'] ?? 'F';
-    $group = $student_data['groups'] ?? $sec; // Fallback to section if group not found
+    $group = $sec; // Fallback to section if group not found
 
     $issue_date = date('Y-m-d');
     $issue_time = date('Y-m-d H:i:s');
