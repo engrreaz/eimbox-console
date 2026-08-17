@@ -109,7 +109,7 @@ $exam2 = $_GET['exam'] ?? 'SSC';
                                                  if ($is_printable) {
                                                      // If issued, show all three
                                                      echo '<a class="dropdown-item" href="javascript:void(0);" onclick="resultEntry(\'' . $row['rollno'] . '\')"><i class="bi bi-card-list me-2"></i> Update Result</a>';
-                                                     echo '<a class="dropdown-item" href="javascript:void(0);" onclick="issue(\'' . $row['stid'] . '\')"><i class="bi bi-file-earmark-check me-2"></i> Issue Testimonial</a>';
+                                                     echo '<a class="dropdown-item" href="javascript:void(0);" onclick="issue(\'' . $row['stid'] . '\')"><i class="bi bi-arrow-repeat me-2"></i> Re-issue Testimonial</a>';
                                                      echo '<a class="dropdown-item text-success" href="javascript:void(0);" onclick="printSingle(\'' . $row['stid'] . '\')"><i class="bi bi-printer me-2"></i> Print</a>';
                                                  } elseif ($is_data_updated) {
                                                      // If data is updated but not issued, show Update Result and Issue Testimonial
@@ -218,9 +218,16 @@ $exam2 = $_GET['exam'] ?? 'SSC';
             type: "POST",
             url: "backend/issue-testimonial.php",
             data: infor,
+            dataType: 'json', // Expect a JSON response
             cache: false,
-            success: function (html) {
-                actionCell.html(html);
+            success: function (response) {
+                if (response.status === 'success') {
+                    showToast('success', response.message, 'Success');
+                    actionCell.html(response.action_html);
+                } else {
+                    showToast('error', response.message, 'Error');
+                    actionCell.html('Failed'); // Or restore previous state
+                }
             }
         });
     }
