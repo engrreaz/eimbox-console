@@ -1,5 +1,6 @@
 <?php
 require_once '../core/init.php';
+header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Sanitize and retrieve POST data

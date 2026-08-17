@@ -72,8 +72,19 @@ $exam2 = $_GET['exam'] ?? 'SSC';
                                 $is_issued_query = "SELECT id FROM testimonial WHERE stid='{$row['stid']}' AND sccode='$sccode' AND pubexam = '$exam2'";
                                 $is_issued_res = $conn->query($is_issued_query);
                                 $is_printable = $is_issued_res->num_rows > 0;
+
+                                // Determine row color based on status
+                                $is_data_updated = !empty($row['regdno']) && !empty($row['rollno']) && $row['gpa'] > 0;
+                                $row_class = '';
+                                if ($is_printable) {
+                                    $row_class = 'table-success'; // Issued
+                                } elseif ($is_data_updated) {
+                                    $row_class = 'table-primary'; // Ready to be issued
+                                } else {
+                                    $row_class = 'table-warning'; // Data missing
+                                }
                                 ?>
-                                <tr>
+                                <tr id="student-row-<?= $row['stid'] ?>" class="<?= $row_class ?>">
                                     <td><input type="checkbox" class="form-check-input st-check"
                                             value="<?= $row['stid'] ?>" <?= !$is_printable ? 'disabled' : '' ?>></td>
                                     <td id="class_roll_<?= $row['stid'] ?>"><?= $row['classroll'] ?></td>
@@ -100,9 +111,6 @@ $exam2 = $_GET['exam'] ?? 'SSC';
                                              </button>
                                              <div class="dropdown-menu dropdown-menu-end">
                                                  <?php
-                                                 // Condition: Data is updated (regdno, sscroll, and gpa are present)
-                                                 $is_data_updated = !empty($row['regdno']) && !empty($row['rollno']) && $row['gpa'] > 0;
- 
                                                  // Always show Update Info
                                                  echo '<a class="dropdown-item" href="javascript:void(0);" onclick="openModifyModal(\'' . $row['stid'] . '\', \'' . addslashes($row['stnameeng']) . '\', \'' . addslashes($row['stnameben']) . '\', \'' . addslashes($row['fname']) . '\', \'' . addslashes($row['mname']) . '\', \'' . $row['rollno'] . '\', \'' . $row['regdno'] . '\', \'' . $row['gpa'] . '\', \'' . $row['sscpassyear'] . '\')"><i class="bi bi-pencil-square me-2"></i> Update Info</a>';
  
@@ -283,10 +291,38 @@ $exam2 = $_GET['exam'] ?? 'SSC';
             data: formData,
             processData: false,
             contentType: false,
+            dataType: 'json', // Expect JSON from update-student-regd.php
             success: function (response) {
-                alert('Information updated successfully!');
-                modifyModal.hide();
-                location.reload(); // রিলোড করে নতুন তথ্য ও বাটন দেখানো
+                if (response.status === 'success') {
+                    showToast('success', 'Information updated successfully!', 'Success');
+                    modifyModal.hide();
+
+                    const stid = formData.get('stid');
+                    // Update table cells instantly
+                    document.getElementById('board_roll_' + stid).textContent = formData.get('rollno');
+                    document.getElementById('regd_no_' + stid).textContent = formData.get('regdno');
+                    document.getElementById('gpa_' + stid).textContent = formData.get('gpa') > 0 ? formData.get('gpa') : '';
+                    document.getElementById('gla_' + stid).textContent = formData.get('gpa') > 0 ? ' / ' + response.gla : '';
+                    document.getElementById('fname_' + stid).textContent = formData.get('fname');
+                    document.getElementById('mname_' + stid).textContent = formData.get('mname');
+
+                    // Fetch and update the action cell
+                    $.get(`backend/get-testimonial-action-cell.php?stid=${stid}&exam=${$('#exam').val()}`, function(actionHtml) {
+                        $('#action-cell-' + stid).html(actionHtml);
+                    });
+
+                    // Update row color
+                    const isDataUpdated = formData.get('rollno') && formData.get('regdno') && formData.get('gpa') > 0;
+                    const row = $('#student-row-' + stid);
+                    row.removeClass('table-warning table-primary table-success');
+                    if (isDataUpdated) {
+                        row.addClass('table-primary'); // Not issued yet, but data is complete
+                    } else {
+                        row.addClass('table-warning');
+                    }
+                } else {
+                    alert(response.message || 'An error occurred.');
+                }
             },
             error: function () {
                 alert('An error occurred. Please try again.');
