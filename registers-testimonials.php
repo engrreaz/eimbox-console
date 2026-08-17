@@ -63,7 +63,7 @@ $exam2 = $_GET['exam'] ?? 'SSC';
                 <tbody>
                     <?php
                     if (!empty($cls2) && !empty($sec2)) {
-                        $sql0 = "SELECT si.id as session_id, si.rollno, si.stid, s.*, s.sscpassyear FROM sessioninfo si JOIN students s ON si.stid = s.stid AND si.sccode = s.sccode WHERE si.sessionyear = '$sessionyear' AND si.sccode='$sccode' AND si.classname='$cls2' AND si.sectionname = '$sec2' ORDER BY si.rollno";
+                        $sql0 = "SELECT si.id as session_id, si.rollno as classroll, si.stid, s.*, s.sscpassyear FROM sessioninfo si JOIN students s ON si.stid = s.stid AND si.sccode = s.sccode WHERE si.sessionyear = '$sessionyear' AND si.sccode='$sccode' AND si.classname='$cls2' AND si.sectionname = '$sec2' ORDER BY si.rollno";
                         $result0 = $conn->query($sql0);
                         if ($result0->num_rows > 0) {
                             while ($row = $result0->fetch_assoc()) {
@@ -76,7 +76,7 @@ $exam2 = $_GET['exam'] ?? 'SSC';
                                 <tr>
                                     <td><input type="checkbox" class="form-check-input st-check"
                                             value="<?= $row['stid'] ?>" <?= !$is_printable ? 'disabled' : '' ?>></td>
-                                    <td id="class_roll_<?= $row['stid'] ?>"><?= $row['rollno'] ?></td>
+                                    <td id="class_roll_<?= $row['stid'] ?>"><?= $row['classroll'] ?></td>
                                     <td>
                                         <div><?= $row['stnameeng'] ?></div>
                                         <small class="text-muted"><?= $row['stnameben'] ?></small>
