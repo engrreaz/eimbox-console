@@ -89,7 +89,14 @@ if ($existing_testimonial) {
     $regdyear = $pass_year - 2;
     $session_str = $regdyear . '-' . (($pass_year - 1) % 100);
     $group = $sec;
-    $exam_center = 'Bancha-2';
+
+    // Fetch exam center name from scinfo table
+    $center_stmt = $conn->prepare("SELECT center_name FROM scinfo WHERE sccode = ?");
+    $center_stmt->bind_param("s", $sccode);
+    $center_stmt->execute();
+    $exam_center = $center_stmt->get_result()->fetch_assoc()['center_name'] ?? 'Default Center';
+    $center_stmt->close();
+
     $issue_date = date('Y-m-d');
     $issue_time = date('Y-m-d H:i:s');
 

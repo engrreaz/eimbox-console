@@ -6,34 +6,46 @@ $sessionyear = $_COOKIE['chain-session'] ?? date('Y');
 $cls2 = $_COOKIE['chain-class'] ?? '';
 $sec2 = $_COOKIE['chain-section'] ?? '';
 $exam2 = $_GET['exam'] ?? 'SSC';
+
+// Fetch scinfo data for center_code, center_name, ed_board
+$scinfo_data = [];
+$scinfo_query = $conn->prepare("SELECT center_code, center_name, ed_board FROM scinfo WHERE sccode = ? LIMIT 1");
+if ($scinfo_query) {
+    $scinfo_query->bind_param("s", $sccode);
+    $scinfo_query->execute();
+    $scinfo_result = $scinfo_query->get_result();
+    if ($scinfo_result && $scinfo_result->num_rows > 0) {
+        $scinfo_data = $scinfo_result->fetch_assoc();
+    }
+    $scinfo_query->close();
+}
 ?>
 
 <div class="container-xxl flex-grow-1 container-p-y">
     <h3 class="d-print-none">Testimonial Issue Register</h3>
-    <div class="card mb-4 d-print-none">
-        <div class="card-body">
-            <div class="row g-3 align-items-end">
-                <div class="col-md-2">
-                    <label class="form-label">Year</label>
-                    <select class="form-select" id="year">
-                        <?php
-                        for ($y = date('Y'); $y >= 2020; $y--) {
-                            $selected = ($sessionyear == $y) ? 'selected' : '';
-                            echo '<option value="' . $y . '"' . $selected . '>' . $y . '</option>';
-                        }
-                        ?>
-                    </select>
-                </div>
-                <?php
+     <?php
                 $chain_param = '-c 12 -t Choose Class & Section -u -r -b Show List';
                 include 'components/slot-tree-ui.php';
                 ?>
+
+                
+    <div class="card mb-4 d-print-none">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">               
                 <div class="col-md-2">
                     <label class="form-label">Exam</label>
                     <select class="form-select" id="exam">
                         <option value="SSC" <?= ($exam2 == 'SSC') ? 'selected' : '' ?>>SSC</option>
                         <option value="HSC" <?= ($exam2 == 'HSC') ? 'selected' : '' ?>>HSC</option>
                     </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Center Code & Name</label>
+                    <input type="text" class="form-control" value="<?= htmlspecialchars($scinfo_data['center_code'] ?? '') . ' - ' . htmlspecialchars($scinfo_data['center_name'] ?? '') ?>" readonly>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Education Board</label>
+                    <input type="text" class="form-control" value="<?= htmlspecialchars($scinfo_data['ed_board'] ?? '') ?>" readonly>
                 </div>
             </div>
         </div>
@@ -97,8 +109,8 @@ $exam2 = $_GET['exam'] ?? 'SSC';
                                         <div>M: <span id="mname_<?= $row['stid'] ?>"><?= $row['mname'] ?></span></div>
                                     </td>
                                     <td>
-                                        <div>Board Roll: <span id="board_roll_<?= $row['stid'] ?>"><?= $row['rollno'] ?></span></div>
-                                        <div>Regd No: <span id="regd_no_<?= $row['stid'] ?>"><?= $row['regdno'] ?></span></div>
+                                        <div>Roll : <span id="board_roll_<?= $row['stid'] ?>"><?= $row['rollno'] ?></span></div>
+                                        <div>Regd : <span id="regd_no_<?= $row['stid'] ?>"><?= $row['regdno'] ?></span></div>
                                     </td>
                                     <td>
                                         <span id="gpa_<?= $row['stid'] ?>"><?= $row['gpa'] > 0 ? $row['gpa'] : '' ?></span>
