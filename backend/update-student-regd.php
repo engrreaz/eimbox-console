@@ -55,7 +55,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             stid = ? AND sccode = ? 
     ");
 
-echo $stmt;
+echo "
+        UPDATE students 
+        SET 
+            stnameeng = ?, stnameben = ?, fname = ?, mname = ?, 
+            rollno = ?, regdno = ?, gpa = ?, gla = ?, sscpassyear = ?
+        WHERE 
+            stid = ? AND sccode = ? 
+    ";
 echo "\n";
 echo $stnameeng . '/' . $stnameben . '/' . $fname . '/' . $mname . '/' . $rollno . '/' . $regdno . '/' . $gpa . '/' . $gla . '/' . $passing_year . '/' . $stid . '/' . $sccode;
 
