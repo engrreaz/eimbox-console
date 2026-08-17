@@ -247,7 +247,7 @@ $exam2 = $_GET['exam'] ?? 'SSC';
         document.querySelectorAll('.st-check').forEach(cb => cb.checked = this.checked);
     });
 
-    function openModifyModal(stid, stnameeng, stnameben, fname, mname, sscroll, regdno, gpa) {
+    function openModifyModal(stid, stnameeng, stnameben, fname, mname, sscroll, regdno, gpa, passing_year) {
         document.getElementById('modal_stid').value = stid;
         document.getElementById('modal_stnameeng').value = stnameeng;
         document.getElementById('modal_stnameben').value = stnameben;
