@@ -243,11 +243,19 @@ if ($scinfo_query) {
             success: function (response) {
                 if (response.status === 'success') {
                     showToast('success', response.message, 'Success');
-                //    actionCell.html(response.action_html);
+                   actionCell.html(response.action_html);
                 } else {
                     showToast('error', response.message, 'Error');
                     actionCell.html('Failed'); // Or restore previous state
                 }
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                // AJAX রিকোয়েস্ট ব্যর্থ হলে এই কোডটি কাজ করবে
+                showToast('error', 'An unexpected error occurred. Please check the console.', 'AJAX Error');
+                console.error("AJAX Error:", textStatus, errorThrown, jqXHR.responseText);
+
+                // আগের অবস্থায় ফিরিয়ে আনার জন্য আবার action cell এর কন্টেন্ট লোড করা হচ্ছে
+                $.get(`backend/get-testimonial-action-cell.php?stid=${stid}&exam=${exam}`, (actionHtml) => actionCell.html(actionHtml));
             }
         });
     }
