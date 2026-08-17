@@ -41,7 +41,7 @@ if ($scinfo_query) {
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Center Code & Name</label>
-                    <input type="text" class="form-control" value="<?= htmlspecialchars($scinfo_data['center_code'] ?? '') . ' - ' . htmlspecialchars($scinfo_data['center_name'] ?? '') ?>" readonly>
+                    <input type="text" class="form-control" value="<?= htmlspecialchars($scinfo_data['center_name'] ?? '') . ' (' . htmlspecialchars($scinfo_data['center_code'] ?? '') . ')' ?>" readonly>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Education Board</label>
