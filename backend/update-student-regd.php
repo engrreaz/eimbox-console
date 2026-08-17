@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         UPDATE students 
         SET 
             stnameeng = ?, stnameben = ?, fname = ?, mname = ?, 
-            sscroll = ?, regdno = ?, gpa = ?, gla = ?, sscpassyear = ?
+            rollno = ?, regdno = ?, gpa = ?, gla = ?, sscpassyear = ?
         WHERE 
             stid = ? AND sccode = ? 
     ");
