@@ -90,7 +90,7 @@ $result = $conn->query($sql);
         .testimonial-page {
             background: white;
             width: 210mm;
-            height: 297mm;
+            min-height: 297mm; /* Use min-height to avoid content overflow issues */
             margin: 20px auto;
             padding: 20mm 20mm 15mm;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
@@ -131,6 +131,34 @@ $result = $conn->query($sql);
             font-size: 24px;
             cursor: pointer;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.2s;
+        }
+
+        .fab-main:hover {
+            background-color: #5355d8;
+        }
+
+        #settings-panel {
+            position: fixed;
+            top: 0;
+            right: -350px;
+            width: 300px;
+            height: 100%;
+            background: #fff;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.15);
+            padding: 20px;
+            transition: right 0.3s ease-in-out;
+            z-index: 10000;
+            overflow-y: auto;
+        }
+
+        #settings-panel.open {
+            right: 0;
+        }
+
+        #settings-panel h5 {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
         }
 
         @media print {
@@ -141,6 +169,7 @@ $result = $conn->query($sql);
             .testimonial-page {
                 margin: 0;
                 box-shadow: none;
+                min-height: 0;
                 border: none;
             }
 
@@ -177,11 +206,11 @@ $result = $conn->query($sql);
                 <img class="watermark-logo" src="<?= institute_logo($sccode) ?>">
 
                 <div class="content-wrapper">
-                    <div style="text-align:center;">
+                    <div style="text-align:center;" class="letter-head">
                         <?php include ('templete/letter-head-01.php'); ?>
                     </div>
 
-                    <table style="width:100%; border:0; margin-top: 20px;">
+                    <table style="width:100%; border:0; margin-top: 20px;" class="main-table">
                         <tr>
                             <td style="height:10mm;" valign="middle">SL: <b><?= htmlspecialchars($row['testslno']) ?></b></td>
                             <td style="text-align:right" valign="middle">Date:
@@ -189,7 +218,7 @@ $result = $conn->query($sql);
                         </tr>
                         <tr>
                             <td colspan="2" style="text-align:center; padding: 20px 0;">
-                                <img src="assets/images/testimonials-02.png" width="250" />
+                                <img src="assets/images/testimonials-02.png" width="250" class="testimonial-title-img" />
                             </td>
                         </tr>
                         <tr>
@@ -200,7 +229,7 @@ $result = $conn->query($sql);
                             </td>
                         </tr>
                         <tr>
-                            <td colspan="2" style="padding-top: 40px;">
+                            <td colspan="2" style="padding-top: 40px;" class="footer-section">
                                 <table style="width:100%; border:0;">
                                     <tr>
                                         <td style="width: 20%; vertical-align: bottom;">
@@ -209,7 +238,7 @@ $result = $conn->query($sql);
                                                 src="https://quickchart.io/qr?text=<?= urlencode($lnk) ?>&size=120" />
                                         </td>
                                         <td style="width: 80%; text-align:right; vertical-align: bottom;">
-                                            <img src="https://eimbox.com/sign/<?= $sccode ?>.png" style="height:40px;"><br>
+                                            <img src="https://eimbox.com/sign/<?= $sccode ?>.png" style="height:40px;" class="head-signature-img"><br>
                                             <b><?= $headname; ?></b><br>
                                             <?= $headtitle; ?><br>
                                             <?= $scname; ?><br>
@@ -231,11 +260,105 @@ $result = $conn->query($sql);
 
     <!-- Floating Menu -->
     <div class="fab-wrapper">
+        <button class="fab-main mb-2" onclick="toggleSettings()">
+            <i class="bi bi-gear"></i>
+        </button>
         <button class="fab-main" onclick="window.print()">
             <i class="bi bi-printer"></i>
         </button>
     </div>
 
+    <!-- Settings Panel -->
+    <div id="settings-panel">
+        <h5>Customize Design</h5>
+        <div class="mb-3">
+            <label class="form-label small">Font Size</label>
+            <input type="range" class="form-range" id="font-size-slider" min="12" max="20" step="1">
+        </div>
+        <div class="mb-3">
+            <label class="form-label small">Page Border</label>
+            <input type="color" class="form-control form-control-color" id="border-color-picker" title="Choose border color">
+        </div>
+        <div class="form-check form-switch mb-2">
+            <input class="form-check-input" type="checkbox" id="toggle-letterhead">
+            <label class="form-check-label small" for="toggle-letterhead">Show Letter Head</label>
+        </div>
+        <div class="form-check form-switch mb-2">
+            <input class="form-check-input" type="checkbox" id="toggle-title-img">
+            <label class="form-check-label small" for="toggle-title-img">Show "Testimonial" Title Image</label>
+        </div>
+        <div class="form-check form-switch mb-2">
+            <input class="form-check-input" type="checkbox" id="toggle-signature">
+            <label class="form-check-label small" for="toggle-signature">Show Head's Signature</label>
+        </div>
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="toggle-footer">
+            <label class="form-check-label small" for="toggle-footer">Show Footer Section</label>
+        </div>
+        <button class="btn btn-sm btn-outline-danger" onclick="resetSettings()">Reset to Default</button>
+    </div>
+
+    <script>
+        const settingsPanel = document.getElementById('settings-panel');
+        const body = document.body;
+
+        // কুকি থেকে সেটিংস লোড করার ফাংশন
+        function loadSettings() {
+            const settings = JSON.parse(getCookie('testimonialSettings') || '{}');
+            applySettings(settings);
+
+            // UI আপডেট করা
+            document.getElementById('font-size-slider').value = settings.fontSize || 16;
+            document.getElementById('border-color-picker').value = settings.borderColor || '#ffffff';
+            document.getElementById('toggle-letterhead').checked = settings.showLetterhead !== false;
+            document.getElementById('toggle-title-img').checked = settings.showTitleImg !== false;
+            document.getElementById('toggle-signature').checked = settings.showSignature !== false;
+            document.getElementById('toggle-footer').checked = settings.showFooter !== false;
+        }
+
+        // সেটিং প্রয়োগ করার ফাংশন
+        function applySettings(settings) {
+            document.querySelectorAll('.dynamic-text').forEach(el => el.style.fontSize = (settings.fontSize || 16) + 'px');
+            document.querySelectorAll('.testimonial-page').forEach(el => el.style.borderColor = settings.borderColor || 'transparent');
+            document.querySelectorAll('.letter-head').forEach(el => el.style.display = settings.showLetterhead === false ? 'none' : '');
+            document.querySelectorAll('.testimonial-title-img').forEach(el => el.style.display = settings.showTitleImg === false ? 'none' : '');
+            document.querySelectorAll('.head-signature-img').forEach(el => el.style.display = settings.showSignature === false ? 'none' : '');
+            document.querySelectorAll('.footer-section').forEach(el => el.style.display = settings.showFooter === false ? 'none' : '');
+        }
+
+        // কুকিতে সেটিংস সেভ করার ফাংশন
+        function saveSettings() {
+            const settings = {
+                fontSize: document.getElementById('font-size-slider').value,
+                borderColor: document.getElementById('border-color-picker').value,
+                showLetterhead: document.getElementById('toggle-letterhead').checked,
+                showTitleImg: document.getElementById('toggle-title-img').checked,
+                showSignature: document.getElementById('toggle-signature').checked,
+                showFooter: document.getElementById('toggle-footer').checked,
+            };
+            setCookie('testimonialSettings', JSON.stringify(settings), 30);
+            applySettings(settings);
+        }
+
+        // সেটিংস রিসেট করার ফাংশন
+        function resetSettings() {
+            deleteCookie('testimonialSettings');
+            loadSettings();
+        }
+
+        // সেটিংস প্যানেল টগল
+        function toggleSettings() {
+            settingsPanel.classList.toggle('open');
+        }
+
+        // ইভেন্ট লিসেনার যোগ করা
+        document.querySelectorAll('#settings-panel input').forEach(input => {
+            input.addEventListener('input', saveSettings);
+        });
+
+        // পেজ লোড হলে সেটিংস লোড করা
+        document.addEventListener('DOMContentLoaded', loadSettings);
+    </script>
 </body>
 
 </html>
