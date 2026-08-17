@@ -1,5 +1,6 @@
 <?php
-require_once '../core/init.php'; // Includes config, db, global_values, functions
+ob_start(); // Start output buffering
+require_once '../core/init.php';
 
 $stid = $_GET['stid'] ?? null;
 $exam2 = $_GET['exam'] ?? 'SSC'; // Assuming exam is passed from frontend
@@ -43,6 +44,9 @@ $stmt_issued->close();
 $is_data_updated = !empty($student_data['regdno']) && !empty($student_data['rollno']) && $student_data['gpa'] > 0;
 
 // Render the action cell HTML
+ob_end_clean(); // Clean (discard) the buffer from init.php
+
+// The only output from this script should be the HTML below
 ?>
 <div class="dropdown">
     <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">

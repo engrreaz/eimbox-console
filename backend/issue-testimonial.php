@@ -1,5 +1,6 @@
 <?php
-require_once '../core/init.php'; // Includes config, db, global_values, functions
+ob_start(); // Start output buffering
+require_once '../core/init.php';
 header('Content-Type: application/json'); // Change header to JSON
 
 // Get data from POST request
@@ -122,6 +123,9 @@ $_GET['exam'] = $exam;
 ob_start();
 include 'get-testimonial-action-cell.php';
 $action_html = ob_get_clean();
+
+ob_end_clean(); // Clean (discard) the buffer
+header('Content-Type: application/json'); // Re-set header just in case
 
 echo json_encode([
     'status' => 'success',
