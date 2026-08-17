@@ -374,7 +374,7 @@ $result = $conn->query($sql);
             document.getElementById('toggle-watermark').checked = settings.showWatermark !== false;
             
             // Title and Background style selection
-            const titleStyle = settings.titleStyle || 'testimonials-02.png';
+            const titleStyle = settings.titleStyle || 'testimonials-00.png';
             const backgroundStyle = settings.backgroundStyle || 'testimonial-background-00.png';
             
             document.querySelector(`input[name="title_style"][value="${titleStyle}"]`).checked = true;
