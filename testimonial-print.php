@@ -201,9 +201,15 @@ $result = $conn->query($sql);
                             <td style="text-align:right" valign="middle">Date:
                                 <b><?= date('d F, Y', strtotime($row['testdate'])) ?></b></td>
                         </tr>
-                        <tr>
-                            <td colspan="2" style="text-align:center; padding: 20px 0;" class="testimonial-title-container">
-                                <img src="assets/testimonial/testimonials-02.png" width="250" class="testimonial-title-img" />
+                        <tr style="vertical-align: middle;">
+                            <td colspan="2" style="padding: 20px 0;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div style="width: 120px;"></div> <!-- Left Spacer -->
+                                    <div class="testimonial-title-container" style="text-align:center;">
+                                        <img src="assets/testimonial/testimonials-02.png" width="250" class="testimonial-title-img" />
+                                    </div>
+                                    <img src="https://eimbox.com/students/<?= $row['stid'] ?>.jpg" class="student-photo" style="width: 100px; height: 120px; border: 1px solid #ccc; object-fit: cover;" />
+                                </div>
                             </td>
                         </tr>
                         <tr>
@@ -275,6 +281,10 @@ $result = $conn->query($sql);
             <div class="form-check form-switch mb-3">
                 <input class="form-check-input" type="checkbox" id="toggle-footer" checked>
                 <label class="form-check-label small" for="toggle-footer">Show Footer Section</label>
+            </div>
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="toggle-student-photo" checked>
+                <label class="form-check-label small" for="toggle-student-photo">Show Student's Photo</label>
             </div>
             <div class="form-check form-switch mb-3">
                 <input class="form-check-input" type="checkbox" id="toggle-watermark" checked>
@@ -371,6 +381,7 @@ $result = $conn->query($sql);
             document.getElementById('toggle-letterhead').checked = settings.showLetterhead !== false; 
             document.getElementById('toggle-signature').checked = settings.showSignature !== false;
             document.getElementById('toggle-footer').checked = settings.showFooter !== false;
+            document.getElementById('toggle-student-photo').checked = settings.showStudentPhoto !== false;
             document.getElementById('toggle-watermark').checked = settings.showWatermark !== false;
             
             // Title and Background style selection
@@ -389,6 +400,9 @@ $result = $conn->query($sql);
             document.querySelectorAll('.letter-head').forEach(el => el.style.display = settings.showLetterhead === false ? 'none' : ''); 
             document.querySelectorAll('.head-signature-img').forEach(el => el.style.display = settings.showSignature === false ? 'none' : '');
             document.querySelectorAll('.footer-section').forEach(el => el.style.display = settings.showFooter === false ? 'none' : '');
+
+            // Student Photo
+            document.querySelectorAll('.student-photo').forEach(el => el.style.visibility = settings.showStudentPhoto === false ? 'hidden' : 'visible');
 
             // Watermark
             document.querySelectorAll('.watermark-logo').forEach(el => el.style.display = settings.showWatermark === false ? 'none' : '');
@@ -413,6 +427,7 @@ $result = $conn->query($sql);
                 showLetterhead: document.getElementById('toggle-letterhead').checked,
                 showSignature: document.getElementById('toggle-signature').checked,
                 showFooter: document.getElementById('toggle-footer').checked,
+                showStudentPhoto: document.getElementById('toggle-student-photo').checked,
                 showWatermark: document.getElementById('toggle-watermark').checked,
                 titleStyle: document.querySelector('input[name="title_style"]:checked')?.value,
                 backgroundStyle: document.querySelector('input[name="background_style"]:checked')?.value,
