@@ -213,7 +213,7 @@ $result = $conn->query($sql);
                             </td>
                         </tr>
                         <tr>
-                            <td colspan="2" style="line-height:1.8; font-size:16px; text-align:justify;" valign="top">
+                            <td colspan="2" style="line-height:1.5; font-size:16px; text-align:justify;" valign="top">
                                 <p class="editable dynamic-text">
                                     <?= $testimonial_body ?>
                                 </p>
