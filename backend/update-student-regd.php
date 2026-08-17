@@ -55,6 +55,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             stid = ? AND sccode = ? 
     ");
 
+echo $stmt;
+echo "\n";
+echo $stnameeng . '/' . $stnameben . '/' . $fname . '/' . $mname . '/' . $rollno . '/' . $regdno . '/' . $gpa . '/' . $gla . '/' . $passing_year . '/' . $stid . '/' . $sccode;
+
     // Bind parameters: 9 for SET, 2 for WHERE. All treated as strings for simplicity. sscroll is used for board roll.
     $stmt->bind_param("sssssssssss", $stnameeng, $stnameben, $fname, $mname, $rollno, $regdno, $gpa, $gla, $passing_year, $stid, $sccode);
 
