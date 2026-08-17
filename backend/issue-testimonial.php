@@ -27,7 +27,7 @@ if ($check_result->num_rows === 0) {
 // Fetch current student data from the 'students' table
 $student_data_sql = "
     SELECT 
-        s.rollno, s.regdno, s.sscpassyear, s.gpa
+        s.rollno, s.regdno, s.sscpassyear, s.gpa, s.gla
     FROM students s
     WHERE s.stid = ? AND s.sccode = ?
     LIMIT 1
@@ -48,15 +48,7 @@ $board_roll = $student_data['rollno'] ?? null;
 $regd_no = $student_data['regdno'] ?? null;
 $pass_year = $student_data['sscpassyear'] ?? $year;
 $gpa = $student_data['gpa'] ?? 0;
-
-// Calculate grade (gla) based on GPA
-if ($gpa == 5) $gla = 'A+';
-elseif ($gpa >= 4) $gla = 'A';
-elseif ($gpa >= 3.5) $gla = 'A-';
-elseif ($gpa >= 3) $gla = 'B';
-elseif ($gpa >= 2) $gla = 'C';
-elseif ($gpa >= 1) $gla = 'D';
-else $gla = 'F';
+$gla = $student_data['gla'] ?? 'F'; // Use GLA directly from students table
 
 // Check if a testimonial already exists
 $check_stmt = $conn->prepare("SELECT * FROM testimonial WHERE stid = ? AND sccode = ? AND pubexam = ? LIMIT 1");
