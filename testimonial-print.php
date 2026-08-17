@@ -246,6 +246,7 @@ $result = $conn->query($sql);
                                             <b><?= $headname; ?></b><br>
                                             <?= $headtitle; ?><br>
                                             <?= $scname; ?><br>
+                                            <?= $scaddress; ?><br>
                                         </td>
                                     </tr>
                                 </table>
