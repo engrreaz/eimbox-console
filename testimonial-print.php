@@ -250,12 +250,12 @@ $result = $conn->query($sql);
     </div>
 
     <!-- Settings Panel -->
-    <div class="card shadow-lg" id="settings-panel" style="position: fixed; top: 20px; right: 20px; width: 320px; z-index: 1050; display: none; background-color: #f7f7ff;">
+    <div class="card" id="settings-panel" style="position: fixed; top: 0; right: 0; width: 320px; height: 100vh; z-index: 1050; display: none; background-color: #f7f7ff; border-radius: 0; box-shadow: -3px 0 10px rgba(0,0,0,0.1);">
         <div class="card-header d-flex justify-content-between align-items-center py-2" style="background-color: #f0f0ff;">
             <h6 class="mb-0 fw-bold text-primary"><i class="bi bi-gear-wide-connected me-2"></i>Customize Design</h6>
             <button type="button" class="btn-close" onclick="document.getElementById('settings-panel').style.display='none'" aria-label="Close"></button>
         </div>
-        <div class="card-body p-3">
+        <div class="card-body p-3" style="overflow-y: auto;">
             <div class="mb-3">
                 <label for="font-size-slider" class="form-label small">Font Size</label>
                 <input type="range" class="form-range" id="font-size-slider" min="12" max="20" step="1" value="16">
