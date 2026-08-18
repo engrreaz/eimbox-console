@@ -12,7 +12,7 @@ if (!$stid || !$sccode) {
 }
 
 // Fetch student data
-$sql_student = "SELECT stnameeng, stnameben, fname, mname, rollno, regdno, gpa, gla, sscpassyear FROM students WHERE stid = ? AND sccode = ?";
+$sql_student = "SELECT stnameeng, stnameben, fname, mname, rollno, regdno, gpa, gla, sscpassyear, gender, dob FROM students WHERE stid = ? AND sccode = ?";
 $stmt_student = $conn->prepare($sql_student);
 if (!$stmt_student) {
     echo "Error preparing student data query: " . $conn->error;
@@ -53,7 +53,7 @@ ob_end_clean(); // Clean (discard) the buffer from init.php
         <i class="bi bi-three-dots-vertical"></i>
     </button>
     <div class="dropdown-menu dropdown-menu-end">
-        <a class="dropdown-item" href="javascript:void(0);" onclick="openModifyModal('<?= $stid ?>', '<?= addslashes($student_data['stnameeng']) ?>', '<?= addslashes($student_data['stnameben']) ?>', '<?= addslashes($student_data['fname']) ?>', '<?= addslashes($student_data['mname']) ?>', '<?= $student_data['rollno'] ?>', '<?= $student_data['regdno'] ?>', '<?= $student_data['gpa'] ?>', '<?= $student_data['sscpassyear'] ?>')"><i class="bi bi-pencil-square me-2"></i> Update Info</a>
+        <a class="dropdown-item" href="javascript:void(0);" onclick="openModifyModal('<?= $stid ?>', '<?= addslashes($student_data['stnameeng']) ?>', '<?= addslashes($student_data['stnameben']) ?>', '<?= addslashes($student_data['fname']) ?>', '<?= addslashes($student_data['mname']) ?>', '<?= $student_data['rollno'] ?>', '<?= $student_data['regdno'] ?>', '<?= $student_data['gpa'] ?>', '<?= $student_data['sscpassyear'] ?>', '<?= $student_data['gender'] ?>', '<?= $student_data['dob'] ?>')"><i class="bi bi-pencil-square me-2"></i> Update Info</a>
         <?php if ($is_printable): ?>
             <a class="dropdown-item" href="javascript:void(0);" onclick="resultEntry('<?= $student_data['rollno'] ?>')"><i class="bi bi-card-list me-2"></i> Update Result</a>
             <a class="dropdown-item" href="javascript:void(0);" onclick="issue('<?= $stid ?>')"><i class="bi bi-arrow-repeat me-2"></i> Re-issue Testimonial</a>

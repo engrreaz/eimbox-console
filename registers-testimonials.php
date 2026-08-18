@@ -123,8 +123,8 @@ if ($scinfo_query) {
                                              </button>
                                              <div class="dropdown-menu dropdown-menu-end">
                                                  <?php
-                                                 // Always show Update Info
-                                                 echo '<a class="dropdown-item" href="javascript:void(0);" onclick="openModifyModal(\'' . $row['stid'] . '\', \'' . addslashes($row['stnameeng']) . '\', \'' . addslashes($row['stnameben']) . '\', \'' . addslashes($row['fname']) . '\', \'' . addslashes($row['mname']) . '\', \'' . $row['rollno'] . '\', \'' . $row['regdno'] . '\', \'' . $row['gpa'] . '\', \'' . $row['sscpassyear'] . '\')"><i class="bi bi-pencil-square me-2"></i> Update Info</a>';
+                                                 // Always show Update Info, added gender and dob
+                                                 echo '<a class="dropdown-item" href="javascript:void(0);" onclick="openModifyModal(\'' . $row['stid'] . '\', \'' . addslashes($row['stnameeng']) . '\', \'' . addslashes($row['stnameben']) . '\', \'' . addslashes($row['fname']) . '\', \'' . addslashes($row['mname']) . '\', \'' . $row['rollno'] . '\', \'' . $row['regdno'] . '\', \'' . $row['gpa'] . '\', \'' . $row['sscpassyear'] . '\', \'' . $row['gender'] . '\', \'' . $row['dob'] . '\')"><i class="bi bi-pencil-square me-2"></i> Update Info</a>';
  
                                                  if ($is_printable) {
                                                      // If issued, show all three
@@ -183,6 +183,18 @@ if ($scinfo_query) {
                         <div class="col-md-6 mb-3">
                             <label for="modal_mname" class="form-label">Mother's Name</label>
                             <input type="text" class="form-control" id="modal_mname" name="mname">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="modal_gender" class="form-label">Gender</label>
+                            <select class="form-select" id="modal_gender" name="gender">
+                                <option value="">Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="modal_dob" class="form-label">Date of Birth</label>
+                            <input type="date" class="form-control" id="modal_dob" name="dob">
                         </div>
                         <div class="col-md-4 mb-3">
                             <label for="modal_sscroll" class="form-label">Board Roll</label>
@@ -283,7 +295,7 @@ if ($scinfo_query) {
         document.querySelectorAll('.st-check:not(:disabled)').forEach(cb => cb.checked = this.checked);
     });
 
-    function openModifyModal(stid, stnameeng, stnameben, fname, mname, rollno, regdno, gpa, passing_year) {
+    function openModifyModal(stid, stnameeng, stnameben, fname, mname, rollno, regdno, gpa, passing_year, gender, dob) {
         document.getElementById('modal_stid').value = stid;
         document.getElementById('modal_stnameeng').value = stnameeng;
         document.getElementById('modal_stnameben').value = stnameben;
@@ -293,6 +305,8 @@ if ($scinfo_query) {
         document.getElementById('modal_regdno').value = regdno;
         document.getElementById('modal_gpa').value = gpa;
         document.getElementById('modal_passing_year').value = passing_year;
+        document.getElementById('modal_gender').value = gender;
+        document.getElementById('modal_dob').value = dob;
         modifyModal.show();
     }
 

@@ -16,6 +16,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // New field for passing year
     $passing_year = trim($_POST['passing_year'] ?? '');
+    $gender = trim($_POST['gender'] ?? '');
+    $dob = trim($_POST['dob'] ?? '');
 
     // Basic validation
     if (empty($stid) || empty($rollno) || empty($regdno)) {
@@ -51,14 +53,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         UPDATE students 
         SET 
             stnameeng = ?, stnameben = ?, fname = ?, mname = ?, 
-            rollno = ?, regdno = ?, gpa = ?, gla = ?, sscpassyear = ?
+            rollno = ?, regdno = ?, gpa = ?, gla = ?, sscpassyear = ?, gender = ?, dob = ?
         WHERE 
             stid = ? AND sccode = ? 
     ");
 
 
-    // Bind parameters: 9 for SET, 2 for WHERE. All treated as strings for simplicity. sscroll is used for board roll.
-    $stmt->bind_param("sssssssssss", $stnameeng, $stnameben, $fname, $mname, $rollno, $regdno, $gpa, $gla, $passing_year, $stid, $sccode);
+    // Bind parameters: 11 for SET, 2 for WHERE. All treated as strings for simplicity.
+    $stmt->bind_param("sssssssssssss", $stnameeng, $stnameben, $fname, $mname, $rollno, $regdno, $gpa, $gla, $passing_year, $gender, $dob, $stid, $sccode);
 
     if ($stmt->execute()) {
         ob_end_clean(); // Clean (discard) the buffer
