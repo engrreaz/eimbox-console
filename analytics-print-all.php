@@ -123,6 +123,16 @@ require_once 'header.php';
             }
         }
 
+        function create_bar_html(value, max_value = 100, color_class = 'bg-primary') {
+            const percentage = (value / max_value) * 100;
+            return `<div class='progress' style='height: 18px; background-color: #e9ecef; width: 100px;'>
+                        <div class='progress-bar ${color_class}' role='progressbar' style='width: ${percentage}%;' aria-valuenow='${value}' aria-valuemin='0' aria-valuemax='${max_value}'>
+                            <span style='font-size: 10px; color: white;'>${parseFloat(value).toFixed(2)}</span>
+                        </div>
+                    </div>`;
+        }
+
+
         function renderReport(sectionId, data) {
             if (sectionId === 'institute-report') {
                 let html = '<h1>Institute Performance Overview</h1>';
