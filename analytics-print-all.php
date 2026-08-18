@@ -34,6 +34,9 @@ require_once 'header.php';
         .no-print {
             display: none !important;
         }
+        body{
+            background:white;
+        }
 
         .page-break {
             page-break-before: always;
