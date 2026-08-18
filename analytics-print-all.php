@@ -104,20 +104,12 @@ require_once 'header.php';
             <div id="institute-report" class="report-section"></div>
             <div class="page-break no-print"></div>
             <div id="teacher-report" class="report-section"></div>
-            <div id="dataset-report" class="report-section"></div>
-            <div class="page-break"></div>
-            <div id="detailed-subject-report" class="report-section"></div>
-            <div class="page-break"></div>
-            <div id="overall-subject-report" class="report-section"></div>
             <div class="page-break"></div>
             <div id="class-report" class="report-section"></div>
             <div class="page-break"></div>
             <div id="subject-report" class="report-section"></div>
-            <div id="teacher-report" class="report-section"></div>
             <div class="page-break"></div>
             <div id="student-report" class="report-section"></div>
-            <div class="page-break"></div>
-            <div id="at-risk-students-report" class="report-section"></div>
         </div>
     </div>
 </div>
@@ -133,13 +125,6 @@ require_once 'header.php';
             { id: 'class-report', endpoint: 'get_class_report.php' },
             { id: 'subject-report', endpoint: 'get_subject_report.php' },
             { id: 'student-report', endpoint: 'get_student_report.php' }
-            { id: 'dataset-report', title: 'Core Report Data (analytics_dataset)', endpoint: 'get_dataset_report.php' },
-            { id: 'detailed-subject-report', title: 'Detailed Subject Performance (analytics_subject_performance)', endpoint: 'get_detailed_subject_report.php' },
-            { id: 'overall-subject-report', title: 'Overall Subject Performance (analytics_overall_subject_performance)', endpoint: 'get_overall_subject_report.php' },
-            { id: 'class-report', title: 'Class Performance (analytics_class_performance)', endpoint: 'get_class_report.php' },
-            { id: 'teacher-report', title: 'Teacher Performance (analytics_teacher_performance)', endpoint: 'get_teacher_report.php' },
-            { id: 'student-report', title: 'Student Performance (analytics_student_performance)', endpoint: 'get_student_report.php' },
-            { id: 'at-risk-students-report', title: 'At-Risk Students (analytics_at_risk_students)', endpoint: 'get_at_risk_students_report.php' }
         ];
 
         // Function to fetch and render a single report
@@ -158,7 +143,6 @@ require_once 'header.php';
                     // This is a simplified renderer. You would replace this with
                     // a function that generates the correct HTML for each report type.
                     container.innerHTML = renderReport(section.id, result.data);
-                    container.innerHTML = renderGenericTable(section.title, result.data);
                 } else {
                     throw new Error(result.message || 'API returned an error.');
                 }
@@ -175,13 +159,7 @@ require_once 'header.php';
                         </div>
                     </div>`;
         }
-        function renderGenericTable(title, data) {
-            if (!data || data.length === 0) {
-                return `<h1>${title}</h1><div class="alert alert-warning">No data available for this report.</div>`;
-            }
 
-            let html = `<h1>${title}</h1>`;
-            html += '<div class="table-responsive"><table class="table table-bordered table-sm table-striped">';
 
         function renderReport(sectionId, data) {
             if (sectionId === 'institute-report') {
@@ -193,13 +171,6 @@ require_once 'header.php';
                             <div class='col-md-4'><div class='card text-center'><div class='card-body'><h4>Pass Rate</h4><p style='font-size: 24px;'>${parseFloat(summary.pass_rate || 0).toFixed(2)}%</p></div></div></div>
                             <div class='col-md-4'><div class='card text-center'><div class='card-body'><h4>Average Marks</h4><p style='font-size: 24px;'>${parseFloat(summary.overall_avg_marks_percentage || 0).toFixed(2)}%</p></div></div></div>
                         </div>`;
-            // Create header
-            const headers = Object.keys(data[0]);
-            html += '<thead><tr>';
-            headers.forEach(header => {
-                html += `<th>${header.replace(/_/g, ' ').toUpperCase()}</th>`;
-            });
-            html += '</tr></thead>';
 
                 html += "<div class='row g-3'><div class='col-md-6'><h3>Grade Distribution</h3>";
                 html += "<table class='table table-sm'><thead><tr><th>Grade</th><th>Number of Students</th><th>Percentage</th></tr></thead><tbody>";
@@ -207,17 +178,8 @@ require_once 'header.php';
                 (data.grade_distribution || []).forEach(grade => {
                     const percentage = (grade.student_count / total_students) * 100;
                     html += `<tr><td>${grade.grade}</td><td>${grade.student_count}</td><td>${create_bar_html(percentage)}</td></tr>`;
-            // Create body
-            html += '<tbody>';
-            data.forEach(row => {
-                html += '<tr>';
-                headers.forEach(header => {
-                    html += `<td>${row[header] !== null ? row[header] : ''}</td>`;
                 });
                 html += "</tbody></table></div>";
-                html += '</tr>';
-            });
-            html += '</tbody></table></div>';
 
                 html += "<div class='col-md-6'><h3>Weakest Subjects</h3>";
                 html += "<table class='table table-sm'><thead><tr><th>Subject</th><th>Failure Rate</th></tr></thead><tbody>";
@@ -300,7 +262,6 @@ require_once 'header.php';
                 return html;
             }
             return `<h2>${sectionId.replace(/-/g, ' ')}</h2><p>Rendering not implemented.</p>`;
-            return html;
         }
 
         // Load all reports sequentially
