@@ -225,83 +225,89 @@ require_once 'header.php';
                 return html;
             }
             if (sectionId === 'detailed-subject-report') {
-                // Use the generic table renderer for this report
-                return renderGenericTable('Detailed Subject Performance (Class & Section wise)', data);
+                // This section now has a custom renderer.
+                // We will fetch pre-rendered HTML from a new endpoint and also show the old table.
+                let html = '<h1>Detailed Subject Performance (Class & Section wise)</h1>';
+
+                // Placeholder for the new custom view which will be loaded separately
+                html += '<div id="custom-detailed-subject-view"><div class="loading-placeholder"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading Custom View...</span></div></div></div>';
+
+                // Asynchronously load the custom view
+                fetch(`analytics/display_detailed_subject_report.php?dataset_id=${datasetId}`)
+                    .then(response => response.text())
+                    .then(customHtml => {
+                        document.getElementById('custom-detailed-subject-view').innerHTML = customHtml;
+                    })
+                    .catch(error => {
+                        document.getElementById('custom-detailed-subject-view').innerHTML = `<div class="alert alert-danger">Failed to load custom view: ${error}</div>`;
+                    });
+
+                // Append the old generic table below it
+                html += '<h3 class="mt-5 text-muted">Raw Data Table (for reference)</h3>';
+                html += renderGenericTable('', data); // Pass empty title
+                return html;
             }
             if (sectionId === 'teacher-report') {
                 let html = '<h1>Teacher\'s Performance Report (শিক্ষকদের পারফরম্যান্স)</h1>';
-                html += '<table class="table table-bordered table-sm"><thead><tr><th>Rank</th><th>Teacher</th><th>Avg. Marks</th><th>Pass Rate</th><th>TPI</th><th>TIA</th><th>TCI</th><th>TSI</th></tr></thead><tbody>';
-                (data || []).forEach((teacher, index) => {
-                    html += `<tr>
-                                <td>${index + 1}</td>
-                                <td>${teacher.tname}<br><small>${teacher.position || ''}</small></td>
-                                <td>${create_bar_html(teacher.overall_avg_marks)}</td>
-                                <td>${create_bar_html(teacher.overall_pass_rate)}</td>
-                                <td>${parseFloat(teacher.tpi).toFixed(2)}</td>
-                                <td style='font-weight: bold;'>${parseFloat(teacher.tia).toFixed(2)}</td>
-                                <td class='${teacher.tci_score > 0 ? 'text-success' : 'text-danger'}'>${parseFloat(teacher.tci_score).toFixed(2)}</td>
-                                <td class='${teacher.tsi_score > 0 ? 'text-success' : 'text-danger'}'>${parseFloat(teacher.tsi_score).toFixed(2)}</td>
-                              </tr>`;
-                });
-                html += '</tbody></table>';
+
+                // Placeholder for the new custom view
+                html += '<div id="custom-teacher-view"><div class="loading-placeholder"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading Custom View...</span></div></div></div>';
+
+                // Asynchronously load the custom view
+                fetch(`analytics/display_teacher_report.php?dataset_id=${datasetId}`)
+                    .then(response => response.text())
+                    .then(customHtml => {
+                        document.getElementById('custom-teacher-view').innerHTML = customHtml;
+                    })
+                    .catch(error => {
+                        document.getElementById('custom-teacher-view').innerHTML = `<div class="alert alert-danger">Failed to load custom view: ${error}</div>`;
+                    });
+
+                // Append the old generic table below it
+                html += '<h3 class="mt-5 text-muted">Raw Data Table (for reference)</h3>';
+                html += renderGenericTable('', data); // Pass empty title
+
                 return html;
             }
             if (sectionId === 'class-report') {
                 let html = '<h1>Class Performance Report (শ্রেণিভিত্তিক পারফরম্যান্স)</h1>';
-                html += '<table class="table table-bordered table-sm"><thead><tr><th>Rank</th><th>Class</th><th>Students</th><th>Avg. Marks</th><th>CPI Score</th><th>Difficulty (CDF)</th></tr></thead><tbody>';
-                (data || []).forEach(cls => {
-                    html += `<tr>
-                                <td>${cls.class_rank}</td>
-                                <td>${cls.classname} - ${cls.sectionname}</td>
-                                <td>${cls.total_students_appeared}</td>
-                                <td>${create_bar_html(cls.overall_marks_percentage)}</td>
-                                <td style='font-weight: bold;'>${parseFloat(cls.cpi_score).toFixed(2)}</td>
-                                <td>${create_bar_html(cls.difficulty_factor, 100, 'bg-danger')}</td>
-                              </tr>`;
-                });
-                html += '</tbody></table>';
+                html += '<div id="custom-class-view"><div class="loading-placeholder"><div class="spinner-border text-primary" role="status"></div></div></div>';
+                fetch(`analytics/display_class_report.php?dataset_id=${datasetId}`)
+                    .then(r => r.text()).then(h => document.getElementById('custom-class-view').innerHTML = h);
+
+                html += '<h3 class="mt-5 text-muted">Raw Data Table (for reference)</h3>';
+                html += renderGenericTable('', data);
                 return html;
             }
             if (sectionId === 'overall-subject-report') {
-                let html = '<h1>Subject Performance Report (বিষয়ভিত্তিক পারফরম্যান্স)</h1>';
-                html += '<table class="table table-bordered table-sm"><thead><tr><th>Subject</th><th>Students</th><th>Avg. Marks</th><th>Pass %</th><th>Fail %</th><th>Difficulty (SDF)</th></tr></thead><tbody>';
-                (data || []).forEach(subject => {
-                    const pass_rate = 100 - subject.failure_rate;
-                    html += `<tr>
-                                <td>${subject.subject_name}</td>
-                                <td>${subject.total_students_appeared}</td>
-                                <td>${create_bar_html(subject.overall_marks_percentage)}</td>
-                                <td class='text-success'>${parseFloat(pass_rate).toFixed(2)}%</td>
-                                <td class='text-danger'>${parseFloat(subject.failure_rate).toFixed(2)}%</td>
-                                <td>${create_bar_html(subject.sdf, 100, 'bg-warning')}</td>
-                              </tr>`;
-                });
-                html += '</tbody></table>';
+                let html = '<h1>Overall Subject Performance (সামগ্রিক বিষয়ভিত্তিক পারফরম্যান্স)</h1>';
+                html += '<div id="custom-overall-subject-view"><div class="loading-placeholder"><div class="spinner-border text-primary" role="status"></div></div></div>';
+                fetch(`analytics/display_overall_subject_report.php?dataset_id=${datasetId}`)
+                    .then(r => r.text()).then(h => document.getElementById('custom-overall-subject-view').innerHTML = h);
+
+                html += '<h3 class="mt-5 text-muted">Raw Data Table (for reference)</h3>';
+                html += renderGenericTable('', data);
                 return html;
             }
             if (sectionId === 'student-report') {
                 let html = '<h1>Student Merit List (শিক্ষার্থীদের মেধাতালিকা)</h1>';
-                html += '<table class="table table-bordered table-sm"><thead><tr><th>Rank</th><th>Student</th><th>Class</th><th>Roll</th><th>Total Marks</th><th>Percentage</th><th>GPA</th><th>Grade</th></tr></thead><tbody>';
-                (data || []).forEach(student => {
-                    const is_fail = student.failed_subjects > 0;
-                    const rank = is_fail ? 'F' : student.class_rank;
-                    const row_class = is_fail ? "class='table-danger'" : "";
-                    html += `<tr ${row_class}>
-                                <td style='font-weight: bold;'>${rank}</td>
-                                <td>${student.stnameeng}</td>
-                                <td>${student.classname} - ${student.sectionname}</td>
-                                <td>${student.rollno}</td>
-                                <td>${parseFloat(student.total_marks_obtained).toFixed(2)}</td>
-                                <td>${parseFloat(student.percentage).toFixed(2)}%</td>
-                                <td>${parseFloat(student.gpa).toFixed(2)}</td>
-                                <td>${student.grade}</td>
-                              </tr>`;
-                });
-                html += '</tbody></table>';
+                html += '<div id="custom-student-view"><div class="loading-placeholder"><div class="spinner-border text-primary" role="status"></div></div></div>';
+                fetch(`analytics/display_student_report.php?dataset_id=${datasetId}`)
+                    .then(r => r.text()).then(h => document.getElementById('custom-student-view').innerHTML = h);
+
+                html += '<h3 class="mt-5 text-muted">Full Merit List (for reference)</h3>';
+                html += renderGenericTable('', data);
                 return html;
             }
             if (sectionId === 'at-risk-students-report') {
-                return renderGenericTable('At-Risk Students Report (ঝুঁকিপূর্ণ শিক্ষার্থী)', data);
+                let html = '<h1>At-Risk Students Report (ঝুঁকিপূর্ণ শিক্ষার্থী)</h1>';
+                html += '<div id="custom-at-risk-view"><div class="loading-placeholder"><div class="spinner-border text-primary" role="status"></div></div></div>';
+                fetch(`analytics/display_at_risk_students_report.php?dataset_id=${datasetId}`)
+                    .then(r => r.text()).then(h => document.getElementById('custom-at-risk-view').innerHTML = h);
+
+                html += '<h3 class="mt-5 text-muted">Raw Data Table (for reference)</h3>';
+                html += renderGenericTable('', data);
+                return html;
             }
             return `<h2>${sectionId.replace(/-/g, ' ')}</h2><p>Rendering not implemented.</p>`;
         }
