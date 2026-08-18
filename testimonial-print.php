@@ -204,7 +204,7 @@ $result = $conn->query($sql);
                     <div style="text-align:center;" class="letter-head">
                         <?php include ('templete/letter-head-01.php'); ?>
                     </div>
-                    <hr style="border:1px solid black; margin:0;"/>
+                    <hr style="border:1px solid black; margin:10px 0 0 0 ;"/>
 
                     <table style="width:100%; border:0; margin-top: 20px;" class="main-table">
                         <tr>
