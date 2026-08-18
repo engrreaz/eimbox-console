@@ -56,7 +56,7 @@ if ($scinfo_query) {
             <h5 class="mb-0">Student List for Testimonial</h5>
             <div>
                 <button class="btn btn-sm btn-info" onclick="printSelected()"><i class="bi bi-printer me-1"></i> Print Selected</button>
-                <button class="btn btn-sm btn-warning" onclick="resultEntry(0)"><i class="bi bi-pencil-square me-1"></i> Result Entry</button>
+                <!-- <button class="btn btn-sm btn-warning" onclick="resultEntry(0)"><i class="bi bi-pencil-square me-1"></i> Result Entry</button> -->
             </div>
         </div>
         <div class="table-responsive text-nowrap">
