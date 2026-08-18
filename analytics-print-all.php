@@ -43,6 +43,31 @@ require_once 'header.php';
             border: none !important;
             box-shadow: none !important;
         }
+
+        body * {
+            visibility: hidden;
+        }
+
+        #main-report-block,
+        #main-report-block * {
+            visibility: visible;
+        }
+
+        #main-report-block {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+
+        .card {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        h1, h2, h3 {
+            margin-top: 20px;
+        }
     }
 
     .page-break {
@@ -71,7 +96,7 @@ require_once 'header.php';
                 <!-- PDF download button can be added later if needed -->
             </div>
         </div>
-        <div class="card-body">
+        <div class="card-body" id="main-report-block">
             <!-- Placeholders for each report section -->
             <div id="institute-report" class="report-section"></div>
             <div class="page-break no-print"></div>
@@ -135,7 +160,7 @@ require_once 'header.php';
 
         function renderReport(sectionId, data) {
             if (sectionId === 'institute-report') {
-                let html = '<h1>Institute Performance Overview</h1>';
+                let html = '<h1>Institute Performance Overview (প্রতিষ্ঠানের সামগ্রিক পারফরম্যান্স)</h1>';
                 const summary = data.summary || {};
                 html += `
                         <div class='row g-3 mb-4'>
@@ -162,7 +187,7 @@ require_once 'header.php';
                 return html;
             }
             if (sectionId === 'teacher-report') {
-                let html = '<h1>Teacher Performance Report</h1>';
+                let html = '<h1>Teacher\'s Performance Report (শিক্ষকদের পারফরম্যান্স)</h1>';
                 html += '<table class="table table-bordered table-sm"><thead><tr><th>Rank</th><th>Teacher</th><th>Avg. Marks</th><th>Pass Rate</th><th>TPI</th><th>TIA</th><th>TCI</th><th>TSI</th></tr></thead><tbody>';
                 (data || []).forEach((teacher, index) => {
                     html += `<tr>
@@ -180,7 +205,7 @@ require_once 'header.php';
                 return html;
             }
             if (sectionId === 'class-report') {
-                let html = '<h1>Class Performance Report</h1>';
+                let html = '<h1>Class Performance Report (শ্রেণিভিত্তিক পারফরম্যান্স)</h1>';
                 html += '<table class="table table-bordered table-sm"><thead><tr><th>Rank</th><th>Class</th><th>Students</th><th>Avg. Marks</th><th>CPI Score</th><th>Difficulty (CDF)</th></tr></thead><tbody>';
                 (data || []).forEach(cls => {
                     html += `<tr>
@@ -196,7 +221,7 @@ require_once 'header.php';
                 return html;
             }
             if (sectionId === 'subject-report') {
-                let html = '<h1>Subject Performance Report</h1>';
+                let html = '<h1>Subject Performance Report (বিষয়ভিত্তিক পারফরম্যান্স)</h1>';
                 html += '<table class="table table-bordered table-sm"><thead><tr><th>Subject</th><th>Students</th><th>Avg. Marks</th><th>Pass %</th><th>Fail %</th><th>Difficulty (SDF)</th></tr></thead><tbody>';
                 (data || []).forEach(subject => {
                     const pass_rate = 100 - subject.failure_rate;
@@ -213,7 +238,7 @@ require_once 'header.php';
                 return html;
             }
             if (sectionId === 'student-report') {
-                let html = '<h1>Student Merit List</h1>';
+                let html = '<h1>Student Merit List (শিক্ষার্থীদের মেধাতালিকা)</h1>';
                 html += '<table class="table table-bordered table-sm"><thead><tr><th>Rank</th><th>Student</th><th>Class</th><th>Roll</th><th>Total Marks</th><th>Percentage</th><th>GPA</th><th>Grade</th></tr></thead><tbody>';
                 (data || []).forEach(student => {
                     const is_fail = student.failed_subjects > 0;
