@@ -40,7 +40,7 @@ $release_colors = [
 
     #mainFooter.fixed {
         position: fixed;
-        bottom: 0;
+        bottom: 24px; /* Updated to accommodate status bar */
         left: 0;
         right: 0;
         z-index: 10300;
@@ -92,6 +92,60 @@ $release_colors = [
     .tree-node.disabled {
         pointer-events: none;
         opacity: 0.6;
+    }
+
+    <?php
+    // এই ভ্যারিয়েবলটি header.php বা কোনো কোর ফাইলে true সেট করতে হবে
+    // উদাহরণ: $statusbar = true;
+    if (isset($statusbar) && $statusbar === true):
+    ?>
+        /* Status Bar Styles */
+        #eimbox-status-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 24px;
+            background-color: var(--bs-primary, #696cff);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+            font-size: 12px;
+            z-index: 10301; /* mainFooter এর উপরে দেখানোর জন্য */
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease;
+        }
+
+        .status-bar-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .status-bar-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .status-bar-item:hover {
+            opacity: 0.8;
+        }
+
+        /* mainFooter এর জন্য স্টাইল অ্যাডজাস্টমেন্ট */
+        #mainFooter.fixed {
+            bottom: 24px; /* স্ট্যাটাস বারের উচ্চতা অনুযায়ী */
+        }
+    <?php
+    endif;
+    ?>
+
+    #mainFooter.fixed {
+        bottom: <?php echo (isset($statusbar) && $statusbar === true) ? '24px' : '0'; ?>;
     }
 </style>
 
@@ -384,7 +438,30 @@ if ($monitorPanel === true) { ?>
     </div>
 </div>
 
+<?php if (isset($statusbar) && $statusbar === true): ?>
+<!-- VS Code Like Status Bar -->
+<div id="eimbox-status-bar">
+    <!-- Left Section -->
+    <div id="statusBar-left" class="status-bar-section">
+        <div id="status-main" class="status-bar-item">
+            <i id="status-icon" class="bi bi-check-all"></i>
+            <span id="status-text">Ready</span>
+        </div>
+        <div id="status-branch" class="status-bar-item">
+            <i class="bi bi-git"></i>
+            <span>main</span>
+        </div>
+    </div>
 
+    <!-- Right Section -->
+    <div id="statusBar-right" class="status-bar-section">
+        <div id="status-notifications" class="status-bar-item">
+            <i class="bi bi-bell"></i>
+            <span id="notification-count">0</span>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 <!-- Modal -->
 <div class="modal fade" id="tourModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
