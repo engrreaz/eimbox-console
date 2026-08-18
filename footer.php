@@ -1,6 +1,7 @@
 <?php
 include_once('dev-log/feedback.php');
 include_once('core/page_status_access.php');
+$statusbar = true;
 
 
 // Sample icons (DB থেকে আসবে)
