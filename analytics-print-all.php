@@ -121,9 +121,10 @@ require_once 'header.php';
 
         const reportSections = [
             { id: 'institute-report', endpoint: 'get_institute_report.php' },
-            { id: 'teacher-report', endpoint: 'get_teacher_report.php' },
-            { id: 'class-report', endpoint: 'get_class_report.php' },
+            { id: 'individual-report', endpoint: 'get_individual_report.php' },
             { id: 'subject-report', endpoint: 'get_subject_report.php' },
+            { id: 'class-report', endpoint: 'get_class_report.php' },
+            { id: 'teacher-report', endpoint: 'get_teacher_report.php' },
             { id: 'student-report', endpoint: 'get_student_report.php' }
         ];
 
