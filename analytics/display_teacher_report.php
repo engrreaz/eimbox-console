@@ -25,7 +25,7 @@ try {
         FROM analytics_teacher_performance AS atp
         JOIN teacher AS t ON atp.tid = t.tid AND atp.sccode = t.sccode
         WHERE atp.dataset_id = ? AND atp.sccode = ?
-        ORDER BY atp.teacher_impact_adjustment DESC
+        ORDER BY atp.teacher_rank ASC, atp.teacher_impact_adjustment DESC
     ");
     if (!$stmt) {
         throw new Exception("Database query preparation failed: " . $conn->error);
@@ -44,8 +44,8 @@ try {
     // --- Custom HTML Rendering Starts Here ---
     echo "<div class='row g-4'>";
 
-    foreach ($data as $index => $teacher) {
-        $rank = $index + 1;
+    foreach ($data as $teacher) {
+        $rank = $teacher['teacher_rank'] ?? 'N/A';
         $avg_marks = (float)($teacher['overall_avg_marks'] ?? 0);
         $pass_rate = (float)($teacher['overall_pass_rate'] ?? 0);
         $tpi = (float)($teacher['tpi'] ?? 0);

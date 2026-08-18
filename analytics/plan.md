@@ -78,6 +78,8 @@ Varience----------------------------------
 [x] **Overall Average Mark:** শিক্ষকের সামগ্রিক গড় নম্বর (গণনা সম্পন্ন - `step-5`)
 [x] **Subject & Class Count:** পড়ানো বিষয় ও শ্রেণির সংখ্যা (গণনা সম্পন্ন - `step-5`)
 [x] **Subject Average:** বিষয়ভিত্তিক গড় (গণনা সম্পন্ন - `step-1`)
+[x] **Teacher Impact Adjustment (TIA):** শিক্ষকের চূড়ান্ত পারফরম্যান্স স্কোর (গণনা সম্পন্ন - `step-8`)
+[x] **Teacher Ranking:** TIA স্কোরের ভিত্তিতে র‍্যাঙ্কিং।
 [x] **Grade Distribution:** গ্রেডভিত্তিক ফলাফল (গণনা সম্পন্ন - `step-11`)
 [x] **Best/Worst Perform Class/Subject:** শিক্ষকের পারফরম্যান্সের তুলনামূলক বিশ্লেষণ (গণনা সম্পন্ন - `step-12`)
 
