@@ -74,7 +74,7 @@ require_once 'header.php';
         <div class="card-body">
             <!-- Placeholders for each report section -->
             <div id="institute-report" class="report-section"></div>
-            <div class="page-break"></div>
+            <div class="page-break no-print"></div>
             <div id="teacher-report" class="report-section"></div>
             <div class="page-break"></div>
             <div id="class-report" class="report-section"></div>
@@ -161,14 +161,87 @@ require_once 'header.php';
                 html += "</tbody></table></div></div>";
                 return html;
             }
-            // অন্যান্য রিপোর্টের জন্য রেন্ডারিং ফাংশন এখানে যোগ করা হবে
-            return `<h2>${sectionId.replace('-', ' ')}</h2><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            if (sectionId === 'teacher-report') {
+                let html = '<h1>Teacher Performance Report</h1>';
+                html += '<table class="table table-bordered table-sm"><thead><tr><th>Rank</th><th>Teacher</th><th>Avg. Marks</th><th>Pass Rate</th><th>TPI</th><th>TIA</th><th>TCI</th><th>TSI</th></tr></thead><tbody>';
+                (data || []).forEach((teacher, index) => {
+                    html += `<tr>
+                                <td>${index + 1}</td>
+                                <td>${teacher.tname}<br><small>${teacher.position || ''}</small></td>
+                                <td>${create_bar_html(teacher.overall_avg_marks)}</td>
+                                <td>${create_bar_html(teacher.overall_pass_rate)}</td>
+                                <td>${parseFloat(teacher.tpi).toFixed(2)}</td>
+                                <td style='font-weight: bold;'>${parseFloat(teacher.tia).toFixed(2)}</td>
+                                <td class='${teacher.tci_score > 0 ? 'text-success' : 'text-danger'}'>${parseFloat(teacher.tci_score).toFixed(2)}</td>
+                                <td class='${teacher.tsi_score > 0 ? 'text-success' : 'text-danger'}'>${parseFloat(teacher.tsi_score).toFixed(2)}</td>
+                              </tr>`;
+                });
+                html += '</tbody></table>';
+                return html;
+            }
+            if (sectionId === 'class-report') {
+                let html = '<h1>Class Performance Report</h1>';
+                html += '<table class="table table-bordered table-sm"><thead><tr><th>Rank</th><th>Class</th><th>Students</th><th>Avg. Marks</th><th>CPI Score</th><th>Difficulty (CDF)</th></tr></thead><tbody>';
+                (data || []).forEach(cls => {
+                    html += `<tr>
+                                <td>${cls.class_rank}</td>
+                                <td>${cls.classname} - ${cls.sectionname}</td>
+                                <td>${cls.total_students_appeared}</td>
+                                <td>${create_bar_html(cls.overall_marks_percentage)}</td>
+                                <td style='font-weight: bold;'>${parseFloat(cls.cpi_score).toFixed(2)}</td>
+                                <td>${create_bar_html(cls.difficulty_factor, 100, 'bg-danger')}</td>
+                              </tr>`;
+                });
+                html += '</tbody></table>';
+                return html;
+            }
+            if (sectionId === 'subject-report') {
+                let html = '<h1>Subject Performance Report</h1>';
+                html += '<table class="table table-bordered table-sm"><thead><tr><th>Subject</th><th>Students</th><th>Avg. Marks</th><th>Pass %</th><th>Fail %</th><th>Difficulty (SDF)</th></tr></thead><tbody>';
+                (data || []).forEach(subject => {
+                    const pass_rate = 100 - subject.failure_rate;
+                    html += `<tr>
+                                <td>${subject.subject_name}</td>
+                                <td>${subject.total_students_appeared}</td>
+                                <td>${create_bar_html(subject.overall_marks_percentage)}</td>
+                                <td class='text-success'>${parseFloat(pass_rate).toFixed(2)}%</td>
+                                <td class='text-danger'>${parseFloat(subject.failure_rate).toFixed(2)}%</td>
+                                <td>${create_bar_html(subject.sdf, 100, 'bg-warning')}</td>
+                              </tr>`;
+                });
+                html += '</tbody></table>';
+                return html;
+            }
+            if (sectionId === 'student-report') {
+                let html = '<h1>Student Merit List</h1>';
+                html += '<table class="table table-bordered table-sm"><thead><tr><th>Rank</th><th>Student</th><th>Class</th><th>Roll</th><th>Total Marks</th><th>Percentage</th><th>GPA</th><th>Grade</th></tr></thead><tbody>';
+                (data || []).forEach(student => {
+                    const is_fail = student.failed_subjects > 0;
+                    const rank = is_fail ? 'F' : student.class_rank;
+                    const row_class = is_fail ? "class='table-danger'" : "";
+                    html += `<tr ${row_class}>
+                                <td style='font-weight: bold;'>${rank}</td>
+                                <td>${student.stnameeng}</td>
+                                <td>${student.classname} - ${student.sectionname}</td>
+                                <td>${student.rollno}</td>
+                                <td>${parseFloat(student.total_marks_obtained).toFixed(2)}</td>
+                                <td>${parseFloat(student.percentage).toFixed(2)}%</td>
+                                <td>${parseFloat(student.gpa).toFixed(2)}</td>
+                                <td>${student.grade}</td>
+                              </tr>`;
+                });
+                html += '</tbody></table>';
+                return html;
+            }
+            return `<h2>${sectionId.replace(/-/g, ' ')}</h2><p>Rendering not implemented.</p>`;
         }
 
-        // শুধুমাত্র প্রথম রিপোর্টটি লোড করা হচ্ছে
-        if (reportSections.length > 0) {
-            loadReport(reportSections[0]);
-        }
+        // Load all reports sequentially
+        (async () => {
+            for (const section of reportSections) {
+                await loadReport(section);
+            }
+        })();
     });
 </script>
 
