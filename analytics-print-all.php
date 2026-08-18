@@ -122,37 +122,42 @@ require_once 'header.php';
                 }
             }
 
-            // A simple function to render report data into HTML.
-            // In a real application, you'd have specific rendering logic for each report.
             function renderReport(sectionId, data) {
-                let title = sectionId.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
-                let html = `<h1>${title}</h1>`;
-                if (Array.isArray(data) && data.length > 0) {
-                    html += '<table class="table table-bordered table-sm">';
-                    // Headers
-                    html += '<thead><tr>';
-                    Object.keys(data[0]).forEach(key => html += `<th>${key}</th>`);
-                    html += '</tr></thead>';
-                    // Body
-                    html += '<tbody>';
-                    data.forEach(row => {
-                        html += '<tr>';
-                        Object.values(row).forEach(value => html += `<td>${(typeof value === 'object' ? JSON.stringify(value) : value)}</td>`);
-                        html += '</tr>';
+                if (sectionId === 'institute-report') {
+                    let html = '<h1>Institute Performance Overview</h1>';
+                    const summary = data.summary || {};
+                    html += `
+                        <div class='row g-3 mb-4'>
+                            <div class='col-md-4'><div class='card text-center'><div class='card-body'><h4>Total Students</h4><p style='font-size: 24px;'>${summary.total_students || 0}</p></div></div></div>
+                            <div class='col-md-4'><div class='card text-center'><div class='card-body'><h4>Pass Rate</h4><p style='font-size: 24px;'>${parseFloat(summary.pass_rate || 0).toFixed(2)}%</p></div></div></div>
+                            <div class='col-md-4'><div class='card text-center'><div class='card-body'><h4>Average Marks</h4><p style='font-size: 24px;'>${parseFloat(summary.overall_avg_marks_percentage || 0).toFixed(2)}%</p></div></div></div>
+                        </div>`;
+
+                    html += "<div class='row g-3'><div class='col-md-6'><h3>Grade Distribution</h3>";
+                    html += "<table class='table table-sm'><thead><tr><th>Grade</th><th>Number of Students</th><th>Percentage</th></tr></thead><tbody>";
+                    const total_students = summary.total_students > 0 ? summary.total_students : 1;
+                    (data.grade_distribution || []).forEach(grade => {
+                        const percentage = (grade.student_count / total_students) * 100;
+                        html += `<tr><td>${grade.grade}</td><td>${grade.student_count}</td><td>${create_bar_html(percentage)}</td></tr>`;
                     });
-                    html += '</tbody></table>';
-                } else {
-                    html += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                    html += "</tbody></table></div>";
+
+                    html += "<div class='col-md-6'><h3>Weakest Subjects</h3>";
+                    html += "<table class='table table-sm'><thead><tr><th>Subject</th><th>Failure Rate</th></tr></thead><tbody>";
+                    (data.weakest_subjects || []).forEach(subject => {
+                        html += `<tr><td>${subject.subject_name}</td><td class='text-danger'>${parseFloat(subject.failure_rate).toFixed(2)}%</td></tr>`;
+                    });
+                    html += "</tbody></table></div></div>";
+                    return html;
                 }
-                return html;
+                // অন্যান্য রিপোর্টের জন্য রেন্ডারিং ফাংশন এখানে যোগ করা হবে
+                return `<h2>${sectionId.replace('-', ' ')}</h2><pre>${JSON.stringify(data, null, 2)}</pre>`;
             }
 
-            // Load all reports sequentially
-            (async () => {
-                for (const section of reportSections) {
-                    await loadReport(section);
-                }
-            })();
+            // শুধুমাত্র প্রথম রিপোর্টটি লোড করা হচ্ছে
+            if (reportSections.length > 0) {
+                loadReport(reportSections[0]);
+            }
         });
     </script>
 
