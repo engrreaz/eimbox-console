@@ -1,7 +1,7 @@
 <?php
 include_once('dev-log/feedback.php');
 include_once('core/page_status_access.php');
-$statusbar = true;
+// $statusbar = true;
 
 
 // Sample icons (DB থেকে আসবে)
@@ -41,7 +41,7 @@ $release_colors = [
 
     #mainFooter.fixed {
         position: fixed;
-        bottom: 24px; /* Updated to accommodate status bar */
+        bottom: 30px; /* Updated to accommodate status bar */
         left: 0;
         right: 0;
         z-index: 10300;
@@ -106,7 +106,7 @@ $release_colors = [
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 24px;
+            height: 30px;
             background-color: var(--bs-primary, #696cff);
             color: white;
             display: flex;
@@ -139,14 +139,24 @@ $release_colors = [
 
         /* mainFooter এর জন্য স্টাইল অ্যাডজাস্টমেন্ট */
         #mainFooter.fixed {
-            bottom: 24px; /* স্ট্যাটাস বারের উচ্চতা অনুযায়ী */
+            bottom: 30px; /* স্ট্যাটাস বারের উচ্চতা অনুযায়ী */
+        }
+
+        /* স্ট্যাটাস বারের জন্য মূল লেআউট কন্টেইনার অ্যাডজাস্টমেন্ট */
+        .layout-wrapper {
+            padding-bottom: 30px;
+        }
+
+        /* স্ট্যাটাস বারের জন্য সাইডবার মেনু অ্যাডজাস্টমেন্ট */
+        #layout-menu {
+            padding-bottom: 30px;
         }
     <?php
     endif;
     ?>
 
     #mainFooter.fixed {
-        bottom: <?php echo (isset($statusbar) && $statusbar === true) ? '24px' : '0'; ?>;
+        bottom: <?php echo (isset($statusbar) && $statusbar === true) ? '30px' : '0'; ?>;
     }
 </style>
 
@@ -439,30 +449,9 @@ if ($monitorPanel === true) { ?>
     </div>
 </div>
 
-<?php if (isset($statusbar) && $statusbar === true): ?>
-<!-- VS Code Like Status Bar -->
-<div id="eimbox-status-bar">
-    <!-- Left Section -->
-    <div id="statusBar-left" class="status-bar-section">
-        <div id="status-main" class="status-bar-item">
-            <i id="status-icon" class="bi bi-check-all"></i>
-            <span id="status-text">Ready</span>
-        </div>
-        <div id="status-branch" class="status-bar-item">
-            <i class="bi bi-git"></i>
-            <span>main</span>
-        </div>
-    </div>
 
-    <!-- Right Section -->
-    <div id="statusBar-right" class="status-bar-section">
-        <div id="status-notifications" class="status-bar-item">
-            <i class="bi bi-bell"></i>
-            <span id="notification-count">0</span>
-        </div>
-    </div>
-</div>
-<?php endif; ?>
+
+
 <!-- Modal -->
 <div class="modal fade" id="tourModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -2321,3 +2310,4 @@ unset($_SESSION['query_log']);
 $conn->close();
 
 ?>
+<?php include_once 'core/eimbox-status-bar.php'; ?>
