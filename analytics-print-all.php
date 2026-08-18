@@ -102,14 +102,18 @@ require_once 'header.php';
         <div class="card-body" id="main-report-block">
             <!-- Placeholders for each report section -->
             <div id="institute-report" class="report-section"></div>
-            <div class="page-break no-print"></div>
+            <div class="page-break"></div>
+            <div id="detailed-subject-report" class="report-section"></div>
+            <div class="page-break"></div>
             <div id="teacher-report" class="report-section"></div>
             <div class="page-break"></div>
             <div id="class-report" class="report-section"></div>
             <div class="page-break"></div>
-            <div id="subject-report" class="report-section"></div>
+            <div id="overall-subject-report" class="report-section"></div>
             <div class="page-break"></div>
             <div id="student-report" class="report-section"></div>
+            <div class="page-break"></div>
+            <div id="at-risk-students-report" class="report-section"></div>
         </div>
     </div>
 </div>
@@ -120,12 +124,13 @@ require_once 'header.php';
         const loadingHTML = `<div class="loading-placeholder"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>`;
 
         const reportSections = [
-            { id: 'institute-report', endpoint: 'get_institute_report.php' },
-            { id: 'individual-report', endpoint: 'get_individual_report.php' },
-            { id: 'subject-report', endpoint: 'get_subject_report.php' },
-            { id: 'class-report', endpoint: 'get_class_report.php' },
-            { id: 'teacher-report', endpoint: 'get_teacher_report.php' },
-            { id: 'student-report', endpoint: 'get_student_report.php' }
+            { id: 'institute-report', title: 'Institute Performance Overview', endpoint: 'get_institute_report.php' },
+            { id: 'detailed-subject-report', title: 'Detailed Subject Performance', endpoint: 'get_detailed_subject_report.php' },
+            { id: 'teacher-report', title: 'Teacher\'s Performance Report', endpoint: 'get_teacher_report.php' },
+            { id: 'class-report', title: 'Class Performance Report', endpoint: 'get_class_report.php' },
+            { id: 'overall-subject-report', title: 'Overall Subject Performance', endpoint: 'get_subject_report.php' },
+            { id: 'student-report', title: 'Student Merit List', endpoint: 'get_student_report.php' },
+            { id: 'at-risk-students-report', title: 'At-Risk Students Report', endpoint: 'get_at_risk_students_report.php' }
         ];
 
         // Function to fetch and render a single report
@@ -161,6 +166,35 @@ require_once 'header.php';
                     </div>`;
         }
 
+        function renderGenericTable(title, data) {
+            if (!data || data.length === 0) {
+                return `<h1>${title}</h1><div class="alert alert-warning">No data available for this report.</div>`;
+            }
+
+            let html = `<h1>${title}</h1>`;
+            html += '<div class="table-responsive"><table class="table table-bordered table-sm table-striped">';
+
+            // Create header
+            const headers = Object.keys(data[0]);
+            html += '<thead><tr>';
+            headers.forEach(header => {
+                html += `<th>${header.replace(/_/g, ' ').toUpperCase()}</th>`;
+            });
+            html += '</tr></thead>';
+
+            // Create body
+            html += '<tbody>';
+            data.forEach(row => {
+                html += '<tr>';
+                headers.forEach(header => {
+                    html += `<td>${row[header] !== null ? row[header] : ''}</td>`;
+                });
+                html += '</tr>';
+            });
+            html += '</tbody></table></div>';
+
+            return html;
+        }
 
         function renderReport(sectionId, data) {
             if (sectionId === 'institute-report') {
@@ -189,6 +223,10 @@ require_once 'header.php';
                 });
                 html += "</tbody></table></div></div>";
                 return html;
+            }
+            if (sectionId === 'detailed-subject-report') {
+                // Use the generic table renderer for this report
+                return renderGenericTable('Detailed Subject Performance (Class & Section wise)', data);
             }
             if (sectionId === 'teacher-report') {
                 let html = '<h1>Teacher\'s Performance Report (শিক্ষকদের পারফরম্যান্স)</h1>';
@@ -224,7 +262,7 @@ require_once 'header.php';
                 html += '</tbody></table>';
                 return html;
             }
-            if (sectionId === 'subject-report') {
+            if (sectionId === 'overall-subject-report') {
                 let html = '<h1>Subject Performance Report (বিষয়ভিত্তিক পারফরম্যান্স)</h1>';
                 html += '<table class="table table-bordered table-sm"><thead><tr><th>Subject</th><th>Students</th><th>Avg. Marks</th><th>Pass %</th><th>Fail %</th><th>Difficulty (SDF)</th></tr></thead><tbody>';
                 (data || []).forEach(subject => {
@@ -261,6 +299,9 @@ require_once 'header.php';
                 });
                 html += '</tbody></table>';
                 return html;
+            }
+            if (sectionId === 'at-risk-students-report') {
+                return renderGenericTable('At-Risk Students Report (ঝুঁকিপূর্ণ শিক্ষার্থী)', data);
             }
             return `<h2>${sectionId.replace(/-/g, ' ')}</h2><p>Rendering not implemented.</p>`;
         }
