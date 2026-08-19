@@ -109,7 +109,7 @@ $files = array_filter(scandir(__DIR__), function ($f) {
 
 
     <?php
-    echo "<table id='userTable' class='table align-middle table-bordered table-hover table-sm data-table'>";
+    echo "<table id='permissionTable' class='table align-middle table-bordered table-hover table-sm data-table'>";
     echo "<thead class='table-dark table-light sticky-top'>
         <tr class='table-sm'>
             <th style='min-width:70px;'></th>
