@@ -367,7 +367,7 @@ $files = array_filter(scandir(__DIR__), function ($f) {
 
 </script>
 
-<script>
+<!-- <script>
     $(document).ready(function () {
         $('#permissionTable').DataTable({
             "pageLength": 10,
@@ -376,7 +376,7 @@ $files = array_filter(scandir(__DIR__), function ($f) {
             "searching": true
         });
     });
-</script>
+</script> -->
 
 
 </body>
