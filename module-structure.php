@@ -275,16 +275,43 @@ $files = array_filter(scandir(__DIR__), function ($f) {
 
 <?php include('footer.php'); ?>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    $('#not-assign').html('Total Not Assign : <b><?php echo $not_assign; ?></b>');
+</script>
+
 <script>
     $(document).ready(function () {
+        // Initialize DataTables with horizontal & vertical scroll
+        var table = $('#permissionTable').DataTable({
+            pageLength: 20,
+            lengthMenu: [10, 20, 50, 100],
+            scrollX: true,        // horizontal scroll for many columns
+            scrollY: "600px",     // set max height for vertical scroll
+            scrollCollapse: true,
+            responsive: true,
+            fixedHeader: true     // fixed header on scroll
+        });
         $('#not-assign').html('Total Not Assign : <b><?php echo $not_assign; ?></b>');
 
+        // Initialize Bootstrap tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
         // Inline input/select update
         $(document).on('change', '.inline-input, .inline-select', function () {
             let id = $(this).data('id');
             let field = $(this).data('field');
             let value = $(this).val();
 
+    // Inline input/select update
+    $(document).on('change', '.inline-input, .inline-select', function () {
+        let id = $(this).data('id');
+        let field = $(this).data('field');
+        let value = $(this).val();
             if (field === 'status_name') {
                 let release_colors = {
                     0: "#f8f8f8ff", 1: "#808080", 2: "#FF0000", 3: "#FFA500",
@@ -295,16 +322,52 @@ $files = array_filter(scandir(__DIR__), function ($f) {
                     4: "#1a180dff", 5: "#072746ff", 6: "#8ea88eff", 7: "#f1bbf1ff", 8: "#c5e9c5ff"
                 };
 
+        if (field === 'status_name') {
+            let release_colors = {
+                0: "#f8f8f8ff",
+                1: "#808080",
+                2: "#FF0000",
+                3: "#FFA500",
+                4: "#FFD700",
+                5: "#1E90FF",
+                6: "#07af07ff",
+                7: "#800080",
+                8: "#012201ff"
+            };
+            let release_text = {
+                0: "#f8f8f8ff",
+                1: "#1a0a0aff",
+                2: "#eccacaff",
+                3: "#1a180dff",
+                4: "#1a180dff",
+                5: "#072746ff",
+                6: "#8ea88eff",
+                7: "#f1bbf1ff",
+                8: "#c5e9c5ff"
+            };
                 $(this).css("background-color", release_colors[value] || "#ffffff");
                 $(this).css("color", release_text[value] || "#ffffff");
             }
 
+            $(this).css("background-color", release_colors[value] || "#ffffff");
+            $(this).css("color", release_text[value] || "#ffffff");
+        }
+
+        $.post('core/update_inline.php', { page_name: id, field: field, value: value }, function (res) {
+            console.log(res);
+            showToast('info', res + 'Settings updated', 'Chages');
             $.post('core/update_inline.php', { page_name: id, field: field, value: value }, function (res) {
                 console.log(res);
                 showToast('info', res + 'Settings updated', 'Changes');
             });
         });
+    });
 
+    // Permission select update
+    $(document).on('change', '.perm-select', function () {
+        let page = $(this).data('page');
+        let role = $(this).data('role');
+        let title = $(this).data('title');
         // Permission select update
         $(document).on('change', '.perm-select', function () {
             let page = $(this).data('page');
@@ -312,6 +375,7 @@ $files = array_filter(scandir(__DIR__), function ($f) {
             let title = $(this).data('title');
             let perm = $(this).val();
 
+        let perm = $(this).val();
             $(this).removeClass("perm-none perm-0 perm-1 perm-2 perm-3");
             let tooltipText = 'Not Assigned';
             if (perm === '') { $(this).addClass('perm-none'); tooltipText = 'Not Assigned'; }
@@ -320,12 +384,39 @@ $files = array_filter(scandir(__DIR__), function ($f) {
             else if (perm === '2') { $(this).addClass('perm-2'); tooltipText = 'Write'; }
             else if (perm === '3') { $(this).addClass('perm-3'); tooltipText = 'Full'; }
 
+        $(this).removeClass("perm-none perm-0 perm-1 perm-2 perm-3");
+        let tooltipText = 'Not Assigned';
+        if (perm === '') { $(this).addClass('perm-none'); tooltipText = 'Not Assigned'; }
+        else if (perm === '0') { $(this).addClass('perm-0'); tooltipText = 'No Access'; }
+        else if (perm === '1') { $(this).addClass('perm-1'); tooltipText = 'Read'; }
+        else if (perm === '2') { $(this).addClass('perm-2'); tooltipText = 'Write'; }
+        else if (perm === '3') { $(this).addClass('perm-3'); tooltipText = 'Full'; }
+
+        //    $(this).attr('title', tooltipText).tooltip('dispose').tooltip();
+
+        $.post('core/update_permission.php', { page_name: page, userlevel: role, permission: perm, title: title }, function (res) {
+            console.log(res);
             $.post('core/update_permission.php', { page_name: page, userlevel: role, permission: perm, title: title }, function (res) {
                 console.log(res);
             });
         });
     });
+
+
 </script>
 
+<script>
+    $(document).ready(function () {
+        $('#permissionTable').DataTable({
+            "pageLength": 10,
+            "lengthMenu": [5, 10, 25, 50, 100],
+            "ordering": true,
+            "searching": true
+        });
+    });
+</script>
+
+
 </body>
+
 </html>
