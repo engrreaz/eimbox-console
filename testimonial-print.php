@@ -445,10 +445,15 @@ $result = $conn->query($sql);
             
             // Background Image
             const backgroundStyle = settings.backgroundStyle || 'testimonial-background-00.png';
-            if (backgroundStyle !== 'none') {
+            if (backgroundStyle && backgroundStyle !== 'none') {
                 document.querySelectorAll('.testimonial-page').forEach(el => {
                     el.style.backgroundImage = `url('assets/testimonial/${backgroundStyle}')`;
+                    el.style.backgroundSize = '210mm 297mm'; // A4 সাইজে সেট করা
+                    el.style.backgroundRepeat = 'no-repeat';
+                    el.style.backgroundPosition = 'center';
                 });
+            } else {
+                document.querySelectorAll('.testimonial-page').forEach(el => el.style.backgroundImage = 'none');
             }
         }
 
