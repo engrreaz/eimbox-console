@@ -47,6 +47,10 @@ if ($scinfo_query) {
                     <label class="form-label">Education Board</label>
                     <input type="text" class="form-control" value="<?= htmlspecialchars($scinfo_data['ed_board'] ?? '') ?>" readonly>
                 </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-secondary w-100" data-bs-toggle="modal" data-bs-target="#centerInfoModal">Update Center Info</button>
+                </div>
             </div>
         </div>
     </div>
@@ -230,6 +234,37 @@ if ($scinfo_query) {
     </div>
 </div>
 
+<!-- Center Info Modal -->
+<div class="modal fade" id="centerInfoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Update Center Information</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="centerInfoForm">
+                    <div class="mb-3">
+                        <label for="modal_center_code" class="form-label">Center Code</label>
+                        <input type="text" class="form-control" id="modal_center_code" name="center_code" value="<?= htmlspecialchars($scinfo_data['center_code'] ?? '') ?>">
+                    </div>
+                    <div class="mb-3">
+                        <label for="modal_center_name" class="form-label">Center Name</label>
+                        <input type="text" class="form-control" id="modal_center_name" name="center_name" value="<?= htmlspecialchars($scinfo_data['center_name'] ?? '') ?>">
+                    </div>
+                    <div class="mb-3">
+                        <label for="modal_ed_board" class="form-label">Education Board</label>
+                        <input type="text" class="form-control" id="modal_ed_board" name="ed_board" value="<?= htmlspecialchars($scinfo_data['ed_board'] ?? '') ?>">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="saveCenterInfo()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?php require_once 'footer.php'; ?>
 
 <script>
@@ -369,6 +404,28 @@ if ($scinfo_query) {
             },
             error: function () {
                 alert('An error occurred. Please try again.');
+            }
+        });
+    }
+
+    function saveCenterInfo() {
+        const form = document.getElementById('centerInfoForm');
+        const formData = new FormData(form);
+
+        $.ajax({
+            url: 'backend/update-center-info.php',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            dataType: 'json',
+            success: function (response) {
+                if (response.status === 'success') {
+                    showToast('success', 'Center info updated successfully!', 'Success');
+                    setTimeout(() => location.reload(), 800);
+                } else {
+                    showToast('error', response.message || 'An error occurred.', 'Error');
+                }
             }
         });
     }
