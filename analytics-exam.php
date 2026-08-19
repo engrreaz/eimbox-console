@@ -319,29 +319,25 @@
         try {
             // 1. Fetch the steps from JSON file
             // Cache busting: Add a unique query parameter to prevent the browser from using a cached version of the JSON file.
-            // Since analysis_steps.json is not provided, I am defining the steps array directly here.
-            // In your actual code, you would modify the JSON file.
             const steps = [
-                { "file": "analytics-exam-step-0.php", "title": "Initializing Analysis", "increment": 5, "icon": "bi-power" },
-                { "file": "analytics-exam-step-1.php", "title": "Analyzing Subject Performance", "increment": 15, "icon": "bi-journal-text" },
-                { "file": "analytics-exam-step-2.php", "title": "Calculating Class Academic Index (CAI)", "increment": 10, "icon": "bi-building" },
-                { "file": "analytics-exam-step-3.php", "title": "Calculating Subject Performance Index (SPI)", "increment": 10, "icon": "bi-book" },
-                { "file": "analytics-exam-step-4.php", "title": "Calculating Class Ranks (CPI)", "increment": 5, "icon": "bi-trophy" },
-                { "file": "analytics-exam-step-5.php", "title": "Aggregating Teacher Data", "increment": 10, "icon": "bi-person-video3" },
-                { "file": "analytics-exam-step-6.php", "title": "Calculating Subject Difficulty (SDF)", "increment": 5, "icon": "bi-reception-3" },
-                { "file": "analytics-exam-step-7.php", "title": "Calculating Combined Difficulty (CDI)", "increment": 5, "icon": "bi-puzzle" },
-                { "file": "analytics-exam-step-8.php", "title": "Calculating Teacher Scores (TPI & TIA)", "increment": 5, "icon": "bi-calculator" },
-                { "file": "analytics-exam-step-8a.php", "title": "Calculating Teacher Subject Index (TSPI)", "increment": 5, "icon": "bi-card-checklist" },
-                { "file": "analytics-exam-step-9.php", "title": "Aggregating Student Performance", "increment": 10, "icon": "bi-people" },
-                { "file": "analytics-exam-step-11.php", "title": "Calculating Student GPA & Grades", "increment": 5, "icon": "bi-mortarboard" },
-                { "file": "analytics-exam-step-12.php", "title": "Calculating Teacher Impact (TCI & TSI)", "increment": 5, "icon": "bi-graph-up-arrow" },
-                { "file": "analytics-exam-step-13.php", "title": "Calculating Student Risk Score (SRS)", "increment": 5, "icon": "bi-heart-pulse" },
-                { "file": "analytics-exam-step-10.php", "title": "Identifying At-Risk Students", "increment": 5, "icon": "bi-exclamation-triangle" },
-                { "file": "analytics-exam-step-15.php", "title": "Calculating Teacher Ranks", "increment": 3, "icon": "bi-award" },
-                { "file": "analytics-exam-step-14.php", "title": "Finalizing Dataset Summary", "increment": 2, "icon": "bi-archive" }
+                {"file": "analytics-exam-step-0.php", "title": "Initializing Analysis", "increment": 5, "icon": "bi-power"},
+                {"file": "analytics-exam-step-1.php", "title": "Analyzing Subject Performance", "increment": 15, "icon": "bi-journal-text"},
+                {"file": "analytics-exam-step-2.php", "title": "Calculating Class Academic Index (CAI)", "increment": 10, "icon": "bi-building"},
+                {"file": "analytics-exam-step-3.php", "title": "Calculating Subject Performance Index (SPI)", "increment": 10, "icon": "bi-book"},
+                {"file": "analytics-exam-step-4.php", "title": "Calculating Class Ranks (CPI)", "increment": 5, "icon": "bi-trophy"},
+                {"file": "analytics-exam-step-5.php", "title": "Aggregating Teacher Data", "increment": 10, "icon": "bi-person-video3"},
+                {"file": "analytics-exam-step-6.php", "title": "Calculating Subject Difficulty (SDF)", "increment": 5, "icon": "bi-reception-3"},
+                {"file": "analytics-exam-step-7.php", "title": "Calculating Combined Difficulty (CDI)", "increment": 5, "icon": "bi-puzzle"},
+                {"file": "analytics-exam-step-8.php", "title": "Calculating Teacher Scores (TPI & TIA)", "increment": 5, "icon": "bi-calculator"},
+                {"file": "analytics-exam-step-8a.php", "title": "Calculating Teacher Subject Index (TSPI)", "increment": 5, "icon": "bi-card-checklist"},
+                {"file": "analytics-exam-step-9.php", "title": "Aggregating Student Performance", "increment": 10, "icon": "bi-people"},
+                {"file": "analytics-exam-step-11.php", "title": "Calculating Student GPA & Grades", "increment": 5, "icon": "bi-mortarboard"},
+                {"file": "analytics-exam-step-12.php", "title": "Calculating Teacher Impact (TCI & TSI)", "increment": 5, "icon": "bi-graph-up-arrow"},
+                {"file": "analytics-exam-step-13.php", "title": "Calculating Student Risk Score (SRS)", "increment": 5, "icon": "bi-heart-pulse"},
+                {"file": "analytics-exam-step-10.php", "title": "Identifying At-Risk Students", "increment": 5, "icon": "bi-exclamation-triangle"},
+                {"file": "analytics-exam-step-15.php", "title": "Calculating Teacher Ranks", "increment": 3, "icon": "bi-award"},
+                {"file": "analytics-exam-step-14.php", "title": "Finalizing Dataset Summary", "increment": 2, "icon": "bi-archive"}
             ];
-            if (!response.ok) throw new Error('Could not load analysis_steps.json');
-            const steps = await response.json();
             
             // 2. Execute each step sequentially
             for (const step of steps) {
