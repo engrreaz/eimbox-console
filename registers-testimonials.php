@@ -47,7 +47,7 @@ if ($scinfo_query) {
                     <label class="form-label">Education Board</label>
                     <input type="text" class="form-control" value="<?= htmlspecialchars($scinfo_data['ed_board'] ?? '') ?>" readonly>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-3">
                     <label class="form-label">&nbsp;</label>
                     <button class="btn btn-secondary w-100" data-bs-toggle="modal" data-bs-target="#centerInfoModal">Update Center Info</button>
                 </div>
@@ -254,7 +254,13 @@ if ($scinfo_query) {
                     </div>
                     <div class="mb-3">
                         <label for="modal_ed_board" class="form-label">Education Board</label>
-                        <input type="text" class="form-control" id="modal_ed_board" name="ed_board" value="<?= htmlspecialchars($scinfo_data['ed_board'] ?? '') ?>">
+                        <select class="form-select" id="modal_ed_board" name="ed_board">
+                            <option value="">Select Board</option>
+                            <option value="Dhaka" <?= (($scinfo_data['ed_board'] ?? '') == 'Dhaka') ? 'selected' : '' ?>>Dhaka</option>
+                            <option value="Cumilla" <?= (($scinfo_data['ed_board'] ?? '') == 'Cumilla') ? 'selected' : '' ?>>Cumilla</option>
+                            <option value="Rajshahi" <?= (($scinfo_data['ed_board'] ?? '') == 'Rajshahi') ? 'selected' : '' ?>>Rajshahi</option>
+                            <option value="Sylhet" <?= (($scinfo_data['ed_board'] ?? '') == 'Sylhet') ? 'selected' : '' ?>>Sylhet</option>
+                        </select>
                     </div>
                 </form>
             </div>
