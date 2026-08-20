@@ -1,6 +1,8 @@
 <?php
 ob_start(); // Start output buffering
-require_once '../core/init.php';
+require_once '../core/config.php';
+require_once '../core/db.php';
+require_once '../core/global_values.php';
 
 $stid = $_GET['stid'] ?? null;
 $exam2 = $_GET['exam'] ?? 'SSC'; // Assuming exam is passed from frontend

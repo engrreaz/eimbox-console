@@ -1,6 +1,11 @@
 <?php
 ob_start(); // Start output buffering
-require_once '../core/init.php';
+require_once '../core/config.php';
+require_once '../core/db.php';
+require_once '../core/global_values.php';
+
+
+
 header('Content-Type: application/json'); // Change header to JSON
 
 // Get data from POST request
