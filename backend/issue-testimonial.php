@@ -1,4 +1,5 @@
 <?php
+session_start();
 ob_start(); // Start output buffering
 require_once '../core/config.php';
 require_once '../core/db.php';
