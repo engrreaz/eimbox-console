@@ -98,7 +98,7 @@ $subjStmt->close();
 
 // 4. Fetch Exams
 $exams = [];
-$examStmt = $conn->prepare("SELECT id, sessionyear, examtitle, slot, datestart, dateend, result_publish 
+$examStmt = $conn->prepare("SELECT id, sessionyear, examtitle, slot, datestart, result_publish 
 FROM examlist 
 WHERE sccode = ? 
 ORDER BY sessionyear DESC, datestart DESC");
@@ -112,7 +112,6 @@ while ($row = $examRes->fetch_assoc()) {
         'examtitle' => $row['examtitle'],
         'slot' => $row['slot'],
         'datestart' => $row['datestart'],
-        'dateend' => $row['dateend'],
         'result_publish' => $row['result_publish']
     ];
 }
