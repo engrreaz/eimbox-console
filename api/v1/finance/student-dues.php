@@ -37,7 +37,8 @@ $sessionyear = $student['sessionyear'] ?: date('Y');
 // 2. Fetch Payable & Pending Items from stfinance (Filtered by month <= current_month or specified upto_month)
 $currentMonth = intval(date('n')); // 1 to 12
 $uptoMonth = isset($_GET['upto_month']) && intval($_GET['upto_month']) > 0 ? intval($_GET['upto_month']) : $currentMonth;
-$allMonths = !empty($_GET['all_months']) && ($_GET['all_months'] === '1' || $_GET['all_months'] === 'true');
+$allMonthsParam = $_GET['all_months'] ?? null;
+$allMonths = ($allMonthsParam !== null && ($allMonthsParam === '1' || $allMonthsParam === 'true' || $allMonthsParam === 1 || $allMonthsParam === true || $allMonthsParam === 'all'));
 
 if ($allMonths) {
     $stmtFin = $conn->prepare("SELECT id, partid, itemcode, particulareng, particularben, amount, payableamt, paid, dues, month, setupdate
