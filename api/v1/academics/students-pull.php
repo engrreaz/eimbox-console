@@ -36,6 +36,8 @@ if (!empty($sectionName) && strtolower($sectionName) !== 'all') {
     $params[] = $sectionName;
 }
 
+$currentMonth = intval(date('n')); // 1 to 12
+
 $sql = "SELECT 
     si.stid,
     si.sessionyear,
@@ -57,22 +59,25 @@ $sql = "SELECT
     s.predist,
     s.photo,
     s.photo_id,
-    COALESCE(df.total_due, 0) AS total_dues
+    COALESCE(df.current_due, 0) AS total_dues,
+    COALESCE(df.full_year_due, 0) AS all_time_dues
 FROM sessioninfo si
 LEFT JOIN students s ON s.stid = si.stid AND s.sccode = si.sccode
 LEFT JOIN (
-    SELECT stid, sccode, sessionyear, SUM(dues) AS total_due 
+    SELECT stid, 
+           SUM(CASE WHEN (month <= ? OR month = 0 OR month IS NULL) THEN dues ELSE 0 END) AS current_due,
+           SUM(dues) AS full_year_due
     FROM stfinance 
-    WHERE sccode = ? 
-    GROUP BY stid, sccode, sessionyear
-) df ON df.stid = si.stid AND df.sessionyear LIKE ?
+    WHERE sccode = ? AND dues > 0
+    GROUP BY stid
+) df ON df.stid = si.stid
 WHERE $where
 ORDER BY si.classname ASC, si.sectionname ASC, si.rollno ASC";
 
 // Add subquery params to front
-array_unshift($params, "%$session%");
 array_unshift($params, $sccode);
-$types = "is" . $types;
+array_unshift($params, $currentMonth);
+$types = "ii" . $types;
 
 $stmt = $conn->prepare($sql);
 if (!$stmt) {
@@ -110,6 +115,7 @@ while ($row = $res->fetch_assoc()) {
         'address' => trim(($row['previll'] ?? '') . ', ' . ($row['prepo'] ?? '') . ', ' . ($row['predist'] ?? '')),
         'photo_url' => $photoUrl,
         'total_dues' => floatval($row['total_dues']),
+        'all_time_dues' => floatval($row['all_time_dues']),
         'last_pr_no' => $row['lastpr'] ? (string)$row['lastpr'] : null
     ];
 }
