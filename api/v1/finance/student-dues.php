@@ -129,15 +129,36 @@ $stmtAllDues->execute();
 $allTimeTotalDues = floatval($stmtAllDues->get_result()->fetch_assoc()['all_dues'] ?? $totalDues);
 $stmtAllDues->close();
 
-// 3. Fetch Last Payment Record (stpr)
-$stmtPr = $conn->prepare("SELECT prno, prdate, amount, entryby, entrytime, collection_media 
+// 3. Fetch Recent Payment History (stpr)
+$stmtPr = $conn->prepare("SELECT 
+    prno, 
+    prdate, 
+    SUM(amount) AS amount, 
+    COALESCE(GROUP_CONCAT(DISTINCT peng SEPARATOR ', '), 'Tuition/Fees') AS particulars,
+    MAX(entryby) AS entryby, 
+    MAX(entrytime) AS entrytime, 
+    MAX(collection_media) AS collection_media 
 FROM stpr 
 WHERE sccode = ? AND stid = ? 
-ORDER BY prno DESC LIMIT 1");
+GROUP BY prno, prdate
+ORDER BY prno DESC LIMIT 20");
 $stmtPr->bind_param('is', $sccode, $stid);
 $stmtPr->execute();
-$lastPr = $stmtPr->get_result()->fetch_assoc();
+$resPr = $stmtPr->get_result();
+$paymentHistory = [];
+while ($pRow = $resPr->fetch_assoc()) {
+    $paymentHistory[] = [
+        'prno' => (string)$pRow['prno'],
+        'prdate' => $pRow['prdate'],
+        'amount' => floatval($pRow['amount']),
+        'particulars' => $pRow['particulars'] ?? '',
+        'entryby' => $pRow['entryby'] ?? 'Counter Cashier',
+        'collection_media' => $pRow['collection_media'] ?? 'Cash'
+    ];
+}
 $stmtPr->close();
+
+$lastPr = count($paymentHistory) > 0 ? $paymentHistory[0] : null;
 
 // Compute Next Receipt Number suggestion
 $suggestedPrNo = null;
@@ -169,12 +190,7 @@ api_response('success', 'Student dues loaded successfully.', [
     'current_month' => $currentMonth,
     'upto_month' => $uptoMonth,
     'payable_items' => $payableItems,
-    'last_payment' => $lastPr ? [
-        'prno' => (string)$lastPr['prno'],
-        'prdate' => $lastPr['prdate'],
-        'amount' => floatval($lastPr['amount']),
-        'entryby' => $lastPr['entryby'],
-        'collection_media' => $lastPr['collection_media'] ?? 'Cash'
-    ] : null,
+    'last_payment' => $lastPr,
+    'payment_history' => $paymentHistory,
     'suggested_prno' => $suggestedPrNo
 ]);
