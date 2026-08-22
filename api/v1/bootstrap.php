@@ -16,10 +16,83 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
     exit;
 }
 
-// 2. Error Reporting
+// 2. Comprehensive API Error & Exception Logging
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
+
+$apiLogDir = __DIR__ . '/../../core/logs';
+if (!is_dir($apiLogDir)) {
+    @mkdir($apiLogDir, 0777, true);
+}
+$apiLogFile = $apiLogDir . '/api-error-' . date('Y-m-d') . '.log';
+ini_set('error_log', $apiLogFile);
+
+/**
+ * Write structured entry to API Error Log file
+ */
+function api_log_error($type, $message, $file = '', $line = 0, $trace = '') {
+    global $apiLogFile;
+    $timestamp = date('Y-m-d H:i:s');
+    $method = $_SERVER['REQUEST_METHOD'] ?? 'CLI';
+    $uri = $_SERVER['REQUEST_URI'] ?? 'Unknown URI';
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+
+    $logEntry = "[$timestamp] [$type] [$method $uri] [IP: $ip]\n";
+    $logEntry .= "Message: $message\n";
+    if ($file) {
+        $logEntry .= "Location: $file (Line $line)\n";
+    }
+    if (!empty($trace)) {
+        $logEntry .= "Stack Trace:\n$trace\n";
+    }
+    $logEntry .= str_repeat('-', 70) . "\n";
+
+    @file_put_contents($apiLogFile, $logEntry, FILE_APPEND);
+}
+
+// Convert PHP errors/warnings into logs
+set_error_handler(function ($severity, $message, $file, $line) {
+    if (!(error_reporting() & $severity)) {
+        return false;
+    }
+    api_log_error('PHP_NOTICE_WARNING', $message, $file, $line);
+    return true;
+});
+
+// Handle uncaught exceptions
+set_exception_handler(function (Throwable $e) {
+    api_log_error('UNCAUGHT_EXCEPTION', $e->getMessage(), $e->getFile(), $e->getLine(), $e->getTraceAsString());
+    
+    http_response_code(500);
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'API Server Exception: ' . $e->getMessage(),
+        'file' => basename($e->getFile()),
+        'line' => $e->getLine(),
+        'timestamp' => date('Y-m-d H:i:s')
+    ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    exit;
+});
+
+// Handle fatal shutdown errors (parse errors, fatal crashes)
+register_shutdown_function(function () {
+    $error = error_get_last();
+    if ($error && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        api_log_error('FATAL_ERROR', $error['message'], $error['file'], $error['line']);
+        if (!headers_sent()) {
+            http_response_code(500);
+            header('Content-Type: application/json; charset=UTF-8');
+        }
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Fatal Server Error: ' . $error['message'],
+            'file' => basename($error['file']),
+            'line' => $error['line'],
+            'timestamp' => date('Y-m-d H:i:s')
+        ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    }
+});
 
 // 3. Include Core Config & DB
 require_once __DIR__ . '/../../core/config.php';
@@ -28,7 +101,12 @@ require_once __DIR__ . '/../../core/core-val.php';
 
 // Ensure DB connection exists
 if (!isset($conn) || !$conn) {
-    $conn = db_connect();
+    try {
+        $conn = db_connect();
+    } catch (Exception $e) {
+        api_log_error('DB_CONNECT_ERROR', $e->getMessage(), $e->getFile(), $e->getLine());
+        api_response('error', 'Database connection error: ' . $e->getMessage(), null, 500);
+    }
 }
 
 /**

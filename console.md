@@ -1,45 +1,49 @@
 # EIMBox Console planning....
 ## Settings
     [ ] Institute Info
-    [ ] 
-    [ ] Slot
-    [ ] Basic Settings
+        [ ] Need UI Fixing
+        [ ] Geo + Time Update
+    [x] Slot
+    [x] Basic Settings
     [ ] Catchment Area
 
 ## Academics
-    [ ] Class/Section
-    [ ] Class Schedule
+    [x] Class/Section
+    [x] Class Schedule
     [ ] Class Routine
     [ ] Subject List
     [ ] Subject Manager
     [ ] Subject Assignment
-    [ ] Syllabus
-    [ ] Lesson Plan
-    [ ] Lesson Tracker
+    [ ] Syllabus *
+    [ ] Lesson Plan *
+    [ ] Lesson Tracker *
 
 ##  Examination
     [ ] Exam List
     [ ] Admit Card
     [ ] Seat Card
-    [ ] Seat Plan
+    [ ] Seat Plan *
     [ ] Exam Routine
     [ ] Grading System
     [ ] marks Distribution
     [ ] Report Settings
-    [ ] Calculation Policies
+    [ ] Calculation Policies *
     [ ][ ][ ][ ][ ][ ][ ][ ][ ][ ]
 
 ## Finance
-    [ ] Bank Check management (dashboard)
-    [ ] Deposit Slit
-    [ ] Income/Expenditure
-    [ ][ ][ ]
+    [ ] Bank Check management (dashboard) *
+    [ ] Deposit Slip *
+    [ ] Income/Expenditure *
+    [ ] Accounts head management *
+    [ ] Accounts Report *
+    [ ] Ledger Management *
+    
 
 ## Banking
-    [ ] Bank Account
-    [ ] Bank Transaction
-    [ ] Bank, Branch List
-    [ ] Deposit Slip
+    [ ] Bank Account *
+    [ ] Bank Transaction *
+    [ ] Bank, Branch List *
+    [ ] Deposit Slip *
     
 ## Collection
     [ ] At-a-Glance
