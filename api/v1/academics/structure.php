@@ -117,11 +117,52 @@ while ($row = $examRes->fetch_assoc()) {
 }
 $examStmt->close();
 
+// 5. Build Flat Classes, Sections, and Class-Section Map for the Requested Session
+$reqSession = strval($_GET['session'] ?? $sessionsList[0] ?? date('Y'));
+$flatClasses = [];
+$flatSections = [];
+$classSectionMap = [];
+
+$targetTree = $classesTree[$reqSession] ?? (count($classesTree) > 0 ? reset($classesTree) : []);
+if (is_array($targetTree)) {
+    foreach ($targetTree as $slot => $classes) {
+        if (is_array($classes)) {
+            foreach ($classes as $cName => $cData) {
+                if (!in_array($cName, $flatClasses)) {
+                    $flatClasses[] = $cName;
+                }
+                if (!isset($classSectionMap[$cName])) {
+                    $classSectionMap[$cName] = [];
+                }
+                if (!empty($cData['sections']) && is_array($cData['sections'])) {
+                    foreach ($cData['sections'] as $sec) {
+                        $sName = $sec['sectionname'] ?? '';
+                        if (!empty($sName)) {
+                            if (!in_array($sName, $flatSections)) {
+                                $flatSections[] = $sName;
+                            }
+                            if (!in_array($sName, $classSectionMap[$cName])) {
+                                $classSectionMap[$cName][] = $sName;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 api_response('success', 'Academic structure retrieved successfully.', [
     'sccode' => $sccode,
+    'sessionyear' => $reqSession,
     'slots' => $slots,
     'sessions' => $sessionsList,
     'classes_tree' => $classesTree,
+    'classes' => $flatClasses,
+    'sections' => $flatSections,
+    'class_section_map' => $classSectionMap,
+    'subjects' => $subjects,
     'subjects_by_class' => $subjects,
     'exams' => $exams
 ]);
+

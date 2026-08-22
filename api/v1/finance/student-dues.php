@@ -34,19 +34,75 @@ if (!$student) {
 
 $sessionyear = $student['sessionyear'] ?: date('Y');
 
-// 2. Fetch Payable & Pending Items from stfinance
-$stmtFin = $conn->prepare("SELECT id, partid, itemcode, particulareng, particularben, amount, payableamt, paid, dues, month, setupdate
-FROM stfinance 
-WHERE sccode = ? AND stid = ? AND dues > 0
-ORDER BY month ASC, id ASC");
-$stmtFin->bind_param('is', $sccode, $stid);
+// 2. Fetch Payable & Pending Items from stfinance (Filtered by month <= current_month or specified upto_month)
+$currentMonth = intval(date('n')); // 1 to 12
+$uptoMonth = isset($_GET['upto_month']) && intval($_GET['upto_month']) > 0 ? intval($_GET['upto_month']) : $currentMonth;
+$allMonths = !empty($_GET['all_months']) && ($_GET['all_months'] === '1' || $_GET['all_months'] === 'true');
+
+if ($allMonths) {
+    $stmtFin = $conn->prepare("SELECT id, partid, itemcode, particulareng, particularben, amount, payableamt, paid, dues, month, setupdate
+    FROM stfinance 
+    WHERE sccode = ? AND stid = ? AND dues > 0
+    ORDER BY month ASC, id ASC");
+    $stmtFin->bind_param('is', $sccode, $stid);
+} else {
+    $stmtFin = $conn->prepare("SELECT id, partid, itemcode, particulareng, particularben, amount, payableamt, paid, dues, month, setupdate
+    FROM stfinance 
+    WHERE sccode = ? AND stid = ? AND dues > 0 AND (month <= ? OR month = 0 OR month IS NULL)
+    ORDER BY month ASC, id ASC");
+    $stmtFin->bind_param('isi', $sccode, $stid, $uptoMonth);
+}
+
 $stmtFin->execute();
 $finRes = $stmtFin->get_result();
 
 $payableItems = [];
 $totalDues = 0;
+
+// 12 Months dynamic keywords map (English & Bengali)
+$allMonthKeywords = [
+    1  => ['january', 'jan', 'জানুয়ারি', 'জানুয়ারি'],
+    2  => ['february', 'feb', 'ফেব্রুয়ারি', 'ফেব্রুয়ারি'],
+    3  => ['march', 'mar', 'মার্চ'],
+    4  => ['april', 'apr', 'এপ্রিল'],
+    5  => ['may', 'মে'],
+    6  => ['june', 'jun', 'জুন'],
+    7  => ['july', 'jul', 'জুলাই'],
+    8  => ['august', 'aug', 'আগস্ট'],
+    9  => ['september', 'sep', 'সেপ্টেম্বর'],
+    10 => ['october', 'oct', 'অক্টোবর'],
+    11 => ['november', 'nov', 'নভেম্বর'],
+    12 => ['december', 'dec', 'ডিসেম্বর']
+];
+
 while ($item = $finRes->fetch_assoc()) {
     $itemDue = floatval($item['dues']);
+    $itemMonth = intval($item['month'] ?? 0);
+
+    if (!$allMonths) {
+        // 1. If explicit numeric month is greater than current/upto month, filter out
+        if ($itemMonth > 0 && $itemMonth > $uptoMonth) {
+            continue;
+        }
+
+        // 2. If month is 0/null but title explicitly mentions any future month relative to current month, filter out
+        $titleLower = strtolower(($item['particulareng'] ?? '') . ' ' . ($item['particularben'] ?? ''));
+        $isFutureItem = false;
+        foreach ($allMonthKeywords as $mNum => $kws) {
+            if ($mNum > $uptoMonth) {
+                foreach ($kws as $kw) {
+                    if (strpos($titleLower, $kw) !== false) {
+                        $isFutureItem = true;
+                        break 2;
+                    }
+                }
+            }
+        }
+        if ($isFutureItem) {
+            continue;
+        }
+    }
+
     $totalDues += $itemDue;
 
     $payableItems[] = [
@@ -59,11 +115,18 @@ while ($item = $finRes->fetch_assoc()) {
         'payable_amt' => floatval($item['payableamt']),
         'paid_so_far' => floatval($item['paid']),
         'due_amount' => $itemDue,
-        'month' => intval($item['month']),
+        'month' => $itemMonth,
         'setupdate' => $item['setupdate']
     ];
 }
 $stmtFin->close();
+
+// Fetch overall all-time total dues for the student
+$stmtAllDues = $conn->prepare("SELECT COALESCE(SUM(dues), 0) AS all_dues FROM stfinance WHERE sccode = ? AND stid = ? AND dues > 0");
+$stmtAllDues->bind_param('is', $sccode, $stid);
+$stmtAllDues->execute();
+$allTimeTotalDues = floatval($stmtAllDues->get_result()->fetch_assoc()['all_dues'] ?? $totalDues);
+$stmtAllDues->close();
 
 // 3. Fetch Last Payment Record (stpr)
 $stmtPr = $conn->prepare("SELECT prno, prdate, amount, entryby, entrytime, collection_media 
@@ -101,6 +164,9 @@ api_response('success', 'Student dues loaded successfully.', [
         'photo_url' => file_exists(__DIR__ . '/../../students/' . $stid . '.jpg') ? 'students/' . $stid . '.jpg' : null
     ],
     'total_dues' => $totalDues,
+    'all_time_total_dues' => $allTimeTotalDues,
+    'current_month' => $currentMonth,
+    'upto_month' => $uptoMonth,
     'payable_items' => $payableItems,
     'last_payment' => $lastPr ? [
         'prno' => (string)$lastPr['prno'],
