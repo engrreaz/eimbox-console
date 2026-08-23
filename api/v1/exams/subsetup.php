@@ -49,7 +49,7 @@ COALESCE(
 (SELECT s.subshname FROM subjects s WHERE s.subcode = ss.subject AND (s.sccode = ss.sccode OR s.sccode = 0) AND (s.sccategory = ? OR s.sccategory = '' OR s.sccategory IS NULL) ORDER BY (s.sccode = ss.sccode) DESC, s.sccode DESC LIMIT 1) AS shortname
 FROM subsetup ss
 WHERE ss.sccode = ? AND ss.sessionyear = ? AND ss.classname = ? AND ss.sectionname = ?";
-
+ 
 $params = [$sccategory, $sccategory, $sccategory, $sccode, $sessionyear, $classname, $sectionname];
 $types = "sssisss";
 
