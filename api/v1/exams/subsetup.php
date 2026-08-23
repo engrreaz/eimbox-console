@@ -36,6 +36,8 @@ if (empty($sccategory)) {
     $sccategory = 'School';
 }
 
+$slot = trim(strval($_GET['slot'] ?? ''));
+
 // Build query with prioritized sccode and sccategory matching to eliminate duplicate rows
 $sql = "SELECT ss.id, ss.slno, ss.sccode, ss.sessionyear, ss.slot, ss.classname, ss.sectionname, 
 ss.subject AS subcode, ss.fullmarks, ss.ctest, ss.mtest, ss.subj, ss.obj, ss.pra, ss.ca, ss.camanual, ss.ctmt, 
@@ -48,14 +50,16 @@ COALESCE(
 (SELECT s.subben FROM subjects s WHERE s.subcode = ss.subject AND (s.sccode = ss.sccode OR s.sccode = 0) AND (s.sccategory = ? OR s.sccategory = '' OR s.sccategory IS NULL) ORDER BY (s.sccode = ss.sccode) DESC, s.sccode DESC LIMIT 1) AS subname_bn,
 (SELECT s.subshname FROM subjects s WHERE s.subcode = ss.subject AND (s.sccode = ss.sccode OR s.sccode = 0) AND (s.sccategory = ? OR s.sccategory = '' OR s.sccategory IS NULL) ORDER BY (s.sccode = ss.sccode) DESC, s.sccode DESC LIMIT 1) AS shortname
 FROM subsetup ss
-WHERE ss.sccode = ? AND ss.sessionyear = ? AND ss.classname = ? AND ss.sectionname = ?";
+WHERE ss.sccode = ? AND ss.sessionyear = ?";
  
-$params = [$sccategory, $sccategory, $sccategory, $sccode, $sessionyear, $classname, $sectionname];
-$types = "sssisss";
+$params = [$sccategory, $sccategory, $sccategory, $sccode, $sessionyear];
+$types = "sssis";
 
-error_log("SQL: " . $sql);
-error_log("Params: " . print_r($params, true));
-
+if (!empty($slot)) {
+    $sql .= " AND ss.slot = ?";
+    $params[] = $slot;
+    $types .= "s";
+}
 
 if (!empty($classname)) {
     $sql .= " AND ss.classname = ?";
@@ -64,9 +68,16 @@ if (!empty($classname)) {
 }
 
 if (!empty($sectionname) && strtolower($sectionname) !== 'all' && strtolower($sectionname) !== 'all sections') {
-    $sql .= " AND (ss.sectionname = ? OR ss.sectionname = '' OR ss.sectionname IS NULL OR ss.sectionname = 'All')";
+    $sql .= " AND ss.sectionname = ?";
     $params[] = $sectionname;
     $types .= "s";
+}
+
+// If Teacher role and not head teacher, restrict to assigned subjects only
+if (isset($user['userlevel']) && strtolower($user['userlevel']) === 'teacher' && !empty($user['tid'])) {
+    $sql .= " AND ss.tid = ?";
+    $params[] = intval($user['tid']);
+    $types .= "i";
 }
 
 $sql .= " ORDER BY ss.classname ASC, ss.slno ASC, ss.subject ASC";
