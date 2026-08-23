@@ -53,6 +53,10 @@ WHERE ss.sccode = ? AND ss.sessionyear = ? AND ss.classname = ? AND ss.sectionna
 $params = [$sccategory, $sccategory, $sccategory, $sccode, $sessionyear, $classname, $sectionname];
 $types = "sssisss";
 
+error_log("SQL: " . $sql);
+error_log("Params: " . print_r($params, true));
+
+
 if (!empty($classname)) {
     $sql .= " AND ss.classname = ?";
     $params[] = $classname;
