@@ -6,7 +6,7 @@
 
 require_once __DIR__ . '/../bootstrap.php';
 
-// Authenticate Request
+// Authenticate Request 
 $user = api_authenticate_request();
 $sccode = (int)($user['sccode'] ?? 0);
 
