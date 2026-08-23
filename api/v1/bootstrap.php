@@ -204,3 +204,29 @@ function authenticate_token($conn) {
     
     return $user;
 }
+
+/**
+ * Backward compatibility alias for authenticate_token
+ */
+function api_authenticate_request($connection = null) {
+    global $conn;
+    return authenticate_token($connection ?: $conn);
+}
+
+/**
+ * Backward compatibility alias for db connection
+ */
+function api_get_db_connection() {
+    global $conn;
+    return $conn;
+}
+
+/**
+ * Backward compatibility alias for response sender
+ */
+function api_send_response($httpCode, $success, $message, $data = null) {
+    api_response($success ? 'success' : 'error', $message, $data, $httpCode);
+}
+
+
+
