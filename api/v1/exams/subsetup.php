@@ -18,17 +18,40 @@ if ($sccode <= 0) {
     api_response('error', 'Valid School Code (sccode) is required.', null, 400);
 }
 
-// Build query
+// 1. Fetch School Category (sccategory / $sctype) from scinfo if not passed
+$sccategory = trim(strval($_GET['sccategory'] ?? $_GET['sctype'] ?? ''));
+if (empty($sccategory)) {
+    $scStmt = $conn->prepare("SELECT sccategory FROM scinfo WHERE sccode = ? LIMIT 1");
+    if ($scStmt) {
+        $scStmt->bind_param("i", $sccode);
+        $scStmt->execute();
+        $scRes = $scStmt->get_result();
+        if ($scRow = $scRes->fetch_assoc()) {
+            $sccategory = trim($scRow['sccategory'] ?? 'School');
+        }
+        $scStmt->close();
+    }
+}
+if (empty($sccategory)) {
+    $sccategory = 'School';
+}
+
+// Build query with prioritized sccode and sccategory matching to eliminate duplicate rows
 $sql = "SELECT ss.id, ss.slno, ss.sccode, ss.sessionyear, ss.slot, ss.classname, ss.sectionname, 
 ss.subject AS subcode, ss.fullmarks, ss.ctest, ss.mtest, ss.subj, ss.obj, ss.pra, ss.ca, ss.camanual, ss.ctmt, 
 ss.pass_algorithm, ss.fourth, ss.combind_1, ss.combind_2, ss.combind_3, ss.combind_4,
-s.subject AS subname_en, s.subben AS subname_bn, s.subshname AS shortname
+COALESCE(
+  (SELECT s.subject FROM subjects s WHERE s.subcode = ss.subject AND (s.sccode = ss.sccode OR s.sccode = 0) AND (s.sccategory = ? OR s.sccategory = '' OR s.sccategory IS NULL) ORDER BY (s.sccode = ss.sccode) DESC, s.sccode DESC LIMIT 1),
+  (SELECT s.subject FROM subjects s WHERE s.subcode = ss.subject AND (s.sccode = ss.sccode OR s.sccode = 0) ORDER BY (s.sccode = ss.sccode) DESC, s.sccode DESC LIMIT 1),
+  CONCAT('Subject ', ss.subject)
+) AS subname_en,
+(SELECT s.subben FROM subjects s WHERE s.subcode = ss.subject AND (s.sccode = ss.sccode OR s.sccode = 0) AND (s.sccategory = ? OR s.sccategory = '' OR s.sccategory IS NULL) ORDER BY (s.sccode = ss.sccode) DESC, s.sccode DESC LIMIT 1) AS subname_bn,
+(SELECT s.subshname FROM subjects s WHERE s.subcode = ss.subject AND (s.sccode = ss.sccode OR s.sccode = 0) AND (s.sccategory = ? OR s.sccategory = '' OR s.sccategory IS NULL) ORDER BY (s.sccode = ss.sccode) DESC, s.sccode DESC LIMIT 1) AS shortname
 FROM subsetup ss
-LEFT JOIN subjects s ON s.subcode = ss.subject AND (s.sccode = ss.sccode OR s.sccode = 0)
 WHERE ss.sccode = ? AND ss.sessionyear = ?";
 
-$params = [$sccode, $sessionyear];
-$types = "is";
+$params = [$sccategory, $sccategory, $sccategory, $sccode, $sessionyear];
+$types = "sssis";
 
 if (!empty($classname)) {
     $sql .= " AND ss.classname = ?";

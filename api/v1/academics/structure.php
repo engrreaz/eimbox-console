@@ -70,21 +70,41 @@ while ($row = $areaRes->fetch_assoc()) {
 }
 $areaStmt->close();
 
-// 3. Fetch Subjects
+// 2b. Fetch School Category from scinfo
+$sccategory = 'School';
+$scStmt = $conn->prepare("SELECT sccategory FROM scinfo WHERE sccode = ? LIMIT 1");
+if ($scStmt) {
+    $scStmt->bind_param("i", $sccode);
+    $scStmt->execute();
+    $scRes = $scStmt->get_result();
+    if ($scRow = $scRes->fetch_assoc()) {
+        $sccategory = trim($scRow['sccategory'] ?? 'School');
+    }
+    $scStmt->close();
+}
+
+// 3. Fetch Subjects with sccode priority and sccategory filter (eliminating duplicate subcodes)
 $subjects = [];
-$subjStmt = $conn->prepare("SELECT id, sccode, sccategory, subcode, subject AS subname, subben AS subname_bn, subshname AS shortname, fourth, sup_class 
-FROM subjects 
-WHERE sccode = ? OR sccode = 0 
-ORDER BY subcode ASC");
-$subjStmt->bind_param('i', $sccode);
+$subjStmt = $conn->prepare("SELECT s.id, s.sccode, s.sccategory, s.subcode, s.subject AS subname, s.subben AS subname_bn, s.subshname AS shortname, s.fourth, s.sup_class 
+FROM subjects s
+WHERE (s.sccode = ? OR s.sccode = 0) 
+  AND (s.sccategory = ? OR s.sccategory = '' OR s.sccategory IS NULL)
+ORDER BY s.subcode ASC, (s.sccode = ?) DESC");
+$subjStmt->bind_param('isi', $sccode, $sccategory, $sccode);
 $subjStmt->execute();
 $subjRes = $subjStmt->get_result();
+
+$seenSubcodes = [];
 while ($row = $subjRes->fetch_assoc()) {
+    $code = intval($row['subcode']);
+    if (isset($seenSubcodes[$code])) continue; // Keep highest priority (sccode = $sccode)
+    $seenSubcodes[$code] = true;
+
     $supClasses = !empty($row['sup_class']) ? explode('.', trim($row['sup_class'], '.')) : ['All'];
     
     $subjItem = [
         'id' => intval($row['id']),
-        'subcode' => intval($row['subcode']),
+        'subcode' => $code,
         'subname_en' => $row['subname'],
         'subname_bn' => $row['subname_bn'],
         'shortname' => $row['shortname'],
@@ -96,18 +116,23 @@ while ($row = $subjRes->fetch_assoc()) {
 }
 $subjStmt->close();
 
-// 3b. Fetch Subject Setup (subsetup) with Mark Breakdown & Pass Algorithms
+// 3b. Fetch Subject Setup (subsetup) with Prioritized Subject Name & Mark Breakdown
 $subsetupList = [];
 $subSetupStmt = $conn->prepare("SELECT ss.id, ss.slno, ss.sccode, ss.sessionyear, ss.slot, ss.classname, ss.sectionname, 
 ss.subject AS subcode, ss.fullmarks, ss.ctest, ss.mtest, ss.subj, ss.obj, ss.pra, ss.ca, ss.camanual, ss.ctmt, 
 ss.pass_algorithm, ss.fourth, ss.combind_1, ss.combind_2, ss.combind_3, ss.combind_4,
-s.subject AS subname_en, s.subben AS subname_bn, s.subshname AS shortname
+COALESCE(
+  (SELECT s.subject FROM subjects s WHERE s.subcode = ss.subject AND (s.sccode = ss.sccode OR s.sccode = 0) AND (s.sccategory = ? OR s.sccategory = '' OR s.sccategory IS NULL) ORDER BY (s.sccode = ss.sccode) DESC, s.sccode DESC LIMIT 1),
+  (SELECT s.subject FROM subjects s WHERE s.subcode = ss.subject AND (s.sccode = ss.sccode OR s.sccode = 0) ORDER BY (s.sccode = ss.sccode) DESC, s.sccode DESC LIMIT 1),
+  CONCAT('Subject ', ss.subject)
+) AS subname_en,
+(SELECT s.subben FROM subjects s WHERE s.subcode = ss.subject AND (s.sccode = ss.sccode OR s.sccode = 0) AND (s.sccategory = ? OR s.sccategory = '' OR s.sccategory IS NULL) ORDER BY (s.sccode = ss.sccode) DESC, s.sccode DESC LIMIT 1) AS subname_bn,
+(SELECT s.subshname FROM subjects s WHERE s.subcode = ss.subject AND (s.sccode = ss.sccode OR s.sccode = 0) AND (s.sccategory = ? OR s.sccategory = '' OR s.sccategory IS NULL) ORDER BY (s.sccode = ss.sccode) DESC, s.sccode DESC LIMIT 1) AS shortname
 FROM subsetup ss
-LEFT JOIN subjects s ON s.subcode = ss.subject AND (s.sccode = ss.sccode OR s.sccode = 0)
 WHERE ss.sccode = ?
 ORDER BY ss.sessionyear DESC, ss.classname ASC, ss.slno ASC, ss.subject ASC");
 if ($subSetupStmt) {
-    $subSetupStmt->bind_param('i', $sccode);
+    $subSetupStmt->bind_param('sssi', $sccategory, $sccategory, $sccategory, $sccode);
     $subSetupStmt->execute();
     $subSetupRes = $subSetupStmt->get_result();
     while ($row = $subSetupRes->fetch_assoc()) {

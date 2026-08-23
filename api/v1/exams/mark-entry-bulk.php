@@ -56,16 +56,18 @@ try {
         $stid = trim($m['stid'] ?? '');
         if (empty($stid)) continue;
 
+        $ctest = floatval($m['ctest'] ?? $m['ct'] ?? 0);
+        $mtest = floatval($m['mtest'] ?? $m['mt'] ?? 0);
         $subj = floatval($m['subj'] ?? 0);
         $obj = floatval($m['obj'] ?? 0);
         $pra = floatval($m['pra'] ?? $m['prac'] ?? 0);
         $ca = floatval($m['ca'] ?? 0);
 
-        $markobt = $subj + $obj + $pra + $ca;
+        $markobt = $ctest + $mtest + $subj + $obj + $pra + $ca;
         $on100 = $fullmark > 0 ? round(($markobt / $fullmark) * 100, 2) : $markobt;
         $grade = calculate_grade($on100);
-        $gp = $grade['gp'];
-        $gl = $grade['gl'];
+        $gp = isset($m['gp']) ? floatval($m['gp']) : $grade['gp'];
+        $gl = !empty($m['gl']) ? strval($m['gl']) : $grade['gl'];
 
         // Check if existing record
         $chkStmt = $conn->prepare("SELECT id FROM stmark 
@@ -79,21 +81,21 @@ try {
         if ($chkRes) {
             // Update
             $upStmt = $conn->prepare("UPDATE stmark SET 
-                slot = ?, fullmark = ?, subj = ?, obj = ?, pra = ?, ca = ?, markobt = ?, on100 = ?, gp = ?, gl = ?, modifieddate = NOW(), entryby = ?
+                slot = ?, fullmark = ?, ctest = ?, mtest = ?, subj = ?, obj = ?, pra = ?, ca = ?, markobt = ?, on100 = ?, gp = ?, gl = ?, modifieddate = NOW(), entryby = ?
                 WHERE id = ?");
-            $upStmt->bind_param('sdddddddsdsi', 
-                $slot, $fullmark, $subj, $obj, $pra, $ca, $markobt, $on100, $gp, $gl, $entryby, $chkRes['id']
+            $upStmt->bind_param('sdddddddddsdsi', 
+                $slot, $fullmark, $ctest, $mtest, $subj, $obj, $pra, $ca, $markobt, $on100, $gp, $gl, $entryby, $chkRes['id']
             );
             $upStmt->execute();
             $upStmt->close();
         } else {
             // Insert
             $insStmt = $conn->prepare("INSERT INTO stmark (
-                slot, sessionyear, sccode, exam, classname, sectionname, subject, fullmark, stid, subj, obj, pra, ca, markobt, on100, gp, gl, entrydate, entryby
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)");
-            $insStmt->bind_param('siisssiisddddddsss', 
+                slot, sessionyear, sccode, exam, classname, sectionname, subject, fullmark, stid, ctest, mtest, subj, obj, pra, ca, markobt, on100, gp, gl, entrydate, entryby
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)");
+            $insStmt->bind_param('siisssiisddddddddsss', 
                 $slot, $sessionyear, $sccode, $exam, $classname, $sectionname, $subcode, $fullmark, $stid, 
-                $subj, $obj, $pra, $ca, $markobt, $on100, $gp, $gl, $entryby
+                $ctest, $mtest, $subj, $obj, $pra, $ca, $markobt, $on100, $gp, $gl, $entryby
             );
             $insStmt->execute();
             $insStmt->close();

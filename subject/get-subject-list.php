@@ -10,7 +10,15 @@ $sec = $_COOKIE['chain-section'] ?? '';
 
 
 $q = "
-SELECT s.subcode, s.subject FROM subjects s LEFT JOIN subsetup ss ON ss.subject = s.subcode AND ss.sccode = '$sccode' AND ss.sessionyear = '$sessionyear' AND ss.classname = '$cls' AND ss.sectionname = '$sec' WHERE ( s.sccode = '$sccode' OR s.sccode=0) AND ss.sessionyear = '$sessionyear' AND ss.classname = '$cls' AND ss.sectionname = '$sec' AND s.sccategory = '$sctype' ORDER BY ss.slno, ss.subject;
+SELECT ss.subject AS subcode,
+COALESCE(
+  (SELECT s.subject FROM subjects s WHERE s.subcode = ss.subject AND (s.sccode = '$sccode' OR s.sccode = 0) AND (s.sccategory = '$sctype' OR s.sccategory = '' OR s.sccategory IS NULL) ORDER BY (s.sccode = '$sccode') DESC, s.sccode DESC LIMIT 1),
+  (SELECT s.subject FROM subjects s WHERE s.subcode = ss.subject AND (s.sccode = '$sccode' OR s.sccode = 0) ORDER BY (s.sccode = '$sccode') DESC, s.sccode DESC LIMIT 1),
+  CONCAT('Subject ', ss.subject)
+) AS subject
+FROM subsetup ss
+WHERE ss.sccode = '$sccode' AND ss.sessionyear = '$sessionyear' AND ss.classname = '$cls' AND ss.sectionname = '$sec'
+ORDER BY ss.slno, ss.subject;
 ";
 $r = $conn->query($q);
 

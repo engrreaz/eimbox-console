@@ -17,16 +17,40 @@ if ($sccode <= 0) {
     api_response('error', 'Valid School Code (sccode) is required.', null, 400);
 }
 
+// Fetch School Category from scinfo
+$sccategory = trim(strval($_GET['sccategory'] ?? $_GET['sctype'] ?? ''));
+if (empty($sccategory)) {
+    $scStmt = $conn->prepare("SELECT sccategory FROM scinfo WHERE sccode = ? LIMIT 1");
+    if ($scStmt) {
+        $scStmt->bind_param("i", $sccode);
+        $scStmt->execute();
+        $scRes = $scStmt->get_result();
+        if ($scRow = $scRes->fetch_assoc()) {
+            $sccategory = trim($scRow['sccategory'] ?? 'School');
+        }
+        $scStmt->close();
+    }
+}
+if (empty($sccategory)) {
+    $sccategory = 'School';
+}
+
 $stmt = $conn->prepare("SELECT id, sccode, sccategory, subcode, subject AS subname, subben AS subname_bn, subshname AS shortname, ncode, fourth, sup_class 
 FROM subjects 
-WHERE sccode = ? OR sccode = 0 
-ORDER BY subcode ASC");
-$stmt->bind_param('i', $sccode);
+WHERE (sccode = ? OR sccode = 0)
+  AND (sccategory = ? OR sccategory = '' OR sccategory IS NULL)
+ORDER BY subcode ASC, (sccode = ?) DESC");
+$stmt->bind_param('isi', $sccode, $sccategory, $sccode);
 $stmt->execute();
 $res = $stmt->get_result();
 
 $subjects = [];
+$seenSubcodes = [];
 while ($row = $res->fetch_assoc()) {
+    $code = intval($row['subcode']);
+    if (isset($seenSubcodes[$code])) continue;
+    $seenSubcodes[$code] = true;
+
     $supClasses = !empty($row['sup_class']) ? explode('.', trim($row['sup_class'], '.')) : ['All'];
 
     // Filter by class if specified
@@ -37,7 +61,7 @@ while ($row = $res->fetch_assoc()) {
 
     $subjects[] = [
         'id' => intval($row['id']),
-        'subcode' => intval($row['subcode']),
+        'subcode' => $code,
         'name_eng' => $row['subname'],
         'name_ben' => $row['subname_bn'] ?? '',
         'shortname' => $row['shortname'] ?? '',

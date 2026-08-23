@@ -78,11 +78,31 @@ if ($subcode > 0) {
     $mParams[] = $subcode;
 }
 
-$mSql = "SELECT m.id, m.stid, m.subject AS subcode, m.fullmark, m.subj, m.obj, m.pra, m.ca, m.markobt, m.on100, m.gp, m.gl,
-s.subject AS subname, s.subshname AS shortname
+// Fetch School Category from scinfo
+$sccategory = 'School';
+$scStmt = $conn->prepare("SELECT sccategory FROM scinfo WHERE sccode = ? LIMIT 1");
+if ($scStmt) {
+    $scStmt->bind_param("i", $sccode);
+    $scStmt->execute();
+    $scRes = $scStmt->get_result();
+    if ($scRow = $scRes->fetch_assoc()) {
+        $sccategory = trim($scRow['sccategory'] ?? 'School');
+    }
+    $scStmt->close();
+}
+
+$mSql = "SELECT m.id, m.stid, m.subject AS subcode, m.fullmark, m.ctest, m.mtest, m.subj, m.obj, m.pra, m.ca, m.markobt, m.on100, m.gp, m.gl,
+COALESCE(
+  (SELECT s.subject FROM subjects s WHERE s.subcode = m.subject AND (s.sccode = m.sccode OR s.sccode = 0) AND (s.sccategory = ? OR s.sccategory = '' OR s.sccategory IS NULL) ORDER BY (s.sccode = m.sccode) DESC, s.sccode DESC LIMIT 1),
+  (SELECT s.subject FROM subjects s WHERE s.subcode = m.subject AND (s.sccode = m.sccode OR s.sccode = 0) ORDER BY (s.sccode = m.sccode) DESC, s.sccode DESC LIMIT 1),
+  CONCAT('Subject ', m.subject)
+) AS subname,
+(SELECT s.subshname FROM subjects s WHERE s.subcode = m.subject AND (s.sccode = m.sccode OR s.sccode = 0) AND (s.sccategory = ? OR s.sccategory = '' OR s.sccategory IS NULL) ORDER BY (s.sccode = m.sccode) DESC, s.sccode DESC LIMIT 1) AS shortname
 FROM stmark m
-LEFT JOIN subjects s ON (s.subcode = m.subject AND (s.sccode = m.sccode OR s.sccode = 0))
 WHERE $mWhere";
+
+array_unshift($mParams, $sccategory, $sccategory);
+$mTypes = "ss" . $mTypes;
 
 $mStmt = $conn->prepare($mSql);
 $mStmt->bind_param($mTypes, ...$mParams);
@@ -99,6 +119,10 @@ while ($mRow = $mRes->fetch_assoc()) {
         'subject_name' => $mRow['subname'] ?? '',
         'shortname' => $mRow['shortname'] ?? '',
         'fullmark' => intval($mRow['fullmark']),
+        'ctest' => floatval($mRow['ctest'] ?? 0),
+        'ct' => floatval($mRow['ctest'] ?? 0),
+        'mtest' => floatval($mRow['mtest'] ?? 0),
+        'mt' => floatval($mRow['mtest'] ?? 0),
         'subj' => floatval($mRow['subj']),
         'obj' => floatval($mRow['obj']),
         'pra' => floatval($mRow['pra']),

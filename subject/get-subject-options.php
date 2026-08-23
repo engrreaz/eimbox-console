@@ -8,10 +8,14 @@ echo '<option value="">------</option>';
 
 $q = "SELECT subcode, subject 
       FROM subjects 
-      where (sccode='$sccode' or sccode=0) AND sccategory='$sctype'
-      ORDER BY subcode";
+      WHERE (sccode='$sccode' OR sccode=0) AND (sccategory='$sctype' OR sccategory='' OR sccategory IS NULL)
+      ORDER BY subcode ASC, (sccode='$sccode') DESC";
 $r = $conn->query($q);
 
+$seen = [];
 while($row=$r->fetch_assoc()){
+    $code = $row['subcode'];
+    if (isset($seen[$code])) continue;
+    $seen[$code] = true;
     echo '<option value="'.$row['subcode'].'">'.$row['subcode'] . ' - ' . $row['subject'].'</option>';
 }
