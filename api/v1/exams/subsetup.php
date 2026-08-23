@@ -48,10 +48,10 @@ COALESCE(
 (SELECT s.subben FROM subjects s WHERE s.subcode = ss.subject AND (s.sccode = ss.sccode OR s.sccode = 0) AND (s.sccategory = ? OR s.sccategory = '' OR s.sccategory IS NULL) ORDER BY (s.sccode = ss.sccode) DESC, s.sccode DESC LIMIT 1) AS subname_bn,
 (SELECT s.subshname FROM subjects s WHERE s.subcode = ss.subject AND (s.sccode = ss.sccode OR s.sccode = 0) AND (s.sccategory = ? OR s.sccategory = '' OR s.sccategory IS NULL) ORDER BY (s.sccode = ss.sccode) DESC, s.sccode DESC LIMIT 1) AS shortname
 FROM subsetup ss
-WHERE ss.sccode = ? AND ss.sessionyear = ?";
+WHERE ss.sccode = ? AND ss.sessionyear = ? AND ss.classname = ? AND ss.sectionname = ?";
 
-$params = [$sccategory, $sccategory, $sccategory, $sccode, $sessionyear];
-$types = "sssis";
+$params = [$sccategory, $sccategory, $sccategory, $sccode, $sessionyear, $classname, $sectionname];
+$types = "sssisss";
 
 if (!empty($classname)) {
     $sql .= " AND ss.classname = ?";
