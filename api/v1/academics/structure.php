@@ -96,26 +96,101 @@ while ($row = $subjRes->fetch_assoc()) {
 }
 $subjStmt->close();
 
-// 4. Fetch Exams
-$exams = [];
-$examStmt = $conn->prepare("SELECT id, sessionyear, examtitle, slot, datestart, result_publish 
-FROM examlist 
-WHERE sccode = ? 
-ORDER BY sessionyear DESC, datestart DESC");
-$examStmt->bind_param('i', $sccode);
-$examStmt->execute();
-$examRes = $examStmt->get_result();
-while ($row = $examRes->fetch_assoc()) {
-    $exams[] = [
-        'id' => $row['id'],
-        'sessionyear' => intval($row['sessionyear']),
-        'examtitle' => $row['examtitle'],
-        'slot' => $row['slot'],
-        'datestart' => $row['datestart'],
-        'result_publish' => $row['result_publish']
-    ];
+// 3b. Fetch Subject Setup (subsetup) with Mark Breakdown & Pass Algorithms
+$subsetupList = [];
+$subSetupStmt = $conn->prepare("SELECT ss.id, ss.slno, ss.sccode, ss.sessionyear, ss.slot, ss.classname, ss.sectionname, 
+ss.subject AS subcode, ss.fullmarks, ss.ctest, ss.mtest, ss.subj, ss.obj, ss.pra, ss.ca, ss.camanual, ss.ctmt, 
+ss.pass_algorithm, ss.fourth, ss.combind_1, ss.combind_2, ss.combind_3, ss.combind_4,
+s.subject AS subname_en, s.subben AS subname_bn, s.subshname AS shortname
+FROM subsetup ss
+LEFT JOIN subjects s ON s.subcode = ss.subject AND (s.sccode = ss.sccode OR s.sccode = 0)
+WHERE ss.sccode = ?
+ORDER BY ss.sessionyear DESC, ss.classname ASC, ss.slno ASC, ss.subject ASC");
+if ($subSetupStmt) {
+    $subSetupStmt->bind_param('i', $sccode);
+    $subSetupStmt->execute();
+    $subSetupRes = $subSetupStmt->get_result();
+    while ($row = $subSetupRes->fetch_assoc()) {
+        $subsetupList[] = [
+            'id' => intval($row['id']),
+            'slno' => intval($row['slno']),
+            'sessionyear' => strval($row['sessionyear']),
+            'slot' => $row['slot'] ?: 'School',
+            'classname' => $row['classname'],
+            'sectionname' => $row['sectionname'],
+            'subcode' => intval($row['subcode']),
+            'subname_en' => $row['subname_en'] ?: ('Subject ' . $row['subcode']),
+            'subname_bn' => $row['subname_bn'],
+            'shortname' => $row['shortname'],
+            'fullmarks' => intval($row['fullmarks'] ?? 100),
+            'subj' => intval($row['subj'] ?? 0),
+            'obj' => intval($row['obj'] ?? 0),
+            'pra' => intval($row['pra'] ?? 0),
+            'ca' => intval($row['ca'] ?? 0),
+            'camanual' => intval($row['camanual'] ?? 0),
+            'ctest' => intval($row['ctest'] ?? 0),
+            'mtest' => intval($row['mtest'] ?? 0),
+            'ctmt' => intval($row['ctmt'] ?? 0),
+            'pass_algorithm' => intval($row['pass_algorithm'] ?? 0),
+            'fourth' => intval($row['fourth'] ?? 0),
+            'combind_1' => intval($row['combind_1'] ?? 0),
+            'combind_2' => intval($row['combind_2'] ?? 0),
+            'combind_3' => intval($row['combind_3'] ?? 0),
+            'combind_4' => intval($row['combind_4'] ?? 0)
+        ];
+    }
+    $subSetupStmt->close();
 }
-$examStmt->close();
+
+// 4. Fetch Exams (examlist)
+$exams = [];
+$examStmt = $conn->prepare("SELECT id, sccode, sessionyear, examtitle, examcode, slot, datestart, result_publish 
+FROM examlist 
+WHERE sccode = ? OR sccode = 0 
+ORDER BY sessionyear DESC, datestart ASC, id ASC");
+if ($examStmt) {
+    $examStmt->bind_param('i', $sccode);
+    $examStmt->execute();
+    $examRes = $examStmt->get_result();
+    while ($row = $examRes->fetch_assoc()) {
+        $exams[] = [
+            'id' => intval($row['id']),
+            'sessionyear' => intval($row['sessionyear']),
+            'examtitle' => $row['examtitle'],
+            'examcode' => $row['examcode'],
+            'slot' => $row['slot'],
+            'datestart' => $row['datestart'],
+            'result_publish' => $row['result_publish']
+        ];
+    }
+    $examStmt->close();
+}
+
+// 4b. Fetch GPA Grading Scale (gpa)
+$gpaScale = [];
+$gpaStmt = $conn->prepare("SELECT id, sccode, slot, minvalues, maxvalues, gp, gl, remark, colorcode 
+FROM gpa 
+WHERE sccode = ? OR sccode = 0 
+ORDER BY minvalues DESC, id ASC");
+if ($gpaStmt) {
+    $gpaStmt->bind_param('i', $sccode);
+    $gpaStmt->execute();
+    $gpaRes = $gpaStmt->get_result();
+    while ($row = $gpaRes->fetch_assoc()) {
+        $gpaScale[] = [
+            'id' => intval($row['id']),
+            'sccode' => intval($row['sccode']),
+            'slot' => $row['slot'] ?: 'School',
+            'minvalues' => intval($row['minvalues']),
+            'maxvalues' => intval($row['maxvalues']),
+            'gp' => floatval($row['gp']),
+            'gl' => $row['gl'],
+            'remark' => $row['remark'],
+            'colorcode' => $row['colorcode']
+        ];
+    }
+    $gpaStmt->close();
+}
 
 // 5. Build Flat Classes, Sections, and Class-Section Map for the Requested Session
 $reqSession = strval($_GET['session'] ?? $sessionsList[0] ?? date('Y'));
@@ -163,6 +238,8 @@ api_response('success', 'Academic structure retrieved successfully.', [
     'class_section_map' => $classSectionMap,
     'subjects' => $subjects,
     'subjects_by_class' => $subjects,
-    'exams' => $exams
+    'subsetup' => $subsetupList,
+    'exams' => $exams,
+    'gpa_scale' => $gpaScale
 ]);
 

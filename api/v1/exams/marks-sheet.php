@@ -11,11 +11,11 @@ require_once __DIR__ . '/../bootstrap.php';
 $user = authenticate_token($conn);
 
 $sccode = intval($_GET['sccode'] ?? $user['sccode'] ?? 0);
-$session = intval($_GET['session'] ?? date('Y'));
+$session = intval($_GET['session'] ?? $_GET['sessionyear'] ?? date('Y'));
 $exam = trim($_GET['exam'] ?? '');
-$className = trim($_GET['class'] ?? '');
-$sectionName = trim($_GET['section'] ?? '');
-$subcode = intval($_GET['subcode'] ?? 0);
+$className = trim($_GET['class'] ?? $_GET['classname'] ?? '');
+$sectionName = trim($_GET['section'] ?? $_GET['sectionname'] ?? '');
+$subcode = intval($_GET['subcode'] ?? $_GET['subject'] ?? 0);
 
 if ($sccode <= 0 || empty($exam) || empty($className)) {
     api_response('error', 'sccode, exam, and class are required.', null, 400);
@@ -51,6 +51,7 @@ while ($stRow = $stRes->fetch_assoc()) {
     $studentsList[$stid] = [
         'stid' => $stid,
         'rollno' => intval($stRow['rollno']),
+        'name' => $stRow['stnameeng'] ?: ($stRow['stnameben'] ?: "Student {$stRow['rollno']}"),
         'name_eng' => $stRow['stnameeng'] ?? '',
         'name_ben' => $stRow['stnameben'] ?? '',
         'classname' => $stRow['classname'],
@@ -88,24 +89,31 @@ $mStmt->bind_param($mTypes, ...$mParams);
 $mStmt->execute();
 $mRes = $mStmt->get_result();
 
+$flatMarks = [];
 while ($mRow = $mRes->fetch_assoc()) {
     $mStid = (string)$mRow['stid'];
+    $markObj = [
+        'id' => intval($mRow['id']),
+        'stid' => $mStid,
+        'subcode' => intval($mRow['subcode']),
+        'subject_name' => $mRow['subname'] ?? '',
+        'shortname' => $mRow['shortname'] ?? '',
+        'fullmark' => intval($mRow['fullmark']),
+        'subj' => floatval($mRow['subj']),
+        'obj' => floatval($mRow['obj']),
+        'pra' => floatval($mRow['pra']),
+        'ca' => floatval($mRow['ca']),
+        'markobt' => floatval($mRow['markobt']),
+        'total' => floatval($mRow['markobt']),
+        'on100' => floatval($mRow['on100']),
+        'gp' => floatval($mRow['gp']),
+        'gl' => $mRow['gl']
+    ];
+
+    $flatMarks[] = $markObj;
+
     if (isset($studentsList[$mStid])) {
-        $studentsList[$mStid]['marks'][$mRow['subcode']] = [
-            'mark_id' => intval($mRow['id']),
-            'subcode' => intval($mRow['subcode']),
-            'subject_name' => $mRow['subname'] ?? '',
-            'shortname' => $mRow['shortname'] ?? '',
-            'fullmark' => intval($mRow['fullmark']),
-            'subj' => floatval($mRow['subj']),
-            'obj' => floatval($mRow['obj']),
-            'pra' => floatval($mRow['pra']),
-            'ca' => floatval($mRow['ca']),
-            'markobt' => floatval($mRow['markobt']),
-            'on100' => floatval($mRow['on100']),
-            'gp' => floatval($mRow['gp']),
-            'gl' => $mRow['gl']
-        ];
+        $studentsList[$mStid]['marks'][$mRow['subcode']] = $markObj;
     }
 }
 $mStmt->close();
@@ -113,10 +121,14 @@ $mStmt->close();
 api_response('success', 'Marks sheet loaded successfully.', [
     'sccode' => $sccode,
     'session' => $session,
+    'sessionyear' => $sessionyear ?? $session,
     'exam' => $exam,
     'class' => $className,
+    'classname' => $className,
     'section' => $sectionName ?: 'All',
+    'sectionname' => $sectionName ?: 'All',
     'subcode' => $subcode ?: 'All',
     'total_students' => count($studentsList),
+    'marks' => $flatMarks,
     'sheet_data' => array_values($studentsList)
 ]);
