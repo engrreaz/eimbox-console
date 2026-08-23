@@ -29,19 +29,33 @@ $slotStmt->close();
 // 2. Fetch Sessions & Areas (Classes & Sections)
 $classesTree = [];
 $sessionsList = [];
+$rawAreas = [];
 
-$areaStmt = $conn->prepare("SELECT id, slot, sessionyear, areaname AS classname, subarea AS sectionname, classteacher 
+$areaStmt = $conn->prepare("SELECT id, idno, sccode, slot, sessionyear, areaname, subarea, areaname AS classname, subarea AS sectionname, classteacher 
 FROM areas 
 WHERE sccode = ? 
-ORDER BY sessionyear DESC, id ASC");
+ORDER BY sessionyear DESC, idno ASC, id ASC");
 $areaStmt->bind_param('i', $sccode);
 $areaStmt->execute();
 $areaRes = $areaStmt->get_result();
 while ($row = $areaRes->fetch_assoc()) {
     $session = $row['sessionyear'];
-    $slot = $row['slot'] ?: 'General';
+    $slot = $row['slot'] ?: 'School';
     $className = $row['classname'];
     $sectionName = $row['sectionname'];
+
+    $rawAreas[] = [
+        'id' => intval($row['id']),
+        'idno' => intval($row['idno'] ?? 0),
+        'sccode' => intval($row['sccode']),
+        'slot' => $slot,
+        'sessionyear' => $session,
+        'areaname' => $className,
+        'subarea' => $sectionName,
+        'classname' => $className,
+        'sectionname' => $sectionName,
+        'classteacher' => intval($row['classteacher'] ?? 0)
+    ];
 
     if (!in_array($session, $sessionsList)) {
         $sessionsList[] = $session;
@@ -257,6 +271,7 @@ api_response('success', 'Academic structure retrieved successfully.', [
     'sessionyear' => $reqSession,
     'slots' => $slots,
     'sessions' => $sessionsList,
+    'areas' => $rawAreas,
     'classes_tree' => $classesTree,
     'classes' => $flatClasses,
     'sections' => $flatSections,
