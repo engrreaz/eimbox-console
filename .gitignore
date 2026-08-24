@@ -2,6 +2,7 @@
 core/core-val.php
 core/config.php
 core/php-error.log
+api/v1/logs/   
 
 
 # Gateway 
