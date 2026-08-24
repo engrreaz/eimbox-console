@@ -222,7 +222,7 @@ if ($method === 'GET') {
     $teachers = [];
     $tStmt = $conn->prepare("SELECT id, tid, tname, position, mobile, email 
                              FROM teacher 
-                             WHERE sccode = ?
+                             WHERE sccode = ? OR sccode = 0
                              ORDER BY tname ASC");
     if ($tStmt) {
         $tStmt->bind_param("i", $sccode);
@@ -245,7 +245,7 @@ if ($method === 'GET') {
     // 5d. Fetch Areas Query
     $sql = "SELECT a.id, a.idno, a.sccode, a.slot, a.sessionyear, a.areaname, a.subarea, 
                    a.areaname AS classname, a.subarea AS sectionname,
-                   a.classteacher, t.tname as teacher_name, t.mobile as teacher_mobile, t.position as teacher_designation,
+                   a.classteacher, t.tid AS teacher_tid, t.tname as teacher_name, t.mobile as teacher_mobile, t.position as teacher_designation,
                    (SELECT COUNT(*) FROM sessioninfo s 
                     WHERE s.sccode = a.sccode 
                       AND s.sessionyear = a.sessionyear 
@@ -253,7 +253,7 @@ if ($method === 'GET') {
                       AND s.sectionname = a.subarea 
                       AND s.status = 1) as student_count
             FROM areas a
-            LEFT JOIN teacher t ON (t.sccode = a.sccode AND (t.tid = a.classteacher OR t.id = a.classteacher))
+            LEFT JOIN teacher t ON ((t.sccode = a.sccode OR t.sccode = 0) AND a.classteacher IS NOT NULL AND a.classteacher != 0 AND a.classteacher != '' AND (t.tid = a.classteacher OR t.id = a.classteacher OR CAST(t.tid AS CHAR) = CAST(a.classteacher AS CHAR)))
             WHERE a.sccode = ?";
     
     $params = [$sccode];
