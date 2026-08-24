@@ -222,7 +222,7 @@ if ($method === 'GET') {
     $teachers = [];
     $tStmt = $conn->prepare("SELECT id, tid, tname, position, mobile, email 
                              FROM teacher 
-                             WHERE sccode = ? OR sccode = 0
+                             WHERE sccode = ?
                              ORDER BY tname ASC");
     if ($tStmt) {
         $tStmt->bind_param("i", $sccode);
