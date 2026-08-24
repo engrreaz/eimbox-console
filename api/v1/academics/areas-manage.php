@@ -9,6 +9,7 @@
  */
 
 require_once __DIR__ . '/../bootstrap.php';
+global $conn;
 
 // Authenticate Request
 $user = api_authenticate_request();
