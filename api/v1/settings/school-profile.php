@@ -6,7 +6,7 @@
  */
 
 require_once __DIR__ . '/../bootstrap.php';
-
+error_log("HAVE FUN!");
 // Authenticate caller
 $user = authenticate_token($conn);
 
