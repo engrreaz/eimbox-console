@@ -10,7 +10,7 @@ require_once __DIR__ . '/../bootstrap.php';
 // Authenticate caller
 $user = authenticate_token($conn);
 
-$sccode = intval($_GET['sccode'] ?? $user['sccode'] ?? 0);
+$sccode = intval($_GET['sccode'] ?? $user['sccode'] ?? 105671);
 
 if ($sccode <= 0) {
     api_response('error', 'Valid School Code (sccode) is required.', null, 400);
