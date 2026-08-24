@@ -23,7 +23,8 @@ ini_set('log_errors', 1);
 
 $_api_start_time = microtime(true);
 
-$apiLogDir = __DIR__ . '/../../core/logs';
+// $apiLogDir = __DIR__ . '/../../core/logs';
+$apiLogDir = __DIR__ . '/logs';
 if (!is_dir($apiLogDir)) {
     @mkdir($apiLogDir, 0777, true);
 }

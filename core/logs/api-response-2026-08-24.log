@@ -1,5 +1,0 @@
-[2026-08-24 15:07:58] [API_SUCCESS_RESPONSE] [CLI Unknown URI] [IP: 127.0.0.1] [Time: 64.55ms]
-HTTP Code: 200 | Status: success | Message: EIMBox REST API Gateway is operational.
-Input: {}
-Data Preview: {"status":"online","api_version":"1.0.0","server_time":"2026-08-24 15:07:58","timezone":"Asia\/Dhaka","database":{"status":"healthy","latency_ms":6.22},"gateway_latency_ms":6.61,"supported_modules":["auth","academics","finance","exams","attendance","sms","notices","settings","sync"]}
-----------------------------------------------------------------------
