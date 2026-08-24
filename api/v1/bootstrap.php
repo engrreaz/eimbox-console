@@ -16,23 +16,45 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
     exit;
 }
 
-// 2. Comprehensive API Error & Exception Logging
+// 2. Comprehensive API Error, Request & Response Logging
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
+
+$_api_start_time = microtime(true);
 
 $apiLogDir = __DIR__ . '/../../core/logs';
 if (!is_dir($apiLogDir)) {
     @mkdir($apiLogDir, 0777, true);
 }
-$apiLogFile = $apiLogDir . '/api-error-' . date('Y-m-d') . '.log';
-ini_set('error_log', $apiLogFile);
+$apiErrorLogFile = $apiLogDir . '/api-error-' . date('Y-m-d') . '.log';
+$apiResponseLogFile = $apiLogDir . '/api-response-' . date('Y-m-d') . '.log';
+ini_set('error_log', $apiErrorLogFile);
 
 /**
- * Write structured entry to API Error Log file
+ * Sanitize sensitive keys before logging
+ */
+function api_sanitize_log_data($data) {
+    if (!is_array($data)) return $data;
+    $sensitiveKeys = ['password', 'password_hash', 'token', 'mfa_secret', 'secret_key', 'api_key', 'otp'];
+    $clean = [];
+    foreach ($data as $k => $v) {
+        if (in_array(strtolower($k), $sensitiveKeys)) {
+            $clean[$k] = '***REDACTED***';
+        } elseif (is_array($v)) {
+            $clean[$k] = api_sanitize_log_data($v);
+        } else {
+            $clean[$k] = $v;
+        }
+    }
+    return $clean;
+}
+
+/**
+ * Write structured entry to API Log files
  */
 function api_log_error($type, $message, $file = '', $line = 0, $trace = '') {
-    global $apiLogFile;
+    global $apiErrorLogFile, $apiResponseLogFile;
     $timestamp = date('Y-m-d H:i:s');
     $method = $_SERVER['REQUEST_METHOD'] ?? 'CLI';
     $uri = $_SERVER['REQUEST_URI'] ?? 'Unknown URI';
@@ -48,7 +70,52 @@ function api_log_error($type, $message, $file = '', $line = 0, $trace = '') {
     }
     $logEntry .= str_repeat('-', 70) . "\n";
 
-    @file_put_contents($apiLogFile, $logEntry, FILE_APPEND);
+    @file_put_contents($apiErrorLogFile, $logEntry, FILE_APPEND);
+    @file_put_contents($apiResponseLogFile, $logEntry, FILE_APPEND);
+    error_log("[$type] $method $uri - $message");
+}
+
+/**
+ * Log outgoing API response
+ */
+function api_log_response($httpCode, $status, $message, $data = null) {
+    global $apiResponseLogFile, $apiErrorLogFile, $_api_start_time;
+    $timestamp = date('Y-m-d H:i:s');
+    $method = $_SERVER['REQUEST_METHOD'] ?? 'CLI';
+    $uri = $_SERVER['REQUEST_URI'] ?? 'Unknown URI';
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+    $durationMs = isset($_api_start_time) ? round((microtime(true) - $_api_start_time) * 1000, 2) : 0;
+
+    $input = get_api_input();
+    $cleanInput = api_sanitize_log_data(is_array($input) ? $input : []);
+    $inputJson = !empty($cleanInput) ? json_encode($cleanInput, JSON_UNESCAPED_UNICODE) : '{}';
+
+    $logType = ($httpCode >= 400 || $status === 'error') ? 'API_ERROR_RESPONSE' : 'API_SUCCESS_RESPONSE';
+
+    $logEntry = "[$timestamp] [$logType] [$method $uri] [IP: $ip] [Time: {$durationMs}ms]\n";
+    $logEntry .= "HTTP Code: $httpCode | Status: $status | Message: $message\n";
+    $logEntry .= "Input: $inputJson\n";
+    
+    if ($data !== null) {
+        $cleanData = api_sanitize_log_data(is_array($data) ? $data : ['data' => $data]);
+        $preview = json_encode($cleanData, JSON_UNESCAPED_UNICODE);
+        if (mb_strlen($preview) > 500) {
+            $preview = mb_substr($preview, 0, 500) . '... [truncated]';
+        }
+        $logEntry .= "Data Preview: $preview\n";
+    }
+    $logEntry .= str_repeat('-', 70) . "\n";
+
+    // Always log to api-response log
+    @file_put_contents($apiResponseLogFile, $logEntry, FILE_APPEND);
+
+    // If error/failure, also write to api-error log and trigger system error_log
+    if ($httpCode >= 400 || $status === 'error') {
+        @file_put_contents($apiErrorLogFile, $logEntry, FILE_APPEND);
+        error_log("[$logType] $method $uri (HTTP $httpCode) - $message");
+    } else {
+        error_log("[$logType] $method $uri (HTTP $httpCode) - $message ({$durationMs}ms)");
+    }
 }
 
 // Convert PHP errors/warnings into logs
@@ -110,9 +177,11 @@ if (!isset($conn) || !$conn) {
 }
 
 /**
- * Standard JSON Response Sender
+ * Standard JSON Response Sender with Logging
  */
 function api_response($status = 'success', $message = '', $data = null, $httpCode = 200) {
+    api_log_response($httpCode, $status, $message, $data);
+    
     http_response_code($httpCode);
     echo json_encode([
         'status' => $status,
