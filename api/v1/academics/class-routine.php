@@ -1,116 +1,306 @@
 <?php
 /**
- * EIMBox REST API — Class Routine & Schedule Endpoint
- * Route: GET /api/v1/academics/class-routine.php
- * Query Params: ?sccode={sccode}&session={session}&class={class}&section={section}&tid={tid}
+ * EIMBox REST API — Weekly Class Routine & Timetable Builder
+ * Endpoint: /api/v1/academics/class-routine.php
+ * Routes:
+ *   GET /api/v1/academics/class-routine.php?sccode={sccode}&sessionyear={year}&classname={class}&sectionname={sec}&tid={tid}
+ *   POST /api/v1/academics/class-routine.php (Save Cell / Bulk Save / Clash Detection)
+ *   DELETE /api/v1/academics/class-routine.php?id={id}&sccode={sccode}
  */
 
 require_once __DIR__ . '/../bootstrap.php';
 
 // Authenticate caller
-$user = authenticate_token($conn);
+$user = api_authenticate_request();
+$input = get_api_input();
+$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+$action = $_GET['action'] ?? $input['action'] ?? '';
 
-$sccode = intval($_GET['sccode'] ?? $user['sccode'] ?? 0);
-$session = intval($_GET['session'] ?? date('Y'));
-$className = trim($_GET['class'] ?? '');
-$sectionName = trim($_GET['section'] ?? '');
-$tid = trim($_GET['tid'] ?? '');
+// 1. Resolve School Code
+$sccode = intval($_GET['sccode'] ?? $input['sccode'] ?? $user['sccode'] ?? 0);
 
 if ($sccode <= 0) {
     api_response('error', 'Valid School Code (sccode) is required.', null, 400);
 }
 
-// 1. Fetch Periods from classschedule
-$periods = [];
-$pStmt = $conn->prepare("SELECT period, timestart, timeend, slots FROM classschedule WHERE sccode = ? AND sessionyear = ? ORDER BY period ASC");
-$pStmt->bind_param('is', $sccode, $session);
-$pStmt->execute();
-$pRes = $pStmt->get_result();
-while ($p = $pRes->fetch_assoc()) {
-    $periods[] = [
-        'period' => intval($p['period']),
-        'start_time' => $p['timestart'],
-        'end_time' => $p['timeend'],
-        'slot' => $p['slots']
+// 2. Handle DELETE (Clear Routine cell or bulk clear)
+if ($method === 'DELETE' || ($method === 'POST' && $action === 'delete')) {
+    $id = intval($_GET['id'] ?? $input['id'] ?? 0);
+    if ($id > 0) {
+        $stmt = $conn->prepare("DELETE FROM clsroutine WHERE id = ? AND sccode = ?");
+        $stmt->bind_param("ii", $id, $sccode);
+        $stmt->execute();
+        $affected = $stmt->affected_rows;
+        $stmt->close();
+
+        if ($affected > 0) {
+            api_response('success', 'Routine period cell cleared successfully.', ['deleted_id' => $id]);
+        } else {
+            api_response('error', 'Routine entry not found.', null, 404);
+        }
+    } else {
+        // Bulk clear for class & section
+        $sessionyear = trim($_GET['sessionyear'] ?? $input['sessionyear'] ?? date('Y'));
+        $classname = trim($_GET['classname'] ?? $input['classname'] ?? '');
+        $sectionname = trim($_GET['sectionname'] ?? $input['sectionname'] ?? '');
+
+        if (!empty($classname) && !empty($sectionname)) {
+            $stmt = $conn->prepare("DELETE FROM clsroutine WHERE sccode = ? AND sessionyear = ? AND classname = ? AND sectionname = ?");
+            $stmt->bind_param("isss", $sccode, $sessionyear, $classname, $sectionname);
+            $stmt->execute();
+            $deletedCount = $stmt->affected_rows;
+            $stmt->close();
+            api_response('success', "Cleared $deletedCount routine periods for $classname ($sectionname).");
+        } else {
+            api_response('error', 'Valid ID or class/section required for routine deletion.', null, 422);
+        }
+    }
+}
+
+// 3. Handle POST: Save Single Cell or Bulk Matrix
+if ($method === 'POST' || $method === 'PUT') {
+    $sessionyear = trim($input['sessionyear'] ?? $input['session'] ?? date('Y'));
+    $classname = trim($input['classname'] ?? $input['class'] ?? '');
+    $sectionname = trim($input['sectionname'] ?? $input['section'] ?? '');
+    $period = intval($input['period'] ?? 0);
+    $wday = intval($input['wday'] ?? 0);
+    $subcode = intval($input['subcode'] ?? 0);
+    $tid = intval($input['tid'] ?? 0);
+    $entryby = trim($input['entryby'] ?? $user['email'] ?? 'admin');
+
+    $wdayNames = [
+        1 => 'Saturday',
+        2 => 'Sunday',
+        3 => 'Monday',
+        4 => 'Tuesday',
+        5 => 'Wednesday',
+        6 => 'Thursday',
+        7 => 'Friday'
     ];
-}
-$pStmt->close();
+    $dayName = $wdayNames[$wday] ?? 'Saturday';
 
-// 2. Fetch Routine entries from clsroutine
-$where = "r.sccode = ? AND r.sessionyear = ?";
-$types = "is";
-$params = [$sccode, $session];
+    // Check for Teacher Clash if teacher assigned
+    if ($tid > 0 && $wday > 0 && $period > 0) {
+        $chk = $conn->prepare("SELECT r.id, r.classname, r.sectionname, t.tname 
+                               FROM clsroutine r 
+                               LEFT JOIN teacher t ON (t.tid = r.tid AND t.sccode = r.sccode)
+                               WHERE r.sccode = ? AND r.sessionyear = ? AND r.wday = ? AND r.period = ? AND r.tid = ? 
+                               AND NOT (r.classname = ? AND r.sectionname = ?)");
+        $chk->bind_param("isiiiss", $sccode, $sessionyear, $wday, $period, $tid, $classname, $sectionname);
+        $chk->execute();
+        $chkRes = $chk->get_result();
+        if ($clash = $chkRes->fetch_assoc()) {
+            $tName = $clash['tname'] ?: "Teacher #$tid";
+            api_response('error', "Teacher Clash Warning: $tName is already scheduled in {$clash['classname']} ({$clash['sectionname']}) on $dayName Period $period.", [
+                'clash' => true,
+                'clashing_class' => $clash['classname'],
+                'clashing_section' => $clash['sectionname']
+            ], 409);
+        }
+        $chk->close();
+    }
 
-if (!empty($className)) {
-    $where .= " AND r.classname = ?";
-    $types .= "s";
-    $params[] = $className;
-}
-if (!empty($sectionName)) {
-    $where .= " AND r.sectionname = ?";
-    $types .= "s";
-    $params[] = $sectionName;
-}
-if (!empty($tid)) {
-    $where .= " AND r.tid = ?";
-    $types .= "s";
-    $params[] = $tid;
-}
+    if (empty($classname) || empty($sectionname) || $wday <= 0 || $period <= 0) {
+        api_response('error', 'Class, Section, Day (wday), and Period number are required.', null, 422);
+    }
 
-$sql = "SELECT r.id, r.classname, r.sectionname, r.period, r.wday, r.subcode, r.tid,
-s.subject AS subname, s.subben AS subname_bn, s.subshname AS shortname,
-t.tname AS teacher_name, t.position AS teacher_designation
-FROM clsroutine r
-LEFT JOIN subjects s ON (s.subcode = r.subcode AND (s.sccode = r.sccode OR s.sccode = 0))
-LEFT JOIN teacher t ON (t.tid = r.tid AND t.sccode = r.sccode)
-WHERE $where
-ORDER BY r.wday ASC, r.period ASC";
+    // Upsert into clsroutine
+    $stmt = $conn->prepare("INSERT INTO clsroutine (sccode, sessionyear, classname, sectionname, period, wday, day, subcode, tid, entryby, modifieddate)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+                            ON DUPLICATE KEY UPDATE 
+                                subcode = VALUES(subcode), tid = VALUES(tid), entryby = VALUES(entryby), modifieddate = NOW()");
+    $stmt->bind_param("isssiisiss", $sccode, $sessionyear, $classname, $sectionname, $period, $wday, $dayName, $subcode, $tid, $entryby);
+    $stmt->execute();
+    $insertId = $conn->insert_id;
+    $stmt->close();
 
-$stmt = $conn->prepare($sql);
-$stmt->bind_param($types, ...$params);
-$stmt->execute();
-$res = $stmt->get_result();
-
-$wdayNames = [
-    1 => 'Saturday',
-    2 => 'Sunday',
-    3 => 'Monday',
-    4 => 'Tuesday',
-    5 => 'Wednesday',
-    6 => 'Thursday',
-    7 => 'Friday'
-];
-
-$routine = [];
-while ($row = $res->fetch_assoc()) {
-    $wday = intval($row['wday']);
-    $routine[] = [
-        'id' => intval($row['id']),
-        'classname' => $row['classname'],
-        'sectionname' => $row['sectionname'],
+    api_response('success', "Routine cell saved for $dayName (Period $period).", [
+        'id' => $insertId,
+        'sccode' => $sccode,
+        'sessionyear' => $sessionyear,
+        'classname' => $classname,
+        'sectionname' => $sectionname,
         'wday' => $wday,
-        'day_name' => $wdayNames[$wday] ?? 'Day ' . $wday,
-        'period' => intval($row['period']),
-        'subject' => [
-            'subcode' => intval($row['subcode']),
-            'name_eng' => $row['subname'] ?? '',
-            'name_ben' => $row['subname_bn'] ?? '',
-            'shortname' => $row['shortname'] ?? ''
-        ],
-        'teacher' => [
-            'tid' => (string)$row['tid'],
-            'name' => $row['teacher_name'] ?? '',
-            'designation' => $row['teacher_designation'] ?? ''
-        ]
-    ];
+        'day' => $dayName,
+        'period' => $period,
+        'subcode' => $subcode,
+        'tid' => $tid
+    ]);
 }
-$stmt->close();
 
-api_response('success', 'Class routine retrieved successfully.', [
-    'sccode' => $sccode,
-    'session' => $session,
-    'class' => $className ?: 'All',
-    'section' => $sectionName ?: 'All',
-    'periods' => $periods,
-    'routine' => $routine
-]);
+// 4. GET: Fetch Complete Routine Grid & Reference Lists
+if ($method === 'GET') {
+    $session = trim($_GET['sessionyear'] ?? $_GET['session'] ?? date('Y'));
+    $className = trim($_GET['classname'] ?? $_GET['class'] ?? '');
+    $sectionName = trim($_GET['sectionname'] ?? $_GET['section'] ?? '');
+    $tid = trim($_GET['tid'] ?? '');
+
+    // Fetch Classes & Sections
+    $classes = [];
+    $sectionsMap = [];
+    $aStmt = $conn->prepare("SELECT areaname, subarea FROM areas WHERE sccode = ? AND sessionyear = ? GROUP BY areaname, subarea ORDER BY MIN(idno) ASC, areaname ASC, subarea ASC");
+    if ($aStmt) {
+        $aStmt->bind_param("is", $sccode, $session);
+        $aStmt->execute();
+        $aRes = $aStmt->get_result();
+        while ($aRow = $aRes->fetch_assoc()) {
+            $cName = $aRow['areaname'];
+            $sName = $aRow['subarea'];
+            if (!in_array($cName, $classes)) $classes[] = $cName;
+            if (!isset($sectionsMap[$cName])) $sectionsMap[$cName] = [];
+            if (!in_array($sName, $sectionsMap[$cName])) $sectionsMap[$cName][] = $sName;
+        }
+        $aStmt->close();
+    }
+    if (empty($classes)) $classes = ['Six', 'Seven', 'Eight', 'Nine', 'Ten'];
+    if (empty($className) && !empty($classes)) $className = $classes[0];
+    if (empty($sectionName) && !empty($sectionsMap[$className])) $sectionName = $sectionsMap[$className][0];
+
+    // Fetch Periods from classschedule
+    $periods = [];
+    $pStmt = $conn->prepare("SELECT period, timestart, timeend, slots, duration FROM classschedule WHERE sccode = ? AND (sessionyear = ? OR sessionyear = '') ORDER BY period ASC");
+    if ($pStmt) {
+        $pStmt->bind_param('is', $sccode, $session);
+        $pStmt->execute();
+        $pRes = $pStmt->get_result();
+        while ($p = $pRes->fetch_assoc()) {
+            $periods[] = [
+                'period' => intval($p['period']),
+                'start_time' => substr($p['timestart'] ?: '08:00', 0, 5),
+                'end_time' => substr($p['timeend'] ?: '08:45', 0, 5),
+                'slot' => $p['slots'] ?: 'School',
+                'duration' => intval($p['duration'] ?: 45)
+            ];
+        }
+        $pStmt->close();
+    }
+
+    if (empty($periods)) {
+        $periods = [
+            ['period' => 1, 'start_time' => '07:50', 'end_time' => '08:35', 'slot' => 'School', 'duration' => 45],
+            ['period' => 2, 'start_time' => '08:35', 'end_time' => '09:20', 'slot' => 'School', 'duration' => 45],
+            ['period' => 3, 'start_time' => '09:20', 'end_time' => '10:05', 'slot' => 'School', 'duration' => 45],
+            ['period' => 4, 'start_time' => '10:35', 'end_time' => '11:15', 'slot' => 'School', 'duration' => 40],
+            ['period' => 5, 'start_time' => '11:15', 'end_time' => '11:55', 'slot' => 'School', 'duration' => 40],
+            ['period' => 6, 'start_time' => '11:55', 'end_time' => '12:35', 'slot' => 'School', 'duration' => 40]
+        ];
+    }
+
+    // Fetch Teachers
+    $teachers = [];
+    $tStmt = $conn->prepare("SELECT id, tid, tname, position FROM teacher WHERE sccode = ? AND (status = 'Active' OR status = '1' OR status = '' OR status IS NULL) ORDER BY tname ASC");
+    if ($tStmt) {
+        $tStmt->bind_param("i", $sccode);
+        $tStmt->execute();
+        $tRes = $tStmt->get_result();
+        while ($tRow = $tRes->fetch_assoc()) {
+            $teachers[] = [
+                'id' => intval($tRow['id']),
+                'tid' => (string)$tRow['tid'],
+                'tname' => $tRow['tname'],
+                'position' => $tRow['position'] ?: ''
+            ];
+        }
+        $tStmt->close();
+    }
+
+    // Fetch Subjects for Class
+    $subjects = [];
+    $sStmt = $conn->prepare("SELECT ss.subject as subcode, COALESCE(s.subject, CONCAT('Subject #', ss.subject)) as subname, COALESCE(s.subshname, '') as shortname 
+                            FROM subsetup ss 
+                            LEFT JOIN subjects s ON (s.subcode = ss.subject AND (s.sccode = 0 OR s.sccode = ss.sccode))
+                            WHERE ss.sccode = ? AND ss.sessionyear = ? AND ss.classname = ?
+                            ORDER BY ss.slno ASC");
+    if ($sStmt) {
+        $sStmt->bind_param("iss", $sccode, $session, $className);
+        $sStmt->execute();
+        $sRes = $sStmt->get_result();
+        while ($sRow = $sRes->fetch_assoc()) {
+            $subjects[] = [
+                'subcode' => intval($sRow['subcode']),
+                'subname' => $sRow['subname'],
+                'shortname' => $sRow['shortname'] ?: $sRow['subname']
+            ];
+        }
+        $sStmt->close();
+    }
+
+    // Fetch Routine Entries
+    $where = "r.sccode = ? AND r.sessionyear = ?";
+    $types = "is";
+    $params = [$sccode, $session];
+
+    if (!empty($className)) {
+        $where .= " AND r.classname = ?";
+        $types .= "s";
+        $params[] = $className;
+    }
+    if (!empty($sectionName)) {
+        $where .= " AND r.sectionname = ?";
+        $types .= "s";
+        $params[] = $sectionName;
+    }
+    if (!empty($tid)) {
+        $where .= " AND r.tid = ?";
+        $types .= "s";
+        $params[] = $tid;
+    }
+
+    $sql = "SELECT r.id, r.classname, r.sectionname, r.period, r.wday, r.day, r.subcode, r.tid,
+                   s.subject AS subname, s.subben AS subname_bn, s.subshname AS shortname,
+                   t.tname AS teacher_name, t.position AS teacher_designation
+            FROM clsroutine r
+            LEFT JOIN subjects s ON (s.subcode = r.subcode AND (s.sccode = r.sccode OR s.sccode = 0))
+            LEFT JOIN teacher t ON (t.tid = r.tid AND t.sccode = r.sccode)
+            WHERE $where
+            ORDER BY r.wday ASC, r.period ASC";
+
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param($types, ...$params);
+    $stmt->execute();
+    $res = $stmt->get_result();
+
+    $wdayNames = [
+        1 => 'Saturday',
+        2 => 'Sunday',
+        3 => 'Monday',
+        4 => 'Tuesday',
+        5 => 'Wednesday',
+        6 => 'Thursday',
+        7 => 'Friday'
+    ];
+
+    $routineEntries = [];
+    while ($row = $res->fetch_assoc()) {
+        $wday = intval($row['wday']);
+        $routineEntries[] = [
+            'id' => intval($row['id']),
+            'classname' => $row['classname'],
+            'sectionname' => $row['sectionname'],
+            'wday' => $wday,
+            'day_name' => $wdayNames[$wday] ?? $row['day'],
+            'period' => intval($row['period']),
+            'subcode' => intval($row['subcode']),
+            'subname' => $row['subname'] ?: '',
+            'shortname' => $row['shortname'] ?: '',
+            'tid' => intval($row['tid']),
+            'teacher_name' => $row['teacher_name'] ?: ''
+        ];
+    }
+    $stmt->close();
+
+    api_response('success', 'Class routine timetable loaded successfully.', [
+        'sccode' => $sccode,
+        'sessionyear' => $session,
+        'classname' => $className,
+        'sectionname' => $sectionName,
+        'classes' => $classes,
+        'sections_map' => $sectionsMap,
+        'periods' => $periods,
+        'teachers' => $teachers,
+        'subjects' => $subjects,
+        'routine' => $routineEntries
+    ]);
+}
+
+api_response('error', 'Method not allowed.', null, 405);

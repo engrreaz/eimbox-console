@@ -111,6 +111,34 @@ $testCases = [
         'query' => '',
         'expected_status' => 'success'
     ],
+    [
+        'name' => 'Academic Schedule & Period Bell Timings',
+        'file' => 'academics/class-schedule.php',
+        'method' => 'GET',
+        'query' => 'shift=Morning',
+        'expected_status' => 'success'
+    ],
+    [
+        'name' => 'Class Routine & Weekly Timetable',
+        'file' => 'academics/class-routine.php',
+        'method' => 'GET',
+        'query' => '',
+        'expected_status' => 'success'
+    ],
+    [
+        'name' => 'Academic Syllabus & Curriculum Planner',
+        'file' => 'academics/syllabus.php',
+        'method' => 'GET',
+        'query' => '',
+        'expected_status' => 'success'
+    ],
+    [
+        'name' => 'Daily Lesson Tracking & Teacher Diary',
+        'file' => 'academics/lesson-tracking.php',
+        'method' => 'GET',
+        'query' => '',
+        'expected_status' => 'success'
+    ],
 
     // 5. Facilities & Campus Services
     [
