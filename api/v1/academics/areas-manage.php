@@ -220,7 +220,7 @@ if ($method === 'GET') {
 
     // 5c. Fetch Active Teachers from `teacher` table
     $teachers = [];
-    $tStmt = $conn->prepare("SELECT id, tid, tname, position, mobile, email 
+    $tStmt = $conn->prepare("SELECT id, tid, tname, position, mobile, email, sccode 
                              FROM teacher 
                              WHERE sccode = ?
                              ORDER BY tname ASC");
@@ -232,6 +232,7 @@ if ($method === 'GET') {
             $teachers[] = [
                 'id' => intval($tRow['id']),
                 'tid' => (string)$tRow['tid'],
+                'sccode' => intval($tRow['sccode'] ?: $sccode),
                 'name' => $tRow['tname'],
                 'tname' => $tRow['tname'],
                 'designation' => $tRow['position'] ?: '',
@@ -253,7 +254,7 @@ if ($method === 'GET') {
                       AND s.sectionname = a.subarea 
                       AND s.status = 1) as student_count
             FROM areas a
-            LEFT JOIN teacher t ON ((t.sccode = a.sccode OR t.sccode = 0) AND a.classteacher IS NOT NULL AND a.classteacher != 0 AND a.classteacher != '' AND (t.tid = a.classteacher OR t.id = a.classteacher OR CAST(t.tid AS CHAR) = CAST(a.classteacher AS CHAR)))
+            LEFT JOIN teacher t ON (t.sccode = a.sccode AND a.classteacher IS NOT NULL AND a.classteacher != 0 AND a.classteacher != '' AND (t.tid = a.classteacher OR t.id = a.classteacher OR CAST(t.tid AS CHAR) = CAST(a.classteacher AS CHAR)))
             WHERE a.sccode = ?";
     
     $params = [$sccode];
