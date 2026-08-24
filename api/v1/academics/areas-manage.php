@@ -222,7 +222,7 @@ if ($method === 'GET') {
     $teachers = [];
     $tStmt = $conn->prepare("SELECT id, tid, tname, position, mobile, email 
                              FROM teacher 
-                             WHERE sccode = ? AND (status = 'Active' OR status = '1' OR status = '' OR status IS NULL)
+                             WHERE sccode = ?
                              ORDER BY tname ASC");
     if ($tStmt) {
         $tStmt->bind_param("i", $sccode);
@@ -298,8 +298,8 @@ if ($method === 'GET') {
         $stCount = intval($row['student_count'] ?? 0);
         $totalStudents += $stCount;
 
-        $cTeacher = $row['classteacher'] ? intval($row['classteacher']) : 0;
-        if ($cTeacher > 0) {
+        $cTeacher = $row['classteacher'] ? trim((string)$row['classteacher']) : '';
+        if (!empty($cTeacher) && $cTeacher !== '0') {
             $assignedTeachers++;
         }
 
