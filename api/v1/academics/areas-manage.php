@@ -150,7 +150,7 @@ if ($method === 'GET') {
     // 5a. Fetch Sessions from `sessionyear` table (syear column, active=1 prioritized)
     $sessions = [];
     $activeSession = '';
-    $sessStmt = $conn->prepare("SELECT syear, active FROM sessionyear WHERE sccode = ? OR sccode = 0 ORDER BY active DESC, syear DESC");
+    $sessStmt = $conn->prepare("SELECT syear, active FROM sessionyear WHERE sccode = ? AND active=1 ORDER BY active DESC, syear DESC");
     if ($sessStmt) {
         $sessStmt->bind_param("i", $sccode);
         $sessStmt->execute();
