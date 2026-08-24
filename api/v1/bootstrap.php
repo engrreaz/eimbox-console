@@ -269,7 +269,7 @@ function authenticate_token($conn) {
     $stmt->close();
     
     if (!$user) {
-        api_response('error', 'User associated with token no longer exists.', null, 401);
+        api_response('error', 'Wrong credentials or user not found.', null, 401);
     }
     
     return $user;

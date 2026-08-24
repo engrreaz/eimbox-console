@@ -28,21 +28,33 @@ if ($sccode <= 0) {
 // 2. Handle DELETE (via DELETE method or POST with action=delete)
 if ($method === 'DELETE' || ($method === 'POST' && $action === 'delete')) {
     $id = intval($_GET['id'] ?? $input['id'] ?? 0);
-    if ($id <= 0) {
-        api_response('error', 'Valid area ID is required for deletion.', null, 422);
+    $areaname = trim($_GET['classname'] ?? $_GET['areaname'] ?? $input['classname'] ?? $input['areaname'] ?? '');
+    $subarea = trim($_GET['sectionname'] ?? $_GET['subarea'] ?? $input['sectionname'] ?? $input['subarea'] ?? '');
+    $sessionyear = trim($_GET['sessionyear'] ?? $input['sessionyear'] ?? '');
+
+    $affected = 0;
+    if ($id > 0) {
+        $delStmt = $conn->prepare("DELETE FROM areas WHERE id = ? AND (sccode = ? OR sccode = 0 OR sccode IS NULL)");
+        $delStmt->bind_param("ii", $id, $sccode);
+        $delStmt->execute();
+        $affected = $delStmt->affected_rows;
+        $delStmt->close();
     }
 
-    $delStmt = $conn->prepare("DELETE FROM areas WHERE id = ? AND sccode = ?");
-    $delStmt->bind_param("ii", $id, $sccode);
-    $delStmt->execute();
-    $affected = $delStmt->affected_rows;
-    $delStmt->close();
-
-    if ($affected > 0) {
-        api_response('success', 'Class section removed successfully.', ['deleted_id' => $id]);
-    } else {
-        api_response('error', 'Area not found or already deleted.', null, 404);
+    if ($affected === 0 && !empty($areaname) && !empty($subarea)) {
+        if (!empty($sessionyear)) {
+            $delStmt2 = $conn->prepare("DELETE FROM areas WHERE (sccode = ? OR sccode = 0 OR sccode IS NULL) AND areaname = ? AND subarea = ? AND sessionyear = ?");
+            $delStmt2->bind_param("isss", $sccode, $areaname, $subarea, $sessionyear);
+        } else {
+            $delStmt2 = $conn->prepare("DELETE FROM areas WHERE (sccode = ? OR sccode = 0 OR sccode IS NULL) AND areaname = ? AND subarea = ?");
+            $delStmt2->bind_param("iss", $sccode, $areaname, $subarea);
+        }
+        $delStmt2->execute();
+        $affected = $delStmt2->affected_rows;
+        $delStmt2->close();
     }
+
+    api_response('success', 'Class section removed successfully.', ['deleted_id' => $id]);
 }
 
 // 3. Handle POST: Clone Session Structure
@@ -99,46 +111,55 @@ if ($method === 'POST' || $method === 'PUT') {
         api_response('error', 'Class name, section name, and session year are required.', null, 422);
     }
 
+    $affected = 0;
     if ($id > 0) {
-        // Update existing record
+        // Update existing record by ID
         $stmt = $conn->prepare("UPDATE areas 
-                                SET areaname = ?, subarea = ?, sessionyear = ?, slot = ?, idno = ?, classteacher = ?, user = ?, modifieddate = NOW() 
-                                WHERE id = ? AND sccode = ?");
-        $stmt->bind_param("ssssiisii", $areaname, $subarea, $sessionyear, $slot, $idno, $classteacher, $userIdentifier, $id, $sccode);
+                                SET areaname = ?, subarea = ?, sessionyear = ?, slot = ?, idno = ?, classteacher = ?, user = ?, sccode = ?, modifieddate = NOW() 
+                                WHERE id = ? AND (sccode = ? OR sccode = 0 OR sccode IS NULL)");
+        $stmt->bind_param("ssssiisiii", $areaname, $subarea, $sessionyear, $slot, $idno, $classteacher, $userIdentifier, $sccode, $id, $sccode);
         $stmt->execute();
+        $affected = $stmt->affected_rows;
         $stmt->close();
-
-        api_response('success', "Class '$areaname' - Section '$subarea' updated successfully.", [
-            'id' => $id,
-            'sccode' => $sccode,
-            'classname' => $areaname,
-            'sectionname' => $subarea,
-            'sessionyear' => $sessionyear,
-            'slot' => $slot,
-            'idno' => $idno,
-            'classteacher' => $classteacher
-        ]);
-    } else {
-        // Insert new record with user column supplied
-        $stmt = $conn->prepare("INSERT INTO areas (sccode, sessionyear, slot, areaname, subarea, idno, classteacher, user, modifieddate)
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
-                                ON DUPLICATE KEY UPDATE idno = VALUES(idno), slot = VALUES(slot), classteacher = VALUES(classteacher), user = VALUES(user), modifieddate = NOW()");
-        $stmt->bind_param("issssiss", $sccode, $sessionyear, $slot, $areaname, $subarea, $idno, $classteacher, $userIdentifier);
-        $stmt->execute();
-        $insertId = $conn->insert_id ?: $id;
-        $stmt->close();
-
-        api_response('success', "Class '$areaname' - Section '$subarea' created successfully.", [
-            'id' => $insertId,
-            'sccode' => $sccode,
-            'classname' => $areaname,
-            'sectionname' => $subarea,
-            'sessionyear' => $sessionyear,
-            'slot' => $slot,
-            'idno' => $idno,
-            'classteacher' => $classteacher
-        ], 201);
     }
+
+    if ($id <= 0 || $affected === 0) {
+        // Check if existing record by natural key exists
+        $checkStmt = $conn->prepare("SELECT id FROM areas WHERE (sccode = ? OR sccode = 0 OR sccode IS NULL) AND sessionyear = ? AND slot = ? AND areaname = ? AND subarea = ? LIMIT 1");
+        $checkStmt->bind_param("issss", $sccode, $sessionyear, $slot, $areaname, $subarea);
+        $checkStmt->execute();
+        $checkRes = $checkStmt->get_result();
+        $existingRow = $checkRes->fetch_assoc();
+        $checkStmt->close();
+
+        if ($existingRow) {
+            $id = intval($existingRow['id']);
+            $upStmt = $conn->prepare("UPDATE areas 
+                                      SET idno = ?, classteacher = ?, user = ?, sccode = ?, modifieddate = NOW() 
+                                      WHERE id = ?");
+            $upStmt->bind_param("iisii", $idno, $classteacher, $userIdentifier, $sccode, $id);
+            $upStmt->execute();
+            $upStmt->close();
+        } else {
+            $stmt = $conn->prepare("INSERT INTO areas (sccode, sessionyear, slot, areaname, subarea, idno, classteacher, user, modifieddate)
+                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+            $stmt->bind_param("issssiss", $sccode, $sessionyear, $slot, $areaname, $subarea, $idno, $classteacher, $userIdentifier);
+            $stmt->execute();
+            $id = $conn->insert_id;
+            $stmt->close();
+        }
+    }
+
+    api_response('success', "Class '$areaname' - Section '$subarea' saved successfully.", [
+        'id' => $id,
+        'sccode' => $sccode,
+        'classname' => $areaname,
+        'sectionname' => $subarea,
+        'sessionyear' => $sessionyear,
+        'slot' => $slot,
+        'idno' => $idno,
+        'classteacher' => $classteacher
+    ]);
 }
 
 // 5. GET: Fetch Class & Section Structure with Teachers, Slots, Sessions (from sessionyear) and Settings Classes
