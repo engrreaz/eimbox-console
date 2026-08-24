@@ -322,27 +322,48 @@ if ($method === 'GET') {
     }
     $stmt->close();
 
-    // 5e. Fetch Slots
+    // 5e. Fetch Slots strictly from `slots` table for the institution
     $slots = [];
-    $slotStmt = $conn->prepare("SELECT id, slotname FROM slots WHERE sccode = ? OR sccode = 0 ORDER BY id ASC");
+    $slotStmt = $conn->prepare("SELECT id, slotname FROM slots WHERE sccode = ? ORDER BY id ASC");
     if ($slotStmt) {
         $slotStmt->bind_param("i", $sccode);
         $slotStmt->execute();
         $slotRes = $slotStmt->get_result();
         while ($sRow = $slotRes->fetch_assoc()) {
-            $slots[] = [
-                'id' => intval($sRow['id']),
-                'slotname' => $sRow['slotname']
-            ];
+            $sName = trim($sRow['slotname']);
+            if (!empty($sName)) {
+                $slots[] = [
+                    'id' => intval($sRow['id']),
+                    'slotname' => $sName
+                ];
+            }
         }
         $slotStmt->close();
     }
+
+    // If none found in slots table, check distinct slots in areas table
+    if (empty($slots)) {
+        $aSlotStmt = $conn->prepare("SELECT DISTINCT slot FROM areas WHERE sccode = ? AND slot IS NOT NULL AND slot != ''");
+        if ($aSlotStmt) {
+            $aSlotStmt->bind_param("i", $sccode);
+            $aSlotStmt->execute();
+            $aSlotRes = $aSlotStmt->get_result();
+            while ($asRow = $aSlotRes->fetch_assoc()) {
+                $asName = trim($asRow['slot']);
+                if (!empty($asName)) {
+                    $slots[] = [
+                        'id' => count($slots) + 1,
+                        'slotname' => $asName
+                    ];
+                }
+            }
+            $aSlotStmt->close();
+        }
+    }
+
     if (empty($slots)) {
         $slots = [
-            ['id' => 1, 'slotname' => 'School'],
-            ['id' => 2, 'slotname' => 'College'],
-            ['id' => 3, 'slotname' => 'Morning'],
-            ['id' => 4, 'slotname' => 'Day']
+            ['id' => 1, 'slotname' => 'School']
         ];
     }
 
