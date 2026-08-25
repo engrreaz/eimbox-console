@@ -246,6 +246,30 @@ foreach ($transactions as $tx) {
                 }
             }
 
+        } elseif ($module === 'catchment' || str_contains($action, 'ADDRESS')) {
+            // Process Catchment Area & Address Translations Push
+            $eng_str = trim($payload['eng_str'] ?? $payload['eng'] ?? '');
+            $ben_str = trim($payload['ben_str'] ?? $payload['str'] ?? '');
+            $field_type = trim($payload['field_type'] ?? 'previll');
+            $quota_pct = intval($payload['quota_pct'] ?? 0);
+            $remarks = trim($payload['remarks'] ?? '');
+
+            if (!empty($eng_str)) {
+                $stmt = $conn->prepare("
+                    INSERT INTO ben_address (sccode, eng_str, ben_str, field_type, quota_pct, remarks, modifieddate)
+                    VALUES (?, ?, ?, ?, ?, ?, NOW())
+                    ON DUPLICATE KEY UPDATE
+                        ben_str = VALUES(ben_str),
+                        field_type = VALUES(field_type),
+                        quota_pct = VALUES(quota_pct),
+                        remarks = VALUES(remarks),
+                        modifieddate = NOW()
+                ");
+                $stmt->bind_param('isssis', $sccode, $eng_str, $ben_str, $field_type, $quota_pct, $remarks);
+                $stmt->execute();
+                $stmt->close();
+            }
+
         } else {
             throw new Exception("Unknown module or action: {$module} / {$action}");
         }
