@@ -229,3 +229,5 @@ api_response('success', 'Catchment area and address list retrieved.', [
     'count' => count($items),
     'items' => $items
 ]);
+
+error_log(print_r($items, true));
