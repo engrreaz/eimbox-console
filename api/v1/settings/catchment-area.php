@@ -138,7 +138,7 @@ $allowed_fields = ['previll', 'prepo', 'preps', 'predist', 'pervill', 'perpo', '
 $field = isset($_GET['field']) && in_array($_GET['field'], $allowed_fields) ? $_GET['field'] : 'previll';
 
 // 4.1 Fetch all translations from ben_address
-$stmt_ben = $conn->prepare("SELECT id, sccode, eng_str, ben_str, field_type, quota_pct, remarks, modifieddate FROM ben_address WHERE sccode = ? ORDER BY id ASC");
+$stmt_ben = $conn->prepare("SELECT id, sccode, eng_str, ben_str, modifieddate FROM ben_address WHERE sccode = ? ORDER BY id ASC");
 $stmt_ben->bind_param('i', $sccode);
 $stmt_ben->execute();
 $res_ben = $stmt_ben->get_result();
