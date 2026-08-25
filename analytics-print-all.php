@@ -29,9 +29,41 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
 }
 ?>
 <style>
+    /* Global Print Color Adjustments */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+    }
+
     .hide-reference-data .reference-data-block {
         display: none !important;
     }
+
+    /* Progress bar styles */
+    .progress {
+        background-color: #e9ecef !important;
+        border: 1px solid #dee2e6 !important;
+        overflow: hidden !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .progress-bar {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .progress-bar:not([class*="bg-"]) {
+        background-color: #696cff !important;
+    }
+
+    .progress-bar.bg-primary { background-color: #696cff !important; }
+    .progress-bar.bg-success { background-color: #71dd37 !important; }
+    .progress-bar.bg-info { background-color: #03c3ec !important; }
+    .progress-bar.bg-warning { background-color: #ffab00 !important; }
+    .progress-bar.bg-danger { background-color: #ff3e1d !important; }
+    .progress-bar.bg-secondary { background-color: #8592a3 !important; }
 
     .report-explanation-card {
         border-left: 4px solid #696cff !important;
@@ -52,6 +84,12 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
     }
 
     @media print {
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+        }
+
         .no-print {
             display: none !important;
         }
@@ -75,6 +113,54 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
         #main-report-block,
         #main-report-block * {
             visibility: visible;
+        }
+
+        /* Enforce Progress Bars in Print */
+        .progress {
+            display: flex !important;
+            background-color: #e9ecef !important;
+            border: 1px solid #ced4da !important;
+            height: auto !important;
+            min-height: 8px !important;
+            overflow: hidden !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        .progress-bar {
+            display: block !important;
+            height: 100% !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        .progress-bar:not([class*="bg-"]) {
+            background-color: #696cff !important;
+        }
+
+        .progress-bar.bg-primary { background-color: #696cff !important; }
+        .progress-bar.bg-success { background-color: #71dd37 !important; }
+        .progress-bar.bg-info { background-color: #03c3ec !important; }
+        .progress-bar.bg-warning { background-color: #ffab00 !important; }
+        .progress-bar.bg-danger { background-color: #ff3e1d !important; }
+        .progress-bar.bg-secondary { background-color: #8592a3 !important; }
+
+        .badge {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        .badge.bg-primary { background-color: #696cff !important; color: #fff !important; }
+        .badge.bg-success { background-color: #71dd37 !important; color: #fff !important; }
+        .badge.bg-info { background-color: #03c3ec !important; color: #fff !important; }
+        .badge.bg-warning { background-color: #ffab00 !important; color: #fff !important; }
+        .badge.bg-danger { background-color: #ff3e1d !important; color: #fff !important; }
+        .badge.bg-secondary { background-color: #8592a3 !important; color: #fff !important; }
+
+        .border-start {
+            border-left-width: 4px !important;
+        }
+        .border-danger {
+            border-color: #ff3e1d !important;
         }
 
         .hide-reference-data .reference-data-block,
