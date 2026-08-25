@@ -54,12 +54,18 @@ try {
                     <p><strong>Students Appeared:</strong> {$class['total_students_appeared']}</p>
                     <p><strong>CPI Score:</strong> <span class='fw-bold fs-5'>".number_format($cpi, 2)."</span></p>
                     <div class='mb-2'>
-                        <span>Avg. Marks: ".number_format($avg_marks, 2)."%</span>
-                        <div class='progress' style='height: 8px;'><div class='progress-bar' style='width: {$avg_marks}%'></div></div>
+                        <div class='d-flex justify-content-between mb-1' style='font-size: 11px;'>
+                            <span>Avg. Marks:</span>
+                            <span class='fw-bold text-primary'>".number_format($avg_marks, 2)."%</span>
+                        </div>
+                        <div class='progress' style='height: 12px; min-height: 12px;'><div class='progress-bar bg-primary' role='progressbar' style='width: {$avg_marks}%'></div></div>
                     </div>
                     <div>
-                        <span>Difficulty Factor: ".number_format($difficulty, 2)."</span>
-                        <div class='progress' style='height: 8px;'><div class='progress-bar bg-danger' style='width: {$difficulty}%'></div></div>
+                        <div class='d-flex justify-content-between mb-1' style='font-size: 11px;'>
+                            <span>Difficulty Factor:</span>
+                            <span class='fw-bold text-danger'>".number_format($difficulty, 2)."</span>
+                        </div>
+                        <div class='progress' style='height: 12px; min-height: 12px;'><div class='progress-bar bg-danger' role='progressbar' style='width: {$difficulty}%'></div></div>
                     </div>
                 </div>
             </div>

@@ -20,10 +20,10 @@ function create_bar($value, $max_value = 100, $color = '#007bff', $height = '18p
 }
 function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
 {
-    $percentage = ($value / $max_value) * 100;
-    return "<div class='progress' style='height: 18px; background-color: #e9ecef; width: 100px;'>
+    $percentage = min(100, max(0, ($value / $max_value) * 100));
+    return "<div class='progress' style='height: 16px; min-height: 16px; width: 100px;'>
                 <div class='progress-bar {$color_class}' role='progressbar' style='width: {$percentage}%;' aria-valuenow='{$value}' aria-valuemin='0' aria-valuemax='{$max_value}'>
-                    <span style='font-size: 10px; color: white;'>" . number_format($value, 2) . "</span>
+                    <span style='font-size: 10px; color: white; font-weight: 600; line-height: 16px; display: block;'>" . number_format($value, 1) . "%</span>
                 </div>
             </div>";
 }
@@ -40,30 +40,66 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
         display: none !important;
     }
 
-    /* Progress bar styles */
+    /* Progress bar base styles with Inset Box-Shadow Fallback */
     .progress {
+        display: flex !important;
+        position: relative !important;
         background-color: #e9ecef !important;
-        border: 1px solid #dee2e6 !important;
+        box-shadow: inset 0 0 0 1000px #e9ecef !important;
+        border: 1px solid #ced4da !important;
+        border-radius: 4px !important;
         overflow: hidden !important;
+        height: 14px;
+        min-height: 14px;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
     }
 
     .progress-bar {
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        text-align: center !important;
+        height: 100% !important;
+        min-height: 14px !important;
+        background-color: #696cff !important;
+        box-shadow: inset 0 0 0 1000px #696cff !important;
+        color: #ffffff !important;
+        font-weight: 600 !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
     }
 
     .progress-bar:not([class*="bg-"]) {
         background-color: #696cff !important;
+        box-shadow: inset 0 0 0 1000px #696cff !important;
     }
 
-    .progress-bar.bg-primary { background-color: #696cff !important; }
-    .progress-bar.bg-success { background-color: #71dd37 !important; }
-    .progress-bar.bg-info { background-color: #03c3ec !important; }
-    .progress-bar.bg-warning { background-color: #ffab00 !important; }
-    .progress-bar.bg-danger { background-color: #ff3e1d !important; }
-    .progress-bar.bg-secondary { background-color: #8592a3 !important; }
+    .progress-bar.bg-primary { 
+        background-color: #696cff !important; 
+        box-shadow: inset 0 0 0 1000px #696cff !important;
+    }
+    .progress-bar.bg-success { 
+        background-color: #28a745 !important; 
+        box-shadow: inset 0 0 0 1000px #28a745 !important;
+    }
+    .progress-bar.bg-info { 
+        background-color: #17a2b8 !important; 
+        box-shadow: inset 0 0 0 1000px #17a2b8 !important;
+    }
+    .progress-bar.bg-warning { 
+        background-color: #ffc107 !important; 
+        box-shadow: inset 0 0 0 1000px #ffc107 !important;
+        color: #000000 !important;
+    }
+    .progress-bar.bg-danger { 
+        background-color: #dc3545 !important; 
+        box-shadow: inset 0 0 0 1000px #dc3545 !important;
+    }
+    .progress-bar.bg-secondary { 
+        background-color: #6c757d !important; 
+        box-shadow: inset 0 0 0 1000px #6c757d !important;
+    }
 
     .report-explanation-card {
         border-left: 4px solid #696cff !important;
@@ -102,7 +138,7 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
         }
 
         .card {
-            border: none !important;
+            border: 1px solid #e2e8f0 !important;
             box-shadow: none !important;
         }
 
@@ -115,52 +151,76 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
             visibility: visible;
         }
 
-        /* Enforce Progress Bars in Print */
+        /* Bulletproof Progress Bars in Print */
         .progress {
             display: flex !important;
+            position: relative !important;
             background-color: #e9ecef !important;
+            box-shadow: inset 0 0 0 1000px #e9ecef !important;
             border: 1px solid #ced4da !important;
-            height: auto !important;
-            min-height: 8px !important;
+            height: 14px !important;
+            min-height: 14px !important;
             overflow: hidden !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
         }
 
         .progress-bar {
-            display: block !important;
+            display: flex !important;
             height: 100% !important;
+            min-height: 14px !important;
+            line-height: 14px !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
         }
 
         .progress-bar:not([class*="bg-"]) {
             background-color: #696cff !important;
+            box-shadow: inset 0 0 0 1000px #696cff !important;
         }
 
-        .progress-bar.bg-primary { background-color: #696cff !important; }
-        .progress-bar.bg-success { background-color: #71dd37 !important; }
-        .progress-bar.bg-info { background-color: #03c3ec !important; }
-        .progress-bar.bg-warning { background-color: #ffab00 !important; }
-        .progress-bar.bg-danger { background-color: #ff3e1d !important; }
-        .progress-bar.bg-secondary { background-color: #8592a3 !important; }
+        .progress-bar.bg-primary { 
+            background-color: #696cff !important; 
+            box-shadow: inset 0 0 0 1000px #696cff !important;
+        }
+        .progress-bar.bg-success { 
+            background-color: #28a745 !important; 
+            box-shadow: inset 0 0 0 1000px #28a745 !important;
+        }
+        .progress-bar.bg-info { 
+            background-color: #17a2b8 !important; 
+            box-shadow: inset 0 0 0 1000px #17a2b8 !important;
+        }
+        .progress-bar.bg-warning { 
+            background-color: #ffc107 !important; 
+            box-shadow: inset 0 0 0 1000px #ffc107 !important;
+            color: #000000 !important;
+        }
+        .progress-bar.bg-danger { 
+            background-color: #dc3545 !important; 
+            box-shadow: inset 0 0 0 1000px #dc3545 !important;
+        }
+        .progress-bar.bg-secondary { 
+            background-color: #6c757d !important; 
+            box-shadow: inset 0 0 0 1000px #6c757d !important;
+        }
 
         .badge {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
         }
-        .badge.bg-primary { background-color: #696cff !important; color: #fff !important; }
-        .badge.bg-success { background-color: #71dd37 !important; color: #fff !important; }
-        .badge.bg-info { background-color: #03c3ec !important; color: #fff !important; }
-        .badge.bg-warning { background-color: #ffab00 !important; color: #fff !important; }
-        .badge.bg-danger { background-color: #ff3e1d !important; color: #fff !important; }
-        .badge.bg-secondary { background-color: #8592a3 !important; color: #fff !important; }
+        .badge.bg-primary { background-color: #696cff !important; box-shadow: inset 0 0 0 1000px #696cff !important; color: #fff !important; }
+        .badge.bg-success { background-color: #28a745 !important; box-shadow: inset 0 0 0 1000px #28a745 !important; color: #fff !important; }
+        .badge.bg-info { background-color: #17a2b8 !important; box-shadow: inset 0 0 0 1000px #17a2b8 !important; color: #fff !important; }
+        .badge.bg-warning { background-color: #ffc107 !important; box-shadow: inset 0 0 0 1000px #ffc107 !important; color: #000 !important; }
+        .badge.bg-danger { background-color: #dc3545 !important; box-shadow: inset 0 0 0 1000px #dc3545 !important; color: #fff !important; }
+        .badge.bg-secondary { background-color: #6c757d !important; box-shadow: inset 0 0 0 1000px #6c757d !important; color: #fff !important; }
 
         .border-start {
             border-left-width: 4px !important;
         }
         .border-danger {
-            border-color: #ff3e1d !important;
+            border-color: #dc3545 !important;
         }
 
         .hide-reference-data .reference-data-block,
@@ -171,6 +231,7 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
 
         .report-explanation-card {
             background-color: #f8f9fa !important;
+            box-shadow: inset 0 0 0 1000px #f8f9fa !important;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
             page-break-inside: avoid;
@@ -193,7 +254,7 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
             padding: 0 !important;
         }
 
-        h1, h2, h3 {
+        h1, h2, h3, h4 {
             margin-top: 20px;
         }
     }
@@ -311,10 +372,10 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
         }
 
         function create_bar_html(value, max_value = 100, color_class = 'bg-primary') {
-            const percentage = (value / max_value) * 100;
-            return `<div class='progress' style='height: 18px; background-color: #e9ecef; width: 100px;'>
+            const percentage = Math.min(100, Math.max(0, (value / max_value) * 100));
+            return `<div class='progress' style='height: 16px; min-height: 16px; width: 100px;'>
                         <div class='progress-bar ${color_class}' role='progressbar' style='width: ${percentage}%;' aria-valuenow='${value}' aria-valuemin='0' aria-valuemax='${max_value}'>
-                            <span style='font-size: 10px; color: white;'>${parseFloat(value).toFixed(2)}</span>
+                            <span style='font-size: 10px; color: white; font-weight: 600; line-height: 16px; display: block;'>${parseFloat(value).toFixed(1)}%</span>
                         </div>
                     </div>`;
         }
@@ -409,7 +470,7 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
                 html += "</tbody></table></div></div>";
 
                 html += renderExplanationCard(
-                    'প্রতিবেদনের ডেটা নির্দেশিকা ও ব্যাখ্যা (Institute Overview Legend)',
+                    'প্রতিষ্ঠানের পারফরম্যান্স নির্দেশিকা ও গণনার ব্যাখ্যা (Institute Performance Guide)',
                     [
                         {
                             term: 'Total Students (মোট শিক্ষার্থী)',
@@ -421,13 +482,13 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
                             formula: '(মোট পাস শিক্ষার্থী ÷ মোট অংশগ্রহণকারী) × ১০০'
                         },
                         {
-                            term: 'Average Marks (গড় নম্বর %)',
+                            term: 'Average Marks (গড় প্রাপ্ত নম্বর %)',
                             desc: 'প্রতিষ্ঠানের সকল শিক্ষার্থীর প্রাপ্ত নম্বরের শতকরা গড় মান।',
                             formula: '(সর্বমোট প্রাপ্ত নম্বর ÷ সর্বমোট পূর্ণমান) × ১০০'
                         },
                         {
-                            term: 'Grade Distribution (গ্রেড বিন্যাস)',
-                            desc: 'শিক্ষা বোর্ডের মানদণ্ড অনুযায়ী অর্জিত GPA এর ভিত্তিতে বিভিন্ন গ্রেডে (A+, A, A-, B, C, D, F) শিক্ষার্থীদের বণ্টন।'
+                            term: 'Grade Distribution (গ্রেড বণ্টন)',
+                            desc: 'শিক্ষা বোর্ডের মানদণ্ড অনুযায়ী অর্জিত GPA এর ভিত্তিতে বিভিন্ন লেটার গ্রেডে (A+, A, A-, B, C, D, F) শিক্ষার্থীদের বিন্যাস।'
                         },
                         {
                             term: 'Weakest Subjects (দুর্বল বিষয়সমূহ)',
@@ -456,38 +517,43 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
 
                 // Custom explanation card
                 html += renderExplanationCard(
-                    'বিষয়ভিত্তিক বিশদ পারফরম্যান্স নির্দেশিকা (Detailed Subject Legend)',
+                    'বিষয়ভিত্তিক বিশদ পারফরম্যান্স নির্দেশিকা ও গণনার সূত্র (Detailed Subject Guide)',
                     [
                         {
-                            term: 'Appeared Students (অংশগ্রহণকারী)',
-                            desc: 'ওই নির্দিষ্ট শ্রেণি ও শাখায় সংশ্লিষ্ট বিষয়ের পরীক্ষায় অংশগ্রহণকারী শিক্ষার্থীর সংখ্যা।'
+                            term: 'Appeared / Enrolled (অংশগ্রহণকারী / অন্তর্ভুক্তি)',
+                            desc: 'শ্রেণি ও শাখায় মোট ভর্তি থাকা শিক্ষার্থীর মধ্যে কতজন সংশ্লিষ্ট বিষয়ের পরীক্ষায় অংশ নিয়েছে।'
                         },
                         {
                             term: 'Pass Rate (পাসের হার %)',
                             desc: 'সংশ্লিষ্ট বিষয়ে পাস নম্বর (কমপক্ষে ৩৩%) প্রাপ্ত শিক্ষার্থীদের শতকরা হার।',
-                            formula: '(পাস করা শিক্ষার্থী ÷ অংশ নেওয়া শিক্ষার্থী) × ১০০'
+                            formula: '(পাস শিক্ষার্থী ÷ অংশ নেওয়া শিক্ষার্থী) × ১০০ [ধাপ ১]'
                         },
                         {
                             term: 'Excellent Rate (A+ হার %)',
                             desc: 'সংশ্লিষ্ট বিষয়ে ৮০% বা তদূর্ধ্ব নম্বর প্রাপ্ত শিক্ষার্থীদের শতকরা হার।',
-                            formula: '(৮০%+ নম্বর পাওয়া শিক্ষার্থী ÷ অংশ নেওয়া শিক্ষার্থী) × ১০০'
+                            formula: '(৮০%+ পাওয়া শিক্ষার্থী ÷ অংশ নেওয়া শিক্ষার্থী) × ১০০ [ধাপ ১]'
                         },
                         {
                             term: 'CDI (Combined Difficulty Index)',
-                            desc: 'শ্রেণির কাঠিন্য (CDF) ও বিষয়ের সার্বিক কাঠিন্যের (SDF) সমন্বিত সূচক (মান বেশি হলে চ্যালেঞ্জিং)।',
-                            formula: '(CDF × ০.৪) + (SDF × ০.৬) + ১'
+                            desc: 'শ্রেণির কাঠিন্য (CDF) ও বিষয়ের সার্বিক কাঠিন্যের (SDF) সমন্বিত কাঠিন্য সূচক (মান বেশি হলে চ্যালেঞ্জিং)।',
+                            formula: '(শ্রেণির CDF × ০.৪০) + (বিষয়ের SDF × ০.৬০) + ১ [ধাপ ৭]'
                         },
                         {
                             term: 'TSPI (Teacher Subject Performance Index)',
-                            desc: 'নির্দিষ্ট শ্রেণি-শাখায় শিক্ষকের বিষয়ের পারফরম্যান্স মানদণ্ড।',
-                            formula: '(গড় নম্বর % × ০.৫) + (পাসের হার % × ০.৫)'
+                            desc: 'নির্দিষ্ট শ্রেণি-শাখায় শিক্ষকের বিষয়ের সম্মিলিত পারফরম্যান্স মানদণ্ড।',
+                            formula: '(গড় নম্বর % × ০.৫০) + (পাসের হার % × ০.৫০) [ধাপ ৮a]'
+                        },
+                        {
+                            term: 'Score Range (নম্বর পরিসর)',
+                            desc: 'সর্বোচ্চ (Max) ও সর্বনিম্ন (Min) নম্বরের ব্যবধান।',
+                            formula: 'সর্বোচ্চ নম্বর - সর্বনিম্ন নম্বর [ধাপ ১]'
                         },
                         {
                             term: 'Variance & Std. Dev. (বিস্তার ও বিচ্যুতি)',
                             desc: 'শিক্ষার্থীদের নম্বরের ধারাবাহিকতা। কম মান সমমানের পারফরম্যান্স ও বেশি মান নম্বরের বড় তারতম্য নির্দেশ করে।'
                         }
                     ],
-                    'পরামর্শ: যেসব বিষয়ে CDI বেশি ও TSPI কম, সেগুলোতে পাঠদান পদ্ধতি ও শিক্ষার্থীদের শিখন ঘাটতি পর্যালোচনা করা প্রয়োজন।'
+                    'পরামর্শ: যেসব বিষয়ে CDI বেশি ও TSPI কম, সেগুলোতে পাঠদান পদ্ধতি ও শিক্ষার্থীদের শিখন ঘাটতি নিবিড়ভাবে পর্যালোচনা করা প্রয়োজন।'
                 );
 
                 // Append the old generic table below it inside reference-data-block
@@ -514,35 +580,35 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
 
                 // Custom explanation card
                 html += renderExplanationCard(
-                    'শিক্ষক মূল্যায়ন সূচক ও পরিমাপ পদ্ধতি (Teacher Evaluation Legend)',
+                    'শিক্ষক মূল্যায়ন সূচক ও পরিমাপ পদ্ধতি (Teacher Evaluation Guide)',
                     [
                         {
-                            term: 'TPI (Teacher Performance Index)',
+                            term: 'TPI (Teacher Performance Index - বেস স্কোর)',
                             desc: 'শিক্ষকের পাঠদানে শিক্ষার্থীদের সরাসরি ফলাফলের ওয়েটেড বেস স্কোর।',
-                            formula: '(পাসের হার % × ০.৪০) + (A+ এর হার % × ০.২৫) + (গড় নম্বর % × ০.৩৫)'
+                            formula: '(পাসের হার % × ০.৪০) + (A+ এর হার % × ০.২৫) + (গড় নম্বর % × ০.৩৫) [ধাপ ৮]'
                         },
                         {
-                            term: 'TII (Teacher Impact Index)',
+                            term: 'TII (Teacher Impact Index - প্রভাব সূচক)',
                             desc: 'শিক্ষক যে শ্রেণিতে পড়ান তার চ্যালেঞ্জ বা কাঠিন্যের প্রভাব সমন্বয়ক (কঠিন শ্রেণিতে পড়ানো শিক্ষকের TII বেশি থাকে)।',
-                            formula: '১ + (১০০ - ক্লাসের গড় নম্বর %) ÷ ১০০'
+                            formula: '১ + (১০০ - ক্লাসের গড় নম্বর %) ÷ ১০০ [ধাপ ৫]'
                         },
                         {
-                            term: 'TIA (Teacher Impact Adjustment)',
-                            desc: 'শিক্ষকের প্রকৃত মূল্যায়ন ও চূড়ান্ত স্কোর (এই স্কোরের উপর ভিত্তি করে শিক্ষক র‍্যাঙ্ক নির্ধারিত হয়)।',
-                            formula: 'TPI × TII (কাঠিন্য সমন্বিত স্কোর)'
+                            term: 'TIA (Teacher Impact Adjustment - চূড়ান্ত স্কোর)',
+                            desc: 'শিক্ষকের প্রকৃত মূল্যায়ন ও চূড়ান্ত স্কোর (এই স্কোরের ক্রমানুযায়ী Teacher Rank নির্ধারিত হয়)।',
+                            formula: 'TPI × TII (কাঠিন্য সমন্বিত স্কোর) [ধাপ ৮]'
                         },
                         {
-                            term: 'TCI (Teacher Class Impact)',
+                            term: 'TCI (Teacher Class Impact - শ্রেণি প্রভাব)',
                             desc: 'শ্রেণির অন্যান্য বিষয়ের সামগ্রিক গড়ের তুলনায় এই শিক্ষকের বিষয়ের গড়ের পার্থক্য (+ মান হলে ক্লাসের চেয়ে ভালো)।',
-                            formula: 'শিক্ষকের বিষয়ের গড় % - শ্রেণির সার্বিক গড় %'
+                            formula: 'AVG(শিক্ষকের বিষয়ের গড় % - শ্রেণির সার্বিক গড় %) [ধাপ ১২]'
                         },
                         {
-                            term: 'TSI (Teacher Subject Impact)',
+                            term: 'TSI (Teacher Subject Impact - বিষয় প্রভাব)',
                             desc: 'প্রতিষ্ঠানের একই বিষয়ের সামগ্রিক গড়ের তুলনায় এই শিক্ষকের সেকশনের গড়ের পার্থক্য (+ মান হলে সার্বিক গড়ের চেয়ে ভালো)।',
-                            formula: 'শিক্ষকের বিষয়ের গড় % - প্রতিষ্ঠানের ওই বিষয়ের সার্বিক গড় %'
+                            formula: 'AVG(শিক্ষকের বিষয়ের গড় % - প্রতিষ্ঠানের ওই বিষয়ের সার্বিক গড় %) [ধাপ ১২]'
                         },
                         {
-                            term: 'Rank (শিক্ষক র‍্যাঙ্ক)',
+                            term: 'Teacher Rank (শিক্ষক র‍্যাঙ্ক)',
                             desc: 'প্রতিষ্ঠানের সকল শিক্ষকদের মধ্যে TIA স্কোরের ক্রমানুযায়ী শিক্ষকের অবস্থান।'
                         }
                     ],
@@ -565,25 +631,25 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
 
                 // Custom explanation card
                 html += renderExplanationCard(
-                    'শ্রেণিভিত্তিক পারফরম্যান্স সূচক নির্দেশিকা (Class Performance Legend)',
+                    'শ্রেণিভিত্তিক পারফরম্যান্স সূচক নির্দেশিকা (Class Performance Guide)',
                     [
                         {
                             term: 'CPI Score (Class Performance Index)',
-                            desc: 'একটি শ্রেণি ও শাখার সার্বিক ফলাফলের সমন্বিত স্কোর মান।',
-                            formula: '(গড় নম্বর % × ০.৫) + (পাসের হার % × ০.৩) + (A+ এর হার % × ০.২)'
+                            desc: 'একটি শ্রেণি ও শাখার সার্বিক ফলাফলের সমন্বিত পারফরম্যান্স স্কোর।',
+                            formula: '(গড় নম্বর % × ০.৫০) + (পাসের হার % × ০.৩০) + (A+ এর হার % × ০.২০) [ধাপ ৪]'
                         },
                         {
                             term: 'Difficulty Factor / CDF (শ্রেণি কাঠিন্য মাত্রা)',
                             desc: 'শ্রেণির সামগ্রিক দুর্বলতা ও পাঠদানের চ্যালেঞ্জের মাত্রা (মান বেশি হলে শ্রেণিটি তুলনামূলক দুর্বল বা চ্যালেঞ্জিং)।',
-                            formula: '(গড় নম্বরের ঘাটতি × ০.৫) + (ফেলের হার % × ০.৩) + (ভ্যারিয়েন্স × ০.২)'
+                            formula: '(গড় নম্বরের ঘাটতি % × ০.৫০) + (ফেলের হার % × ০.৩০) + (ভ্যারিয়েন্স × ০.২০) [ধাপ ২]'
                         },
                         {
                             term: 'Students Appeared (অংশগ্রহণকারী)',
-                            desc: 'ওই শ্রেণি ও শাখার পরীক্ষায় অংশ নেওয়া মোট শিক্ষার্থীর সংখ্যা।'
+                            desc: 'ওই শ্রেণি ও শাখার পরীক্ষায় অংশ নেওয়া মোট শিক্ষার্থীর সংখ্যা (ধাপ ২)।'
                         },
                         {
-                            term: 'Rank (শ্রেণি র‍্যাঙ্ক)',
-                            desc: 'প্রতিষ্ঠানের সকল শ্রেণি ও শাখার মধ্যে CPI স্কোরের ভিত্তিতে তুলনামূলক অবস্থান।'
+                            term: 'Class Rank (শ্রেণি র‍্যাঙ্ক)',
+                            desc: 'প্রতিষ্ঠানের সকল শ্রেণি ও শাখার মধ্যে CPI স্কোরের ভিত্তিতে তুলনামূলক অবস্থান (ধাপ ৪)।'
                         }
                     ],
                     'পরামর্শ: যেসব শ্রেণির Difficulty Factor বেশি ও CPI কম, সেগুলোতে অভিজ্ঞ শিক্ষক নিয়োগ ও বিশেষ ক্লাসের ব্যবস্থা রাখা উচিত।'
@@ -603,23 +669,23 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
 
                 // Custom explanation card
                 html += renderExplanationCard(
-                    'সামগ্রিক বিষয়ভিত্তিক পারফরম্যান্স নির্দেশিকা (Overall Subject Legend)',
+                    'সামগ্রিক বিষয়ভিত্তিক পারফরম্যান্স নির্দেশিকা (Overall Subject Guide)',
                     [
                         {
                             term: 'Overall Avg. Marks (সার্বিক গড় নম্বর %)',
-                            desc: 'সকল শ্রেণি-শাখা মিলিয়ে প্রতিষ্ঠানে ওই বিষয়ের সামগ্রিক প্রাপ্ত নম্বরের গড় শতকরা হার।'
+                            desc: 'সকল শ্রেণি-শাখা মিলিয়ে প্রতিষ্ঠানে ওই বিষয়ের সামগ্রিক প্রাপ্ত নম্বরের গড় শতকরা হার (ধাপ ৩)।'
                         },
                         {
                             term: 'Pass Rate / Failure Rate (পাস ও ফেলের হার %)',
-                            desc: 'পুরো প্রতিষ্ঠানে ওই বিষয়ে উত্তীর্ণ ও অকৃতকার্য শিক্ষার্থীদের শতকরা অনুপাত।'
+                            desc: 'পুরো প্রতিষ্ঠানে ওই বিষয়ে উত্তীর্ণ ও অকৃতকার্য শিক্ষার্থীদের শতকরা অনুপাত (ধাপ ৩)।'
                         },
                         {
                             term: 'SDF (Subject Difficulty Factor - বিষয় কাঠিন্য মাত্রা)',
                             desc: 'বিষয়টির সার্বিক কাঠিন্য সূচক (SDF মান যত বেশি, শিক্ষার্থীদের কাছে বিষয়টি তত বেশি কঠিন ও ভীতিকর)।',
-                            formula: '(ফেলের হার % × ০.৩৫) + (মিডিয়ান ঘাটতি × ০.২৫) + (CV বিচ্যুতি × ০.২৫) + (৫০% কম পাওয়া ছাত্রের অনুপাত × ০.১৫)'
+                            formula: '(ফেলের হার % × ০.৩৫) + (মিডিয়ান ঘাটতি % × ০.২৫) + (CV বিচ্যুতি % × ০.২৫) + (৫০% কম পাওয়া ছাত্রের হার % × ০.১৫) [ধাপ ৬]'
                         }
                     ],
-                    'ব্যাখ্যা: উচ্চ SDF যুক্ত বিষয়গুলোতে শিক্ষার্থীদের ভীতি দূর করতে সহজবোধ্য শিক্ষাদান পদ্ধতি ও পর্যাপ্ত মডেল টেস্ট নেওয়া প্রয়োজন।'
+                    'ব্যাখ্যা: SDF সূত্রে CV (Coefficient of Variation) হলো (Std. Dev ÷ Avg Marks) × ১০০ এবং মিডিয়ান ঘাটতি হলো (১০০ - Median %)। উচ্চ SDF যুক্ত বিষয়গুলোতে বিশেষ শিখন সহায়তা প্রয়োজন।'
                 );
 
                 html += '<div class="reference-data-block">';
@@ -636,27 +702,27 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
 
                 // Custom explanation card
                 html += renderExplanationCard(
-                    'শিক্ষার্থীদের মেধাতালিকা ও গ্রেডিং নির্দেশিকা (Student Merit Legend)',
+                    'শিক্ষার্থীদের মেধাতালিকা ও গ্রেডিং নির্দেশিকা (Student Merit Guide)',
                     [
                         {
                             term: 'Class Rank (শ্রেণি র‍্যাঙ্ক)',
-                            desc: 'পুরো শ্রেণিতে (সকল শাখা মিলিয়ে) মোট প্রাপ্ত নম্বর ও জিপিএ অনুযায়ী শিক্ষার্থীর অবস্থান।'
+                            desc: 'পুরো শ্রেণিতে (সকল শাখা মিলিয়ে) মোট প্রাপ্ত নম্বর ও জিপিএ অনুযায়ী শিক্ষার্থীর অবস্থান (ধাপ ৯)।'
                         },
                         {
                             term: 'Section Rank (শাখা র‍্যাঙ্ক)',
-                            desc: 'শিক্ষার্থীর নিজস্ব শাখায় (Section) তার মেধাক্রম অবস্থান।'
+                            desc: 'শিক্ষার্থীর নিজস্ব শাখায় (Section) তার মেধাক্রম অবস্থান (ধাপ ৯)।'
                         },
                         {
                             term: 'GPA (Grade Point Average) ও Grade',
                             desc: 'আবশ্যিক বিষয়সমূহ এবং ৪র্থ বিষয়ের অতিরিক্ত পয়েন্ট (২.০ এর অতিরিক্ত) সমন্বয়ে অর্জিত চূড়ান্ত GPA ও গ্রেড।',
-                            formula: 'মোট অর্জিত জিপি পয়েন্ট (৪র্থ বিষয়ের বোনাস সহ) ÷ আবশ্যিক বিষয়ের সংখ্যা'
+                            formula: '(আবশ্যিক বিষয়ের মোট পয়েন্ট + ৪র্থ বিষয়ের অতিরিক্ত পয়েন্ট) ÷ আবশ্যিক বিষয়ের সংখ্যা [ধাপ ১১]'
                         },
                         {
                             term: 'Failed Subjects (ফেল বিষয়ের সংখ্যা)',
-                            desc: 'যেকোনো বিষয়ে ৩৩% এর কম নম্বর পেলে অকৃতকার্য হিসেবে গণ্য হয়। কোনো একটি বিষয়েও ফেল থাকলে চূড়ান্ত জিপিএ ০.০০ (F) নির্ধারিত হয়।'
+                            desc: 'যেকোনো বিষয়ে ৩৩% এর কম নম্বর পেলে অকৃতকার্য হিসেবে গণ্য হয়। কোনো একটি আবশ্যিক বিষয়েও ফেল থাকলে চূড়ান্ত জিপিএ ০.০০ (F) নির্ধারিত হয় [ধাপ ১১]।'
                         }
                     ],
-                    'গ্রেডিং মানদণ্ড: ৮০-১০০: A+ (৫.০), ৭০-৭৯: A (৪.০), ৬০-৬৯: A- (৩.৫), ৫০-৫৯: B (৩.০), ৪০-৪৯: C (২.০), ৩৩-৩৯: D (১.০), ০-৩২: F (০.০)।'
+                    'গ্রেডিং স্কেল: ৮০-১০০: A+ (৫.০), ৭০-৭৯: A (৪.০), ৬০-৬৯: A- (৩.৫), ৫০-৫৯: B (৩.০), ৪০-৪৯: C (২.০), ৩৩-৩৯: D (১.০), ০-৩২: F (০.০)। ৪র্থ বিষয়ের ২.০ এর অতিরিক্ত পয়েন্ট মূল পয়েন্টের সাথে যোগ হয় (সর্বোচ্চ জিপিএ ৫.০)।'
                 );
 
                 html += '<div class="reference-data-block">';
@@ -673,16 +739,20 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
 
                 // Custom explanation card
                 html += renderExplanationCard(
-                    'ঝুঁকিপূর্ণ শিক্ষার্থী ও ঝুঁকি সূচক নির্দেশিকা (At-Risk Assessment Legend)',
+                    'ঝুঁকিপূর্ণ শিক্ষার্থী ও ঝুঁকি সূচক নির্দেশিকা (At-Risk Assessment Guide)',
                     [
                         {
                             term: 'SRS / Risk Score (শিক্ষার্থী ঝুঁকি সূচক)',
                             desc: 'শিক্ষার্থীর অকৃতকার্য বিষয়গুলোর কাঠিন্য (SDF), পাস নম্বরের ঘাটতি এবং সংশ্লিষ্ট বিষয়ের শিক্ষকের পারফরম্যান্স (TSPI) সমন্বয় করে নির্ণীত সম্ভাব্য চূড়ান্ত ব্যর্থতার ঝুঁকি মাত্রা।',
-                            formula: '∑ [ {(বিষয়ের SDF × ০.৬) + (পাস নম্বরের ঘাটতি % × ০.৪)} × {১ + ((৫০ - TSPI) / ১০০)} ]'
+                            formula: '∑ [ {(বিষয়ের SDF × ০.৬০) + (পাস নম্বরের ঘাটতি % × ০.৪০)} × {১ + ((৫০ - শিক্ষকের TSPI) ÷ ১০০)} ] [ধাপ ১৩]'
+                        },
+                        {
+                            term: 'মানদণ্ড (Selection Criteria)',
+                            desc: 'যেসব শিক্ষার্থী এক বা একাধিক বিষয়ে ফেল করেছে এবং যাদের Risk Score ২৫ এর বেশি, তাদের এই তালিকায় আনা হয় [ধাপ ১০]।'
                         },
                         {
                             term: 'Failed Subjects (অকৃতকার্য বিষয়সমূহ)',
-                            desc: 'যেসব বিষয়ে শিক্ষার্থী ৩৩% এর কম নম্বর পেয়ে অকৃতকার্য হয়েছে সেগুলোর তালিকা।'
+                            desc: 'যেসব বিষয়ে শিক্ষার্থী ৩৩% এর কম নম্বর পেয়ে অকৃতকার্য হয়েছে সেগুলোর তালিকা [ধাপ ১০]।'
                         },
                         {
                             term: 'Reason (ঝুঁকির কারণ)',

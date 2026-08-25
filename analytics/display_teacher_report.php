@@ -75,12 +75,18 @@ try {
                     </div>
                     <hr>
                     <div class='mb-2'>
-                        <span>Avg. Marks: " . number_format($avg_marks, 2) . "%</span>
-                        <div class='progress' style='height: 10px;'><div class='progress-bar bg-info' style='width: {$avg_marks}%'></div></div>
+                        <div class='d-flex justify-content-between mb-1' style='font-size: 11px;'>
+                            <span>Avg. Marks:</span>
+                            <span class='fw-bold text-info'>" . number_format($avg_marks, 2) . "%</span>
+                        </div>
+                        <div class='progress' style='height: 12px; min-height: 12px;'><div class='progress-bar bg-info' role='progressbar' style='width: {$avg_marks}%'></div></div>
                     </div>
                     <div>
-                        <span>Pass Rate: " . number_format($pass_rate, 2) . "%</span>
-                        <div class='progress' style='height: 10px;'><div class='progress-bar bg-success' style='width: {$pass_rate}%'></div></div>
+                        <div class='d-flex justify-content-between mb-1' style='font-size: 11px;'>
+                            <span>Pass Rate:</span>
+                            <span class='fw-bold text-success'>" . number_format($pass_rate, 2) . "%</span>
+                        </div>
+                        <div class='progress' style='height: 12px; min-height: 12px;'><div class='progress-bar bg-success' role='progressbar' style='width: {$pass_rate}%'></div></div>
                     </div>
                 </div>
             </div>
