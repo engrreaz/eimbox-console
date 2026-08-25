@@ -104,3 +104,16 @@
          transform: rotate(360deg);
      }
  }
+
+  /* Menu Warning & Danger Styling */
+  .menu-item.warning > .menu-link,
+  .menu-link.warning,
+  .dropdown-item.warning {
+      color: var(--bs-warning, #ff9f43) !important;
+  }
+
+  .menu-item.warning > .menu-link .menu-icon,
+  .menu-link.warning .menu-icon,
+  .dropdown-item.warning i {
+      color: var(--bs-warning, #ff9f43) !important;
+  }
