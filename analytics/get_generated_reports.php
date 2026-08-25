@@ -25,8 +25,8 @@ $response = ['status' => 'success', 'reports' => []];
 
 try {
     $stmt = $conn->prepare(
-        "SELECT id, dataset_name, created_at 
-         FROM analytics_datasets 
+        "SELECT datasetid, dataset_name, created_at 
+         FROM analytics_dataset 
          WHERE sccode = ? AND slot = ? AND sessionyear = ? 
          ORDER BY created_at DESC"
     );
@@ -37,7 +37,7 @@ try {
     while ($row = $result->fetch_assoc()) {
         $created_date = date("d M, Y h:i A", strtotime($row['created_at']));
         $response['reports'][] = [
-            'dataset_id' => $row['id'],
+            'dataset_id' => $row['datasetid'],
             'report_name' => "{$row['dataset_name']} (on {$created_date})"
         ];
     }

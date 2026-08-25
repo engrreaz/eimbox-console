@@ -356,7 +356,7 @@
 
             // 3. Finalize
             updateProgress(100, 'bi-check-circle-fill text-success', 'Analysis complete!');
-            await fetchAndDisplayReport(examid); // Fetch and display the report
+            await loadLatestReport(); // Fetch and display the report
             $('#startAnalysisBtn').prop('disabled', false).html('<i class="bi bi-play-circle me-2"></i>Start Analysis');
 
         } catch (error) {
@@ -477,7 +477,7 @@
                     });
                     const isLatest = index === 0 ? '<span class="badge bg-primary ms-2">Latest</span>' : '';
                     listContent += `
-                        <a href="#" class="list-group-item list-group-item-action" data-dataset-id="${item.id}">
+                        <a href="#" class="list-group-item list-group-item-action" data-dataset-id="${item.datasetid}">
                             <div class="d-flex w-100 justify-content-between">
                                 <h6 class="mb-1">${item.dataset_name}</h6>
                                 <small>${date}</small>

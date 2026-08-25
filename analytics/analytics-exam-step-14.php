@@ -38,7 +38,7 @@ $total_subjects = $result['total_subjects'] ?? 0;
 $update_sql = "
     UPDATE analytics_dataset
     SET total_students = ?, total_subjects = ?
-    WHERE id = ?;
+    WHERE datasetid = ?;
 ";
 
 $stmt_update = $conn->prepare($update_sql);
