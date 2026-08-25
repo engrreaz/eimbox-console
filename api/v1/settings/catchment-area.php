@@ -9,6 +9,8 @@
 
 require_once __DIR__ . '/../bootstrap.php';
 
+error_log("catchment-area.php: " . $_SERVER['REQUEST_METHOD']);
+
 // Authenticate caller token if present
 $user = authenticate_token($conn);
 
