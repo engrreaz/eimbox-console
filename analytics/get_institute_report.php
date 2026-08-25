@@ -10,6 +10,17 @@ set_time_limit(300);
 $dataset_id = (int)($_GET['dataset_id'] ?? 0);
 $sccode = $_SESSION['sccode'] ?? null;
 
+if (!$sccode && $dataset_id > 0) {
+    $stmt_sc = $conn->prepare("SELECT sccode FROM analytics_dataset WHERE datasetid = ?");
+    if ($stmt_sc) {
+        $stmt_sc->bind_param("i", $dataset_id);
+        $stmt_sc->execute();
+        $res_sc = $stmt_sc->get_result()->fetch_assoc();
+        $sccode = $res_sc['sccode'] ?? null;
+        $stmt_sc->close();
+    }
+}
+
 if (empty($dataset_id) || empty($sccode)) {
     http_response_code(400);
     echo json_encode(['status' => 'error', 'message' => 'Missing required parameters.']);

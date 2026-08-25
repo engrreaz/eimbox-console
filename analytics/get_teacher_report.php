@@ -1,30 +1,27 @@
 <?php
 /**
  * Fetches the final teacher performance report for a given dataset.
- *
- * This script queries the database for teacher performance data,
- * ranks them based on the Teacher Impact Adjustment (TIA) score,
- * and returns the results as a JSON object.
  */
 
 header('Content-Type: application/json');
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once '../core/config.php';
 require_once '../core/db.php';
 
-$dataset_id = $_GET['dataset_id'] ?? 0;
-$sccode = $_SESSION['sccode'] ?? null;
+$dataset_id = filter_input(INPUT_GET, 'dataset_id', FILTER_VALIDATE_INT);
 
-if (empty($dataset_id) || empty($sccode)) {
+if (!$dataset_id) {
     http_response_code(400);
-    echo json_encode(['status' => 'error', 'message' => 'Missing required parameters.']);
+    echo json_encode(['status' => 'error', 'message' => 'Missing or invalid dataset_id parameter.']);
     exit;
 }
 
 $query = "
     SELECT
-        t.tname,
-        t.position,
+        COALESCE(t.tname, 'Unassigned') AS tname,
+        COALESCE(t.position, '') AS position,
         atp.total_students_taught,
         atp.total_subjects_taught,
         atp.overall_avg_marks,
@@ -35,17 +32,16 @@ $query = "
         atp.tsi_score
     FROM
         analytics_teacher_performance AS atp
-    JOIN
-        teacher AS t ON atp.tid = t.tid AND atp.sccode = t.sccode
+    LEFT JOIN
+        teacher AS t ON atp.tid = t.tid AND (t.sccode = atp.sccode OR t.sccode = '0')
     WHERE
-        atp.dataset_id = ? AND atp.sccode = ?
+        atp.dataset_id = ?
     ORDER BY
-        tia DESC;
+        atp.teacher_rank ASC, atp.teacher_impact_adjustment DESC;
 ";
 
-
 $stmt = $conn->prepare($query);
-$stmt->bind_param("is", $dataset_id, $sccode);
+$stmt->bind_param("i", $dataset_id);
 $stmt->execute();
 $result = $stmt->get_result();
 $report_data = $result->fetch_all(MYSQLI_ASSOC);

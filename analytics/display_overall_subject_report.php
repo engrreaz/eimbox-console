@@ -5,30 +5,38 @@
  * Fetches data from `analytics_overall_subject_performance` and renders it as a custom HTML block.
  */
 
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once '../core/config.php';
 require_once '../core/db.php';
-require_once '../core/global_values.php';
 
 $dataset_id = filter_input(INPUT_GET, 'dataset_id', FILTER_VALIDATE_INT);
-$sccode = $_SESSION['sccode'] ?? null;
 
-if (!$dataset_id || !$sccode) {
-    echo '<div class="alert alert-danger">Invalid Parameters.</div>';
+if (!$dataset_id) {
+    echo '<div class="alert alert-danger">Invalid Dataset ID.</div>';
     exit;
 }
 
 try {
-    $stmt = $conn->prepare("
-        SELECT s.subject as subject_name, aosp.*
+    $query = "
+        SELECT 
+            COALESCE(s.subject, CONCAT('Subject ', aosp.subject_code)) AS subject_name,
+            aosp.*
         FROM analytics_overall_subject_performance AS aosp
-        JOIN subjects AS s ON aosp.subject_code = s.subcode AND (s.sccode = ? OR s.sccode = '0')
-        WHERE aosp.dataset_id = ? AND s.sccategory = ?
+        LEFT JOIN subjects AS s 
+            ON aosp.subject_code = s.subcode 
+            AND (s.sccode = aosp.sccode OR s.sccode = '0')
+        WHERE aosp.dataset_id = ?
         GROUP BY aosp.id
         ORDER BY aosp.subject_difficulty_factor DESC
-    ");
+    ";
+    
+    $stmt = $conn->prepare($query);
     if (!$stmt) throw new Exception("DB query preparation failed: " . $conn->error);
 
-    $stmt->bind_param("sis", $sccode, $dataset_id, $sctype);
+    $stmt->bind_param("i", $dataset_id);
     $stmt->execute();
     $data = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
@@ -42,21 +50,64 @@ try {
     echo "<div class='row g-4'>";
 
     foreach ($data as $subject) {
-        $pass_rate = 100 - (float)($subject['failure_rate'] ?? 0);
+        $sub_name = htmlspecialchars($subject['subject_name']);
+        $sub_code = htmlspecialchars($subject['subject_code']);
+        $failure_rate = (float)($subject['failure_rate'] ?? 0);
+        $pass_rate = 100 - $failure_rate;
         $sdf = (float)($subject['subject_difficulty_factor'] ?? 0);
+        $avg_marks = (float)($subject['overall_marks_percentage'] ?? 0);
+        $appeared = (int)($subject['total_students_appeared'] ?? 0);
+        $fail_count = (int)($subject['fail_count'] ?? 0);
+        $pass_count = max(0, $appeared - $fail_count);
 
         echo "
         <div class='col-md-6 col-lg-4'>
-            <div class='card h-100 shadow-sm'>
-                <div class='card-header'>
-                    <h6 class='card-title mb-0'>{$subject['subject_name']}</h6>
-                    <small class='text-muted'>Code: {$subject['subject_code']}</small>
+            <div class='card h-100 shadow-sm border'>
+                <div class='card-header py-2 px-3 bg-light border-bottom d-flex justify-content-between align-items-center'>
+                    <h6 class='card-title mb-0 fw-bold text-dark'>{$sub_name}</h6>
+                    <span class='badge bg-secondary'>Code: {$sub_code}</span>
                 </div>
-                <div class='card-body'>
-                    <p><strong>Appeared:</strong> {$subject['total_students_appeared']}</p>
-                    <p><strong>Avg. Marks:</strong> ".number_format($subject['overall_marks_percentage'], 2)."%</p>
-                    <p><strong>Pass Rate:</strong> <span class='text-success'>".number_format($pass_rate, 2)."%</span></p>
-                    <p><strong>Difficulty (SDF):</strong> <span class='fw-bold text-danger'>".number_format($sdf, 2)."</span></p>
+                <div class='card-body p-3'>
+                    <div class='row text-center g-2 mb-3'>
+                        <div class='col-4'>
+                            <div class='p-1 bg-light rounded border-sm'>
+                                <small class='text-muted d-block' style='font-size: 10px;'>Appeared</small>
+                                <strong class='text-dark'>{$appeared}</strong>
+                            </div>
+                        </div>
+                        <div class='col-4'>
+                            <div class='p-1 bg-light rounded border-sm'>
+                                <small class='text-muted d-block' style='font-size: 10px;'>Avg Marks</small>
+                                <strong class='text-primary'>" . number_format($avg_marks, 1) . "%</strong>
+                            </div>
+                        </div>
+                        <div class='col-4'>
+                            <div class='p-1 bg-light rounded border-sm'>
+                                <small class='text-muted d-block' style='font-size: 10px;'>Difficulty (SDF)</small>
+                                <strong class='text-danger'>" . number_format($sdf, 1) . "</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class='mb-2'>
+                        <div class='d-flex justify-content-between mb-1' style='font-size: 11px;'>
+                            <span class='text-muted'>Pass Rate ({$pass_count} Passed):</span>
+                            <span class='fw-bold text-success'>" . number_format($pass_rate, 2) . "%</span>
+                        </div>
+                        <div class='progress' style='height: 12px; min-height: 12px;'>
+                            <div class='progress-bar bg-success' role='progressbar' style='width: {$pass_rate}%;'></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class='d-flex justify-content-between mb-1' style='font-size: 11px;'>
+                            <span class='text-muted'>Failure Rate ({$fail_count} Failed):</span>
+                            <span class='fw-bold text-danger'>" . number_format($failure_rate, 2) . "%</span>
+                        </div>
+                        <div class='progress' style='height: 12px; min-height: 12px;'>
+                            <div class='progress-bar bg-danger' role='progressbar' style='width: {$failure_rate}%;'></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -67,4 +118,3 @@ try {
 } catch (Exception $e) {
     echo '<div class="alert alert-danger">An error occurred: ' . htmlspecialchars($e->getMessage()) . '</div>';
 }
-?>
