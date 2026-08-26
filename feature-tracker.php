@@ -4,20 +4,262 @@
  * File: feature-tracker.php
  * Author: EIMBox Team
  * Purpose: Track features, issues, developer responses, and platform status across
- *          Dashboard, Console, Android Lite, Android Premium, Desktop.
+ *          Dashboard, Console, Android Lite, Android Premium, Desktop without page reloads.
  */
+
+// Available Platforms Metadata
+$platforms = [
+    'Dashboard' => ['icon' => 'ri-dashboard-line', 'badge' => 'bg-label-primary', 'color' => '#696cff'],
+    'Console' => ['icon' => 'ri-terminal-box-line', 'badge' => 'bg-label-info', 'color' => '#03c3ec'],
+    'Android Lite' => ['icon' => 'ri-android-line', 'badge' => 'bg-label-success', 'color' => '#71dd37'],
+    'Android Premium' => ['icon' => 'ri-smartphone-line', 'badge' => 'bg-label-warning', 'color' => '#ffab00'],
+    'Desktop' => ['icon' => 'ri-computer-line', 'badge' => 'bg-label-secondary', 'color' => '#8592a3'],
+    'API' => ['icon' => 'ri-code-s-slash-line', 'badge' => 'bg-label-dark', 'color' => '#233446'],
+    'General' => ['icon' => 'ri-global-line', 'badge' => 'bg-label-info', 'color' => '#03c3ec']
+];
+
+// Status Colors & Badges Metadata
+$status_meta = [
+    'Open' => ['badge' => 'bg-danger text-white', 'badge_soft' => 'bg-label-danger', 'icon' => 'ri-error-warning-line', 'color' => '#ff3e1d'],
+    'Pending' => ['badge' => 'bg-warning text-dark', 'badge_soft' => 'bg-label-warning', 'icon' => 'ri-time-line', 'color' => '#ffab00'],
+    'Ongoing' => ['badge' => 'bg-info text-white', 'badge_soft' => 'bg-label-info', 'icon' => 'ri-loader-4-line', 'color' => '#03c3ec'],
+    'Testing' => ['badge' => 'bg-primary text-white', 'badge_soft' => 'bg-label-primary', 'icon' => 'ri-test-tube-line', 'color' => '#696cff'],
+    'Completed' => ['badge' => 'bg-success text-white', 'badge_soft' => 'bg-label-success', 'icon' => 'ri-checkbox-circle-line', 'color' => '#71dd37'],
+    'Closed' => ['badge' => 'bg-secondary text-white', 'badge_soft' => 'bg-label-secondary', 'icon' => 'ri-close-circle-line', 'color' => '#8592a3'],
+    'On Hold' => ['badge' => 'bg-dark text-white', 'badge_soft' => 'bg-label-dark', 'icon' => 'ri-pause-circle-line', 'color' => '#233446']
+];
+
+// Priority Colors Metadata
+$priority_meta = [
+    'Critical' => ['badge' => 'badge bg-danger', 'icon' => 'ri-alarm-warning-fill'],
+    'High' => ['badge' => 'badge bg-warning text-dark', 'icon' => 'ri-arrow-up-circle-fill'],
+    'Medium' => ['badge' => 'badge bg-info', 'icon' => 'ri-subtract-fill'],
+    'Low' => ['badge' => 'badge bg-label-secondary', 'icon' => 'ri-arrow-down-circle-line']
+];
+
+/**
+ * Reusable HTML Renderer for Table Rows & Expandable Detail Drawers
+ */
+function render_features_table_body($features, $platforms, $status_meta, $priority_meta) {
+    if (empty($features)) {
+        ?>
+        <tr>
+            <td colspan="7" class="text-center py-5 text-muted">
+                <i class="ri-inbox-line fs-1 d-block mb-2 text-secondary"></i>
+                <div class="fw-semibold">কোনো ফিচার রেকর্ড পাওয়া যায়নি!</div>
+                <small class="text-muted">ফিল্টার পরিবর্তন করুন অথবা নতুন ফিচার যুক্ত করুন।</small>
+            </td>
+        </tr>
+        <?php
+        return;
+    }
+
+    foreach ($features as $f): 
+        $plat_info = $platforms[$f['platform']] ?? ['icon' => 'ri-device-line', 'badge' => 'bg-label-secondary', 'color' => '#8592a3'];
+        $stat_info = $status_meta[$f['status']] ?? ['badge' => 'bg-secondary', 'badge_soft' => 'bg-label-secondary', 'icon' => 'ri-information-line', 'color' => '#8592a3'];
+        $prio_info = $priority_meta[$f['priority']] ?? ['badge' => 'badge bg-secondary', 'icon' => 'ri-subtract-line'];
+        $has_issues = !empty(trim($f['issues'] ?? ''));
+        $has_resp   = !empty(trim($f['response'] ?? ''));
+        $feature_json = htmlspecialchars(json_encode($f), ENT_QUOTES, 'UTF-8');
+    ?>
+        <!-- Main Clickable Table Row -->
+        <tr class="feature-main-row" id="row-<?= $f['id'] ?>" onclick="toggleDrawer(<?= $f['id'] ?>, event)">
+            <!-- ID + Expand Arrow -->
+            <td class="col-id">
+                <i class="ri-arrow-right-s-line expand-icon text-muted" id="icon-<?= $f['id'] ?>"></i>
+                <span class="d-block small text-muted">#<?= $f['id'] ?></span>
+            </td>
+
+            <!-- Module & Platform -->
+            <td class="col-module">
+                <div class="fw-bold text-dark small mb-1"><?= htmlspecialchars($f['module']) ?></div>
+                <span class="platform-pill <?= $plat_info['badge'] ?>">
+                    <i class="<?= $plat_info['icon'] ?>"></i>
+                    <?= htmlspecialchars($f['platform']) ?>
+                </span>
+            </td>
+
+            <!-- Feature & Script -->
+            <td class="col-feature">
+                <div class="fw-semibold text-primary" style="font-size: 0.9rem;">
+                    <?= htmlspecialchars($f['feature']) ?>
+                </div>
+                <?php if (!empty($f['topic'])): ?>
+                    <div class="text-muted small"><i class="ri-hashtag text-secondary"></i> <?= htmlspecialchars($f['topic']) ?></div>
+                <?php endif; ?>
+                <?php if (!empty($f['script'])): ?>
+                    <span class="code-script mt-1" title="<?= htmlspecialchars($f['script']) ?>">
+                        <i class="ri-file-code-line me-1"></i><?= htmlspecialchars($f['script']) ?>
+                    </span>
+                <?php endif; ?>
+            </td>
+
+            <!-- Inline Fast Status Change -->
+            <td class="col-status" onclick="event.stopPropagation()">
+                <select class="form-select form-select-sm status-select-badge <?= $stat_info['badge'] ?>" 
+                        onchange="quickChangeStatus(<?= $f['id'] ?>, this.value)"
+                        title="স্ট্যাটাস দ্রুত পরিবর্তন করতে সিলেক্ট করুন">
+                    <?php foreach ($status_meta as $st_key => $st_val): ?>
+                        <option value="<?= $st_key ?>" <?= $f['status'] === $st_key ? 'selected' : '' ?> class="bg-white text-dark">
+                            <?= $st_key ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <div class="d-flex align-items-center gap-1 mt-1">
+                    <div class="progress progress-compact flex-grow-1 bg-light">
+                        <div class="progress-bar <?= $f['progress_percent'] == 100 ? 'bg-success' : ($f['progress_percent'] > 50 ? 'bg-primary' : 'bg-warning') ?>" 
+                             style="width: <?= intval($f['progress_percent']) ?>%"></div>
+                    </div>
+                    <span style="font-size: 0.7rem;" class="text-muted"><?= intval($f['progress_percent']) ?>%</span>
+                </div>
+            </td>
+
+            <!-- Priority -->
+            <td class="col-priority">
+                <span class="<?= $prio_info['badge'] ?>">
+                    <i class="<?= $prio_info['icon'] ?>"></i> <?= htmlspecialchars($f['priority']) ?>
+                </span>
+            </td>
+
+            <!-- Issues & Response Badges -->
+            <td class="col-issues">
+                <div class="d-flex flex-column gap-1">
+                    <?php if ($has_issues): ?>
+                        <span class="badge bg-label-danger text-truncate d-block text-start" title="<?= htmlspecialchars($f['issues']) ?>">
+                            <i class="ri-bug-line me-1"></i> ইশ্যু আছে
+                        </span>
+                    <?php endif; ?>
+                    <?php if ($has_resp): ?>
+                        <span class="badge bg-label-success text-truncate d-block text-start" title="<?= htmlspecialchars($f['response']) ?>">
+                            <i class="ri-reply-line me-1"></i> রেসপন্স দেওয়া
+                        </span>
+                    <?php endif; ?>
+                    <?php if (!$has_issues && !$has_resp): ?>
+                        <span class="text-muted small fst-italic">কোনো ইস্যু নেই</span>
+                    <?php endif; ?>
+                </div>
+            </td>
+
+            <!-- Direct Action Buttons on Every Row -->
+            <td class="col-actions" onclick="event.stopPropagation()">
+                <div class="action-btn-group">
+                    <!-- 1. Quick Response & Issue Note Button -->
+                    <button type="button" class="btn btn-sm btn-outline-success act-btn" 
+                            title="রেসপন্স ও সমস্যা নোট আপডেট করুন"
+                            data-record="<?= $feature_json ?>"
+                            onclick='openResponseModalFromBtn(this)'>
+                        <i class="ri-chat-check-line"></i>
+                    </button>
+
+                    <!-- 2. Full Edit Button -->
+                    <button type="button" class="btn btn-sm btn-outline-primary act-btn" 
+                            title="ফিচার বিস্তারিত এডিট করুন"
+                            data-record="<?= $feature_json ?>"
+                            onclick='openEditModalFromBtn(this)'>
+                        <i class="ri-pencil-line"></i>
+                    </button>
+
+                    <!-- 3. Duplicate to Platform Button -->
+                    <button type="button" class="btn btn-sm btn-outline-info act-btn" 
+                            title="অন্য প্ল্যাটফর্মে ডুপ্লিকেট করুন"
+                            onclick='openDuplicateModal(<?= $f['id'] ?>, "<?= htmlspecialchars($f['feature'], ENT_QUOTES) ?>", "<?= htmlspecialchars($f['platform'], ENT_QUOTES) ?>")'>
+                        <i class="ri-file-copy-2-line"></i>
+                    </button>
+
+                    <!-- 4. Delete Button -->
+                    <button type="button" class="btn btn-sm btn-outline-danger act-btn" 
+                            title="মুছে ফেলুন"
+                            onclick="deleteFeature(<?= $f['id'] ?>)">
+                        <i class="ri-delete-bin-line"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+
+        <!-- Expandable Details Row (Shown on Click) -->
+        <tr class="feature-detail-row" id="drawer-<?= $f['id'] ?>">
+            <td colspan="7" class="p-2">
+                <div class="detail-drawer-box">
+                    <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                        <div>
+                            <strong class="text-primary fs-6"><?= htmlspecialchars($f['module']) ?> &raquo; <?= htmlspecialchars($f['feature']) ?></strong>
+                            <span class="platform-pill <?= $plat_info['badge'] ?> ms-2"><?= htmlspecialchars($f['platform']) ?></span>
+                        </div>
+                        <div class="d-flex gap-2 align-items-center">
+                            <span class="text-muted small">
+                                <i class="ri-user-line me-1"></i><?= htmlspecialchars($f['assigned_to'] ?: 'Unassigned') ?>
+                            </span>
+                            <span class="text-muted small">
+                                <i class="ri-time-line me-1"></i><?= date('d M Y, h:i A', strtotime($f['updated_at'] ?: $f['created_at'])) ?>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <!-- Issues / Bug description -->
+                        <div class="col-md-6">
+                            <div class="p-2 rounded bg-light border">
+                                <strong class="text-danger d-block mb-1">
+                                    <i class="ri-bug-line me-1"></i>শনাক্তকৃত সমস্যা বা পেন্ডিং কাজ (Issues):
+                                </strong>
+                                <p class="mb-0 text-dark small" style="white-space: pre-wrap;"><?= !empty($f['issues']) ? htmlspecialchars($f['issues']) : '<span class="text-muted fst-italic">কোনো সমস্যা উল্লেখ নেই।</span>' ?></p>
+                            </div>
+                        </div>
+
+                        <!-- Developer Response / Solution -->
+                        <div class="col-md-6">
+                            <div class="p-2 rounded bg-light border">
+                                <strong class="text-success d-block mb-1">
+                                    <i class="ri-reply-line me-1"></i>ডেভেলপার রেসপন্স বা সমাধান বিবরণ (Response):
+                                </strong>
+                                <p class="mb-0 text-dark small" style="white-space: pre-wrap;"><?= !empty($f['response']) ? htmlspecialchars($f['response']) : '<span class="text-muted fst-italic">এখনও কোনো রেসপন্স যুক্ত করা হয়নি।</span>' ?></p>
+                            </div>
+                        </div>
+
+                        <!-- Script & Quick Actions Bar inside drawer -->
+                        <div class="col-12 d-flex flex-wrap justify-content-between align-items-center gap-2 pt-1 border-top">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="small text-muted fw-semibold">স্ক্রিপ্ট / ফাইল পাথ:</span>
+                                <span class="code-script"><?= htmlspecialchars($f['script'] ?: 'None') ?></span>
+                                <?php if (!empty($f['script'])): ?>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary py-0" onclick="copyToClipboard('<?= htmlspecialchars($f['script'], ENT_QUOTES) ?>')">
+                                        <i class="ri-file-copy-line me-1"></i>কপি
+                                    </button>
+                                <?php endif; ?>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-xs btn-success" data-record="<?= $feature_json ?>" onclick='openResponseModalFromBtn(this)'>
+                                    <i class="ri-chat-check-line me-1"></i> রেসপন্স লিখুন
+                                </button>
+                                <button type="button" class="btn btn-xs btn-primary" data-record="<?= $feature_json ?>" onclick='openEditModalFromBtn(this)'>
+                                    <i class="ri-pencil-line me-1"></i> এডিট
+                                </button>
+                                <button type="button" class="btn btn-xs btn-info text-white" onclick='openDuplicateModal(<?= $f['id'] ?>, "<?= htmlspecialchars($f['feature'], ENT_QUOTES) ?>", "<?= htmlspecialchars($f['platform'], ENT_QUOTES) ?>")'>
+                                    <i class="ri-file-copy-line me-1"></i> ডুপ্লিকেট
+                                </button>
+                                <button type="button" class="btn btn-xs btn-danger" onclick="deleteFeature(<?= $f['id'] ?>)">
+                                    <i class="ri-delete-bin-line me-1"></i> মুছুন
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    <?php endforeach;
+}
 
 // -------------------------------------------------------------
 // 1. AJAX Backend Handlers (Executed before headers if POST/AJAX)
 // -------------------------------------------------------------
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+if (($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) || (isset($_GET['ajax']) && $_GET['ajax'] == 1)) {
     // Include core DB if not already initialized
     if (!isset($conn)) {
         require_once 'core/init.php';
     }
 
     header('Content-Type: application/json; charset=utf-8');
-    $action = $_POST['action'] ?? '';
+    $action = $_POST['action'] ?? $_GET['action'] ?? '';
     $user_name = $_SESSION['user'] ?? $_SESSION['user_name'] ?? 'Admin';
 
     // Auto-create table if missing
@@ -47,6 +289,101 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
               KEY `idx_priority` (`priority`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         ");
+    }
+
+    // 1.0 AJAX FETCH FILTERED DATA WITHOUT PAGE RELOAD
+    if ($action === 'fetch_features' || (isset($_GET['ajax']) && $_GET['ajax'] == 1)) {
+        $f_platform = $_POST['platform'] ?? $_GET['platform'] ?? 'all';
+        $f_module   = $_POST['module'] ?? $_GET['module'] ?? 'all';
+        $f_feature  = $_POST['feature'] ?? $_GET['feature'] ?? 'all';
+        $f_status   = $_POST['status'] ?? $_GET['status'] ?? 'all';
+        $f_priority = $_POST['priority'] ?? $_GET['priority'] ?? 'all';
+        $f_search   = trim($_POST['search'] ?? $_GET['search'] ?? '');
+
+        $where_clauses = [];
+        if ($f_platform !== 'all' && !empty($f_platform)) {
+            $clean = $conn->real_escape_string($f_platform);
+            $where_clauses[] = "platform = '$clean'";
+        }
+        if ($f_module !== 'all' && !empty($f_module)) {
+            $clean = $conn->real_escape_string($f_module);
+            $where_clauses[] = "module = '$clean'";
+        }
+        if ($f_feature !== 'all' && !empty($f_feature)) {
+            $clean = $conn->real_escape_string($f_feature);
+            $where_clauses[] = "feature = '$clean'";
+        }
+        if ($f_status !== 'all' && !empty($f_status)) {
+            $clean = $conn->real_escape_string($f_status);
+            $where_clauses[] = "status = '$clean'";
+        }
+        if ($f_priority !== 'all' && !empty($f_priority)) {
+            $clean = $conn->real_escape_string($f_priority);
+            $where_clauses[] = "priority = '$clean'";
+        }
+        if (!empty($f_search)) {
+            $clean = $conn->real_escape_string($f_search);
+            $where_clauses[] = "(feature LIKE '%$clean%' OR module LIKE '%$clean%' OR topic LIKE '%$clean%' OR script LIKE '%$clean%' OR issues LIKE '%$clean%' OR response LIKE '%$clean%')";
+        }
+
+        $where_sql = count($where_clauses) > 0 ? "WHERE " . implode(" AND ", $where_clauses) : "";
+
+        // Fetch features
+        $q = "SELECT * FROM eimbox_features $where_sql ORDER BY FIELD(priority, 'Critical', 'High', 'Medium', 'Low'), FIELD(status, 'Open', 'Pending', 'Ongoing', 'Testing', 'On Hold', 'Completed', 'Closed'), module ASC, feature ASC";
+        $res = $conn->query($q);
+        $fetched_features = [];
+        if ($res) {
+            while ($row = $res->fetch_assoc()) {
+                $fetched_features[] = $row;
+            }
+        }
+
+        // Fetch dynamic distinct features list for dropdown based on module
+        $feat_list = [];
+        $feat_sql = "SELECT DISTINCT feature FROM eimbox_features";
+        if ($f_module !== 'all' && !empty($f_module)) {
+            $clean_m = $conn->real_escape_string($f_module);
+            $feat_sql .= " WHERE module = '$clean_m'";
+        }
+        $feat_sql .= " ORDER BY feature ASC";
+        $feat_res = $conn->query($feat_sql);
+        if ($feat_res) {
+            while ($ft = $feat_res->fetch_assoc()) {
+                if (!empty($ft['feature'])) $feat_list[] = $ft['feature'];
+            }
+        }
+
+        // Render HTML for table
+        ob_start();
+        render_features_table_body($fetched_features, $platforms, $status_meta, $priority_meta);
+        $html_output = ob_get_clean();
+
+        // Statistics
+        $stats_q = $conn->query("SELECT 
+            COUNT(*) as total,
+            SUM(CASE WHEN status = 'Completed' THEN 1 ELSE 0 END) as completed,
+            SUM(CASE WHEN status = 'Testing' THEN 1 ELSE 0 END) as testing,
+            SUM(CASE WHEN status = 'Ongoing' THEN 1 ELSE 0 END) as ongoing,
+            SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END) as pending,
+            SUM(CASE WHEN status = 'Open' THEN 1 ELSE 0 END) as open,
+            SUM(CASE WHEN priority = 'Critical' AND status NOT IN ('Completed', 'Closed') THEN 1 ELSE 0 END) as critical_issues,
+            SUM(CASE WHEN platform = 'Dashboard' THEN 1 ELSE 0 END) as p_dashboard,
+            SUM(CASE WHEN platform = 'Console' THEN 1 ELSE 0 END) as p_console,
+            SUM(CASE WHEN platform = 'Android Lite' THEN 1 ELSE 0 END) as p_android_lite,
+            SUM(CASE WHEN platform = 'Android Premium' THEN 1 ELSE 0 END) as p_android_premium,
+            SUM(CASE WHEN platform = 'Desktop' THEN 1 ELSE 0 END) as p_desktop
+            FROM eimbox_features");
+        $stats_data = $stats_q ? $stats_q->fetch_assoc() : [];
+
+        echo json_encode([
+            'status' => 'success',
+            'count' => count($fetched_features),
+            'html' => $html_output,
+            'features_list' => $feat_list,
+            'selected_feature' => $f_feature,
+            'stats' => $stats_data
+        ]);
+        exit;
     }
 
     // 1.1 ADD NEW FEATURE
@@ -123,7 +460,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             exit;
         }
 
-        // Auto calculate progress if status is Completed
         $progress_sql = "";
         if ($status === 'Completed') {
             $progress_sql = ", progress_percent = 100";
@@ -230,7 +566,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 ['Exam & Result', 'Mark Entry & Tabulation', 'Dashboard', 'mark-entry.php', 'Grade Sheet & GPA Calculator', 'Merge marks formula needs support for 4th subject optional exemptions.', 'Updated core calculation engine in result-processor.php.', 'Ongoing', 'High', 70, 'Dev Team'],
                 ['Analytics', 'Subject-wise Performance Report', 'Dashboard', 'analytics/get_detailed_subject_report.php', 'Comparative Section Analytics', 'Filter by shift and section needs instant AJAX refresh.', 'Added AJAX fetch listener and cached queries.', 'Completed', 'Medium', 100, 'Reaz'],
                 ['Analytics', 'Executive Summary Dashboard', 'Android Lite', 'lib/screens/principal_summary.dart', 'Principal KPI Cards', 'Needs push notifications for daily attendance & fee alerts.', 'FCM setup pending backend trigger cron.', 'Pending', 'Medium', 40, 'Dev Team'],
-                ['Communication', 'SMS & Push Notification Engine', 'Console', 'sms-gateway.php', 'Bulk Masking SMS Delivery', 'Failed SMS queue needs auto-retry mechanism with exponential backoff.', 'Cron job added to re-attempt failed SMS twice.', 'Completed', 'High', 100, 'Reaz']
+                ['Communication', 'SMS & Push Notification Engine', 'Console', 'sms-gateway.php', 'Bulk Masking SMS Delivery', 'Failed SMS queue needs auto-retry mechanism with exponential backoff.', 'Cron job added to re-attempt failed SMS twice.', 'Completed', 'High', 100, 'Reaz'],
+                ['Routine & Schedule', 'Class Routine Builder', 'Dashboard', 'class-routine.php', 'Teacher Conflict Detection', 'Drag & drop slot swapping sometimes allows double booking.', 'Under development with client-side slot matrix validator.', 'Ongoing', 'High', 55, 'Dev Team']
             ];
 
             $stmt = $conn->prepare("INSERT INTO eimbox_features (module, feature, platform, script, topic, issues, response, status, priority, progress_percent, assigned_to, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'System')");
@@ -261,7 +598,6 @@ $table_check = $conn->query("SHOW TABLES LIKE 'eimbox_features'");
 if ($table_check && $table_check->num_rows > 0) {
     $table_exists = true;
 } else {
-    // Auto create table
     $conn->query("
         CREATE TABLE IF NOT EXISTS `eimbox_features` (
           `id` INT(11) NOT NULL AUTO_INCREMENT,
@@ -289,14 +625,15 @@ if ($table_check && $table_check->num_rows > 0) {
     $table_exists = true;
 }
 
-// Get filter values from GET parameters
+// Get filter values from GET parameters (initial load)
 $filter_platform = $_GET['platform'] ?? 'all';
 $filter_module   = $_GET['module'] ?? 'all';
+$filter_feature  = $_GET['feature'] ?? 'all';
 $filter_status   = $_GET['status'] ?? 'all';
 $filter_priority = $_GET['priority'] ?? 'all';
 $filter_search   = trim($_GET['search'] ?? '');
 
-// Build Query
+// Build Initial Query
 $where_clauses = [];
 if ($filter_platform !== 'all' && !empty($filter_platform)) {
     $clean_platform = $conn->real_escape_string($filter_platform);
@@ -305,6 +642,10 @@ if ($filter_platform !== 'all' && !empty($filter_platform)) {
 if ($filter_module !== 'all' && !empty($filter_module)) {
     $clean_module = $conn->real_escape_string($filter_module);
     $where_clauses[] = "module = '$clean_module'";
+}
+if ($filter_feature !== 'all' && !empty($filter_feature)) {
+    $clean_feature = $conn->real_escape_string($filter_feature);
+    $where_clauses[] = "feature = '$clean_feature'";
 }
 if ($filter_status !== 'all' && !empty($filter_status)) {
     $clean_status = $conn->real_escape_string($filter_status);
@@ -321,7 +662,7 @@ if (!empty($filter_search)) {
 
 $where_sql = count($where_clauses) > 0 ? "WHERE " . implode(" AND ", $where_clauses) : "";
 
-// Fetch Filtered Features
+// Fetch Initial Filtered Features
 $features_query = "SELECT * FROM eimbox_features $where_sql ORDER BY FIELD(priority, 'Critical', 'High', 'Medium', 'Low'), FIELD(status, 'Open', 'Pending', 'Ongoing', 'Testing', 'On Hold', 'Completed', 'Closed'), module ASC, feature ASC";
 $features_res = $conn->query($features_query);
 $features = [];
@@ -339,7 +680,6 @@ $stats_query = "SELECT
     SUM(CASE WHEN status = 'Ongoing' THEN 1 ELSE 0 END) as ongoing,
     SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END) as pending,
     SUM(CASE WHEN status = 'Open' THEN 1 ELSE 0 END) as open,
-    SUM(CASE WHEN status = 'On Hold' THEN 1 ELSE 0 END) as on_hold,
     SUM(CASE WHEN priority = 'Critical' AND status NOT IN ('Completed', 'Closed') THEN 1 ELSE 0 END) as critical_issues,
     SUM(CASE WHEN platform = 'Dashboard' THEN 1 ELSE 0 END) as p_dashboard,
     SUM(CASE WHEN platform = 'Console' THEN 1 ELSE 0 END) as p_console,
@@ -349,7 +689,7 @@ $stats_query = "SELECT
     FROM eimbox_features";
 $stats_res = $conn->query($stats_query);
 $stats = $stats_res ? $stats_res->fetch_assoc() : [
-    'total' => 0, 'completed' => 0, 'testing' => 0, 'ongoing' => 0, 'pending' => 0, 'open' => 0, 'on_hold' => 0,
+    'total' => 0, 'completed' => 0, 'testing' => 0, 'ongoing' => 0, 'pending' => 0, 'open' => 0,
     'critical_issues' => 0, 'p_dashboard' => 0, 'p_console' => 0, 'p_android_lite' => 0, 'p_android_premium' => 0, 'p_desktop' => 0
 ];
 
@@ -362,64 +702,125 @@ if ($mod_res) {
     }
 }
 
-// Available Platforms
-$platforms = [
-    'Dashboard' => ['icon' => 'ri-dashboard-line', 'badge' => 'bg-label-primary', 'color' => '#696cff'],
-    'Console' => ['icon' => 'ri-terminal-box-line', 'badge' => 'bg-label-info', 'color' => '#03c3ec'],
-    'Android Lite' => ['icon' => 'ri-android-line', 'badge' => 'bg-label-success', 'color' => '#71dd37'],
-    'Android Premium' => ['icon' => 'ri-smartphone-line', 'badge' => 'bg-label-warning', 'color' => '#ffab00'],
-    'Desktop' => ['icon' => 'ri-computer-line', 'badge' => 'bg-label-secondary', 'color' => '#8592a3']
-];
-
-// Status Colors & Badges
-$status_meta = [
-    'Open' => ['badge' => 'bg-danger text-white', 'icon' => 'ri-error-warning-line', 'color' => '#ff3e1d'],
-    'Pending' => ['badge' => 'bg-warning text-dark', 'icon' => 'ri-time-line', 'color' => '#ffab00'],
-    'Ongoing' => ['badge' => 'bg-info text-white', 'icon' => 'ri-loader-4-line', 'color' => '#03c3ec'],
-    'Testing' => ['badge' => 'bg-primary text-white', 'icon' => 'ri-test-tube-line', 'color' => '#696cff'],
-    'Completed' => ['badge' => 'bg-success text-white', 'icon' => 'ri-checkbox-circle-line', 'color' => '#71dd37'],
-    'Closed' => ['badge' => 'bg-secondary text-white', 'icon' => 'ri-close-circle-line', 'color' => '#8592a3'],
-    'On Hold' => ['badge' => 'bg-dark text-white', 'icon' => 'ri-pause-circle-line', 'color' => '#233446']
-];
-
-// Priority Colors
-$priority_meta = [
-    'Critical' => ['badge' => 'badge bg-danger', 'icon' => 'ri-alarm-warning-fill'],
-    'High' => ['badge' => 'badge bg-warning text-dark', 'icon' => 'ri-arrow-up-circle-fill'],
-    'Medium' => ['badge' => 'badge bg-info', 'icon' => 'ri-subtract-fill'],
-    'Low' => ['badge' => 'badge bg-label-secondary', 'icon' => 'ri-arrow-down-circle-line']
-];
+// Fetch Distinct Features for Dropdown
+$features_list = [];
+$feat_sql = "SELECT DISTINCT feature FROM eimbox_features";
+if ($filter_module !== 'all' && !empty($filter_module)) {
+    $clean_mod = $conn->real_escape_string($filter_module);
+    $feat_sql .= " WHERE module = '$clean_mod'";
+}
+$feat_sql .= " ORDER BY feature ASC";
+$feat_res = $conn->query($feat_sql);
+if ($feat_res) {
+    while ($ft = $feat_res->fetch_assoc()) {
+        if (!empty($ft['feature'])) $features_list[] = $ft['feature'];
+    }
+}
 
 $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['total']) * 100, 1) : 0;
 ?>
 
-<!-- Custom CSS for Modern Material Aesthetic -->
+<!-- Optimized CSS: Fits 100% on Screen & Direct Action Controls -->
 <style>
-    .feature-card {
-        border-radius: 12px;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    .feature-tracker-container {
+        width: 100%;
+        max-width: 100%;
     }
-    .feature-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    .feature-table-wrapper {
+        width: 100%;
+        position: relative;
+        overflow-x: auto;
     }
+    .feature-table {
+        width: 100% !important;
+        table-layout: fixed;
+        border-collapse: collapse;
+    }
+    .feature-table th, .feature-table td {
+        vertical-align: middle;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        white-space: normal !important;
+        padding: 0.65rem 0.5rem;
+    }
+
+    /* Column Width Optimization */
+    .col-id { width: 45px; text-align: center; }
+    .col-module { width: 14%; }
+    .col-feature { width: 28%; }
+    .col-status { width: 14%; }
+    .col-priority { width: 10%; }
+    .col-issues { width: 18%; }
+    .col-actions { width: 16%; text-align: center; }
+
+    /* Interactive Row Hover & Click */
+    .feature-main-row {
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+    }
+    .feature-main-row:hover {
+        background-color: rgba(105, 108, 255, 0.05) !important;
+    }
+
+    /* Expandable Detail Drawer */
+    .feature-detail-row {
+        background-color: #f8f9fa;
+        display: none;
+    }
+    .feature-detail-row.show {
+        display: table-row;
+    }
+    .detail-drawer-box {
+        background: #ffffff;
+        border: 1px solid #e7e7e8;
+        border-left: 4px solid #696cff;
+        border-radius: 8px;
+        padding: 14px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+
+    /* Direct Action Button Styles */
+    .action-btn-group {
+        display: inline-flex;
+        gap: 4px;
+        align-items: center;
+        justify-content: center;
+    }
+    .act-btn {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        font-size: 1rem;
+        transition: all 0.2s;
+    }
+    .act-btn:hover {
+        transform: scale(1.1);
+    }
+
     .platform-pill {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        padding: 4px 10px;
-        border-radius: 20px;
+        gap: 4px;
+        padding: 2px 8px;
+        border-radius: 12px;
         font-weight: 500;
-        font-size: 0.8rem;
+        font-size: 0.75rem;
     }
     .code-script {
-        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-        font-size: 0.75rem;
-        background: #f4f5f7;
-        padding: 2px 6px;
+        font-family: 'SFMono-Regular', Consolas, Menlo, monospace;
+        font-size: 0.72rem;
+        background: #f1f2f4;
+        padding: 2px 5px;
         border-radius: 4px;
-        color: #e83e8c;
-        border: 1px solid #e1e4e8;
+        color: #d63384;
+        border: 1px solid #e2e4e8;
+        max-width: 100%;
+        display: inline-block;
+        word-break: break-all;
     }
     .status-select-badge {
         cursor: pointer;
@@ -427,81 +828,85 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
         outline: none;
         font-weight: 600;
         font-size: 0.75rem;
-        padding: 4px 8px;
-        border-radius: 20px;
-        transition: all 0.2s;
+        padding: 3px 6px;
+        border-radius: 14px;
+        width: 100%;
+        text-align: center;
     }
     .status-select-badge:focus {
-        box-shadow: 0 0 0 3px rgba(105, 108, 255, 0.25);
-    }
-    .text-truncate-2 {
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-    .filter-bar {
-        background: #ffffff;
-        border-radius: 12px;
-        box-shadow: 0 2px 12px rgba(67, 89, 113, 0.06);
-    }
-    .table-hover tbody tr:hover {
-        background-color: rgba(105, 108, 255, 0.02) !important;
-    }
-    .modal-content {
-        border-radius: 16px;
+        box-shadow: 0 0 0 2px rgba(105, 108, 255, 0.3);
     }
     .progress-compact {
-        height: 6px;
-        border-radius: 10px;
+        height: 5px;
+        border-radius: 6px;
+    }
+    .expand-icon {
+        transition: transform 0.2s ease;
+        display: inline-block;
+    }
+    .expand-icon.rotated {
+        transform: rotate(90deg);
+    }
+
+    /* Loading Overlay */
+    .table-loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.7);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        border-radius: 8px;
+    }
+    .table-loading-overlay.active {
+        display: flex;
     }
 </style>
 
-<div class="container-xxl flex-grow-1 container-p-y">
+<div class="container-xxl flex-grow-1 container-p-y feature-tracker-container">
 
     <!-- Page Header & Action Buttons -->
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 gap-2">
         <div>
             <h4 class="fw-bold mb-1 d-flex align-items-center gap-2">
                 <i class="ri-dashboard-2-line text-primary fs-3"></i>
                 EIMBox Feature & Platform Status Matrix
             </h4>
-            <p class="text-muted mb-0">
-                Dashboard, Console, Android Lite, Android Premium ও Desktop প্ল্যাটফর্মের সমস্ত ফিচারের সামগ্রিক ট্র্যাকিং ও অবস্থা।
+            <p class="text-muted mb-0 small">
+                Dashboard, Console, Android Lite, Android Premium ও Desktop প্ল্যাটফর্মের লাইভ ট্র্যাকিং।
             </p>
         </div>
         <div class="d-flex gap-2 flex-wrap">
             <?php if ($stats['total'] == 0): ?>
-                <button type="button" class="btn btn-outline-warning" id="btnSeedDemo">
+                <button type="button" class="btn btn-sm btn-outline-warning" id="btnSeedDemo">
                     <i class="ri-magic-line me-1"></i> ডেমো ডাটা লোড করুন
                 </button>
             <?php endif; ?>
-            <button type="button" class="btn btn-outline-secondary" onclick="window.print()">
-                <i class="ri-printer-line me-1"></i> প্রিন্ট রিপোর্ট
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.print()">
+                <i class="ri-printer-line me-1"></i> প্রিন্ট
             </button>
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFeatureModal">
-                <i class="ri-add-circle-line me-1"></i> নতুন ফিচার যোগ করুন
+            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addFeatureModal">
+                <i class="ri-add-circle-line me-1"></i> নতুন ফিচার যোগ
             </button>
         </div>
     </div>
 
     <!-- KPI Summary Overview Cards -->
-    <div class="row g-3 mb-4">
+    <div class="row g-2 mb-3">
         <!-- Total Features -->
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="card h-100 feature-card shadow-sm border-0 border-start border-4 border-primary">
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-start">
+            <div class="card h-100 shadow-sm border-0 border-start border-3 border-primary">
+                <div class="card-body p-2 px-3">
+                    <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <span class="text-muted text-uppercase fw-semibold" style="font-size: 0.7rem;">মোট ফিচার</span>
-                            <h3 class="fw-bold my-1 text-primary"><?= number_format($stats['total']) ?></h3>
+                            <span class="text-muted text-uppercase fw-semibold" style="font-size: 0.68rem;">মোট ফিচার</span>
+                            <h4 class="fw-bold my-0 text-primary" id="kpi_total"><?= number_format($stats['total']) ?></h4>
                         </div>
-                        <div class="avatar avatar-sm flex-shrink-0">
-                            <span class="avatar-initial rounded bg-label-primary"><i class="ri-apps-2-line"></i></span>
-                        </div>
-                    </div>
-                    <div class="mt-2 text-muted small">
-                        <span class="text-success fw-bold"><?= $completion_rate ?>%</span> সম্পন্ন
+                        <span class="badge bg-label-primary rounded-pill small" id="kpi_completion_rate"><?= $completion_rate ?>%</span>
                     </div>
                 </div>
             </div>
@@ -509,19 +914,14 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
 
         <!-- Completed Status -->
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="card h-100 feature-card shadow-sm border-0 border-start border-4 border-success">
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-start">
+            <div class="card h-100 shadow-sm border-0 border-start border-3 border-success">
+                <div class="card-body p-2 px-3">
+                    <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <span class="text-muted text-uppercase fw-semibold" style="font-size: 0.7rem;">Completed</span>
-                            <h3 class="fw-bold my-1 text-success"><?= number_format($stats['completed']) ?></h3>
+                            <span class="text-muted text-uppercase fw-semibold" style="font-size: 0.68rem;">Completed</span>
+                            <h4 class="fw-bold my-0 text-success" id="kpi_completed"><?= number_format($stats['completed']) ?></h4>
                         </div>
-                        <div class="avatar avatar-sm flex-shrink-0">
-                            <span class="avatar-initial rounded bg-label-success"><i class="ri-checkbox-circle-line"></i></span>
-                        </div>
-                    </div>
-                    <div class="mt-2 text-muted small">
-                        রেডি ফর প্রোডাকশন
+                        <i class="ri-checkbox-circle-line text-success fs-4"></i>
                     </div>
                 </div>
             </div>
@@ -529,19 +929,14 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
 
         <!-- In Testing -->
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="card h-100 feature-card shadow-sm border-0 border-start border-4 border-info">
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-start">
+            <div class="card h-100 shadow-sm border-0 border-start border-3 border-info">
+                <div class="card-body p-2 px-3">
+                    <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <span class="text-muted text-uppercase fw-semibold" style="font-size: 0.7rem;">Testing</span>
-                            <h3 class="fw-bold my-1 text-info"><?= number_format($stats['testing']) ?></h3>
+                            <span class="text-muted text-uppercase fw-semibold" style="font-size: 0.68rem;">Testing</span>
+                            <h4 class="fw-bold my-0 text-info" id="kpi_testing"><?= number_format($stats['testing']) ?></h4>
                         </div>
-                        <div class="avatar avatar-sm flex-shrink-0">
-                            <span class="avatar-initial rounded bg-label-info"><i class="ri-test-tube-line"></i></span>
-                        </div>
-                    </div>
-                    <div class="mt-2 text-muted small">
-                        QA & ভেরিফিকেশন রানিং
+                        <i class="ri-test-tube-line text-info fs-4"></i>
                     </div>
                 </div>
             </div>
@@ -549,19 +944,14 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
 
         <!-- In Ongoing / Development -->
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="card h-100 feature-card shadow-sm border-0 border-start border-4 border-primary">
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-start">
+            <div class="card h-100 shadow-sm border-0 border-start border-3 border-primary">
+                <div class="card-body p-2 px-3">
+                    <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <span class="text-muted text-uppercase fw-semibold" style="font-size: 0.7rem;">Ongoing</span>
-                            <h3 class="fw-bold my-1 text-primary"><?= number_format($stats['ongoing']) ?></h3>
+                            <span class="text-muted text-uppercase fw-semibold" style="font-size: 0.68rem;">Ongoing</span>
+                            <h4 class="fw-bold my-0 text-primary" id="kpi_ongoing"><?= number_format($stats['ongoing']) ?></h4>
                         </div>
-                        <div class="avatar avatar-sm flex-shrink-0">
-                            <span class="avatar-initial rounded bg-label-primary"><i class="ri-loader-4-line"></i></span>
-                        </div>
-                    </div>
-                    <div class="mt-2 text-muted small">
-                        সক্রিয় ডেভেলপমেন্ট চলছে
+                        <i class="ri-loader-4-line text-primary fs-4"></i>
                     </div>
                 </div>
             </div>
@@ -569,19 +959,14 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
 
         <!-- Pending / Open -->
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="card h-100 feature-card shadow-sm border-0 border-start border-4 border-warning">
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-start">
+            <div class="card h-100 shadow-sm border-0 border-start border-3 border-warning">
+                <div class="card-body p-2 px-3">
+                    <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <span class="text-muted text-uppercase fw-semibold" style="font-size: 0.7rem;">Pending / Open</span>
-                            <h3 class="fw-bold my-1 text-warning"><?= number_format($stats['open'] + $stats['pending']) ?></h3>
+                            <span class="text-muted text-uppercase fw-semibold" style="font-size: 0.68rem;">Pending/Open</span>
+                            <h4 class="fw-bold my-0 text-warning" id="kpi_pending"><?= number_format($stats['open'] + $stats['pending']) ?></h4>
                         </div>
-                        <div class="avatar avatar-sm flex-shrink-0">
-                            <span class="avatar-initial rounded bg-label-warning"><i class="ri-time-line"></i></span>
-                        </div>
-                    </div>
-                    <div class="mt-2 text-muted small">
-                        পরিকল্পিত / কিউতে আছে
+                        <i class="ri-time-line text-warning fs-4"></i>
                     </div>
                 </div>
             </div>
@@ -589,75 +974,60 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
 
         <!-- Critical Issues / Bugs -->
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="card h-100 feature-card shadow-sm border-0 border-start border-4 border-danger">
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-start">
+            <div class="card h-100 shadow-sm border-0 border-start border-3 border-danger">
+                <div class="card-body p-2 px-3">
+                    <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <span class="text-muted text-uppercase fw-semibold" style="font-size: 0.7rem;">Critical Issues</span>
-                            <h3 class="fw-bold my-1 text-danger"><?= number_format($stats['critical_issues']) ?></h3>
+                            <span class="text-muted text-uppercase fw-semibold" style="font-size: 0.68rem;">Critical Issues</span>
+                            <h4 class="fw-bold my-0 text-danger" id="kpi_critical"><?= number_format($stats['critical_issues']) ?></h4>
                         </div>
-                        <div class="avatar avatar-sm flex-shrink-0">
-                            <span class="avatar-initial rounded bg-label-danger"><i class="ri-bug-line"></i></span>
-                        </div>
-                    </div>
-                    <div class="mt-2 text-muted small">
-                        উচ্চ অগ্রাধিকারযুক্ত সমস্যা
+                        <i class="ri-alarm-warning-line text-danger fs-4"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Platform Breakdown Quick Bar -->
-    <div class="card mb-4 border-0 shadow-sm">
+    <!-- Platform Quick Switcher Bar -->
+    <div class="card mb-3 border-0 shadow-sm">
+        <div class="card-body p-2 px-3">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <div class="d-flex align-items-center gap-1">
+                    <span class="fw-bold text-dark small"><i class="ri-stack-line text-primary me-1"></i>প্ল্যাটফর্ম:</span>
+                </div>
+                <div class="d-flex flex-wrap gap-1" id="platformQuickBadges">
+                    <button type="button" class="btn btn-xs platform-quick-btn <?= $filter_platform === 'all' ? 'btn-primary' : 'btn-outline-secondary' ?>" onclick="setPlatformFilter('all')">
+                        All (<span id="p_count_all"><?= $stats['total'] ?></span>)
+                    </button>
+                    <button type="button" class="btn btn-xs platform-quick-btn <?= $filter_platform === 'Dashboard' ? 'btn-primary' : 'btn-outline-primary' ?>" onclick="setPlatformFilter('Dashboard')">
+                        <i class="ri-dashboard-line me-1"></i>Dashboard (<span id="p_count_dashboard"><?= $stats['p_dashboard'] ?></span>)
+                    </button>
+                    <button type="button" class="btn btn-xs platform-quick-btn <?= $filter_platform === 'Console' ? 'btn-info text-white' : 'btn-outline-info' ?>" onclick="setPlatformFilter('Console')">
+                        <i class="ri-terminal-box-line me-1"></i>Console (<span id="p_count_console"><?= $stats['p_console'] ?></span>)
+                    </button>
+                    <button type="button" class="btn btn-xs platform-quick-btn <?= $filter_platform === 'Android Lite' ? 'btn-success' : 'btn-outline-success' ?>" onclick="setPlatformFilter('Android Lite')">
+                        <i class="ri-android-line me-1"></i>Android Lite (<span id="p_count_android_lite"><?= $stats['p_android_lite'] ?></span>)
+                    </button>
+                    <button type="button" class="btn btn-xs platform-quick-btn <?= $filter_platform === 'Android Premium' ? 'btn-warning text-dark' : 'btn-outline-warning' ?>" onclick="setPlatformFilter('Android Premium')">
+                        <i class="ri-smartphone-line me-1"></i>Android Premium (<span id="p_count_android_premium"><?= $stats['p_android_premium'] ?></span>)
+                    </button>
+                    <button type="button" class="btn btn-xs platform-quick-btn <?= $filter_platform === 'Desktop' ? 'btn-secondary text-white' : 'btn-outline-secondary' ?>" onclick="setPlatformFilter('Desktop')">
+                        <i class="ri-computer-line me-1"></i>Desktop (<span id="p_count_desktop"><?= $stats['p_desktop'] ?></span>)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Multi-Parameter AJAX Filter Form (No Page Reloads) -->
+    <div class="card mb-3 border-0 shadow-sm">
         <div class="card-body p-3">
-            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-                <div class="d-flex align-items-center gap-2">
-                    <span class="fw-bold text-dark"><i class="ri-stack-line text-primary me-1"></i>প্ল্যাটফর্ম ডিস্ট্রিবিউশন:</span>
-                </div>
-                <div class="d-flex flex-wrap gap-2">
-                    <a href="?platform=all" class="badge <?= $filter_platform === 'all' ? 'bg-primary text-white' : 'bg-label-secondary' ?> text-decoration-none py-2 px-3">
-                        <i class="ri-apps-line me-1"></i> সমস্ত প্ল্যাটফর্ম (<?= $stats['total'] ?>)
-                    </a>
-                    <a href="?platform=Dashboard" class="badge <?= $filter_platform === 'Dashboard' ? 'bg-primary text-white' : 'bg-label-primary' ?> text-decoration-none py-2 px-3">
-                        <i class="ri-dashboard-line me-1"></i> Dashboard (<?= $stats['p_dashboard'] ?>)
-                    </a>
-                    <a href="?platform=Console" class="badge <?= $filter_platform === 'Console' ? 'bg-info text-white' : 'bg-label-info' ?> text-decoration-none py-2 px-3">
-                        <i class="ri-terminal-box-line me-1"></i> Console (<?= $stats['p_console'] ?>)
-                    </a>
-                    <a href="?platform=Android+Lite" class="badge <?= $filter_platform === 'Android Lite' ? 'bg-success text-white' : 'bg-label-success' ?> text-decoration-none py-2 px-3">
-                        <i class="ri-android-line me-1"></i> Android Lite (<?= $stats['p_android_lite'] ?>)
-                    </a>
-                    <a href="?platform=Android+Premium" class="badge <?= $filter_platform === 'Android Premium' ? 'bg-warning text-dark' : 'bg-label-warning' ?> text-decoration-none py-2 px-3">
-                        <i class="ri-smartphone-line me-1"></i> Android Premium (<?= $stats['p_android_premium'] ?>)
-                    </a>
-                    <a href="?platform=Desktop" class="badge <?= $filter_platform === 'Desktop' ? 'bg-secondary text-white' : 'bg-label-secondary' ?> text-decoration-none py-2 px-3">
-                        <i class="ri-computer-line me-1"></i> Desktop (<?= $stats['p_desktop'] ?>)
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Multi-Parameter Filter & Search Box -->
-    <div class="card filter-bar mb-4 border-0">
-        <div class="card-header bg-transparent pb-1 pt-3 d-flex justify-content-between align-items-center">
-            <h6 class="mb-0 fw-bold d-flex align-items-center gap-2">
-                <i class="ri-filter-3-line text-primary"></i> প্যারামিটার ফিল্টার ও সার্চ অপশন
-            </h6>
-            <?php if ($filter_platform !== 'all' || $filter_module !== 'all' || $filter_status !== 'all' || $filter_priority !== 'all' || !empty($filter_search)): ?>
-                <a href="feature-tracker.php" class="btn btn-sm btn-outline-danger">
-                    <i class="ri-refresh-line me-1"></i> ফিল্টার রিসেট করুন
-                </a>
-            <?php endif; ?>
-        </div>
-        <div class="card-body pt-2">
-            <form method="GET" action="feature-tracker.php" id="filterForm">
-                <div class="row g-2">
+            <form id="ajaxFilterForm" onsubmit="event.preventDefault(); fetchFeaturesAjax();">
+                <div class="row g-2 align-items-end">
                     <!-- Platform Filter -->
-                    <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+                    <div class="col-6 col-sm-4 col-md-2">
                         <label class="form-label small fw-semibold text-muted mb-1">প্ল্যাটফর্ম (Platform)</label>
-                        <select name="platform" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <select name="platform" id="filter_platform" class="form-select form-select-sm" onchange="fetchFeaturesAjax()">
                             <option value="all" <?= $filter_platform === 'all' ? 'selected' : '' ?>>-- All Platforms --</option>
                             <option value="Dashboard" <?= $filter_platform === 'Dashboard' ? 'selected' : '' ?>>Dashboard</option>
                             <option value="Console" <?= $filter_platform === 'Console' ? 'selected' : '' ?>>Console</option>
@@ -670,9 +1040,9 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
                     </div>
 
                     <!-- Module Filter -->
-                    <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+                    <div class="col-6 col-sm-4 col-md-2">
                         <label class="form-label small fw-semibold text-muted mb-1">মডিউল (Module)</label>
-                        <select name="module" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <select name="module" id="filter_module" class="form-select form-select-sm" onchange="fetchFeaturesAjax(true)">
                             <option value="all" <?= $filter_module === 'all' ? 'selected' : '' ?>>-- All Modules --</option>
                             <?php foreach ($modules_list as $mod): ?>
                                 <option value="<?= htmlspecialchars($mod) ?>" <?= $filter_module === $mod ? 'selected' : '' ?>>
@@ -682,10 +1052,23 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
                         </select>
                     </div>
 
+                    <!-- Feature Filter -->
+                    <div class="col-6 col-sm-4 col-md-2">
+                        <label class="form-label small fw-semibold text-muted mb-1">ফিচার (Feature)</label>
+                        <select name="feature" id="filter_feature" class="form-select form-select-sm" onchange="fetchFeaturesAjax()">
+                            <option value="all" <?= $filter_feature === 'all' ? 'selected' : '' ?>>-- All Features --</option>
+                            <?php foreach ($features_list as $feat): ?>
+                                <option value="<?= htmlspecialchars($feat) ?>" <?= $filter_feature === $feat ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($feat) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
                     <!-- Status Filter -->
-                    <div class="col-12 col-sm-6 col-md-3 col-lg-2">
+                    <div class="col-6 col-sm-4 col-md-2">
                         <label class="form-label small fw-semibold text-muted mb-1">স্ট্যাটাস (Status)</label>
-                        <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <select name="status" id="filter_status" class="form-select form-select-sm" onchange="fetchFeaturesAjax()">
                             <option value="all" <?= $filter_status === 'all' ? 'selected' : '' ?>>-- All Status --</option>
                             <option value="Open" <?= $filter_status === 'Open' ? 'selected' : '' ?>>🔴 Open</option>
                             <option value="Pending" <?= $filter_status === 'Pending' ? 'selected' : '' ?>>🟡 Pending</option>
@@ -698,10 +1081,10 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
                     </div>
 
                     <!-- Priority Filter -->
-                    <div class="col-12 col-sm-6 col-md-3 col-lg-2">
-                        <label class="form-label small fw-semibold text-muted mb-1">অগ্রাধিকার (Priority)</label>
-                        <select name="priority" class="form-select form-select-sm" onchange="this.form.submit()">
-                            <option value="all" <?= $filter_priority === 'all' ? 'selected' : '' ?>>-- All Priorities --</option>
+                    <div class="col-6 col-sm-4 col-md-1">
+                        <label class="form-label small fw-semibold text-muted mb-1">অগ্রাধিকার</label>
+                        <select name="priority" id="filter_priority" class="form-select form-select-sm" onchange="fetchFeaturesAjax()">
+                            <option value="all" <?= $filter_priority === 'all' ? 'selected' : '' ?>>All</option>
                             <option value="Critical" <?= $filter_priority === 'Critical' ? 'selected' : '' ?>>🔥 Critical</option>
                             <option value="High" <?= $filter_priority === 'High' ? 'selected' : '' ?>>⚡ High</option>
                             <option value="Medium" <?= $filter_priority === 'Medium' ? 'selected' : '' ?>>🔹 Medium</option>
@@ -709,13 +1092,16 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
                         </select>
                     </div>
 
-                    <!-- Keyword Search -->
-                    <div class="col-12 col-md-12 col-lg-4">
-                        <label class="form-label small fw-semibold text-muted mb-1">কীওয়ার্ড সার্চ (Search)</label>
+                    <!-- Live Keyword Search & Reset Button -->
+                    <div class="col-12 col-md-3">
+                        <label class="form-label small fw-semibold text-muted mb-1">লাইভ সার্চ</label>
                         <div class="input-group input-group-sm">
-                            <input type="text" name="search" class="form-control" placeholder="ফিচার, স্ক্রিপ্ট, ইস্যু বা রেসপন্স খুঁজুন..." value="<?= htmlspecialchars($filter_search) ?>">
-                            <button class="btn btn-primary" type="submit">
-                                <i class="ri-search-line me-1"></i> খুঁজুন
+                            <input type="text" name="search" id="filter_search" class="form-control" placeholder="কীওয়ার্ড লিখলেই ফিল্টার হবে..." value="<?= htmlspecialchars($filter_search) ?>" oninput="onSearchInputDebounce()">
+                            <button class="btn btn-primary" type="button" onclick="fetchFeaturesAjax()" title="খুঁজুন">
+                                <i class="ri-search-line"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-danger" onclick="resetFiltersAjax()" title="সব ফিল্টার রিসেট">
+                                <i class="ri-refresh-line"></i>
                             </button>
                         </div>
                     </div>
@@ -725,160 +1111,44 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
     </div>
 
     <!-- Main Feature Table Card -->
-    <div class="card border-0 shadow-sm">
-        <div class="card-header bg-transparent d-flex justify-content-between align-items-center py-3">
-            <h5 class="mb-0 fw-bold d-flex align-items-center gap-2">
-                <i class="ri-list-check-2 text-primary"></i> ফিচার ও স্ট্যাটাস তালিকা
-                <span class="badge bg-label-primary rounded-pill"><?= count($features) ?> টি রেকর্ড</span>
-            </h5>
-            <div class="d-flex gap-2">
-                <button type="button" class="btn btn-sm btn-outline-primary" id="btnExportCsv">
-                    <i class="ri-file-excel-2-line me-1"></i> CSV এক্সপোর্ট
+    <div class="card border-0 shadow-sm position-relative">
+        <!-- Table Loading Overlay Spinner -->
+        <div class="table-loading-overlay" id="tableLoadingOverlay">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">লোড হচ্ছে...</span>
+            </div>
+        </div>
+
+        <div class="card-header bg-transparent d-flex justify-content-between align-items-center py-2 px-3 border-bottom">
+            <h6 class="mb-0 fw-bold d-flex align-items-center gap-2">
+                <i class="ri-list-check-2 text-primary"></i> ফিচার লিস্ট
+                <span class="badge bg-label-primary rounded-pill" id="badgeRecordCount"><?= count($features) ?> টি</span>
+            </h6>
+            <div class="d-flex gap-1 align-items-center">
+                <span class="text-muted small me-2 d-none d-sm-inline">
+                    <i class="ri-information-line me-1"></i>রো-তে ক্লিক করলে বিস্তারিত ড্রয়ার খুলবে
+                </span>
+                <button type="button" class="btn btn-xs btn-outline-primary" id="btnExportCsv">
+                    <i class="ri-file-excel-2-line me-1"></i> CSV
                 </button>
             </div>
         </div>
 
-        <div class="table-responsive text-nowrap">
-            <table class="table table-hover align-middle mb-0" id="featuresTable">
+        <div class="feature-table-wrapper">
+            <table class="table table-hover align-middle mb-0 feature-table" id="featuresTable">
                 <thead class="table-light">
                     <tr>
-                        <th style="width: 50px;">#ID</th>
-                        <th>মডিউল ও বিষয়</th>
-                        <th>ফিচার নাম ও স্ক্রিপ্ট</th>
-                        <th>প্ল্যাটফর্ম</th>
-                        <th style="width: 140px;">স্ট্যাটাস</th>
-                        <th>অগ্রাধিকার</th>
-                        <th style="width: 120px;">অগ্রগতি (%)</th>
-                        <th style="min-width: 250px;">ইস্যু ও রেসপন্স সামারি</th>
-                        <th class="text-center" style="width: 100px;">অ্যাকশন</th>
+                        <th class="col-id">#</th>
+                        <th class="col-module">মডিউল / প্ল্যাটফর্ম</th>
+                        <th class="col-feature">ফিচার ও স্ক্রিপ্ট</th>
+                        <th class="col-status">স্ট্যাটাস</th>
+                        <th class="col-priority">অগ্রাধিকার</th>
+                        <th class="col-issues">ইস্যু / রেসপন্স</th>
+                        <th class="col-actions">অ্যাকশন</th>
                     </tr>
                 </thead>
-                <tbody class="table-border-bottom-0">
-                    <?php if (empty($features)): ?>
-                        <tr>
-                            <td colspan="9" class="text-center py-5 text-muted">
-                                <i class="ri-inbox-line fs-1 d-block mb-2 text-secondary"></i>
-                                <span>কোনো ফিচার রেকর্ড পাওয়া যায়নি! ফিল্টার পরিবর্তন করুন অথবা নতুন ফিচার যোগ করুন।</span>
-                            </td>
-                        </tr>
-                    <?php else: ?>
-                        <?php foreach ($features as $f): 
-                            $plat_info = $platforms[$f['platform']] ?? ['icon' => 'ri-device-line', 'badge' => 'bg-label-secondary', 'color' => '#8592a3'];
-                            $stat_info = $status_meta[$f['status']] ?? ['badge' => 'bg-secondary', 'icon' => 'ri-information-line', 'color' => '#8592a3'];
-                            $prio_info = $priority_meta[$f['priority']] ?? ['badge' => 'badge bg-secondary', 'icon' => 'ri-subtract-line'];
-                        ?>
-                            <tr id="row-<?= $f['id'] ?>">
-                                <!-- ID -->
-                                <td>
-                                    <span class="fw-bold text-muted small">#<?= $f['id'] ?></span>
-                                </td>
-
-                                <!-- Module & Topic -->
-                                <td>
-                                    <div class="fw-bold text-dark"><?= htmlspecialchars($f['module']) ?></div>
-                                    <?php if (!empty($f['topic'])): ?>
-                                        <small class="text-muted d-block"><i class="ri-hashtag me-1"></i><?= htmlspecialchars($f['topic']) ?></small>
-                                    <?php endif; ?>
-                                </td>
-
-                                <!-- Feature & Script -->
-                                <td>
-                                    <div class="fw-semibold text-primary"><?= htmlspecialchars($f['feature']) ?></div>
-                                    <?php if (!empty($f['script'])): ?>
-                                        <span class="code-script mt-1 d-inline-block" title="<?= htmlspecialchars($f['script']) ?>">
-                                            <i class="ri-file-code-line me-1"></i><?= htmlspecialchars($f['script']) ?>
-                                        </span>
-                                    <?php endif; ?>
-                                </td>
-
-                                <!-- Platform Badge -->
-                                <td>
-                                    <span class="platform-pill <?= $plat_info['badge'] ?>">
-                                        <i class="<?= $plat_info['icon'] ?>"></i>
-                                        <?= htmlspecialchars($f['platform']) ?>
-                                    </span>
-                                </td>
-
-                                <!-- Inline Status Switcher -->
-                                <td>
-                                    <select class="form-select form-select-sm status-select-badge <?= $stat_info['badge'] ?>" 
-                                            onchange="quickChangeStatus(<?= $f['id'] ?>, this.value)"
-                                            title="স্ট্যাটাস দ্রুত পরিবর্তন করুন">
-                                        <?php foreach ($status_meta as $st_key => $st_val): ?>
-                                            <option value="<?= $st_key ?>" <?= $f['status'] === $st_key ? 'selected' : '' ?> class="bg-white text-dark">
-                                                <?= $st_key ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </td>
-
-                                <!-- Priority -->
-                                <td>
-                                    <span class="<?= $prio_info['badge'] ?>">
-                                        <i class="<?= $prio_info['icon'] ?> me-1"></i><?= htmlspecialchars($f['priority']) ?>
-                                    </span>
-                                </td>
-
-                                <!-- Progress Bar -->
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="progress progress-compact flex-grow-1 bg-light">
-                                            <div class="progress-bar <?= $f['progress_percent'] == 100 ? 'bg-success' : ($f['progress_percent'] > 50 ? 'bg-primary' : 'bg-warning') ?>" 
-                                                 role="progressbar" 
-                                                 style="width: <?= intval($f['progress_percent']) ?>%">
-                                            </div>
-                                        </div>
-                                        <span class="small fw-semibold text-muted"><?= intval($f['progress_percent']) ?>%</span>
-                                    </div>
-                                </td>
-
-                                <!-- Issues & Response Summary -->
-                                <td>
-                                    <div style="max-width: 320px; white-space: normal;">
-                                        <?php if (!empty($f['issues'])): ?>
-                                            <div class="small mb-1 text-truncate-2" title="<?= htmlspecialchars($f['issues']) ?>">
-                                                <strong class="text-danger"><i class="ri-bug-line me-1"></i>ইস্যু:</strong> 
-                                                <?= htmlspecialchars($f['issues']) ?>
-                                            </div>
-                                        <?php endif; ?>
-                                        
-                                        <?php if (!empty($f['response'])): ?>
-                                            <div class="small text-muted text-truncate-2" title="<?= htmlspecialchars($f['response']) ?>">
-                                                <strong class="text-success"><i class="ri-reply-line me-1"></i>রেসপন্স:</strong> 
-                                                <?= htmlspecialchars($f['response']) ?>
-                                            </div>
-                                        <?php elseif (empty($f['issues'])): ?>
-                                            <span class="text-muted small fst-italic">কোনো ইস্যু নথিভুক্ত নেই</span>
-                                        <?php endif; ?>
-                                    </div>
-                                </td>
-
-                                <!-- Actions -->
-                                <td class="text-center">
-                                    <div class="dropdown">
-                                        <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
-                                            <i class="ri-more-2-fill fs-5"></i>
-                                        </button>
-                                        <div class="dropdown-menu dropdown-menu-end shadow">
-                                            <a class="dropdown-item" href="javascript:void(0);" onclick='openResponseModal(<?= json_encode($f) ?>)'>
-                                                <i class="ri-chat-check-line text-success me-2"></i> রেসপন্স ও ইস্যু আপডেট
-                                            </a>
-                                            <a class="dropdown-item" href="javascript:void(0);" onclick='openEditModal(<?= json_encode($f) ?>)'>
-                                                <i class="ri-pencil-line text-primary me-2"></i> বিস্তারিত এডিট
-                                            </a>
-                                            <a class="dropdown-item" href="javascript:void(0);" onclick='openDuplicateModal(<?= $f['id'] ?>, "<?= htmlspecialchars($f['feature']) ?>", "<?= htmlspecialchars($f['platform']) ?>")'>
-                                                <i class="ri-file-copy-2-line text-info me-2"></i> অন্য প্ল্যাটফর্মে ডুপ্লিকেট
-                                            </a>
-                                            <div class="dropdown-divider"></div>
-                                            <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="deleteFeature(<?= $f['id'] ?>)">
-                                                <i class="ri-delete-bin-line me-2"></i> মুছে ফেলুন
-                                            </a>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
+                <tbody id="featuresTableBody">
+                    <?php render_features_table_body($features, $platforms, $status_meta, $priority_meta); ?>
                 </tbody>
             </table>
         </div>
@@ -890,7 +1160,7 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
 <!-- ============================================================= -->
 <div class="modal fade" id="addFeatureModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
+        <div class="modal-content shadow-lg border-0">
             <div class="modal-header bg-light">
                 <h5 class="modal-title fw-bold">
                     <i class="ri-add-circle-line text-primary me-1"></i> নতুন ফিচার ট্র্যাকিং এন্ট্রি যোগ করুন
@@ -901,7 +1171,6 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
                 <input type="hidden" name="action" value="add_feature">
                 <div class="modal-body">
                     <div class="row g-3">
-                        <!-- Module -->
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">মডিউল (Module) <span class="text-danger">*</span></label>
                             <input type="text" name="module" class="form-control" list="moduleSuggestions" placeholder="যেমন: Attendance, Accounts, Exam" required>
@@ -921,13 +1190,11 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
                             </datalist>
                         </div>
 
-                        <!-- Feature Name -->
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">ফিচার নাম (Feature) <span class="text-danger">*</span></label>
                             <input type="text" name="feature" class="form-control" placeholder="যেমন: Student Attendance via QR Code" required>
                         </div>
 
-                        <!-- Platform -->
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">প্ল্যাটফর্ম (Platform) <span class="text-danger">*</span></label>
                             <select name="platform" class="form-select" required>
@@ -941,19 +1208,16 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
                             </select>
                         </div>
 
-                        <!-- Topic / Sub-feature -->
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">টপিক / সাব-টপিক (Topic)</label>
                             <input type="text" name="topic" class="form-control" placeholder="যেমন: Camera QR Scanning & Sync">
                         </div>
 
-                        <!-- Script / Route / File Path -->
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">স্ক্রিপ্ট / ফাইল পাথ (Script)</label>
                             <input type="text" name="script" class="form-control font-monospace" placeholder="যেমন: attendance-register.php">
                         </div>
 
-                        <!-- Initial Status -->
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">প্রাথমিক স্ট্যাটাস (Status)</label>
                             <select name="status" class="form-select">
@@ -966,7 +1230,6 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
                             </select>
                         </div>
 
-                        <!-- Priority -->
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">অগ্রাধিকার (Priority)</label>
                             <select name="priority" class="form-select">
@@ -977,25 +1240,21 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
                             </select>
                         </div>
 
-                        <!-- Progress (%) -->
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">অগ্রগতি শতাংশ (Progress %)</label>
                             <input type="number" name="progress_percent" class="form-control" min="0" max="100" value="0">
                         </div>
 
-                        <!-- Assigned To -->
                         <div class="col-md-12">
                             <label class="form-label fw-semibold">অ্যাসাইন করা হয়েছে (Assigned Developer / QA)</label>
                             <input type="text" name="assigned_to" class="form-control" placeholder="যেমন: Reaz, Dev Team">
                         </div>
 
-                        <!-- Issues / Bug Details -->
                         <div class="col-md-12">
                             <label class="form-label fw-semibold text-danger"><i class="ri-bug-line me-1"></i>শনাক্তকৃত সমস্যা বা পেন্ডিং কাজ (Issues / Bugs)</label>
                             <textarea name="issues" class="form-control" rows="3" placeholder="ফিচারটিতে কী সমস্যা রয়েছে বা কী কী কাজ বাকি আছে বিস্তারিত লিখুন..."></textarea>
                         </div>
 
-                        <!-- Initial Response / Notes -->
                         <div class="col-md-12">
                             <label class="form-label fw-semibold text-success"><i class="ri-reply-line me-1"></i>ডেভেলপার রেসপন্স বা সমাধান নোট (Response)</label>
                             <textarea name="response" class="form-control" rows="2" placeholder="সমাধানের জন্য কী পদক্ষেপ নেওয়া হয়েছে বা মতামত..."></textarea>
@@ -1018,7 +1277,7 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
 <!-- ============================================================= -->
 <div class="modal fade" id="editFeatureModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
+        <div class="modal-content shadow-lg border-0">
             <div class="modal-header bg-light">
                 <h5 class="modal-title fw-bold">
                     <i class="ri-edit-2-line text-primary me-1"></i> ফিচার বিস্তারিত এডিট করুন
@@ -1123,7 +1382,7 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
 <!-- ============================================================= -->
 <div class="modal fade" id="responseModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
+        <div class="modal-content shadow-lg border-0">
             <div class="modal-header bg-light">
                 <h5 class="modal-title fw-bold">
                     <i class="ri-chat-check-line text-success me-1"></i> রেসপন্স ও ইস্যু আপডেট
@@ -1136,7 +1395,7 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="fw-semibold text-dark d-block mb-1" id="resp_feature_title">ফিচার নাম</label>
-                        <span class="badge bg-label-primary" id="resp_platform_badge">Platform</span>
+                        <span class="platform-pill bg-label-primary" id="resp_platform_badge">Platform</span>
                     </div>
 
                     <div class="mb-3">
@@ -1183,7 +1442,7 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
 <!-- ============================================================= -->
 <div class="modal fade" id="duplicateModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
+        <div class="modal-content shadow-lg border-0">
             <div class="modal-header bg-light">
                 <h5 class="modal-title fw-bold">
                     <i class="ri-file-copy-2-line text-info me-1"></i> অন্য প্ল্যাটফর্মে ডুপ্লিকেট করুন
@@ -1224,10 +1483,157 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
 </div>
 
 <!-- ============================================================= -->
-<!-- CLIENT-SIDE JS HANDLERS (AJAX & FILTER INTERACTION) -->
+<!-- CLIENT-SIDE JS HANDLERS (SEAMLESS AJAX WITHOUT PAGE RELOADS) -->
 <!-- ============================================================= -->
 <script>
-    // Quick Inline Status Change
+    let searchDebounceTimer = null;
+
+    // Real-time Debounce for Keyword Search
+    function onSearchInputDebounce() {
+        clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(() => {
+            fetchFeaturesAjax();
+        }, 250);
+    }
+
+    // Quick Platform Switcher
+    function setPlatformFilter(platform) {
+        document.getElementById('filter_platform').value = platform;
+        
+        // Update active badge styles
+        const buttons = document.querySelectorAll('.platform-quick-btn');
+        buttons.forEach(btn => {
+            btn.classList.remove('btn-primary', 'btn-info', 'btn-success', 'btn-warning', 'btn-secondary');
+            if (!btn.classList.contains('btn-outline-secondary') && 
+                !btn.classList.contains('btn-outline-primary') && 
+                !btn.classList.contains('btn-outline-info') && 
+                !btn.classList.contains('btn-outline-success') && 
+                !btn.classList.contains('btn-outline-warning')) {
+                btn.className = 'btn btn-xs platform-quick-btn btn-outline-secondary';
+            }
+        });
+
+        fetchFeaturesAjax();
+    }
+
+    // Reset All Filters via AJAX
+    function resetFiltersAjax() {
+        document.getElementById('filter_platform').value = 'all';
+        document.getElementById('filter_module').value = 'all';
+        document.getElementById('filter_feature').value = 'all';
+        document.getElementById('filter_status').value = 'all';
+        document.getElementById('filter_priority').value = 'all';
+        document.getElementById('filter_search').value = '';
+
+        fetchFeaturesAjax(true);
+    }
+
+    // Main AJAX Fetch Function
+    function fetchFeaturesAjax(moduleChanged = false) {
+        const overlay = document.getElementById('tableLoadingOverlay');
+        if (overlay) overlay.classList.add('active');
+
+        const platform = document.getElementById('filter_platform').value;
+        const module   = document.getElementById('filter_module').value;
+        const feature  = document.getElementById('filter_feature').value;
+        const status   = document.getElementById('filter_status').value;
+        const priority = document.getElementById('filter_priority').value;
+        const search   = document.getElementById('filter_search').value.trim();
+
+        const formData = new FormData();
+        formData.append('action', 'fetch_features');
+        formData.append('platform', platform);
+        formData.append('module', module);
+        formData.append('feature', moduleChanged ? 'all' : feature);
+        formData.append('status', status);
+        formData.append('priority', priority);
+        formData.append('search', search);
+
+        // Update URL state without page reload
+        const params = new URLSearchParams();
+        if (platform !== 'all') params.set('platform', platform);
+        if (module !== 'all') params.set('module', module);
+        if (!moduleChanged && feature !== 'all') params.set('feature', feature);
+        if (status !== 'all') params.set('status', status);
+        if (priority !== 'all') params.set('priority', priority);
+        if (search !== '') params.set('search', search);
+        
+        const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+        window.history.replaceState({}, '', newUrl);
+
+        fetch('feature-tracker.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Update Table HTML
+                document.getElementById('featuresTableBody').innerHTML = data.html;
+                document.getElementById('badgeRecordCount').textContent = data.count + ' টি';
+
+                // Update Feature Dropdown if module changed or on reload
+                if (data.features_list) {
+                    const featSelect = document.getElementById('filter_feature');
+                    const curVal = moduleChanged ? 'all' : (data.selected_feature || 'all');
+                    let optionsHtml = '<option value="all">-- All Features --</option>';
+                    data.features_list.forEach(f => {
+                        const sel = (f === curVal) ? 'selected' : '';
+                        optionsHtml += `<option value="${escapeHtml(f)}" ${sel}>${escapeHtml(f)}</option>`;
+                    });
+                    featSelect.innerHTML = optionsHtml;
+                }
+
+                // Update KPI Cards if stats returned
+                if (data.stats) {
+                    const total = parseInt(data.stats.total || 0);
+                    const comp = parseInt(data.stats.completed || 0);
+                    const rate = total > 0 ? Math.round((comp / total) * 100) : 0;
+                    
+                    if (document.getElementById('kpi_total')) document.getElementById('kpi_total').textContent = total;
+                    if (document.getElementById('kpi_completed')) document.getElementById('kpi_completed').textContent = comp;
+                    if (document.getElementById('kpi_testing')) document.getElementById('kpi_testing').textContent = data.stats.testing || 0;
+                    if (document.getElementById('kpi_ongoing')) document.getElementById('kpi_ongoing').textContent = data.stats.ongoing || 0;
+                    if (document.getElementById('kpi_pending')) document.getElementById('kpi_pending').textContent = (parseInt(data.stats.open || 0) + parseInt(data.stats.pending || 0));
+                    if (document.getElementById('kpi_critical')) document.getElementById('kpi_critical').textContent = data.stats.critical_issues || 0;
+                    if (document.getElementById('kpi_completion_rate')) document.getElementById('kpi_completion_rate').textContent = rate + '%';
+
+                    if (document.getElementById('p_count_all')) document.getElementById('p_count_all').textContent = total;
+                    if (document.getElementById('p_count_dashboard')) document.getElementById('p_count_dashboard').textContent = data.stats.p_dashboard || 0;
+                    if (document.getElementById('p_count_console')) document.getElementById('p_count_console').textContent = data.stats.p_console || 0;
+                    if (document.getElementById('p_count_android_lite')) document.getElementById('p_count_android_lite').textContent = data.stats.p_android_lite || 0;
+                    if (document.getElementById('p_count_android_premium')) document.getElementById('p_count_android_premium').textContent = data.stats.p_android_premium || 0;
+                    if (document.getElementById('p_count_desktop')) document.getElementById('p_count_desktop').textContent = data.stats.p_desktop || 0;
+                }
+            } else {
+                showToast('ত্রুটি!', data.message, 'error');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            showToast('ত্রুটি!', 'সার্ভার থেকে ডাটা আনতে সমস্যা হয়েছে।', 'error');
+        })
+        .finally(() => {
+            if (overlay) overlay.classList.remove('active');
+        });
+    }
+
+    // Toggle Details Drawer for a Row
+    function toggleDrawer(id, event) {
+        const drawer = document.getElementById('drawer-' + id);
+        const icon = document.getElementById('icon-' + id);
+        if (!drawer) return;
+
+        if (drawer.classList.contains('show')) {
+            drawer.classList.remove('show');
+            if (icon) icon.classList.remove('rotated');
+        } else {
+            drawer.classList.add('show');
+            if (icon) icon.classList.add('rotated');
+        }
+    }
+
+    // Quick Inline Status Change (Without Page Reload)
     function quickChangeStatus(id, newStatus) {
         const formData = new FormData();
         formData.append('action', 'quick_update_status');
@@ -1242,7 +1648,7 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
         .then(data => {
             if (data.status === 'success') {
                 showToast('সফল!', data.message, 'success');
-                setTimeout(() => window.location.reload(), 600);
+                fetchFeaturesAjax(); // Silent refresh via AJAX
             } else {
                 showToast('ত্রুটি!', data.message, 'error');
             }
@@ -1251,6 +1657,17 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
             console.error(err);
             showToast('ত্রুটি!', 'সার্ভারে অনুরোধ পাঠানো সম্ভব হয়নি।', 'error');
         });
+    }
+
+    // Helper functions for reading record data from buttons
+    function openEditModalFromBtn(btn) {
+        const data = JSON.parse(btn.getAttribute('data-record'));
+        openEditModal(data);
+    }
+
+    function openResponseModalFromBtn(btn) {
+        const data = JSON.parse(btn.getAttribute('data-record'));
+        openResponseModal(data);
     }
 
     // Open Edit Modal with Pre-populated Data
@@ -1291,7 +1708,6 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
         document.getElementById('dup_id').value = id;
         document.getElementById('dup_feature_name').value = featureName + ' (' + currentPlatform + ')';
         
-        // Auto select a different platform default
         const platforms = ['Dashboard', 'Console', 'Android Lite', 'Android Premium', 'Desktop'];
         const filtered = platforms.filter(p => p !== currentPlatform);
         if (filtered.length > 0) {
@@ -1302,7 +1718,7 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
         modal.show();
     }
 
-    // Delete Feature Record
+    // Delete Feature Record (Without Page Reload)
     function deleteFeature(id) {
         if (!confirm('আপনি কি নিশ্চিত যে এই ফিচার রেকর্ডটি মুছে ফেলতে চান?')) {
             return;
@@ -1320,9 +1736,7 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
         .then(data => {
             if (data.status === 'success') {
                 showToast('সফল!', data.message, 'success');
-                const row = document.getElementById('row-' + id);
-                if (row) row.remove();
-                setTimeout(() => window.location.reload(), 600);
+                fetchFeaturesAjax(); // Silent AJAX refresh
             } else {
                 showToast('ত্রুটি!', data.message, 'error');
             }
@@ -1333,9 +1747,23 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
         });
     }
 
-    // Form Submit Handlers
+    // Copy to Clipboard Helper
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('কপি হয়েছে!', text, 'info');
+        }).catch(err => {
+            console.error(err);
+        });
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
+    // Form Submit Listeners (Modal Actions -> AJAX Refresh)
     document.addEventListener('DOMContentLoaded', function() {
-        // Add Feature Form
+        // Add Feature Form Submit
         document.getElementById('addFeatureForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
@@ -1344,14 +1772,16 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
             .then(data => {
                 if (data.status === 'success') {
                     showToast('সফল!', data.message, 'success');
-                    setTimeout(() => window.location.reload(), 600);
+                    bootstrap.Modal.getInstance(document.getElementById('addFeatureModal'))?.hide();
+                    this.reset();
+                    fetchFeaturesAjax();
                 } else {
                     showToast('ত্রুটি!', data.message, 'error');
                 }
             });
         });
 
-        // Edit Feature Form
+        // Edit Feature Form Submit
         document.getElementById('editFeatureForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
@@ -1360,14 +1790,15 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
             .then(data => {
                 if (data.status === 'success') {
                     showToast('সফল!', data.message, 'success');
-                    setTimeout(() => window.location.reload(), 600);
+                    bootstrap.Modal.getInstance(document.getElementById('editFeatureModal'))?.hide();
+                    fetchFeaturesAjax();
                 } else {
                     showToast('ত্রুটি!', data.message, 'error');
                 }
             });
         });
 
-        // Quick Response Form
+        // Quick Response Form Submit
         document.getElementById('responseForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
@@ -1376,14 +1807,15 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
             .then(data => {
                 if (data.status === 'success') {
                     showToast('সফল!', data.message, 'success');
-                    setTimeout(() => window.location.reload(), 600);
+                    bootstrap.Modal.getInstance(document.getElementById('responseModal'))?.hide();
+                    fetchFeaturesAjax();
                 } else {
                     showToast('ত্রুটি!', data.message, 'error');
                 }
             });
         });
 
-        // Duplicate Form
+        // Duplicate Form Submit
         document.getElementById('duplicateForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
@@ -1392,7 +1824,8 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
             .then(data => {
                 if (data.status === 'success') {
                     showToast('সফল!', data.message, 'success');
-                    setTimeout(() => window.location.reload(), 600);
+                    bootstrap.Modal.getInstance(document.getElementById('duplicateModal'))?.hide();
+                    fetchFeaturesAjax();
                 } else {
                     showToast('ত্রুটি!', data.message, 'error');
                 }
@@ -1409,7 +1842,7 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
                 .then(res => res.json())
                 .then(data => {
                     showToast('ডেমো সেটআপ!', data.message, 'success');
-                    setTimeout(() => window.location.reload(), 700);
+                    fetchFeaturesAjax();
                 });
             });
         }
@@ -1419,17 +1852,19 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
         if (exportBtn) {
             exportBtn.addEventListener('click', function() {
                 let csv = [];
-                const rows = document.querySelectorAll('#featuresTable tr');
+                const rows = document.querySelectorAll('#featuresTable tr.feature-main-row');
                 
-                for (let i = 0; i < rows.length; i++) {
-                    let row = [], cols = rows[i].querySelectorAll('td, th');
-                    for (let j = 0; j < cols.length - 1; j++) {
-                        let data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, ' ').replace(/(\s\s+)/gm, ' ');
-                        data = data.replace(/"/g, '""');
-                        row.push('"' + data + '"');
-                    }
-                    csv.push(row.join(','));
-                }
+                csv.push('"ID","Module","Feature","Platform","Status","Priority","Progress"');
+                rows.forEach(r => {
+                    let cols = r.querySelectorAll('td');
+                    let id = cols[0].innerText.replace(/[^0-9]/g, '');
+                    let mod = cols[1].innerText.replace(/\n/g, ' ');
+                    let feat = cols[2].innerText.replace(/\n/g, ' ');
+                    let status = cols[3].querySelector('select') ? cols[3].querySelector('select').value : cols[3].innerText;
+                    let prio = cols[4].innerText.trim();
+                    let prog = cols[3].querySelector('.progress-bar') ? cols[3].querySelector('.progress-bar').style.width : '0%';
+                    csv.push(`"${id}","${mod}","${feat}","${cols[1].querySelector('.platform-pill')?.innerText || ''}","${status}","${prio}","${prog}"`);
+                });
                 
                 const csvFile = new Blob([csv.join('\n')], {type: 'text/csv;charset=utf-8;'});
                 const downloadLink = document.createElement('a');
@@ -1443,14 +1878,14 @@ $completion_rate = $stats['total'] > 0 ? round(($stats['completed'] / $stats['to
         }
     });
 
-    // Simple Toast notification helper
+    // Toast helper
     function showToast(title, message, type) {
         if (window.toastr) {
             if (type === 'success') toastr.success(message, title);
             else if (type === 'error') toastr.error(message, title);
             else toastr.info(message, title);
         } else {
-            alert(title + '\n' + message);
+            console.log(title + ': ' + message);
         }
     }
 </script>
