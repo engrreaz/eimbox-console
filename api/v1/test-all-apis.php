@@ -139,6 +139,20 @@ $testCases = [
         'query' => '',
         'expected_status' => 'success'
     ],
+    [
+        'name' => 'Student Fee Waiver & Concessions Roster',
+        'file' => 'academics/student-waivers.php',
+        'method' => 'GET',
+        'query' => 'sessionyear=all',
+        'expected_status' => 'success'
+    ],
+    [
+        'name' => 'Student Waiver Assignment Lookup',
+        'file' => 'academics/student-waivers.php',
+        'method' => 'GET',
+        'query' => 'action=lookup&stid=1031870051',
+        'expected_status' => 'success'
+    ],
 
     // 5. Facilities & Campus Services
     [
