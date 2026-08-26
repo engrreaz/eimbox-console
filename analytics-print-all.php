@@ -237,12 +237,29 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
         }
 
         .page-break {
-            page-break-before: always;
+            display: none !important;
+        }
+
+        /* Intelligent Page Breaks: Only break BEFORE subsequent visible sections */
+        .report-section-container {
+            break-before: auto;
+            page-break-before: auto;
+            break-after: auto;
+            page-break-after: auto;
+            margin-bottom: 0 !important;
+            padding-bottom: 0 !important;
+        }
+
+        .report-section-container:not(.section-hidden) ~ .report-section-container:not(.section-hidden) {
+            break-before: page !important;
+            page-break-before: always !important;
         }
 
         .card {
             border: 1px solid #e2e8f0 !important;
             box-shadow: none !important;
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
         }
 
         body * {
@@ -286,9 +303,10 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
             visibility: hidden !important;
         }
 
-        .no-page-breaks .page-break {
-            display: none !important;
+        .no-page-breaks .report-section-container:not(.section-hidden) ~ .report-section-container:not(.section-hidden) {
+            break-before: auto !important;
             page-break-before: auto !important;
+            margin-bottom: 25px !important;
         }
 
         /* Bulletproof Progress Bars in Print */
@@ -431,32 +449,26 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
             <!-- Placeholders for each report section wrapped with container -->
             <div class="report-section-container" id="container-institute-report" data-section="institute-report">
                 <div id="institute-report" class="report-section"></div>
-                <div class="page-break"></div>
             </div>
 
             <div class="report-section-container" id="container-detailed-subject-report" data-section="detailed-subject-report">
                 <div id="detailed-subject-report" class="report-section"></div>
-                <div class="page-break"></div>
             </div>
 
             <div class="report-section-container" id="container-teacher-report" data-section="teacher-report">
                 <div id="teacher-report" class="report-section"></div>
-                <div class="page-break"></div>
             </div>
 
             <div class="report-section-container" id="container-class-report" data-section="class-report">
                 <div id="class-report" class="report-section"></div>
-                <div class="page-break"></div>
             </div>
 
             <div class="report-section-container" id="container-overall-subject-report" data-section="overall-subject-report">
                 <div id="overall-subject-report" class="report-section"></div>
-                <div class="page-break"></div>
             </div>
 
             <div class="report-section-container" id="container-student-report" data-section="student-report">
                 <div id="student-report" class="report-section"></div>
-                <div class="page-break"></div>
             </div>
 
             <div class="report-section-container" id="container-at-risk-students-report" data-section="at-risk-students-report">

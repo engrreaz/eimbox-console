@@ -10,11 +10,11 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-require_once '../core/config.php';
-require_once '../core/db.php';
-require_once '../core/global_values.php';
+require_once __DIR__ . '/../core/config.php';
+require_once __DIR__ . '/../core/db.php';
+require_once __DIR__ . '/../core/global_values.php';
 
-$dataset_id = filter_input(INPUT_GET, 'dataset_id', FILTER_VALIDATE_INT);
+$dataset_id = (int)($_GET['dataset_id'] ?? 0);
 $sctype = $_SESSION['sccategory'] ?? ($sctype ?? '');
 
 if (!$dataset_id) {

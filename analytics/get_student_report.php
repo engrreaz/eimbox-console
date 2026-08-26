@@ -3,10 +3,11 @@ header('Content-Type: application/json');
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-require_once '../core/config.php';
-require_once '../core/db.php';
+require_once __DIR__ . '/../core/config.php';
+require_once __DIR__ . '/../core/db.php';
+require_once __DIR__ . '/../core/global_values.php';
 
-$dataset_id = filter_input(INPUT_GET, 'dataset_id', FILTER_VALIDATE_INT);
+$dataset_id = (int)($_GET['dataset_id'] ?? 0);
 
 if (!$dataset_id) {
     http_response_code(400);
@@ -19,14 +20,12 @@ $sql = "
         asp.*,
         COALESCE(s.stnameeng, CONCAT('Student ', asp.stid)) AS stnameeng,
         COALESCE(s.stnameben, '') AS stnameben,
-        COALESCE(s.gender, si.gender, '') AS gender,
-        COALESCE(s.guarmobile, si.guarmobile, '') AS guarmobile
+        COALESCE(s.gender, '') AS gender,
+        COALESCE(s.guarmobile, '') AS guarmobile
     FROM 
         analytics_student_performance AS asp
     LEFT JOIN 
         students AS s ON asp.stid = s.stid AND asp.sccode = s.sccode
-    LEFT JOIN 
-        sessioninfo AS si ON asp.stid = si.stid AND asp.sccode = si.sccode AND asp.sessionyear = si.sessionyear
     WHERE 
         asp.dataset_id = ?
     ORDER BY 

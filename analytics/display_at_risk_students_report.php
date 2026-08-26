@@ -9,11 +9,11 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-require_once '../core/config.php';
-require_once '../core/db.php';
-require_once '../core/global_values.php';
+require_once __DIR__ . '/../core/config.php';
+require_once __DIR__ . '/../core/db.php';
+require_once __DIR__ . '/../core/global_values.php';
 
-$dataset_id = filter_input(INPUT_GET, 'dataset_id', FILTER_VALIDATE_INT);
+$dataset_id = (int)($_GET['dataset_id'] ?? 0);
 
 if (!$dataset_id) {
     echo '<div class="alert alert-danger">Invalid Dataset ID.</div>';
@@ -26,9 +26,9 @@ try {
             ar.*, 
             COALESCE(s.stnameeng, CONCAT('Student ', ar.stid)) AS stnameeng,
             COALESCE(s.stnameben, '') AS stnameben,
-            COALESCE(s.gender, si.gender, '') AS gender,
-            COALESCE(s.guarmobile, si.guarmobile, '') AS guarmobile,
-            COALESCE(asp.rollno, si.rollno, '-') AS rollno,
+            COALESCE(s.gender, '') AS gender,
+            COALESCE(s.guarmobile, '') AS guarmobile,
+            COALESCE(asp.rollno, '-') AS rollno,
             COALESCE(asp.total_marks_obtained, 0) AS total_marks_obtained,
             COALESCE(asp.total_full_marks, 0) AS total_full_marks,
             COALESCE(asp.percentage, 0) AS percentage,
@@ -36,10 +36,8 @@ try {
             COALESCE(asp.section_rank, 0) AS section_rank
         FROM analytics_at_risk_students AS ar
         LEFT JOIN students AS s ON ar.stid = s.stid AND ar.sccode = s.sccode
-        LEFT JOIN sessioninfo AS si ON ar.stid = si.stid AND ar.sccode = si.sccode
         LEFT JOIN analytics_student_performance AS asp ON ar.dataset_id = asp.dataset_id AND ar.stid = asp.stid
         WHERE ar.dataset_id = ?
-        GROUP BY ar.id
         ORDER BY ar.risk_score DESC, ar.failed_subject_count DESC, ar.classname ASC, ar.sectionname ASC;
     ";
 

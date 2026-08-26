@@ -3,14 +3,14 @@ header('Content-Type: application/json');
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-require_once '../core/config.php';
-require_once '../core/db.php';
-require_once '../core/global_values.php';
+require_once __DIR__ . '/../core/config.php';
+require_once __DIR__ . '/../core/db.php';
+require_once __DIR__ . '/../core/global_values.php';
 
 // Increase execution time for large datasets
 set_time_limit(300);
 
-$dataset_id = filter_input(INPUT_GET, 'dataset_id', FILTER_VALIDATE_INT);
+$dataset_id = (int)($_GET['dataset_id'] ?? 0);
 $sccode = $_SESSION['sccode'] ?? null;
 $sctype = $_SESSION['sccategory'] ?? ($sctype ?? '');
 
@@ -41,10 +41,11 @@ try {
             ad.sessionyear,
             ad.slot,
             ad.created_at,
-            ad.examid_list,
+            ad.examid,
+            ad.dataset_name,
             COALESCE(sc.scname, 'Institution') AS scname,
             COALESCE(sc.sccode, ?) AS sccode,
-            COALESCE(sc.scaddress, '') AS scaddress,
+            CONCAT_WS(', ', NULLIF(sc.scadd1, ''), NULLIF(sc.scadd2, ''), NULLIF(sc.ps, ''), NULLIF(sc.dist, '')) AS scaddress,
             COALESCE(sc.headname, '') AS headname,
             COALESCE(sc.headtitle, 'Head Teacher') AS headtitle
         FROM analytics_dataset ad
@@ -59,8 +60,8 @@ try {
 
     // Fetch exam titles
     $exam_names = [];
-    if (!empty($meta_result['examid_list'])) {
-        $exam_ids_clean = implode(',', array_map('intval', explode(',', $meta_result['examid_list'])));
+    if (!empty($meta_result['examid'])) {
+        $exam_ids_clean = implode(',', array_map('intval', explode(',', $meta_result['examid'])));
         if (!empty($exam_ids_clean)) {
             $exam_q = $conn->query("SELECT examtitle FROM examlist WHERE id IN ({$exam_ids_clean})");
             if ($exam_q) {
@@ -70,7 +71,7 @@ try {
             }
         }
     }
-    $meta_result['exam_title'] = !empty($exam_names) ? implode(' + ', $exam_names) : 'Terminal Examination';
+    $meta_result['exam_title'] = !empty($exam_names) ? implode(' + ', $exam_names) : (!empty($meta_result['dataset_name']) ? $meta_result['dataset_name'] : 'Terminal Examination');
     $report_data['meta'] = $meta_result;
 
     // 1. Overall Performance Summary & Workload
