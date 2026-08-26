@@ -385,6 +385,8 @@ if ($method === 'GET') {
 
     $avgWaiverPct = ($totalBeneficiaries > 0) ? round($totalWaiverPct / $totalBeneficiaries, 1) : 0;
 
+error_log('Waived' . print_r($waivedList, true));
+
     api_response('success', 'Student fee waivers retrieved successfully.', [
         'sccode' => $sccode,
         'sessionyear' => $sessionyear,
