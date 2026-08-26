@@ -13,7 +13,7 @@ $input = get_api_input();
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $action = $_GET['action'] ?? $input['action'] ?? '';
 
-// 1. Resolve School Code
+// 1. Resolve School Code (Strict check: sccode must be > 0)
 $sccode = intval($_GET['sccode'] ?? $input['sccode'] ?? $user['sccode'] ?? 0);
 if ($sccode <= 0) {
     api_response('error', 'Valid School Code (sccode) is required.', null, 400);
@@ -36,8 +36,8 @@ if ($action === 'lookup' || $action === 'search_student') {
                        s.previll, s.prepo, s.preps, s.predist, s.pervill, s.perpo, s.perps, s.perdist,
                        s.photo, s.photo_id
                 FROM sessioninfo si
-                LEFT JOIN students s ON (s.stid = si.stid AND (s.sccode = si.sccode OR s.sccode = 0))
-                WHERE (si.sccode = ? OR si.sccode = 0) 
+                LEFT JOIN students s ON (s.stid = si.stid AND s.sccode = si.sccode)
+                WHERE si.sccode = ? 
                   AND (si.sessionyear = ? OR ? = '' OR ? = 'all')
                   AND si.stid = ?
                 LIMIT 1";
@@ -57,8 +57,8 @@ if ($action === 'lookup' || $action === 'search_student') {
                            s.previll, s.prepo, s.preps, s.predist, s.pervill, s.perpo, s.perps, s.perdist,
                            s.photo, s.photo_id
                     FROM sessioninfo si
-                    LEFT JOIN students s ON (s.stid = si.stid AND (s.sccode = si.sccode OR s.sccode = 0))
-                    WHERE (si.sccode = ? OR si.sccode = 0) AND si.stid = ?
+                    LEFT JOIN students s ON (s.stid = si.stid AND s.sccode = si.sccode)
+                    WHERE si.sccode = ? AND si.stid = ?
                     ORDER BY si.sessionyear DESC, si.id DESC
                     LIMIT 1";
             $fStmt = $conn->prepare($fallbackSql);
@@ -96,8 +96,8 @@ if ($action === 'lookup' || $action === 'search_student') {
                        si.rate, si.sector,
                        s.stnameeng, s.stnameben, s.guarmobile, s.previll, s.predist
                 FROM sessioninfo si
-                LEFT JOIN students s ON (s.stid = si.stid AND (s.sccode = si.sccode OR s.sccode = 0))
-                WHERE (si.sccode = ? OR si.sccode = 0)
+                LEFT JOIN students s ON (s.stid = si.stid AND s.sccode = si.sccode)
+                WHERE si.sccode = ?
                   AND (si.sessionyear = ? OR ? = '' OR ? = 'all')
                   AND (s.stnameeng LIKE ? OR s.stnameben LIKE ? OR CAST(si.stid AS CHAR) LIKE ? OR CAST(si.rollno AS CHAR) LIKE ?)
                 ORDER BY si.classname ASC, si.sectionname ASC, CAST(si.rollno AS UNSIGNED) ASC
@@ -130,10 +130,10 @@ if ($method === 'DELETE' || ($method === 'POST' && $action === 'revoke')) {
     }
 
     if ($id > 0) {
-        $stmt = $conn->prepare("UPDATE sessioninfo SET rate = 100, sector = '', modifieddate = NOW() WHERE id = ? AND (sccode = ? OR sccode = 0)");
+        $stmt = $conn->prepare("UPDATE sessioninfo SET rate = 100, sector = '', modifieddate = NOW() WHERE id = ? AND sccode = ?");
         $stmt->bind_param("ii", $id, $sccode);
     } else {
-        $stmt = $conn->prepare("UPDATE sessioninfo SET rate = 100, sector = '', modifieddate = NOW() WHERE stid = ? AND (sessionyear = ? OR ? = 'all') AND (sccode = ? OR sccode = 0)");
+        $stmt = $conn->prepare("UPDATE sessioninfo SET rate = 100, sector = '', modifieddate = NOW() WHERE stid = ? AND (sessionyear = ? OR ? = 'all') AND sccode = ?");
         $stmt->bind_param("sssi", $stid, $sessionyear, $sessionyear, $sccode);
     }
     
@@ -169,7 +169,7 @@ if ($method === 'POST' || $method === 'PUT') {
     }
 
     if ($id > 0) {
-        $stmt = $conn->prepare("UPDATE sessioninfo SET rate = ?, sector = ?, modifieddate = NOW() WHERE id = ? AND (sccode = ? OR sccode = 0)");
+        $stmt = $conn->prepare("UPDATE sessioninfo SET rate = ?, sector = ?, modifieddate = NOW() WHERE id = ? AND sccode = ?");
         $stmt->bind_param("dsii", $rate, $sector, $id, $sccode);
         $stmt->execute();
         $affected = $stmt->affected_rows;
@@ -182,7 +182,7 @@ if ($method === 'POST' || $method === 'PUT') {
             'sector' => $sector
         ]);
     } elseif (!empty($stid)) {
-        $stmt = $conn->prepare("UPDATE sessioninfo SET rate = ?, sector = ?, modifieddate = NOW() WHERE stid = ? AND (sessionyear = ? OR ? = 'all') AND (sccode = ? OR sccode = 0)");
+        $stmt = $conn->prepare("UPDATE sessioninfo SET rate = ?, sector = ?, modifieddate = NOW() WHERE stid = ? AND (sessionyear = ? OR ? = 'all') AND sccode = ?");
         $stmt->bind_param("dssssi", $rate, $sector, $stid, $sessionyear, $sessionyear, $sccode);
         $stmt->execute();
         $affected = $stmt->affected_rows;
@@ -215,7 +215,7 @@ if ($method === 'GET') {
 
     // 5.1 Load Distinct Filter Options (Sessions, Classes, Sectors)
     $sessionsList = [];
-    $sQ = $conn->prepare("SELECT DISTINCT sessionyear FROM sessioninfo WHERE (sccode = ? OR sccode = 0) AND sessionyear != '' ORDER BY sessionyear DESC");
+    $sQ = $conn->prepare("SELECT DISTINCT sessionyear FROM sessioninfo WHERE sccode = ? AND sessionyear != '' ORDER BY sessionyear DESC");
     $sQ->bind_param("i", $sccode);
     $sQ->execute();
     $sRes = $sQ->get_result();
@@ -231,7 +231,7 @@ if ($method === 'GET') {
     }
 
     $sectorsList = [];
-    $secQ = $conn->prepare("SELECT DISTINCT sector FROM sessioninfo WHERE (sccode = ? OR sccode = 0) AND sector IS NOT NULL AND sector != '' AND rate < 100 ORDER BY sector ASC");
+    $secQ = $conn->prepare("SELECT DISTINCT sector FROM sessioninfo WHERE sccode = ? AND sector IS NOT NULL AND sector != '' AND rate < 100 ORDER BY sector ASC");
     $secQ->bind_param("i", $sccode);
     $secQ->execute();
     $secRes = $secQ->get_result();
@@ -241,7 +241,7 @@ if ($method === 'GET') {
     $secQ->close();
 
     $classesList = [];
-    $clsQ = $conn->prepare("SELECT DISTINCT classname FROM sessioninfo WHERE (sccode = ? OR sccode = 0) AND classname IS NOT NULL AND classname != '' ORDER BY classname ASC");
+    $clsQ = $conn->prepare("SELECT DISTINCT classname FROM sessioninfo WHERE sccode = ? AND classname IS NOT NULL AND classname != '' ORDER BY classname ASC");
     $clsQ->bind_param("i", $sccode);
     $clsQ->execute();
     $clsRes = $clsQ->get_result();
@@ -257,8 +257,8 @@ if ($method === 'GET') {
                    s.previll, s.prepo, s.preps, s.predist, s.pervill, s.perpo, s.perps, s.perdist,
                    s.photo, s.photo_id
             FROM sessioninfo si
-            LEFT JOIN students s ON (s.stid = si.stid AND (s.sccode = si.sccode OR s.sccode = 0))
-            WHERE (si.sccode = ? OR si.sccode = 0) AND si.rate < 100";
+            LEFT JOIN students s ON (s.stid = si.stid AND s.sccode = si.sccode)
+            WHERE si.sccode = ? AND si.rate < 100";
     
     $params = [$sccode];
     $types = "i";
