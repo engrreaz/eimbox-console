@@ -41,6 +41,7 @@ $sql = "
     FROM stmark sm
     JOIN subsetup ss ON sm.sccode = ss.sccode AND sm.sessionyear = ss.sessionyear AND sm.classname = ss.classname AND sm.sectionname = ss.sectionname AND sm.subject = ss.subject
     WHERE sm.sccode = ? AND sm.sessionyear = ? AND sm.examid IN (" . $examid_list_str . ")
+      AND (sm.presence = 1 OR sm.markobt > 0)
 ";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("ss", $sccode, $sessionyear);

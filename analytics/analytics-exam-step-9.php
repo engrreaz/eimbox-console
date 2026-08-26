@@ -35,10 +35,10 @@ SELECT
     si.classname,
     si.sectionname,
     si.rollno,
-    SUM(sm.markobt) AS total_marks_obtained,
-    SUM(sm.fullmark) AS total_full_marks,
-    (SUM(sm.markobt) / SUM(sm.fullmark)) * 100 AS percentage,
-    COUNT(DISTINCT CASE WHEN (sm.markobt / sm.fullmark * 100) < 33 THEN sm.subject END) AS failed_subjects,
+    COALESCE(SUM(CASE WHEN (sm.presence = 1 OR sm.markobt > 0) THEN sm.markobt ELSE 0 END), 0) AS total_marks_obtained,
+    COALESCE(SUM(CASE WHEN (sm.presence = 1 OR sm.markobt > 0) THEN sm.fullmark ELSE 0 END), 0) AS total_full_marks,
+    COALESCE((SUM(CASE WHEN (sm.presence = 1 OR sm.markobt > 0) THEN sm.markobt ELSE 0 END) / NULLIF(SUM(CASE WHEN (sm.presence = 1 OR sm.markobt > 0) THEN sm.fullmark ELSE 0 END), 0)) * 100, 0) AS percentage,
+    COUNT(DISTINCT CASE WHEN (sm.presence = 1 OR sm.markobt > 0) AND (sm.markobt / NULLIF(sm.fullmark, 1) * 100) < 33 THEN sm.subject END) AS failed_subjects,
     COALESCE(ts.gpa, 0) AS gpa,
     COALESCE(ts.gla, 'F') AS grade,
     COALESCE(ts.meritnumcomb, 0) AS class_rank,
@@ -46,8 +46,8 @@ SELECT
     0 AS predicted_gpa,
     NULL AS predicted_grade,
     0 AS a_plus_probability,
-    GROUP_CONCAT(DISTINCT CASE WHEN (sm.markobt / sm.fullmark * 100) < 33 THEN sm.subject ELSE NULL END ORDER BY sm.subject SEPARATOR ', ') AS failed_subject_codes,
-    GROUP_CONCAT(DISTINCT CASE WHEN (sm.markobt / sm.fullmark * 100) < 33 THEN sub.subject ELSE NULL END ORDER BY sm.subject SEPARATOR ', ') AS failed_subject_names
+    GROUP_CONCAT(DISTINCT CASE WHEN (sm.presence = 1 OR sm.markobt > 0) AND (sm.markobt / NULLIF(sm.fullmark, 1) * 100) < 33 THEN sm.subject ELSE NULL END ORDER BY sm.subject SEPARATOR ', ') AS failed_subject_codes,
+    GROUP_CONCAT(DISTINCT CASE WHEN (sm.presence = 1 OR sm.markobt > 0) AND (sm.markobt / NULLIF(sm.fullmark, 1) * 100) < 33 THEN sub.subject ELSE NULL END ORDER BY sm.subject SEPARATOR ', ') AS failed_subject_names
 FROM stmark sm
 JOIN sessioninfo si ON sm.stid = si.stid AND sm.sccode = si.sccode AND sm.sessionyear = si.sessionyear AND sm.slot = si.slot
 LEFT JOIN subjects sub ON sm.subject = sub.subcode
@@ -69,6 +69,7 @@ WHERE sm.sccode = ?
   AND sm.examid IN (" . $examid_list_str . ")
   AND sm.slot = ?
 GROUP BY sm.sccode, sm.sessionyear, sm.stid, si.classname, si.sectionname, si.rollno
+HAVING SUM(CASE WHEN (sm.presence = 1 OR sm.markobt > 0) THEN 1 ELSE 0 END) > 0
 ON DUPLICATE KEY UPDATE
     total_marks_obtained = VALUES(total_marks_obtained),
     total_full_marks = VALUES(total_full_marks),

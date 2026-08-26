@@ -76,6 +76,7 @@ SELECT
     AVG((sm.markobt / NULLIF(sm.fullmark, 0)) * 100) -- Calculate average percentage
 FROM stmark sm
 WHERE sm.sccode = ? AND sm.sessionyear = ? AND sm.examid IN (" . $examid_list_str . ")
+  AND (sm.presence = 1 OR sm.markobt > 0)
 GROUP BY sm.sccode, sm.sessionyear, sm.classname, sm.sectionname, sm.subject;
 ";
 $stmt_avg = $conn->prepare($populate_temp_table_sql);
@@ -155,38 +156,38 @@ SELECT
     /* Female Count */
     COALESCE(tes.female_enrolled_count, 0),
 
-    /* Appeared Student Count (Students with marks) */
-    SUM(CASE WHEN sm.presence = 1 THEN 1 ELSE 0 END),
+    /* Appeared Student Count (Students with presence = 1 OR markobt > 0) */
+    SUM(CASE WHEN (sm.presence = 1 OR sm.markobt > 0) THEN 1 ELSE 0 END),
 
     /* Student Count (Total Enrolled) */
     COALESCE(tes.enrolled_count, 0),
-    COALESCE(SUM(sm.markobt),0),
-    COALESCE(SUM(sm.fullmark),0),
+    COALESCE(SUM(CASE WHEN (sm.presence = 1 OR sm.markobt > 0) THEN sm.markobt ELSE 0 END),0),
+    COALESCE(SUM(CASE WHEN (sm.presence = 1 OR sm.markobt > 0) THEN sm.fullmark ELSE 0 END),0),
 
-    COALESCE(AVG(sm.markobt),0),
+    COALESCE(AVG(CASE WHEN (sm.presence = 1 OR sm.markobt > 0) THEN sm.markobt END),0),
 
     /* Marks Percentage */
-    COALESCE(SUM(sm.markobt) / NULLIF(SUM(sm.fullmark), 0) * 100, 0),
+    COALESCE(SUM(CASE WHEN (sm.presence = 1 OR sm.markobt > 0) THEN sm.markobt ELSE 0 END) / NULLIF(SUM(CASE WHEN (sm.presence = 1 OR sm.markobt > 0) THEN sm.fullmark ELSE 0 END), 0) * 100, 0),
 
-    COALESCE(MAX((sm.markobt / NULLIF(sm.fullmark, 1)) * 100), 0),
+    COALESCE(MAX(CASE WHEN (sm.presence = 1 OR sm.markobt > 0) THEN (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 END), 0),
 
     COALESCE(
         MIN(
             CASE
-                WHEN sm.markobt > 0 THEN (sm.markobt / NULLIF(sm.fullmark, 1)) * 100
+                WHEN (sm.presence = 1 OR sm.markobt > 0) AND sm.markobt > 0 THEN (sm.markobt / NULLIF(sm.fullmark, 1)) * 100
             END
         ),
     0),
 
-    COALESCE(VAR_POP((sm.markobt / NULLIF(sm.fullmark, 1)) * 100), 0),
+    COALESCE(VAR_POP(CASE WHEN (sm.presence = 1 OR sm.markobt > 0) THEN (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 END), 0),
 
-    COALESCE(STDDEV_POP((sm.markobt / NULLIF(sm.fullmark, 1)) * 100), 0),
+    COALESCE(STDDEV_POP(CASE WHEN (sm.presence = 1 OR sm.markobt > 0) THEN (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 END), 0),
 
-    COALESCE(MAX((sm.markobt / NULLIF(sm.fullmark, 1)) * 100), 0) -
+    COALESCE(MAX(CASE WHEN (sm.presence = 1 OR sm.markobt > 0) THEN (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 END), 0) -
     COALESCE(
         MIN(
             CASE
-                WHEN sm.markobt > 0 THEN (sm.markobt / NULLIF(sm.fullmark, 1)) * 100
+                WHEN (sm.presence = 1 OR sm.markobt > 0) AND sm.markobt > 0 THEN (sm.markobt / NULLIF(sm.fullmark, 1)) * 100
             END
         ),
     0),
@@ -194,7 +195,7 @@ SELECT
     /* Pass Count */
     SUM(
         CASE
-            WHEN sm.presence = 1 AND (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 >= 33 THEN 1
+            WHEN (sm.presence = 1 OR sm.markobt > 0) AND (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 >= 33 THEN 1
             ELSE 0
         END
     ),
@@ -202,22 +203,22 @@ SELECT
     /* Fail Count */
     SUM(
         CASE
-            WHEN sm.presence = 1 AND (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 < 33 THEN 1
+            WHEN (sm.presence = 1 OR sm.markobt > 0) AND (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 < 33 THEN 1
             ELSE 0
         END
     ),
 
     /* Male Pass Count */
-    SUM(CASE WHEN sm.presence = 1 AND (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 >= 33 AND st.gender IN ('Male', 'Boy') THEN 1 ELSE 0 END),
+    SUM(CASE WHEN (sm.presence = 1 OR sm.markobt > 0) AND (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 >= 33 AND st.gender IN ('Male', 'Boy') THEN 1 ELSE 0 END),
 
     /* Female Pass Count */
-    SUM(CASE WHEN sm.presence = 1 AND (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 >= 33 AND st.gender IN ('Female', 'Girl') THEN 1 ELSE 0 END),
+    SUM(CASE WHEN (sm.presence = 1 OR sm.markobt > 0) AND (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 >= 33 AND st.gender IN ('Female', 'Girl') THEN 1 ELSE 0 END),
 
     /* Male Avg Marks */
-    COALESCE(AVG(CASE WHEN st.gender IN ('Male', 'Boy') THEN (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 END), 0),
+    COALESCE(AVG(CASE WHEN (sm.presence = 1 OR sm.markobt > 0) AND st.gender IN ('Male', 'Boy') THEN (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 END), 0),
 
     /* Female Avg Marks */
-    COALESCE(AVG(CASE WHEN st.gender IN ('Female', 'Girl') THEN (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 END), 0),
+    COALESCE(AVG(CASE WHEN (sm.presence = 1 OR sm.markobt > 0) AND st.gender IN ('Female', 'Girl') THEN (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 END), 0),
 
 
 
@@ -226,11 +227,11 @@ SELECT
         (
             SUM(
                 CASE
-                    WHEN sm.presence = 1 AND (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 >= 33 THEN 1
+                    WHEN (sm.presence = 1 OR sm.markobt > 0) AND (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 >= 33 THEN 1
                     ELSE 0
                 END
             ) * 100
-        ) / NULLIF(SUM(CASE WHEN sm.presence = 1 THEN 1 ELSE 0 END),0),
+        ) / NULLIF(SUM(CASE WHEN (sm.presence = 1 OR sm.markobt > 0) THEN 1 ELSE 0 END),0),
     2),
 
     /* Fail Rate */
@@ -239,18 +240,18 @@ SELECT
         (
             SUM(
                 CASE
-                    WHEN sm.presence = 1 AND (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 < 33 THEN 1
+                    WHEN (sm.presence = 1 OR sm.markobt > 0) AND (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 < 33 THEN 1
                     ELSE 0
                 END
             ) * 100
-        ) / NULLIF(SUM(CASE WHEN sm.presence = 1 THEN 1 ELSE 0 END),0),
+        ) / NULLIF(SUM(CASE WHEN (sm.presence = 1 OR sm.markobt > 0) THEN 1 ELSE 0 END),0),
     2),
     0),
 
     /* Excellent Count (>=70) */
     SUM(
         CASE
-            WHEN sm.presence = 1 AND (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 >= 70 THEN 1
+            WHEN (sm.presence = 1 OR sm.markobt > 0) AND (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 >= 70 THEN 1
             ELSE 0
         END
     ),
@@ -261,22 +262,22 @@ SELECT
         (
             SUM(
                 CASE
-                    WHEN sm.presence = 1 AND (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 >= 70 THEN 1
+                    WHEN (sm.presence = 1 OR sm.markobt > 0) AND (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 >= 70 THEN 1
                     ELSE 0
                 END
             ) * 100
-        ) / NULLIF(SUM(CASE WHEN sm.presence = 1 THEN 1 ELSE 0 END),0),
+        ) / NULLIF(SUM(CASE WHEN (sm.presence = 1 OR sm.markobt > 0) THEN 1 ELSE 0 END),0),
     2),
 0),
 
     /* Above Average Count */
     SUM(
-        CASE WHEN (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 > t.avg_mark_percentage_for_subject THEN 1 ELSE 0 END
+        CASE WHEN (sm.presence = 1 OR sm.markobt > 0) AND (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 > t.avg_mark_percentage_for_subject THEN 1 ELSE 0 END
     ),
 
     /* Below Average Count */
     SUM(
-        CASE WHEN (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 < t.avg_mark_percentage_for_subject THEN 1 ELSE 0 END
+        CASE WHEN (sm.presence = 1 OR sm.markobt > 0) AND (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 < t.avg_mark_percentage_for_subject THEN 1 ELSE 0 END
     )
 
 FROM subsetup ss

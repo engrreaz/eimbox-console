@@ -55,6 +55,7 @@ $sql = "
         AND sm.sessionyear = ?
         AND sm.examid IN (" . $examid_list_str . ")
         AND sm.slot = ?
+        AND (sm.presence = 1 OR sm.markobt > 0)
         -- শুধুমাত্র অকৃতকার্য বিষয়গুলো ফিল্টার করা
         AND (sm.markobt / sm.fullmark * 100) < " . PASS_MARK_PERCENTAGE . "
 ";
