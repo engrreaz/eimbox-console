@@ -216,25 +216,87 @@ if ($method === 'POST' || $method === 'PUT') {
 
 // 6. GET: Fetch Subjects Master & Class Setup
 if ($method === 'GET') {
-    $sessionyear = trim($_GET['sessionyear'] ?? $_GET['session'] ?? date('Y'));
+    $sessionyear = trim($_GET['sessionyear'] ?? $_GET['session'] ?? '');
     $classname = trim($_GET['classname'] ?? $_GET['class'] ?? '');
     $sectionname = trim($_GET['sectionname'] ?? $_GET['section'] ?? '');
+    $slot = trim($_GET['slot'] ?? '');
 
-    // Fetch Master Subjects (sccode=0 or sccode=$sccode)
+    // Fetch Slots List
+    $slotsList = [];
+    $slotStmt = $conn->prepare("SELECT id, slotname FROM slots WHERE sccode = ? OR sccode = 0 ORDER BY id ASC");
+    if ($slotStmt) {
+        $slotStmt->bind_param("i", $sccode);
+        $slotStmt->execute();
+        $slotRes = $slotStmt->get_result();
+        while ($sRow = $slotRes->fetch_assoc()) {
+            $slotsList[] = $sRow['slotname'];
+        }
+        $slotStmt->close();
+    }
+    if (empty($slotsList)) {
+        $slotsList = ['School', 'College', 'Morning', 'Day'];
+    }
+
+    // Fetch Sessions from sessionyear table with active=1 prioritization
+    $sessionsList = [];
+    $activeSession = '';
+    $sessStmt = $conn->prepare("SELECT syear, active FROM sessionyear WHERE sccode = ? OR sccode = 0 ORDER BY active DESC, syear DESC");
+    if ($sessStmt) {
+        $sessStmt->bind_param("i", $sccode);
+        $sessStmt->execute();
+        $sessRes = $sessStmt->get_result();
+        while ($sRow = $sessRes->fetch_assoc()) {
+            $yStr = strval($sRow['syear']);
+            if (!in_array($yStr, $sessionsList)) {
+                $sessionsList[] = $yStr;
+            }
+            if (intval($sRow['active']) === 1 && empty($activeSession)) {
+                $activeSession = $yStr;
+            }
+        }
+        $sessStmt->close();
+    }
+    if (empty($sessionsList)) {
+        $sessionsList = [date('Y'), strval(date('Y') - 1)];
+    }
+    if (empty($sessionyear)) {
+        $sessionyear = $activeSession ?: $sessionsList[0];
+    }
+
+    // Fetch School Category from scinfo
+    $sccategory = 'School';
+    $scStmt = $conn->prepare("SELECT sccategory FROM scinfo WHERE sccode = ? LIMIT 1");
+    if ($scStmt) {
+        $scStmt->bind_param("i", $sccode);
+        $scStmt->execute();
+        $scRes = $scStmt->get_result();
+        if ($scRow = $scRes->fetch_assoc()) {
+            $sccategory = trim($scRow['sccategory'] ?? 'School');
+        }
+        $scStmt->close();
+    }
+
+    // Fetch Master Subjects (deduplicated strictly so each subcode appears once)
     $masterSubjects = [];
-    $mStmt = $conn->prepare("SELECT id, sccode, subcode, subject, subben, subshname, fourth, sup_class 
+    $seenCodes = [];
+    $mStmt = $conn->prepare("SELECT id, sccode, sccategory, subcode, subject, subben, subshname, fourth, sup_class 
                              FROM subjects 
-                             WHERE sccode = 0 OR sccode = ? 
-                             ORDER BY subcode ASC");
+                             WHERE (sccode = 0 OR sccode = ?) 
+                               AND (sccategory = ? OR sccategory = '' OR sccategory IS NULL)
+                             ORDER BY subcode ASC, (sccode = ?) DESC");
     if ($mStmt) {
-        $mStmt->bind_param("i", $sccode);
+        $mStmt->bind_param("isi", $sccode, $sccategory, $sccode);
         $mStmt->execute();
         $mRes = $mStmt->get_result();
         while ($row = $mRes->fetch_assoc()) {
+            $code = intval($row['subcode']);
+            if (isset($seenCodes[$code])) continue;
+            $seenCodes[$code] = true;
+
             $masterSubjects[] = [
                 'id' => intval($row['id']),
                 'sccode' => intval($row['sccode']),
-                'subcode' => intval($row['subcode']),
+                'subcode' => $code,
                 'subject' => $row['subject'],
                 'subname_en' => $row['subject'],
                 'subben' => $row['subben'] ?: '',
@@ -249,7 +311,7 @@ if ($method === 'GET') {
         $mStmt->close();
     }
 
-    // Fetch Classes & Sections for this session
+    // Fetch Classes & Sections for this session from areas table
     $classes = [];
     $sectionsMap = [];
     $aStmt = $conn->prepare("SELECT areaname, subarea FROM areas WHERE sccode = ? AND sessionyear = ? GROUP BY areaname, subarea ORDER BY MIN(idno) ASC, areaname ASC, subarea ASC");
@@ -287,16 +349,22 @@ if ($method === 'GET') {
                        COALESCE(s.subshname, '') as shortname,
                        t.tname as teacher_name
                 FROM subsetup ss
-                LEFT JOIN subjects s ON (s.subcode = ss.subject AND (s.sccode = 0 OR s.sccode = ss.sccode))
+                LEFT JOIN subjects s ON (s.subcode = ss.subject AND (s.sccode = 0 OR s.sccode = ss.sccode) AND (s.sccategory = ? OR s.sccategory = '' OR s.sccategory IS NULL))
                 LEFT JOIN teacher t ON (t.sccode = ss.sccode AND (t.tid = ss.tid OR t.id = ss.tid))
                 WHERE ss.sccode = ? AND ss.sessionyear = ? AND ss.classname = ?";
         
-        $params = [$sccode, $sessionyear, $classname];
-        $types = "iss";
+        $params = [$sccategory, $sccode, $sessionyear, $classname];
+        $types = "siss";
 
         if (!empty($sectionname) && $sectionname !== 'All') {
             $sql .= " AND (ss.sectionname = ? OR ss.sectionname = 'All' OR ss.sectionname = '')";
             $params[] = $sectionname;
+            $types .= "s";
+        }
+
+        if (!empty($slot) && $slot !== 'All') {
+            $sql .= " AND (ss.slot = ? OR ss.slot = '' OR ss.slot IS NULL)";
+            $params[] = $slot;
             $types .= "s";
         }
 
@@ -360,8 +428,12 @@ if ($method === 'GET') {
     api_response('success', 'Subjects data fetched successfully.', [
         'sccode' => $sccode,
         'sessionyear' => $sessionyear,
+        'active_session' => $activeSession,
         'classname' => $classname,
         'sectionname' => $sectionname,
+        'slot' => $slot ?: ($slotsList[0] ?? 'School'),
+        'slots' => $slotsList,
+        'sessions' => $sessionsList,
         'classes' => $classes,
         'sections_map' => $sectionsMap,
         'master_subjects' => $masterSubjects,

@@ -96,16 +96,32 @@ if ($method === 'GET') {
     $category = trim($_GET['category'] ?? '');
     $scope = trim($_GET['scope'] ?? 'all'); // 'all', 'nctb', 'custom'
 
+    // Fetch School Category from scinfo if category not specified or 'all'
+    $sccategory = 'School';
+    $scStmt = $conn->prepare("SELECT sccategory FROM scinfo WHERE sccode = ? LIMIT 1");
+    if ($scStmt) {
+        $scStmt->bind_param("i", $sccode);
+        $scStmt->execute();
+        $scRes = $scStmt->get_result();
+        if ($scRow = $scRes->fetch_assoc()) {
+            $sccategory = trim($scRow['sccategory'] ?? 'School');
+        }
+        $scStmt->close();
+    }
+
+    $targetCategory = (!empty($category) && $category !== 'all') ? $category : $sccategory;
+
     $sql = "SELECT id, sccode, sccategory, subcode, subject, subben, subshname, fourth, modifieddate,
                    CASE 
                      WHEN sccode = 0 THEN 'NCTB Standard'
                      ELSE 'Custom Institutional'
                    END AS subject_type
             FROM subjects 
-            WHERE (sccode = 0 OR sccode = ?)";
+            WHERE (sccode = 0 OR sccode = ?)
+              AND (sccategory = ? OR sccategory = '' OR sccategory IS NULL)";
     
-    $params = [$sccode];
-    $types = "i";
+    $params = [$sccode, $targetCategory];
+    $types = "is";
 
     if ($scope === 'nctb') {
         $sql .= " AND sccode = 0";
@@ -115,12 +131,6 @@ if ($method === 'GET') {
         $types .= "i";
     }
 
-    if (!empty($category) && $category !== 'all') {
-        $sql .= " AND (sccategory = ? OR sccategory = '')";
-        $params[] = $category;
-        $types .= "s";
-    }
-
     if (!empty($search)) {
         $sql .= " AND (subject LIKE ? OR subben LIKE ? OR subshname LIKE ? OR CAST(subcode AS CHAR) LIKE ?)";
         $sTerm = "%$search%";
@@ -128,7 +138,9 @@ if ($method === 'GET') {
         $types .= "ssss";
     }
 
-    $sql .= " ORDER BY subcode ASC";
+    $sql .= " ORDER BY subcode ASC, (sccode = ?) DESC";
+    $params[] = $sccode;
+    $types .= "i";
 
     $stmt = $conn->prepare($sql);
     $stmt->bind_param($types, ...$params);
@@ -136,10 +148,15 @@ if ($method === 'GET') {
     $result = $stmt->get_result();
 
     $subjects = [];
+    $seenCodes = [];
     $nctbCount = 0;
     $customCount = 0;
 
     while ($row = $result->fetch_assoc()) {
+        $code = intval($row['subcode']);
+        if (isset($seenCodes[$code])) continue; // Each subject code strictly once
+        $seenCodes[$code] = true;
+
         if ($row['sccode'] == 0) {
             $nctbCount++;
         } else {
@@ -151,6 +168,7 @@ if ($method === 'GET') {
 
     api_response('success', 'Subjects catalog retrieved successfully.', [
         'sccode' => $sccode,
+        'sccategory' => $targetCategory,
         'kpis' => [
             'total_subjects' => count($subjects),
             'nctb_standards' => $nctbCount,

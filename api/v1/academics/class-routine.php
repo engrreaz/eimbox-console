@@ -289,9 +289,57 @@ if ($method === 'GET') {
     }
     $stmt->close();
 
+    // Fetch Weekends from settings table
+    $weekends = [];
+    $wStmt = $conn->prepare("SELECT settings_value FROM settings WHERE (sccode = ? OR sccode = 0) AND setting_title = 'Weekends' LIMIT 1");
+    if ($wStmt) {
+        $wStmt->bind_param("i", $sccode);
+        $wStmt->execute();
+        $wRes = $wStmt->get_result();
+        if ($wRow = $wRes->fetch_assoc()) {
+            $wVal = trim($wRow['settings_value'] ?? '');
+            if (!empty($wVal)) {
+                $rawDays = preg_split('/[\s,.]+/', $wVal);
+                foreach ($rawDays as $rd) {
+                    $rd = trim($rd);
+                    if (!empty($rd)) $weekends[] = ucfirst(strtolower($rd));
+                }
+            }
+        }
+        $wStmt->close();
+    }
+    if (empty($weekends)) {
+        $weekends = ['Friday', 'Saturday'];
+    }
+
+    // Fetch Sessions from sessionyear
+    $sessionsList = [];
+    $activeSession = '';
+    $sessStmt = $conn->prepare("SELECT syear, active FROM sessionyear WHERE sccode = ? OR sccode = 0 ORDER BY active DESC, syear DESC");
+    if ($sessStmt) {
+        $sessStmt->bind_param("i", $sccode);
+        $sessStmt->execute();
+        $sessRes = $sessStmt->get_result();
+        while ($sRow = $sessRes->fetch_assoc()) {
+            $yStr = strval($sRow['syear']);
+            if (!in_array($yStr, $sessionsList)) $sessionsList[] = $yStr;
+            if (intval($sRow['active']) === 1 && empty($activeSession)) $activeSession = $yStr;
+        }
+        $sessStmt->close();
+    }
+    if (empty($sessionsList)) {
+        $sessionsList = [date('Y'), strval(date('Y') - 1)];
+    }
+    if (empty($session)) {
+        $session = $activeSession ?: $sessionsList[0];
+    }
+
     api_response('success', 'Class routine timetable loaded successfully.', [
         'sccode' => $sccode,
         'sessionyear' => $session,
+        'active_session' => $activeSession,
+        'sessions' => $sessionsList,
+        'weekends' => $weekends,
         'classname' => $className,
         'sectionname' => $sectionName,
         'classes' => $classes,
