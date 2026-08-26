@@ -261,6 +261,7 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
         }
 
         .mode-table-only .custom-graphical-view,
+        .mode-table-only #custom-institute-view,
         .mode-table-only #custom-detailed-subject-view,
         .mode-table-only #custom-teacher-view,
         .mode-table-only #custom-class-view,
@@ -1167,6 +1168,503 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
             return html;
         }
 
+        function renderClassTable(data) {
+            if (!data || data.length === 0) {
+                return '<div class="alert alert-warning">No class performance data available.</div>';
+            }
+
+            let html = `
+            <div class="detailed-class-table-container mb-4">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm align-middle mb-0 a4-compact-table">
+                        <thead class="table-light">
+                            <tr class="text-center align-middle" style="font-size: 10px;">
+                                <th style="width: 45px;">Rank</th>
+                                <th class="text-start" style="min-width: 120px;">Class & Section</th>
+                                <th style="width: 80px;">Appeared / Enrolled</th>
+                                <th style="width: 85px;">Pass & Avg</th>
+                                <th style="width: 75px;">Exc. (70%+)</th>
+                                <th class="text-start" style="min-width: 150px;">Gender Stats (M : F)</th>
+                                <th style="width: 90px;">Index (CPI & TII)</th>
+                                <th style="width: 95px;">Difficulty (CDF) & Var</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+
+            data.forEach(cls => {
+                const rank = cls.class_rank ? `#${cls.class_rank}` : '-';
+                const classname = cls.classname || 'Class';
+                const sectionname = cls.sectionname || 'Section';
+
+                const enrolled = parseInt(cls.total_enrolled) || parseInt(cls.total_students_appeared) || 0;
+                const appeared = parseInt(cls.total_students_appeared) || 0;
+                const subjects = parseInt(cls.total_subjects) || 0;
+                const attnRate = enrolled > 0 ? ((appeared / enrolled) * 100).toFixed(1) : '0.0';
+
+                const avgMarks = parseFloat(cls.overall_marks_percentage || 0).toFixed(1);
+                const subAvg = parseFloat(cls.avg_of_subject_averages || 0).toFixed(1);
+                const passRate = parseFloat(cls.pass_rate || 0).toFixed(1);
+                const excRate = parseFloat(cls.excellent_rate || 0).toFixed(1);
+
+                const cpi = parseFloat(cls.cpi_score || 0).toFixed(1);
+                const difficulty = parseFloat(cls.difficulty_factor || 0).toFixed(2);
+                const tii = parseFloat(cls.teacher_impact_index || 1).toFixed(2);
+
+                const maleCount = parseInt(cls.male_count) || 0;
+                const femaleCount = parseInt(cls.female_count) || 0;
+                const malePassed = parseInt(cls.male_passed) || 0;
+                const femalePassed = parseInt(cls.female_passed) || 0;
+                const maleAvg = parseFloat(cls.male_avg || 0).toFixed(1);
+                const femaleAvg = parseFloat(cls.female_avg || 0).toFixed(1);
+                const totalGender = maleCount + femaleCount;
+                const genderRatioStr = totalGender > 0 ? `${maleCount}M : ${femaleCount}F` : '-';
+
+                const stdDev = parseFloat(cls.avg_std_dev || 0).toFixed(2);
+                const variance = parseFloat(cls.avg_variance || 0).toFixed(1);
+                const aboveAvg = parseInt(cls.above_avg_count) || 0;
+                const belowAvg = parseInt(cls.below_avg_count) || 0;
+
+                html += `
+                            <tr>
+                                <td class="text-center">
+                                    <span class="badge bg-primary fs-6 py-1 px-2">${rank}</span>
+                                </td>
+                                <td class="text-start">
+                                    <div class="fw-bold text-dark lh-sm">${classname} - ${sectionname}</div>
+                                    <small class="text-muted d-block lh-sm" style="font-size: 9.5px;"><i class="bi bi-journal-text me-1"></i>${subjects} Subjects</small>
+                                </td>
+                                <td class="text-center">
+                                    <div class="fw-bold lh-sm">${appeared} <span class="text-muted fw-normal">/ ${enrolled}</span></div>
+                                    <small class="text-muted d-block" style="font-size: 9px;">Attn: ${attnRate}%</small>
+                                </td>
+                                <td class="text-center">
+                                    <div class="lh-sm">PR: <strong class="text-success">${passRate}%</strong></div>
+                                    <small class="d-block" style="font-size: 9.5px;">Avg: <strong class="text-primary">${avgMarks}%</strong></small>
+                                </td>
+                                <td class="text-center">
+                                    <div class="fw-bold text-info lh-sm">${excRate}%</div>
+                                    <small class="text-muted d-block" style="font-size: 8.5px;">(70%+ Scored)</small>
+                                </td>
+                                <td class="text-start" style="font-size: 9.5px;">
+                                    <div class="lh-sm"><span class="fw-semibold text-primary">👦 M (${maleCount}):</span> Avg: <strong class="text-dark">${maleAvg}%</strong></div>
+                                    <div class="lh-sm mt-1"><span class="fw-semibold text-danger">👧 F (${femaleCount}):</span> Avg: <strong class="text-dark">${femaleAvg}%</strong></div>
+                                    <div class="text-muted mt-1" style="font-size: 8.5px;">Ratio: <span class="fw-bold text-secondary">${genderRatioStr}</span></div>
+                                </td>
+                                <td class="text-center">
+                                    <div class="lh-sm"><strong class="text-primary fs-6">CPI: ${cpi}</strong></div>
+                                    <small class="text-muted d-block" style="font-size: 9px;">TII Boost: ${tii}x</small>
+                                </td>
+                                <td class="text-center" style="font-size: 9.5px;">
+                                    <div class="lh-sm"><span class="badge bg-danger text-white" style="font-size: 9px;">CDF: ${difficulty}</span></div>
+                                    <small class="text-muted d-block mt-1" style="font-size: 8.5px;">SD: <strong>${stdDev}</strong> | Var: <strong>${variance}</strong></small>
+                                </td>
+                            </tr>`;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>`;
+
+            return html;
+        }
+
+        function renderOverallSubjectTable(data) {
+            if (!data || data.length === 0) {
+                return '<div class="alert alert-warning">No overall subject performance data available.</div>';
+            }
+
+            let html = `
+            <div class="detailed-overall-subject-table-container mb-4">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm align-middle mb-0 a4-compact-table">
+                        <thead class="table-light">
+                            <tr class="text-center align-middle" style="font-size: 10px;">
+                                <th style="width: 50px;">Code</th>
+                                <th class="text-start" style="min-width: 130px;">Subject & Scope</th>
+                                <th style="width: 80px;">Appeared / Enrolled</th>
+                                <th style="width: 85px;">Pass & Avg</th>
+                                <th style="width: 75px;">Exc. (70%+)</th>
+                                <th class="text-start" style="min-width: 150px;">Gender Stats (M : F)</th>
+                                <th style="width: 90px;">Difficulty (SDF)</th>
+                                <th style="width: 95px;">Dist. & Variance</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+
+            data.forEach(sub => {
+                const subCode = sub.subject_code || '-';
+                const subName = sub.subject_name || `Subject ${subCode}`;
+
+                const enrolled = parseInt(sub.total_enrolled) || parseInt(sub.total_students_appeared) || 0;
+                const appeared = parseInt(sub.total_students_appeared) || 0;
+                const attnRate = enrolled > 0 ? ((appeared / enrolled) * 100).toFixed(1) : '0.0';
+
+                const classesCount = parseInt(sub.classes_count) || 0;
+                const teachersCount = parseInt(sub.teachers_count) || 0;
+
+                const avgMarks = parseFloat(sub.overall_marks_percentage || 0).toFixed(1);
+                const failureRate = parseFloat(sub.failure_rate || 0).toFixed(1);
+                const passRate = parseFloat(sub.pass_rate || (100 - failureRate)).toFixed(1);
+                const excRate = parseFloat(sub.excellent_rate || 0).toFixed(1);
+
+                const sdf = parseFloat(sub.subject_difficulty_factor || 0).toFixed(1);
+                const lowGpa = parseFloat(sub.low_gpa_ratio || 0).toFixed(1);
+                const median = parseFloat(sub.median || 0).toFixed(1);
+
+                const maleCount = parseInt(sub.male_count) || 0;
+                const femaleCount = parseInt(sub.female_count) || 0;
+                const maleAvg = parseFloat(sub.male_avg || 0).toFixed(1);
+                const femaleAvg = parseFloat(sub.female_avg || 0).toFixed(1);
+                const totalGender = maleCount + femaleCount;
+                const genderRatioStr = totalGender > 0 ? `${maleCount}M : ${femaleCount}F` : '-';
+
+                const stdDev = parseFloat(sub.std_deviation || 0).toFixed(2);
+                const variance = parseFloat(sub.variance || 0).toFixed(1);
+                const aboveAvg = parseInt(sub.above_avg_count) || 0;
+                const belowAvg = parseInt(sub.below_avg_count) || 0;
+
+                const sdfBadgeClass = sdf >= 40 ? 'bg-danger' : (sdf >= 25 ? 'bg-warning text-dark' : 'bg-success');
+
+                html += `
+                            <tr>
+                                <td class="text-center">
+                                    <span class="badge bg-secondary font-monospace">${subCode}</span>
+                                </td>
+                                <td class="text-start">
+                                    <div class="fw-bold text-dark lh-sm">${subName}</div>
+                                    <small class="text-muted d-block lh-sm" style="font-size: 9.5px;"><i class="bi bi-diagram-3 me-1"></i>${classesCount} Classes • ${teachersCount} Teachers</small>
+                                </td>
+                                <td class="text-center">
+                                    <div class="fw-bold lh-sm">${appeared} <span class="text-muted fw-normal">/ ${enrolled}</span></div>
+                                    <small class="text-muted d-block" style="font-size: 9px;">Attn: ${attnRate}%</small>
+                                </td>
+                                <td class="text-center">
+                                    <div class="lh-sm">PR: <strong class="text-success">${passRate}%</strong></div>
+                                    <small class="d-block" style="font-size: 9.5px;">Avg: <strong class="text-primary">${avgMarks}%</strong></small>
+                                </td>
+                                <td class="text-center">
+                                    <div class="fw-bold text-info lh-sm">${excRate}%</div>
+                                    <small class="text-muted d-block" style="font-size: 8.5px;">(70%+ Scored)</small>
+                                </td>
+                                <td class="text-start" style="font-size: 9.5px;">
+                                    <div class="lh-sm"><span class="fw-semibold text-primary">👦 M (${maleCount}):</span> Avg: <strong class="text-dark">${maleAvg}%</strong></div>
+                                    <div class="lh-sm mt-1"><span class="fw-semibold text-danger">👧 F (${femaleCount}):</span> Avg: <strong class="text-dark">${femaleAvg}%</strong></div>
+                                    <div class="text-muted mt-1" style="font-size: 8.5px;">Ratio: <span class="fw-bold text-secondary">${genderRatioStr}</span></div>
+                                </td>
+                                <td class="text-center">
+                                    <div class="lh-sm"><span class="badge ${sdfBadgeClass} fs-6 py-1 px-2">SDF: ${sdf}</span></div>
+                                    <small class="text-muted d-block mt-1" style="font-size: 8.5px;">&lt;50% Low: <strong>${lowGpa}%</strong></small>
+                                </td>
+                                <td class="text-center" style="font-size: 9.5px;">
+                                    <div class="lh-sm">▲ <strong>${aboveAvg}</strong> | ▼ <strong>${belowAvg}</strong></div>
+                                    <small class="text-muted d-block mt-1" style="font-size: 8.5px;">SD: <strong>${stdDev}</strong> | Var: <strong>${variance}</strong></small>
+                                </td>
+                            </tr>`;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>`;
+
+            return html;
+        }
+
+        function renderStudentMeritTable(data) {
+            if (!data || data.length === 0) {
+                return '<div class="alert alert-warning">No student performance data available.</div>';
+            }
+
+            // Group by Class and Section
+            const grouped = {};
+            data.forEach(s => {
+                const key = `${s.classname || 'Class'} - ${s.sectionname || 'Section'}`;
+                if (!grouped[key]) grouped[key] = [];
+                grouped[key].push(s);
+            });
+
+            let html = `<div class="detailed-student-table-container mb-4">`;
+
+            for (const [classTitle, students] of Object.entries(grouped)) {
+                const totalStudents = students.length;
+                const passedStudents = students.filter(s => (parseInt(s.failed_subjects) || 0) === 0).length;
+                const passRate = totalStudents > 0 ? ((passedStudents / totalStudents) * 100).toFixed(1) : '0.0';
+
+                html += `
+                <div class="detailed-student-group mb-4">
+                    <div class="d-flex justify-content-between align-items-center bg-light border p-2 rounded-top mb-0">
+                        <span class="fw-bold text-dark"><i class="bi bi-mortarboard-fill text-primary me-2"></i>Class: ${classTitle}</span>
+                        <span class="badge bg-primary fs-6 py-1 px-2">${totalStudents} Students | Passed: ${passedStudents} (${passRate}%)</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm align-middle mb-0 a4-compact-table">
+                            <thead class="table-light">
+                                <tr class="text-center align-middle" style="font-size: 10px;">
+                                    <th style="width: 55px;">Rank</th>
+                                    <th style="width: 50px;">Roll</th>
+                                    <th class="text-start" style="min-width: 140px;">Student Details</th>
+                                    <th style="width: 90px;">Marks & %</th>
+                                    <th style="width: 65px;">GPA</th>
+                                    <th style="width: 55px;">Grade</th>
+                                    <th class="text-start" style="min-width: 150px;">Status & Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+
+                students.forEach(st => {
+                    const isFail = (parseInt(st.failed_subjects) || 0) > 0;
+                    const classRank = st.class_rank ? `#${st.class_rank}` : '-';
+                    const secRank = st.section_rank ? `#${st.section_rank}` : '-';
+
+                    const stname = st.stnameeng || `Student ${st.stid}`;
+                    const stnameben = st.stnameben || '';
+                    const rollno = st.rollno || '-';
+                    const stid = st.stid || '';
+                    const gender = st.gender || '';
+                    const genderIcon = (gender.toLowerCase() === 'female' || gender === 'ছাত্রী') ? '👧' : '👦';
+
+                    const totalMarks = parseFloat(st.total_marks_obtained || 0).toFixed(1);
+                    const fullMarks = parseFloat(st.total_full_marks || 0).toFixed(0);
+                    const pct = parseFloat(st.percentage || 0).toFixed(1);
+                    const gpa = parseFloat(st.gpa || 0).toFixed(2);
+                    const grade = st.grade || (isFail ? 'F' : '-');
+                    const riskScore = parseFloat(st.risk_score || 0).toFixed(1);
+                    const failedNames = st.failed_subject_names || '';
+
+                    let gradeBadge = 'bg-secondary';
+                    if (grade === 'A+') gradeBadge = 'bg-primary';
+                    else if (grade === 'A' || grade === 'A-') gradeBadge = 'bg-success';
+                    else if (grade === 'F') gradeBadge = 'bg-danger';
+
+                    let statusHtml = '';
+                    if (isFail) {
+                        const failCnt = parseInt(st.failed_subjects) || 1;
+                        statusHtml = `<span class="badge bg-danger">Failed (${failCnt})</span>`;
+                        if (failedNames) {
+                            statusHtml += `<div class="text-danger mt-1" style="font-size: 8.5px;"><i class="bi bi-exclamation-triangle me-1"></i>${failedNames}</div>`;
+                        }
+                        if (parseFloat(riskScore) > 0) {
+                            statusHtml += `<div class="text-muted" style="font-size: 8px;">Risk Score: <strong>${riskScore}</strong></div>`;
+                        }
+                    } else {
+                        statusHtml = `<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Passed</span>`;
+                    }
+
+                    html += `
+                                <tr>
+                                    <td class="text-center">
+                                        <span class="badge ${isFail ? 'bg-danger' : 'bg-primary'} fs-6 py-1 px-2">${isFail ? 'Fail' : classRank}</span>
+                                        <small class="text-muted d-block mt-1" style="font-size: 8.5px;">Sec: ${secRank}</small>
+                                    </td>
+                                    <td class="text-center fw-bold text-dark font-monospace">${rollno}</td>
+                                    <td class="text-start">
+                                        <div class="fw-bold text-dark lh-sm">${genderIcon} ${stname}</div>
+                                        ${stnameben ? `<small class="text-muted d-block lh-1" style="font-size: 9px;">${stnameben}</small>` : ''}
+                                        <small class="text-muted font-monospace" style="font-size: 8.5px;">ID: ${stid}</small>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="fw-bold text-primary lh-sm">${totalMarks}</div>
+                                        <small class="text-muted d-block" style="font-size: 8.5px;">${pct}% (${fullMarks})</small>
+                                    </td>
+                                    <td class="text-center fw-bold fs-6 ${isFail ? 'text-danger' : 'text-primary'}">${gpa}</td>
+                                    <td class="text-center"><span class="badge ${gradeBadge} fs-6 px-2">${grade}</span></td>
+                                    <td class="text-start">${statusHtml}</td>
+                                </tr>`;
+                });
+
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+            }
+
+            html += `</div>`;
+            return html;
+        }
+
+        function renderAtRiskTable(data) {
+            if (!data || data.length === 0) {
+                return '<div class="alert alert-success"><i class="bi bi-check-circle-fill me-2"></i>No high-risk students found for this examination dataset.</div>';
+            }
+
+            let html = `
+            <div class="detailed-at-risk-table-container mb-4">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm align-middle mb-0 a4-compact-table">
+                        <thead class="table-light">
+                            <tr class="text-center align-middle" style="font-size: 10px;">
+                                <th style="width: 75px;">Risk Level</th>
+                                <th style="width: 50px;">Roll</th>
+                                <th class="text-start" style="min-width: 140px;">Student & Class</th>
+                                <th class="text-start" style="min-width: 160px;">Failed Subject(s)</th>
+                                <th style="width: 85px;">Total Marks & %</th>
+                                <th style="width: 85px;">Guardian Mobile</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+
+            data.forEach(st => {
+                const riskScore = parseFloat(st.risk_score || 0).toFixed(1);
+                const failedCount = parseInt(st.failed_subject_count || st.failed_subjects) || 1;
+                const failedList = st.failed_subject_list || st.failed_subject_names || '-';
+
+                const stname = st.stnameeng || `Student ${st.stid}`;
+                const stnameben = st.stnameben || '';
+                const rollno = st.rollno || '-';
+                const stid = st.stid || '';
+                const classname = st.classname || '-';
+                const sectionname = st.sectionname || '-';
+                const gender = st.gender || '';
+                const genderIcon = (gender.toLowerCase() === 'female' || gender === 'ছাত্রী') ? '👧' : '👦';
+                const guarmobile = st.guarmobile || '-';
+
+                const totalMarks = parseFloat(st.total_marks_obtained || 0).toFixed(1);
+                const pct = parseFloat(st.percentage || 0).toFixed(1);
+
+                let badgeClass = 'bg-danger text-white';
+                let levelLabel = 'Critical';
+                if (parseFloat(riskScore) >= 60 || failedCount >= 3) {
+                    badgeClass = 'bg-danger text-white';
+                    levelLabel = 'Critical';
+                } else if (parseFloat(riskScore) >= 35 || failedCount == 2) {
+                    badgeClass = 'bg-warning text-dark';
+                    levelLabel = 'Moderate';
+                } else {
+                    badgeClass = 'bg-info text-dark';
+                    levelLabel = 'Borderline';
+                }
+
+                html += `
+                            <tr>
+                                <td class="text-center">
+                                    <span class="badge ${badgeClass} fs-6 py-1 px-2">SRS: ${riskScore}</span>
+                                    <small class="text-muted d-block mt-1 fw-semibold" style="font-size: 8.5px;">${levelLabel}</small>
+                                </td>
+                                <td class="text-center fw-bold text-dark font-monospace">${rollno}</td>
+                                <td class="text-start">
+                                    <div class="fw-bold text-dark lh-sm">${genderIcon} ${stname}</div>
+                                    ${stnameben ? `<small class="text-muted d-block lh-1" style="font-size: 9px;">${stnameben}</small>` : ''}
+                                    <small class="text-muted d-block" style="font-size: 8.5px;"><i class="bi bi-mortarboard-fill me-1"></i>${classname} - ${sectionname} (ID: ${stid})</small>
+                                </td>
+                                <td class="text-start">
+                                    <span class="badge bg-danger mb-1" style="font-size: 8.5px;">Failed: ${failedCount}</span>
+                                    <div class="text-danger fw-semibold lh-sm" style="font-size: 9.5px;">${failedList}</div>
+                                </td>
+                                <td class="text-center">
+                                    <div class="fw-bold text-dark lh-sm">${totalMarks}</div>
+                                    <small class="text-muted d-block" style="font-size: 8.5px;">${pct}%</small>
+                                </td>
+                                <td class="text-center font-monospace" style="font-size: 9.5px;">
+                                    ${guarmobile !== '-' ? `<a href="tel:${guarmobile}" class="text-decoration-none text-primary fw-bold"><i class="bi bi-telephone me-1"></i>${guarmobile}</a>` : '<span class="text-muted">-</span>'}
+                                </td>
+                            </tr>`;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>`;
+
+            return html;
+        }
+
+        function renderInstituteTable(data) {
+            if (!data) return '<div class="alert alert-warning">No institutional data available.</div>';
+
+            const summary = data.summary || {};
+            const classes = data.classes_summary || [];
+
+            let html = `
+            <div class="institute-summary-table-container mb-4">
+                <h5 class="fw-bold text-dark mb-2"><i class="bi bi-grid-3x3-gap-fill text-primary me-2"></i>Class Performance Comparative Matrix (শ্রেণিভিত্তিক তুলনামূলক পারফরম্যান্স)</h5>
+                <div class="table-responsive mb-4">
+                    <table class="table table-bordered table-sm align-middle mb-0 a4-compact-table">
+                        <thead class="table-light text-center">
+                            <tr style="font-size: 10px;">
+                                <th style="width: 45px;">Rank</th>
+                                <th class="text-start" style="min-width: 130px;">Class & Section</th>
+                                <th style="width: 85px;">Appeared / Enrolled</th>
+                                <th style="width: 80px;">Passed / Failed</th>
+                                <th style="width: 75px;">Pass Rate %</th>
+                                <th style="width: 70px;">GPA 5.0 (A+)</th>
+                                <th style="width: 75px;">Avg Marks %</th>
+                                <th style="width: 80px;">CPI Score</th>
+                                <th style="width: 75px;">Difficulty (CDF)</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+
+            if (classes.length === 0) {
+                html += `<tr><td colspan="9" class="text-center text-muted py-2">No class records available</td></tr>`;
+            } else {
+                classes.forEach((cls, idx) => {
+                    const rank = parseInt(cls.class_rank) || (idx + 1);
+                    const classname = cls.classname || '-';
+                    const sectionname = cls.sectionname || '-';
+                    const appeared = parseInt(cls.total_students_appeared) || 0;
+                    const enrolled = parseInt(cls.total_enrolled) || appeared;
+                    const passed = parseInt(cls.total_passed) || 0;
+                    const failed = parseInt(cls.total_failed) || 0;
+                    const passRate = parseFloat(cls.pass_rate || 0).toFixed(1);
+                    const aplus = parseInt(cls.aplus_count) || 0;
+                    const avgMarks = parseFloat(cls.overall_marks_percentage || 0).toFixed(1);
+                    const cpi = parseFloat(cls.cpi_score || 0).toFixed(1);
+                    const cdf = parseFloat(cls.difficulty_factor || 0).toFixed(1);
+
+                    const cpiBadge = cpi >= 70 ? 'bg-success' : (cpi >= 50 ? 'bg-primary' : (cpi >= 35 ? 'bg-warning text-dark' : 'bg-danger'));
+                    const rankDisplay = rank === 1 ? '<span class="badge bg-warning text-dark"><i class="bi bi-trophy-fill"></i> #1</span>' : `<span class="badge bg-light text-dark">#${rank}</span>`;
+
+                    html += `
+                            <tr>
+                                <td class="text-center fw-bold">${rankDisplay}</td>
+                                <td class="text-start fw-bold text-dark">${classname} - ${sectionname}</td>
+                                <td class="text-center">${appeared} <span class="text-muted fw-normal">/ ${enrolled}</span></td>
+                                <td class="text-center"><span class="text-success fw-bold">${passed}</span> / <span class="text-danger fw-bold">${failed}</span></td>
+                                <td class="text-center fw-bold ${parseFloat(passRate) >= 70 ? 'text-success' : (parseFloat(passRate) >= 50 ? 'text-primary' : 'text-danger')}">${passRate}%</td>
+                                <td class="text-center fw-bold text-info">${aplus}</td>
+                                <td class="text-center fw-bold text-dark">${avgMarks}%</td>
+                                <td class="text-center"><span class="badge ${cpiBadge} px-2">${cpi}</span></td>
+                                <td class="text-center text-muted font-monospace">${cdf}</td>
+                            </tr>`;
+                });
+
+                // Totals Footer Row
+                const totAppeared = summary.total_appeared || 0;
+                const totEnrolled = summary.total_enrolled || totAppeared;
+                const totPassed = summary.total_passed || 0;
+                const totFailed = summary.total_failed || 0;
+                const totPassRate = parseFloat(summary.pass_rate || 0).toFixed(1);
+                const totAplus = summary.total_aplus || 0;
+                const totAvg = parseFloat(summary.overall_avg_marks_percentage || 0).toFixed(1);
+
+                html += `
+                            <tr class="table-secondary fw-bold text-dark border-top border-2">
+                                <td class="text-center">Total</td>
+                                <td class="text-start">All ${classes.length} Classes</td>
+                                <td class="text-center">${totAppeared} / ${totEnrolled}</td>
+                                <td class="text-center"><span class="text-success">${totPassed}</span> / <span class="text-danger">${totFailed}</span></td>
+                                <td class="text-center text-success">${totPassRate}%</td>
+                                <td class="text-center text-info">${totAplus}</td>
+                                <td class="text-center">${totAvg}%</td>
+                                <td class="text-center">-</td>
+                                <td class="text-center">-</td>
+                            </tr>`;
+            }
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>`;
+
+            return html;
+        }
+
         function renderExplanationCard(title, items, notes = '') {
             let html = `
             <div class="card mt-4 border-light shadow-none bg-light report-explanation-card">
@@ -1202,58 +1700,61 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
         function renderReport(sectionId, data) {
             if (sectionId === 'institute-report') {
                 let html = '<h1>Institute Performance Overview (প্রতিষ্ঠানের সামগ্রিক পারফরম্যান্স)</h1>';
-                const summary = data.summary || {};
-                html += `
-                        <div class='row g-3 mb-4 stat-summary-cards custom-graphical-view'>
-                            <div class='col-md-4'><div class='card text-center'><div class='card-body'><h4>Total Students</h4><p style='font-size: 24px;'>${summary.total_students || 0}</p></div></div></div>
-                            <div class='col-md-4'><div class='card text-center'><div class='card-body'><h4>Pass Rate</h4><p style='font-size: 24px;'>${parseFloat(summary.pass_rate || 0).toFixed(2)}%</p></div></div></div>
-                            <div class='col-md-4'><div class='card text-center'><div class='card-body'><h4>Average Marks</h4><p style='font-size: 24px;'>${parseFloat(summary.overall_avg_marks_percentage || 0).toFixed(2)}%</p></div></div></div>
-                        </div>`;
+                
+                // Graphical Dashboard & Top Sheet Container
+                html += '<div id="custom-institute-view" class="custom-graphical-view"><div class="loading-placeholder"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading Executive Top Sheet...</span></div></div></div>';
+                
+                fetch(`analytics/display_institute_report.php?dataset_id=${datasetId}`)
+                    .then(response => response.text())
+                    .then(customHtml => {
+                        const target = document.getElementById('custom-institute-view');
+                        if (target) target.innerHTML = customHtml;
+                    })
+                    .catch(error => {
+                        const target = document.getElementById('custom-institute-view');
+                        if (target) target.innerHTML = `<div class="alert alert-danger">Failed to load executive top sheet: ${error}</div>`;
+                    });
 
-                html += "<div class='row g-3'><div class='col-md-6'><h3>Grade Distribution</h3>";
-                html += "<table class='table table-sm table-bordered table-striped'><thead><tr><th>Grade</th><th>Number of Students</th><th>Percentage</th></tr></thead><tbody>";
-                const total_students = summary.total_students > 0 ? summary.total_students : 1;
-                (data.grade_distribution || []).forEach(grade => {
-                    const percentage = (grade.student_count / total_students) * 100;
-                    html += `<tr><td>${grade.grade}</td><td>${grade.student_count}</td><td>${create_bar_html(percentage)}</td></tr>`;
-                });
-                html += "</tbody></table></div>";
-
-                html += "<div class='col-md-6'><h3>Weakest Subjects</h3>";
-                html += "<table class='table table-sm table-bordered table-striped'><thead><tr><th>Subject</th><th>Failure Rate</th></tr></thead><tbody>";
-                (data.weakest_subjects || []).forEach(subject => {
-                    html += `<tr><td>${subject.subject_name}</td><td class='text-danger fw-bold'>${parseFloat(subject.failure_rate).toFixed(2)}%</td></tr>`;
-                });
-                html += "</tbody></table></div></div>";
-
+                // Comprehensive Institutional Performance Explanation Card
                 html += renderExplanationCard(
-                    'প্রতিষ্ঠানের পারফরম্যান্স নির্দেশিকা ও গণনার ব্যাখ্যা (Institute Performance Guide)',
+                    'প্রতিষ্ঠানের পারফরম্যান্স নির্দেশিকা ও প্রাতিষ্ঠানিক সূচকসমূহ (Institute Performance Guide)',
                     [
                         {
-                            term: 'Total Students (মোট শিক্ষার্থী)',
-                            desc: 'পরীক্ষায় অংশগ্রহণকারী অনন্য (Unique) শিক্ষার্থীর সর্বমোট সংখ্যা।'
+                            term: 'Attendance Rate (উপস্থিতির হার %)',
+                            desc: 'মোট ভর্তি শিক্ষার্থীর মধ্যে কতজন পরীক্ষায় অংশ নিয়েছে তার শতকরা অনুপাত।',
+                            formula: '(অংশগ্রহণকারী শিক্ষার্থী ÷ মোট ভর্তি শিক্ষার্থী) × ১০০'
                         },
                         {
-                            term: 'Pass Rate (পাসের হার %)',
-                            desc: 'সকল বিষয়ে উত্তীর্ণ পরীক্ষার্থীদের সামগ্রিক শতকরা হার।',
-                            formula: '(মোট পাস শিক্ষার্থী ÷ মোট অংশগ্রহণকারী) × ১০০'
+                            term: 'Overall Pass Rate (সামগ্রিক পাসের হার %)',
+                            desc: 'সকল বিষয়ে সফলভাবে উত্তীর্ণ অনন্য শিক্ষার্থীর শতকরা হার।',
+                            formula: '(সকল বিষয়ে পাস শিক্ষার্থী ÷ মোট অংশগ্রহণকারী) × ১০০'
                         },
                         {
-                            term: 'Average Marks (গড় প্রাপ্ত নম্বর %)',
-                            desc: 'প্রতিষ্ঠানের সকল শিক্ষার্থীর প্রাপ্ত নম্বরের শতকরা গড় মান।',
-                            formula: '(সর্বমোট প্রাপ্ত নম্বর ÷ সর্বমোট পূর্ণমান) × ১০০'
+                            term: 'GPA 5.00 (A+) ও Excellence Rate (উৎকর্ষ হার %)',
+                            desc: 'সর্বোচ্চ জিপিএ ৫.০০ প্রাপ্ত শিক্ষার্থী এবং ৭০% বা তদূর্ধ্ব সামগ্রিক নম্বর অর্জনকারী শিক্ষার্থীদের হার।',
+                            formula: '(জিপিএ ৫.০০ বা ৭০%+ নম্বর প্রাপ্ত শিক্ষার্থী ÷ মোট অংশগ্রহণকারী) × ১০০'
                         },
                         {
-                            term: 'Grade Distribution (গ্রেড বণ্টন)',
-                            desc: 'শিক্ষা বোর্ডের মানদণ্ড অনুযায়ী অর্জিত GPA এর ভিত্তিতে বিভিন্ন লেটার গ্রেডে (A+, A, A-, B, C, D, F) শিক্ষার্থীদের বিন্যাস।'
+                            term: 'Gender Parity & Performance (লিঙ্গভিত্তিক সমতা)',
+                            desc: 'ছাত্র এবং ছাত্রীদের অংশগ্রহণ, পাসের হার, অর্জিত জিপিএ ৫.০০ এবং গড় নম্বরের তুলনামূলক বিশ্লেষণ।'
                         },
                         {
-                            term: 'Weakest Subjects (দুর্বল বিষয়সমূহ)',
-                            desc: 'যেসব বিষয়ে ফেলের হার (Failure Rate) সবচেয়ে বেশি, সেগুলোর অগ্রাধিকার তালিকা।'
+                            term: 'CPI & Class Benchmarks (শ্রেণি পারফরম্যান্স)',
+                            desc: 'শ্রেণির গড় নম্বর, পাসের হার এবং শিক্ষকের অবদানের সমন্বয়ে প্রস্তুত শ্রেণি পারফরম্যান্স সূচক (CPI)।'
+                        },
+                        {
+                            term: 'Institutional At-Risk (ঝুঁকিপূর্ণ শিক্ষার্থী অনুপাত)',
+                            desc: 'প্রতিষ্ঠানের মোট শিক্ষার্থীর মধ্যে যাদের তাৎক্ষণিক নিবিড় প্রতিকারমূলক পাঠদান (Remedial Coaching) প্রয়োজন।'
                         }
                     ],
-                    'পরামর্শ: দুর্বল বিষয়গুলোতে অতিরিক্ত ক্লাস ও নিবিড় নজরদারি নিশ্চিত করলে প্রতিষ্ঠানের সার্বিক ফলাফল দ্রুত উন্নত হবে।'
+                    'প্রাতিষ্ঠানিক লক্ষ্য: সকল শ্রেণিতে ন্যূনতম ৮০% পাসের হার নিশ্চিতকরণ, সমাপনী পরীক্ষায় জিপিএ ৫.০০ এর অনুপাত বৃদ্ধি এবং ফেল করা শিক্ষার্থীদের রিমিডিয়াল ক্লাসের আওতায় আনা।'
                 );
+
+                // Detailed Class-by-Class Comparative Matrix Table
+                html += '<div class="reference-data-block">';
+                html += '<h3 class="mt-5 mb-3 text-muted"><i class="bi bi-table me-2"></i>Institutional Class Performance Matrix Table</h3>';
+                html += renderInstituteTable(data);
+                html += '</div>';
 
                 return html;
             }
@@ -1409,33 +1910,44 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
 
                 // Custom explanation card
                 html += renderExplanationCard(
-                    'শ্রেণিভিত্তিক পারফরম্যান্স সূচক নির্দেশিকা (Class Performance Guide)',
+                    'শ্রেণিভিত্তিক পারফরম্যান্স সূচক, পরিমাপ পদ্ধতি ও গণনার সূত্র (Class Performance Guide)',
                     [
                         {
-                            term: 'CPI Score (Class Performance Index)',
-                            desc: 'একটি শ্রেণি ও শাখার সার্বিক ফলাফলের সমন্বিত পারফরম্যান্স স্কোর।',
-                            formula: '(গড় নম্বর % × ০.৫০) + (পাসের হার % × ০.৩০) + (A+ এর হার % × ০.২০) [ধাপ ৪]'
+                            term: 'CPI Score (Class Performance Index - সামগ্রিক পারফরম্যান্স)',
+                            desc: 'একটি শ্রেণি ও শাখার সকল বিষয়ের সমন্বিত ফলাফল মানদণ্ড (যার ভিত্তিতে Class Rank নির্ধারিত হয়)।',
+                            formula: '(গড় নম্বর % × ০.৫০) + (পাসের হার % × ০.৩০) + (৭০%+ উৎকর্ষ হার % × ০.২০) [ধাপ ৪]'
                         },
                         {
-                            term: 'Difficulty Factor / CDF (শ্রেণি কাঠিন্য মাত্রা)',
+                            term: 'Difficulty Factor / CDF (শ্রেণি কাঠিন্য ও দুর্বলতা মাত্রা)',
                             desc: 'শ্রেণির সামগ্রিক দুর্বলতা ও পাঠদানের চ্যালেঞ্জের মাত্রা (মান বেশি হলে শ্রেণিটি তুলনামূলক দুর্বল বা চ্যালেঞ্জিং)।',
                             formula: '(গড় নম্বরের ঘাটতি % × ০.৫০) + (ফেলের হার % × ০.৩০) + (ভ্যারিয়েন্স × ০.২০) [ধাপ ২]'
                         },
                         {
-                            term: 'Students Appeared (অংশগ্রহণকারী)',
-                            desc: 'ওই শ্রেণি ও শাখার পরীক্ষায় অংশ নেওয়া মোট শিক্ষার্থীর সংখ্যা (ধাপ ২)।'
+                            term: 'TII (Teacher Impact Index - শিক্ষক বুস্ট গুণক)',
+                            desc: 'এই শ্রেণিতে পাঠদানকারী শিক্ষকের পরিশ্রমের জন্য প্রাপ্ত বুস্ট গুণক।',
+                            formula: '১ + (১০০ - শ্রেণির গড় নম্বর %) ÷ ১০০ [ধাপ ২]'
+                        },
+                        {
+                            term: 'Gender Performance & Ratio (লিঙ্গভিত্তিক পরিসংখ্যান)',
+                            desc: 'শ্রেণিতে ছাত্র (Male) ও ছাত্রী (Female) এর অন্তর্ভুক্তি সংখ্যা, অনুপাত এবং অর্জিত গড় নম্বর।'
+                        },
+                        {
+                            term: 'SD & Variance (নম্বরের তারতম্য ও বিস্তার)',
+                            desc: 'শ্রেণির বিভিন্ন বিষয়ে শিক্ষার্থীদের নম্বরের সামঞ্জস্যতা ও আদর্শ বিচ্যুতি (কম মান সুষম ফলাফল নির্দেশ করে)।'
                         },
                         {
                             term: 'Class Rank (শ্রেণি র‍্যাঙ্ক)',
-                            desc: 'প্রতিষ্ঠানের সকল শ্রেণি ও শাখার মধ্যে CPI স্কোরের ভিত্তিতে তুলনামূলক অবস্থান (ধাপ ৪)।'
+                            desc: 'প্রতিষ্ঠানের সকল শ্রেণি ও শাখার মধ্যে CPI স্কোরের ভিত্তিতে তুলনামূলক অবস্থান (#1, #2...)।',
+                            formula: 'RANK() OVER (ORDER BY CPI DESC) [ধাপ ৪]'
                         }
                     ],
-                    'পরামর্শ: যেসব শ্রেণির Difficulty Factor বেশি ও CPI কম, সেগুলোতে অভিজ্ঞ শিক্ষক নিয়োগ ও বিশেষ ক্লাসের ব্যবস্থা রাখা উচিত।'
+                    'পরামর্শ: যেসব শ্রেণির Difficulty Factor (CDF) বেশি ও CPI কম, সেগুলোতে বিশেষ নজরদারি, শিখন ঘাটতি পূরণ ও অভিজ্ঞ শিক্ষক নিয়োগ করা বাঞ্ছনীয়।'
                 );
 
+                // Append the formatted class table below it inside reference-data-block
                 html += '<div class="reference-data-block">';
-                html += '<h3 class="mt-5 text-muted"><i class="bi bi-table me-2"></i>Raw Data Table (Class Performance Reference)</h3>';
-                html += renderGenericTable('', data);
+                html += '<h3 class="mt-5 mb-3 text-muted"><i class="bi bi-table me-2"></i>Class & Section Performance Summary Table (Ranking & Analysis)</h3>';
+                html += renderClassTable(data);
                 html += '</div>';
                 return html;
             }
@@ -1450,28 +1962,43 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
 
                 // Custom explanation card
                 html += renderExplanationCard(
-                    'সামগ্রিক বিষয়ভিত্তিক পারফরম্যান্স নির্দেশিকা (Overall Subject Guide)',
+                    'সামগ্রিক বিষয়ভিত্তিক পারফরম্যান্স সূচক, পরিমাপ পদ্ধতি ও গণনার সূত্র (Overall Subject Guide)',
                     [
                         {
                             term: 'Overall Avg. Marks (সার্বিক গড় নম্বর %)',
-                            desc: 'সকল শ্রেণি-শাখা মিলিয়ে প্রতিষ্ঠানে ওই বিষয়ের সামগ্রিক প্রাপ্ত নম্বরের গড় শতকরা হার (ধাপ ৩)।'
+                            desc: 'সকল শ্রেণি-শাখা মিলিয়ে প্রতিষ্ঠানে ওই বিষয়ের সামগ্রিক প্রাপ্ত নম্বরের গড় শতকরা হার।',
+                            formula: 'মোট প্রাপ্ত নম্বর ÷ মোট পূর্ণমান × ১০০ [ধাপ ৩]'
                         },
                         {
-                            term: 'Pass Rate / Failure Rate (পাস ও ফেলের হার %)',
-                            desc: 'পুরো প্রতিষ্ঠানে ওই বিষয়ে উত্তীর্ণ ও অকৃতকার্য শিক্ষার্থীদের শতকরা অনুপাত (ধাপ ৩)।'
+                            term: 'Pass Rate & Exc. Rate (পাস ও উৎকর্ষ হার %)',
+                            desc: 'পুরো প্রতিষ্ঠানে ওই বিষয়ে পাস এবং ৭০%+ নম্বর পাওয়া শিক্ষার্থীদের শতকরা অনুপাত।'
                         },
                         {
                             term: 'SDF (Subject Difficulty Factor - বিষয় কাঠিন্য মাত্রা)',
-                            desc: 'বিষয়টির সার্বিক কাঠিন্য সূচক (SDF মান যত বেশি, শিক্ষার্থীদের কাছে বিষয়টি তত বেশি কঠিন ও ভীতিকর)।',
-                            formula: '(ফেলের হার % × ০.৩৫) + (মিডিয়ান ঘাটতি % × ০.২৫) + (CV বিচ্যুতি % × ০.২৫) + (৫০% কম পাওয়া ছাত্রের হার % × ০.১৫) [ধাপ ৬]'
+                            desc: 'বিষয়টির সার্বিক কাঠিন্য সূচক (SDF মান যত বেশি, শিক্ষার্থীদের কাছে বিষয়টি তত বেশি কঠিন বা চ্যালেঞ্জিং)।',
+                            formula: '(ফেলের হার % × ০.৩৫) + (মিডিয়ান ঘাটতি % × ০.২৫) + (CV বিচ্যুতি % × ০.২৫) + (৫০% কম পাওয়া শিক্ষার্থীর হার % × ০.১৫) [ধাপ ৬]'
+                        },
+                        {
+                            term: 'CV (Coefficient of Variation - আপেক্ষিক বিচ্যুতি)',
+                            desc: 'নম্বরের মানের তারতম্য ও বিচ্যুতির তুলনামূলক মাত্রা।',
+                            formula: '(Std. Deviation ÷ Overall Avg Marks) × ১০০ [ধাপ ৬]'
+                        },
+                        {
+                            term: 'Gender Performance & Ratio (লিঙ্গভিত্তিক পরিসংখ্যান)',
+                            desc: 'বিষয়টিতে ছাত্র (Male) ও ছাত্রী (Female) এর অংশগ্রহণ সংখ্যা, অনুপাত এবং অর্জিত গড় নম্বর।'
+                        },
+                        {
+                            term: 'SD & Variance (নম্বরের বিস্তার ও বৈষম্য)',
+                            desc: 'বিষয়টিতে শিক্ষার্থীদের প্রাপ্ত নম্বরের ধারাবাহিকতা ও বৈষম্যের পরিমাপ (কম মান সুষম ফলাফল নির্দেশ করে)।'
                         }
                     ],
-                    'ব্যাখ্যা: SDF সূত্রে CV (Coefficient of Variation) হলো (Std. Dev ÷ Avg Marks) × ১০০ এবং মিডিয়ান ঘাটতি হলো (১০০ - Median %)। উচ্চ SDF যুক্ত বিষয়গুলোতে বিশেষ শিখন সহায়তা প্রয়োজন।'
+                    'পরামর্শ: যেসব বিষয়ের SDF সূচক বেশি (বিশেষ করে ৪০+), সেগুলোতে দুর্বল শিক্ষার্থীদের চিহ্নিত করে বিশেষ প্রতিকারমূলক পাঠদান (Remedial Teaching) নিশ্চিত করা উচিত।'
                 );
 
+                // Append the formatted overall subject table below it inside reference-data-block
                 html += '<div class="reference-data-block">';
-                html += '<h3 class="mt-5 text-muted"><i class="bi bi-table me-2"></i>Raw Data Table (Overall Subject Reference)</h3>';
-                html += renderGenericTable('', data);
+                html += '<h3 class="mt-5 mb-3 text-muted"><i class="bi bi-table me-2"></i>Overall Subject Performance Summary Table (Difficulty & Breakdown)</h3>';
+                html += renderOverallSubjectTable(data);
                 html += '</div>';
                 return html;
             }
@@ -1486,15 +2013,17 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
 
                 // Custom explanation card
                 html += renderExplanationCard(
-                    'শিক্ষার্থীদের মেধাতালিকা ও গ্রেডিং নির্দেশিকা (Student Merit Guide)',
+                    'শিক্ষার্থীদের মেধাতালিকা, গ্রেডিং পদ্ধতি ও গণনার সূত্র (Student Merit Guide)',
                     [
                         {
                             term: 'Class Rank (শ্রেণি র‍্যাঙ্ক)',
-                            desc: 'পুরো শ্রেণিতে (সকল শাখা মিলিয়ে) মোট প্রাপ্ত নম্বর ও জিপিএ অনুযায়ী শিক্ষার্থীর অবস্থান (ধাপ ৯)।'
+                            desc: 'পুরো শ্রেণিতে (সকল শাখা মিলিয়ে) মোট প্রাপ্ত নম্বর ও জিপিএ অনুযায়ী শিক্ষার্থীর অবস্থান।',
+                            formula: 'প্রাপ্ত নম্বরের ক্রম ও জিপিএ সমতা বিচার [ধাপ ৯]'
                         },
                         {
                             term: 'Section Rank (শাখা র‍্যাঙ্ক)',
-                            desc: 'শিক্ষার্থীর নিজস্ব শাখায় (Section) তার মেধাক্রম অবস্থান (ধাপ ৯)।'
+                            desc: 'শিক্ষার্থীর নিজস্ব শাখায় (Section) তার মেধা অবস্থান।',
+                            formula: 'শাখায় প্রাপ্ত নম্বর ও জিপিএ এর ক্রম [ধাপ ৯]'
                         },
                         {
                             term: 'GPA (Grade Point Average) ও Grade',
@@ -1502,16 +2031,21 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
                             formula: '(আবশ্যিক বিষয়ের মোট পয়েন্ট + ৪র্থ বিষয়ের অতিরিক্ত পয়েন্ট) ÷ আবশ্যিক বিষয়ের সংখ্যা [ধাপ ১১]'
                         },
                         {
-                            term: 'Failed Subjects (ফেল বিষয়ের সংখ্যা)',
-                            desc: 'যেকোনো বিষয়ে ৩৩% এর কম নম্বর পেলে অকৃতকার্য হিসেবে গণ্য হয়। কোনো একটি আবশ্যিক বিষয়েও ফেল থাকলে চূড়ান্ত জিপিএ ০.০০ (F) নির্ধারিত হয় [ধাপ ১১]।'
+                            term: 'Failed Subjects (ফেল বিষয়ের তালিকা)',
+                            desc: 'যেকোনো বিষয়ে ৩৩% এর কম নম্বর পেলে অকৃতকার্য হিসেবে গণ্য হয়। কোনো একটি আবশ্যিক বিষয়ে ফেল থাকলে চূড়ান্ত জিপিএ ০.০০ (F) নির্ধারিত হয় [ধাপ ১১]।'
+                        },
+                        {
+                            term: 'Risk Score (SRS - ঝুঁকি স্কোর)',
+                            desc: 'অকৃতকার্য শিক্ষার্থীদের ক্ষেত্রে বিষয়ের কাঠিন্য (SDF), নম্বরের ঘাটতি এবং শিক্ষক পারফরম্যান্স সমন্বিত ঝুঁকি মান [ধাপ ১৩]।'
                         }
                     ],
                     'গ্রেডিং স্কেল: ৮০-১০০: A+ (৫.০), ৭০-৭৯: A (৪.০), ৬০-৬৯: A- (৩.৫), ৫০-৫৯: B (৩.০), ৪০-৪৯: C (২.০), ৩৩-৩৯: D (১.০), ০-৩২: F (০.০)। ৪র্থ বিষয়ের ২.০ এর অতিরিক্ত পয়েন্ট মূল পয়েন্টের সাথে যোগ হয় (সর্বোচ্চ জিপিএ ৫.০)।'
                 );
 
+                // Append the formatted student merit table below it inside reference-data-block
                 html += '<div class="reference-data-block">';
-                html += '<h3 class="mt-5 text-muted"><i class="bi bi-table me-2"></i>Full Merit List (for reference)</h3>';
-                html += renderGenericTable('', data);
+                html += '<h3 class="mt-5 mb-3 text-muted"><i class="bi bi-table me-2"></i>Student Merit List (Class & Section Grouped)</h3>';
+                html += renderStudentMeritTable(data);
                 html += '</div>';
                 return html;
             }
@@ -1526,32 +2060,33 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
 
                 // Custom explanation card
                 html += renderExplanationCard(
-                    'ঝুঁকিপূর্ণ শিক্ষার্থী ও ঝুঁকি সূচক নির্দেশিকা (At-Risk Assessment Guide)',
+                    'ঝুঁকিপূর্ণ শিক্ষার্থী শনাক্তকরণ, ঝুঁকি সূচক (SRS) ও গণনার সূত্র (At-Risk Assessment Guide)',
                     [
                         {
                             term: 'SRS / Risk Score (শিক্ষার্থী ঝুঁকি সূচক)',
-                            desc: 'শিক্ষার্থীর অকৃতকার্য বিষয়গুলোর কাঠিন্য (SDF), পাস নম্বরের ঘাটতি এবং সংশ্লিষ্ট বিষয়ের শিক্ষকের পারফরম্যান্স (TSPI) সমন্বয় করে নির্ণীত সম্ভাব্য চূড়ান্ত ব্যর্থতার ঝুঁকি মাত্রা।',
+                            desc: 'শিক্ষার্থীর অকৃতকার্য বিষয়গুলোর কাঠিন্য (SDF), নম্বরের ঘাটতি এবং সংশ্লিষ্ট বিষয়ের শিক্ষকের পারফরম্যান্স (TSPI) সমন্বয় করে নির্ণীত সম্ভাব্য চূড়ান্ত ব্যর্থতার ঝুঁকি মাত্রা।',
                             formula: '∑ [ {(বিষয়ের SDF × ০.৬০) + (পাস নম্বরের ঘাটতি % × ০.৪০)} × {১ + ((৫০ - শিক্ষকের TSPI) ÷ ১০০)} ] [ধাপ ১৩]'
                         },
                         {
-                            term: 'মানদণ্ড (Selection Criteria)',
-                            desc: 'যেসব শিক্ষার্থী এক বা একাধিক বিষয়ে ফেল করেছে এবং যাদের Risk Score ২৫ এর বেশি, তাদের এই তালিকায় আনা হয় [ধাপ ১০]।'
+                            term: 'Risk Severity (ঝুঁকির মাত্রা)',
+                            desc: 'SRS ৬০+ হলে Critical High Risk (গুরুতর ঝুঁকি), ৩৫-৫৯ হলে Moderate Risk (মাঝারি ঝুঁকি), এবং ২৫-৩৪ হলে Borderline Risk।'
                         },
                         {
-                            term: 'Failed Subjects (অকৃতকার্য বিষয়সমূহ)',
-                            desc: 'যেসব বিষয়ে শিক্ষার্থী ৩৩% এর কম নম্বর পেয়ে অকৃতকার্য হয়েছে সেগুলোর তালিকা [ধাপ ১০]।'
+                            term: 'Selection Criteria (তালিকাভুক্তি মানদণ্ড)',
+                            desc: 'যেসব শিক্ষার্থী এক বা একাধিক বিষয়ে ফেল করেছে এবং যাদের Risk Score ২৫ এর বেশি [ধাপ ১০]।'
                         },
                         {
-                            term: 'Reason (ঝুঁকির কারণ)',
-                            desc: 'শিক্ষার্থীর বর্তমান ব্যর্থতার সারসংক্ষেপ, যা দ্রুত প্রতিকারমূলক ব্যবস্থা গ্রহণে সাহায্য করে।'
+                            term: 'Failed Subjects (ফেল বিষয়ের তালিকা)',
+                            desc: 'যেসব বিষয়ে শিক্ষার্থী ৩৩% এর কম নম্বর পেয়ে অকৃতকার্য হয়েছে সেগুলোর তালিকা ও বিষয়ের সংখ্যা [ধাপ ১০]।'
                         }
                     ],
-                    'পদক্ষেপ: Risk Score ২৫ এর বেশি হওয়া শিক্ষার্থীদের অবিলম্বে চিহ্নিত করে অভিভাবক সমাবেশ ও বিশেষ নিবিড় পাঠদান (Remedial Coaching) গ্রহণ করা আবশ্যক।'
+                    'পদক্ষেপ: Risk Score প্রাপ্ত শিক্ষার্থীদের চিহ্নিত করে দ্রুত অভিভাবকের সাথে যোগাযোগ (Guardian Contact), শিখন ঘাটতি নিরূপণ ও নিবিড় প্রতিকারমূলক পাঠদান (Remedial Coaching) প্রদান করা আবশ্যক।'
                 );
 
+                // Append the formatted at-risk table below it inside reference-data-block
                 html += '<div class="reference-data-block">';
-                html += '<h3 class="mt-5 text-muted"><i class="bi bi-table me-2"></i>Raw Data Table (At-Risk Students Reference)</h3>';
-                html += renderGenericTable('', data);
+                html += '<h3 class="mt-5 mb-3 text-muted"><i class="bi bi-table me-2"></i>At-Risk Students Actionable Summary Table</h3>';
+                html += renderAtRiskTable(data);
                 html += '</div>';
                 return html;
             }

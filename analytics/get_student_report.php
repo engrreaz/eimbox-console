@@ -16,26 +16,24 @@ if (!$dataset_id) {
 
 $sql = "
     SELECT 
-        asp.stid,
+        asp.*,
         COALESCE(s.stnameeng, CONCAT('Student ', asp.stid)) AS stnameeng,
-        asp.classname,
-        asp.sectionname,
-        asp.rollno,
-        asp.total_marks_obtained,
-        asp.percentage,
-        asp.gpa,
-        asp.grade,
-        asp.class_rank, 
-        asp.section_rank,
-        asp.failed_subjects
+        COALESCE(s.stnameben, '') AS stnameben,
+        COALESCE(s.gender, si.gender, '') AS gender,
+        COALESCE(s.guarmobile, si.guarmobile, '') AS guarmobile
     FROM 
         analytics_student_performance AS asp
     LEFT JOIN 
         students AS s ON asp.stid = s.stid AND asp.sccode = s.sccode
+    LEFT JOIN 
+        sessioninfo AS si ON asp.stid = si.stid AND asp.sccode = si.sccode AND asp.sessionyear = si.sessionyear
     WHERE 
         asp.dataset_id = ?
     ORDER BY 
-        asp.class_rank ASC, asp.total_marks_obtained DESC;
+        asp.classname ASC, asp.sectionname ASC, 
+        CASE WHEN asp.failed_subjects > 0 THEN 1 ELSE 0 END ASC,
+        asp.class_rank ASC, asp.section_rank ASC, 
+        asp.total_marks_obtained DESC;
 ";
 
 $stmt = $conn->prepare($sql);
