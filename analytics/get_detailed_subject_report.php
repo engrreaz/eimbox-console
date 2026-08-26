@@ -19,12 +19,17 @@
 
 header('Content-Type: application/json');
 
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once '../core/config.php';
 require_once '../core/db.php';
+require_once '../core/global_values.php';
 
 $response = ['status' => 'error', 'message' => 'An unknown error occurred.'];
 
 $dataset_id = filter_input(INPUT_GET, 'dataset_id', FILTER_VALIDATE_INT);
+$sctype = $_SESSION['sccategory'] ?? ($sctype ?? '');
 
 if (!$dataset_id) {
     $response['message'] = 'Invalid or missing dataset_id.';
@@ -43,10 +48,20 @@ try {
         LEFT JOIN subjects AS s 
             ON asp.subject_code = s.subcode 
             AND (s.sccode = asp.sccode OR s.sccode = '0')
+            AND (s.sccategory = ? OR ? = '')
+            AND s.id = (
+                SELECT s2.id FROM subjects s2 
+                WHERE s2.subcode = asp.subject_code 
+                  AND (s2.sccode = asp.sccode OR s2.sccode = '0')
+                  AND (s2.sccategory = ? OR ? = '')
+                ORDER BY (s2.sccode = asp.sccode) DESC, s2.sccode DESC, s2.id DESC 
+                LIMIT 1
+            )
         LEFT JOIN teacher AS t 
             ON asp.tid = t.tid 
             AND (t.sccode = asp.sccode OR t.sccode = '0')
         WHERE asp.dataset_id = ? 
+        GROUP BY asp.id
         ORDER BY asp.classname, asp.sectionname, asp.subject_code
     ";
     $stmt = $conn->prepare($query);
@@ -54,7 +69,7 @@ try {
         throw new Exception("Database query preparation failed: " . $conn->error);
     }
 
-    $stmt->bind_param("i", $dataset_id);
+    $stmt->bind_param("ssssi", $sctype, $sctype, $sctype, $sctype, $dataset_id);
     $stmt->execute();
     $result = $stmt->get_result();
     $data = $result->fetch_all(MYSQLI_ASSOC);

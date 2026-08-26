@@ -133,17 +133,28 @@ $report_data['top_classes'] = $top_classes_result;
 $stmt_top_classes->close();
 
 // 5. 3 Subjects with Lowest Pass Rate (Highest Failure Rate)
+$sctype = $_SESSION['sccategory'] ?? ($sctype ?? '');
 $sql_weakest_subjects = "
     SELECT s.subject AS subject_name, aosp.failure_rate
     FROM analytics_overall_subject_performance AS aosp
-    JOIN subjects AS s ON aosp.subject_code = s.subcode AND (s.sccode = ? OR s.sccode = '0')
+    JOIN subjects AS s ON aosp.subject_code = s.subcode 
+        AND (s.sccode = ? OR s.sccode = '0')
+        AND (s.sccategory = ? OR ? = '')
+        AND s.id = (
+            SELECT s2.id FROM subjects s2 
+            WHERE s2.subcode = aosp.subject_code 
+              AND (s2.sccode = ? OR s2.sccode = '0')
+              AND (s2.sccategory = ? OR ? = '')
+            ORDER BY (s2.sccode = ?) DESC, s2.sccode DESC, s2.id DESC 
+            LIMIT 1
+        )
     WHERE aosp.dataset_id = ?
     GROUP BY aosp.subject_code, aosp.failure_rate
     ORDER BY aosp.failure_rate DESC
     LIMIT 5;
 ";
 $stmt_weakest_subjects = $conn->prepare($sql_weakest_subjects);
-$stmt_weakest_subjects->bind_param("si", $sccode, $dataset_id);
+$stmt_weakest_subjects->bind_param("sssssssi", $sccode, $sctype, $sctype, $sccode, $sctype, $sctype, $sccode, $dataset_id);
 $stmt_weakest_subjects->execute();
 $weakest_subjects_result = $stmt_weakest_subjects->get_result()->fetch_all(MYSQLI_ASSOC);
 foreach ($weakest_subjects_result as &$subject) {

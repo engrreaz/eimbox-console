@@ -11,8 +11,10 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once '../core/config.php';
 require_once '../core/db.php';
+require_once '../core/global_values.php';
 
 $dataset_id = filter_input(INPUT_GET, 'dataset_id', FILTER_VALIDATE_INT);
+$sctype = $_SESSION['sccategory'] ?? ($sctype ?? '');
 
 if (!$dataset_id) {
     echo '<div class="alert alert-danger">Invalid Dataset ID.</div>';
@@ -28,6 +30,15 @@ try {
         LEFT JOIN subjects AS s 
             ON aosp.subject_code = s.subcode 
             AND (s.sccode = aosp.sccode OR s.sccode = '0')
+            AND (s.sccategory = ? OR ? = '')
+            AND s.id = (
+                SELECT s2.id FROM subjects s2 
+                WHERE s2.subcode = aosp.subject_code 
+                  AND (s2.sccode = aosp.sccode OR s2.sccode = '0')
+                  AND (s2.sccategory = ? OR ? = '')
+                ORDER BY (s2.sccode = aosp.sccode) DESC, s2.sccode DESC, s2.id DESC 
+                LIMIT 1
+            )
         WHERE aosp.dataset_id = ?
         GROUP BY aosp.id
         ORDER BY aosp.subject_difficulty_factor DESC
@@ -36,7 +47,7 @@ try {
     $stmt = $conn->prepare($query);
     if (!$stmt) throw new Exception("DB query preparation failed: " . $conn->error);
 
-    $stmt->bind_param("i", $dataset_id);
+    $stmt->bind_param("ssssi", $sctype, $sctype, $sctype, $sctype, $dataset_id);
     $stmt->execute();
     $data = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
