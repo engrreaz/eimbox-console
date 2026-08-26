@@ -33,7 +33,23 @@ if (!$dataset_id) {
 }
 
 try {
-    $stmt = $conn->prepare("SELECT * FROM analytics_subject_performance WHERE dataset_id = ? ORDER BY classname, sectionname, subject_code");
+    $query = "
+        SELECT 
+            asp.*,
+            COALESCE(s.subject, CONCAT('Subject ', asp.subject_code)) AS subject_name,
+            COALESCE(t.tname, 'Unassigned') AS teacher_name,
+            t.position AS teacher_position
+        FROM analytics_subject_performance AS asp
+        LEFT JOIN subjects AS s 
+            ON asp.subject_code = s.subcode 
+            AND (s.sccode = asp.sccode OR s.sccode = '0')
+        LEFT JOIN teacher AS t 
+            ON asp.tid = t.tid 
+            AND (t.sccode = asp.sccode OR t.sccode = '0')
+        WHERE asp.dataset_id = ? 
+        ORDER BY asp.classname, asp.sectionname, asp.subject_code
+    ";
+    $stmt = $conn->prepare($query);
     if (!$stmt) {
         throw new Exception("Database query preparation failed: " . $conn->error);
     }

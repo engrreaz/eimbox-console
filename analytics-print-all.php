@@ -188,11 +188,42 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
         background-color: #f1f3f7 !important;
     }
 
+    /* A4 Compact Tables & Grouping */
+    .a4-compact-table {
+        width: 100% !important;
+        font-size: 11px;
+    }
+    .a4-compact-table th, 
+    .a4-compact-table td {
+        padding: 4px 6px !important;
+        vertical-align: middle;
+    }
+    .detailed-subject-table-group {
+        page-break-inside: avoid;
+        margin-bottom: 20px;
+    }
+
     @media print {
         * {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
             color-adjust: exact !important;
+        }
+
+        .a4-compact-table {
+            font-size: 9.5px !important;
+            width: 100% !important;
+        }
+        .a4-compact-table th, 
+        .a4-compact-table td {
+            padding: 2.5px 3.5px !important;
+            border: 1px solid #ced4da !important;
+            white-space: normal !important;
+            word-break: break-word !important;
+        }
+        .detailed-subject-table-group {
+            page-break-inside: avoid;
+            margin-bottom: 15px !important;
         }
 
         .no-print,
@@ -901,6 +932,118 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
             return html;
         }
 
+        function renderDetailedSubjectTable(data) {
+            if (!data || data.length === 0) {
+                return '<div class="alert alert-warning">No detailed subject data available.</div>';
+            }
+
+            // Group data by Class > Section
+            const grouped = {};
+            data.forEach(row => {
+                const cls = row.classname || 'Class';
+                const sec = row.sectionname || 'General';
+                if (!grouped[cls]) grouped[cls] = {};
+                if (!grouped[cls][sec]) grouped[cls][sec] = [];
+                grouped[cls][sec].push(row);
+            });
+
+            let html = '';
+
+            for (const [cls, sections] of Object.entries(grouped)) {
+                for (const [sec, subjects] of Object.entries(sections)) {
+                    html += `
+                    <div class="detailed-subject-table-group mb-4">
+                        <div class="d-flex justify-content-between align-items-center bg-light border p-2 px-3 rounded-top mb-0">
+                            <h6 class="mb-0 fw-bold text-primary">
+                                <i class="bi bi-mortarboard-fill me-2"></i>Class: <span class="text-dark">${cls}</span>
+                                <span class="mx-2 text-muted">|</span>
+                                Section: <span class="text-dark">${sec}</span>
+                            </h6>
+                            <span class="badge bg-secondary text-white">${subjects.length} Subjects</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm table-striped align-middle mb-0 a4-compact-table">
+                                <thead class="table-light">
+                                    <tr class="text-center align-middle">
+                                        <th style="width: 45px;">Code</th>
+                                        <th class="text-start">Subject & Teacher</th>
+                                        <th style="width: 75px;">Appeared / Enrolled</th>
+                                        <th style="width: 70px;">Pass / Fail</th>
+                                        <th style="width: 75px;">Pass Rate %</th>
+                                        <th style="width: 75px;">Avg Marks %</th>
+                                        <th style="width: 70px;">A+ (80%+)</th>
+                                        <th style="width: 80px;">Score Range</th>
+                                        <th style="width: 80px;">Indices</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+
+                    subjects.forEach(sub => {
+                        const code = sub.subject_code || '-';
+                        const name = sub.subject_name || `Subject ${code}`;
+                        const teacher = sub.teacher_name || 'Unassigned';
+                        const tpos = sub.teacher_position ? ` (${sub.teacher_position})` : '';
+
+                        const enrolled = parseInt(sub.student_count) || 0;
+                        const appeared = parseInt(sub.appeared_student_count) || 0;
+                        const passed = parseInt(sub.pass_count) || 0;
+                        const failed = parseInt(sub.fail_count) || 0;
+
+                        const passRate = parseFloat(sub.pass_rate || 0).toFixed(1);
+                        const avgMarks = parseFloat(sub.marks_percentage || sub.avg_marks || 0).toFixed(1);
+                        const excellent = parseInt(sub.excellent_count) || 0;
+                        const excellentRate = parseFloat(sub.excellent_rate || 0).toFixed(1);
+
+                        const maxM = parseFloat(sub.max_marks || 0);
+                        const minM = parseFloat(sub.min_marks || 0);
+
+                        const cdi = parseFloat(sub.cdi || 0).toFixed(2);
+                        const tspi = parseFloat(sub.tspi || 0).toFixed(1);
+
+                        html += `
+                                    <tr>
+                                        <td class="text-center fw-semibold text-secondary">${code}</td>
+                                        <td class="text-start">
+                                            <div class="fw-bold text-dark">${name}</div>
+                                            <small class="text-muted"><i class="bi bi-person me-1"></i>${teacher}${tpos}</small>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="fw-bold">${appeared}</span><span class="text-muted"> / ${enrolled}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="text-success fw-bold">${passed}</span> / <span class="text-danger fw-bold">${failed}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="fw-bold text-success">${passRate}%</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="fw-bold text-primary">${avgMarks}%</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="fw-bold text-info">${excellent}</span>
+                                            <small class="text-muted d-block" style="font-size: 9px;">(${excellentRate}%)</small>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="text-success fw-bold">${maxM}</span> - <span class="text-danger fw-bold">${minM}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-warning text-dark me-1" style="font-size: 9px;">CDI: ${cdi}</span>
+                                            <span class="badge bg-primary text-white" style="font-size: 9px;">TSPI: ${tspi}</span>
+                                        </td>
+                                    </tr>`;
+                    });
+
+                    html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>`;
+                }
+            }
+
+            return html;
+        }
+
         function renderExplanationCard(title, items, notes = '') {
             let html = `
             <div class="card mt-4 border-light shadow-none bg-light report-explanation-card">
@@ -1049,10 +1192,10 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
                     'পরামর্শ: যেসব বিষয়ে CDI বেশি ও TSPI কম, সেগুলোতে পাঠদান পদ্ধতি ও শিক্ষার্থীদের শিখন ঘাটতি নিবিড়ভাবে পর্যালোচনা করা প্রয়োজন।'
                 );
 
-                // Append the raw generic table below it inside reference-data-block
+                // Append the formatted grouped table below it inside reference-data-block
                 html += '<div class="reference-data-block">';
-                html += '<h3 class="mt-5 text-muted"><i class="bi bi-table me-2"></i>Raw Data Table (Detailed Subject Reference)</h3>';
-                html += renderGenericTable('', data);
+                html += '<h3 class="mt-5 mb-3 text-muted"><i class="bi bi-table me-2"></i>Detailed Subject Performance Table (Class & Section wise)</h3>';
+                html += renderDetailedSubjectTable(data);
                 html += '</div>';
                 return html;
             }
