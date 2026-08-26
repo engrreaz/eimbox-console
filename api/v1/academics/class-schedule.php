@@ -95,7 +95,7 @@ if ($method === 'POST' || $method === 'PUT') {
 
     if ($id > 0) {
         $stmt = $conn->prepare("UPDATE classschedule SET sessionyear = ?, slots = ?, shift = ?, period = ?, timestart = ?, timeend = ?, duration = ?, modifieddate = NOW() WHERE id = ? AND sccode = ?");
-        $stmt->bind_param("sssisssiii", $sessionyear, $slot, $shift, $period, $timeStart, $timeEnd, $duration, $id, $sccode);
+        $stmt->bind_param("sssisssii", $sessionyear, $slot, $shift, $period, $timeStart, $timeEnd, $duration, $id, $sccode);
         $stmt->execute();
         $stmt->close();
         api_response('success', 'Period schedule updated successfully.', ['id' => $id]);
