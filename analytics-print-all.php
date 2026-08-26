@@ -1165,8 +1165,16 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
                                     <div class="lh-sm mt-1">Sub (TSI): <strong class="${tsiColor}">${tsiSign}${tsi.toFixed(1)}</strong></div>
                                 </td>
                                 <td class="text-center" style="font-size: 9px;">
-                                    <div class="lh-sm">SD: <strong>${stdDev}</strong></div>
-                                    <div class="text-muted mt-1">Var: <strong>${variance}</strong></div>
+                                    <div class="lh-sm mb-1">
+                                        ${(() => {
+                                            const val = parseFloat(stdDev);
+                                            if (val <= 0) return `<span class="badge bg-secondary-subtle text-secondary px-1 py-0" style="font-size: 8px;">N/A</span>`;
+                                            if (val <= 15) return `<span class="badge bg-success-subtle text-success border border-success-subtle px-1 py-0" style="font-size: 8px;" title="SD ≤ 15 (Ideal)"><i class="bi bi-check-circle-fill me-1"></i>${stdDev} (Ideal)</span>`;
+                                            if (val <= 20) return `<span class="badge bg-warning-subtle text-dark border border-warning-subtle px-1 py-0" style="font-size: 8px;" title="SD 15-20 (Moderate)"><i class="bi bi-exclamation-circle-fill text-warning me-1"></i>${stdDev} (Mod)</span>`;
+                                            return `<span class="badge bg-danger-subtle text-danger border border-danger-subtle px-1 py-0" style="font-size: 8px;" title="SD > 20 (High Gap)"><i class="bi bi-exclamation-triangle-fill me-1"></i>${stdDev} (High)</span>`;
+                                        })()}
+                                    </div>
+                                    <div class="text-muted" style="font-size: 8.5px;">Var: <strong>${variance}</strong></div>
                                 </td>
                             </tr>`;
             });
@@ -1890,8 +1898,8 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
                             formula: 'AVG(শিক্ষকের বিষয়ের গড় % - প্রতিষ্ঠানের ওই বিষয়ের সার্বিক গড় %) [ধাপ ১২]'
                         },
                         {
-                            term: 'SD & Variance (ধারাবাহিকতা ও বিস্তার)',
-                            desc: 'শিক্ষকের পড়ানো বিভিন্ন শ্রেণিতে শিক্ষার্থীদের ফলাফলের তারতম্য বা ধারাবাহিকতার পরিমাপ (কম মান সুষম শিক্ষাদানের প্রতীক)।',
+                            term: 'SD & Variance (ধারাবাহিকতা ও কালার সূচক)',
+                            desc: 'শিক্ষার্থীদের ফলাফলের তারতম্য বা ধারাবাহিকতা। <br><span class="text-success fw-bold">🟢 SD ≤ ১৫</span>: আদর্শ ও সুষম | <span class="text-warning fw-bold">🟡 SD ১৫.১-২০</span>: মধ্যম | <span class="text-danger fw-bold">🔴 SD > ২০</span>: উচ্চ বৈষম্য (দুর্বলদের বিশেষ যত্ন প্রয়োজন)।',
                             formula: 'AVG(Standard Deviation) ও AVG(Variance) [ধাপ ৫]'
                         },
                         {

@@ -69,6 +69,77 @@ try {
         exit;
     }
 
+    // Helper to generate SD badge with Material colors
+    $get_sd_badge = function($sd) {
+        if ($sd <= 0) {
+            return '<span class="badge bg-secondary-subtle text-secondary border px-2 py-1"><i class="bi bi-dash-circle me-1"></i>N/A</span>';
+        } elseif ($sd <= 15) {
+            return '<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" title="SD ≤ 15: ফলাফল আদর্শ ও সুষম (Ideal)"><i class="bi bi-check-circle-fill me-1"></i>SD ' . number_format($sd, 2) . ' <span class="fw-normal">(Ideal)</span></span>';
+        } elseif ($sd <= 20) {
+            return '<span class="badge bg-warning-subtle text-dark border border-warning-subtle px-2 py-1" title="SD 15.1 - 20: মধ্যম ব্যবধান (Moderate)"><i class="bi bi-exclamation-circle-fill text-warning me-1"></i>SD ' . number_format($sd, 2) . ' <span class="fw-normal">(Moderate)</span></span>';
+        } else {
+            return '<span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1" title="SD > 20: উচ্চ বৈষম্য / বিশেষ নজর প্রয়োজন (High Gap)"><i class="bi bi-exclamation-triangle-fill me-1"></i>SD ' . number_format($sd, 2) . ' <span class="fw-normal">(High Gap)</span></span>';
+        }
+    };
+
+    // --- Explanation & Color Guide Card ---
+    echo "
+    <div class='card border-0 shadow-sm mb-4 bg-light-subtle border-start border-4 border-info'>
+        <div class='card-body p-3'>
+            <div class='d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2'>
+                <h6 class='fw-bold text-dark mb-0 d-flex align-items-center'>
+                    <i class='bi bi-info-circle-fill text-info me-2 fs-5'></i>
+                    পারফরম্যান্স সূচক ও SD কালার গাইড (Analytics & Color Legend)
+                </h6>
+                <button class='btn btn-xs btn-outline-secondary py-0 px-2' type='button' data-bs-toggle='collapse' data-bs-target='#teacherGuideCollapse' aria-expanded='false' aria-controls='teacherGuideCollapse' style='font-size: 11px;'>
+                    <i class='bi bi-chevron-down me-1'></i>গাইড বিস্তারিত
+                </button>
+            </div>
+
+            <!-- Quick SD Legend Badges Always Visible -->
+            <div class='d-flex flex-wrap align-items-center gap-2 pt-1 pb-1'>
+                <span class='text-muted small fw-semibold me-1'><i class='bi bi-graph-up-arrow me-1'></i>SD (ধারাবাহিকতা):</span>
+                <span class='badge bg-success-subtle text-success border border-success-subtle px-2 py-1' style='font-size: 11px;'>
+                    <i class='bi bi-check-circle-fill me-1'></i>🟢 SD ≤ 15 (Ideal / সুষম)
+                </span>
+                <span class='badge bg-warning-subtle text-dark border border-warning-subtle px-2 py-1' style='font-size: 11px;'>
+                    <i class='bi bi-exclamation-circle-fill text-warning me-1'></i>🟡 SD 15.1 – 20 (Moderate / মধ্যম)
+                </span>
+                <span class='badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1' style='font-size: 11px;'>
+                    <i class='bi bi-exclamation-triangle-fill me-1'></i>🔴 SD > 20 (High Gap / উচ্চ বৈষম্য)
+                </span>
+            </div>
+
+            <!-- Collapsible Detailed Explanation -->
+            <div class='collapse mt-3 pt-2 border-top' id='teacherGuideCollapse'>
+                <div class='row g-3' style='font-size: 12px;'>
+                    <div class='col-md-6'>
+                        <div class='p-2 bg-white rounded border'>
+                            <strong class='text-primary d-block mb-1'><i class='bi bi-bar-chart-steps me-1'></i>Standard Deviation (SD) ব্যাখ্যা:</strong>
+                            <ul class='mb-0 ps-3 text-muted'>
+                                <li><strong>🟢 SD ≤ 15 (আদর্শ):</strong> ক্লাসের শিক্ষার্থীদের ফলাফল অত্যন্ত ভারসাম্যপূর্ণ ও ধারাবাহিক।</li>
+                                <li><strong>🟡 SD 15.1 – 20 (মধ্যম):</strong> ফলাফলে সহনশীল ব্যবধান রয়েছে, পিছিয়ে পড়াদের মনিটর করা উচিত।</li>
+                                <li><strong>🔴 SD > 20 (উচ্চ বৈষম্য):</strong> ক্লাসে ভালো ও দুর্বল ছাত্রদের মাঝে বড় ফারাক—রিমিডিয়াল ক্লাস ও বাড়তি নজর জরুরি।</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class='col-md-6'>
+                        <div class='p-2 bg-white rounded border'>
+                            <strong class='text-primary d-block mb-1'><i class='bi bi-award me-1'></i>মূল্যায়ন সূচক (Key Metrics):</strong>
+                            <ul class='mb-0 ps-3 text-muted'>
+                                <li><strong>TPI (Base Index):</strong> পাস রেট (৪০%) + এ+ বা উৎকর্ষ (২৫%) + গড় নম্বর (৩৫%)।</li>
+                                <li><strong>TII (Boost Multiplier):</strong> ক্লাসের কাঠিন্য সমন্বয়ক গুণক (কঠিন শ্রেণিতে TII > 1)।</li>
+                                <li><strong>TIA (Final Score):</strong> চূড়ান্ত স্কোর (TPI × TII), যার ভিত্তিতে Rank নির্ধারিত হয়।</li>
+                                <li><strong>TCI / TSI:</strong> শ্রেণি ও বিষয়ের সামগ্রিক গড়ের সাথে শিক্ষকের বিষয়ের তুলনামূলক মান।</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    ";
+
     // --- Custom HTML Rendering Starts Here ---
     echo "<div class='row g-4'>";
 
@@ -89,6 +160,7 @@ try {
 
         $std_dev = (float)($teacher['avg_std_deviation'] ?? 0);
         $variance = (float)($teacher['avg_variance'] ?? 0);
+        $sd_badge_html = $get_sd_badge($std_dev);
 
         $tci_color = $tci > 0 ? 'text-success' : ($tci < 0 ? 'text-danger' : 'text-muted');
         $tsi_color = $tsi > 0 ? 'text-success' : ($tsi < 0 ? 'text-danger' : 'text-muted');
@@ -199,8 +271,13 @@ try {
                                     <td><span class='text-primary'>{$subjects_list}</span></td>
                                 </tr>
                                 <tr>
-                                    <td class='bg-light text-muted'>Variation</td>
-                                    <td>Avg SD: <strong>" . number_format($std_dev, 2) . "</strong> | Avg Var: <strong>" . number_format($variance, 1) . "</strong></td>
+                                    <td class='bg-light text-muted align-middle'>Variation (SD)</td>
+                                    <td class='align-middle'>
+                                        <div class='d-flex align-items-center justify-content-between flex-wrap gap-1'>
+                                            {$sd_badge_html}
+                                            <small class='text-muted'>Avg Var: <strong>" . number_format($variance, 1) . "</strong></small>
+                                        </div>
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
