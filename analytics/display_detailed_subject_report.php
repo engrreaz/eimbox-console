@@ -153,7 +153,7 @@ try {
                                 </div>
                                 <div class='col-3'>
                                     <div class='p-1 bg-light rounded border-sm'>
-                                        <small class='text-muted d-block' style='font-size: 10px;'>A+ (80%+)</small>
+                                        <small class='text-muted d-block' style='font-size: 10px;'>Exc. (70%+)</small>
                                         <strong class='text-info'>" . number_format($excellent_rate, 1) . "%</strong>
                                     </div>
                                 </div>
@@ -172,7 +172,7 @@ try {
 
                             <div class='mb-3'>
                                 <div class='d-flex justify-content-between align-items-center mb-1' style='font-size: 11px;'>
-                                    <span class='text-muted'>A+ Excellence Rate ({$excellent_count} Students):</span>
+                                    <span class='text-muted'>Excellence Rate (70%+ Marks - {$excellent_count} Students):</span>
                                     <span class='fw-bold text-info'>" . number_format($excellent_rate, 2) . "%</span>
                                 </div>
                                 <div class='progress' style='height: 14px; min-height: 14px;'>

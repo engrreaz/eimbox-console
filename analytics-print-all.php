@@ -962,18 +962,17 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
                             <span class="badge bg-secondary text-white">${subjects.length} Subjects</span>
                         </div>
                         <div class="table-responsive">
-                            <table class="table table-bordered table-sm table-striped align-middle mb-0 a4-compact-table">
+                            <table class="table table-bordered table-sm align-middle mb-0 a4-compact-table">
                                 <thead class="table-light">
-                                    <tr class="text-center align-middle">
+                                    <tr class="text-center align-middle" style="font-size: 10px;">
                                         <th style="width: 45px;">Code</th>
-                                        <th class="text-start">Subject & Teacher</th>
-                                        <th style="width: 75px;">Appeared / Enrolled</th>
-                                        <th style="width: 70px;">Pass / Fail</th>
-                                        <th style="width: 75px;">Pass Rate %</th>
-                                        <th style="width: 75px;">Avg Marks %</th>
-                                        <th style="width: 70px;">A+ (80%+)</th>
-                                        <th style="width: 80px;">Score Range</th>
-                                        <th style="width: 80px;">Indices</th>
+                                        <th class="text-start" style="min-width: 120px;">Subject & Teacher</th>
+                                        <th style="width: 75px;">Enrolled / Appeared</th>
+                                        <th style="width: 85px;">Pass & Avg</th>
+                                        <th style="width: 75px;">Exc. (70%+)</th>
+                                        <th class="text-start" style="min-width: 155px;">Gender Stats (M : F)</th>
+                                        <th style="width: 90px;">Dist. & Variation</th>
+                                        <th style="width: 95px;">Range & Indices</th>
                                     </tr>
                                 </thead>
                                 <tbody>`;
@@ -986,16 +985,36 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
 
                         const enrolled = parseInt(sub.student_count) || 0;
                         const appeared = parseInt(sub.appeared_student_count) || 0;
+                        const attnRate = enrolled > 0 ? ((appeared / enrolled) * 100).toFixed(1) : '0.0';
+
                         const passed = parseInt(sub.pass_count) || 0;
                         const failed = parseInt(sub.fail_count) || 0;
-
                         const passRate = parseFloat(sub.pass_rate || 0).toFixed(1);
                         const avgMarks = parseFloat(sub.marks_percentage || sub.avg_marks || 0).toFixed(1);
+
                         const excellent = parseInt(sub.excellent_count) || 0;
                         const excellentRate = parseFloat(sub.excellent_rate || 0).toFixed(1);
 
-                        const maxM = parseFloat(sub.max_marks || 0);
-                        const minM = parseFloat(sub.min_marks || 0);
+                        const maleCount = parseInt(sub.male_count) || 0;
+                        const femaleCount = parseInt(sub.female_count) || 0;
+                        const malePass = parseInt(sub.male_pass_count) || 0;
+                        const femalePass = parseInt(sub.female_pass_count) || 0;
+                        const maleAvg = parseFloat(sub.male_avg_marks || 0).toFixed(1);
+                        const femaleAvg = parseFloat(sub.female_avg_marks || 0).toFixed(1);
+                        const malePassRate = maleCount > 0 ? ((malePass / maleCount) * 100).toFixed(1) : '0.0';
+                        const femalePassRate = femaleCount > 0 ? ((femalePass / femaleCount) * 100).toFixed(1) : '0.0';
+
+                        const totalGender = maleCount + femaleCount;
+                        const genderRatioStr = totalGender > 0 ? `${maleCount}M : ${femaleCount}F` : '-';
+
+                        const aboveAvg = parseInt(sub.count_above_avg) || 0;
+                        const belowAvg = parseInt(sub.count_below_avg) || 0;
+                        const variance = parseFloat(sub.variance || 0).toFixed(1);
+                        const stdDev = parseFloat(sub.std_deviation || 0).toFixed(2);
+
+                        const maxM = parseFloat(sub.max_marks || 0).toFixed(0);
+                        const minM = parseFloat(sub.min_marks || 0).toFixed(0);
+                        const rangeVal = parseFloat(sub.marks_range || (maxM - minM)).toFixed(0);
 
                         const cdi = parseFloat(sub.cdi || 0).toFixed(2);
                         const tspi = parseFloat(sub.tspi || 0).toFixed(1);
@@ -1004,31 +1023,36 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
                                     <tr>
                                         <td class="text-center fw-semibold text-secondary">${code}</td>
                                         <td class="text-start">
-                                            <div class="fw-bold text-dark">${name}</div>
-                                            <small class="text-muted"><i class="bi bi-person me-1"></i>${teacher}${tpos}</small>
+                                            <div class="fw-bold text-dark lh-sm">${name}</div>
+                                            <small class="text-muted d-block lh-sm" style="font-size: 9.5px;"><i class="bi bi-person me-1"></i>${teacher}${tpos}</small>
                                         </td>
                                         <td class="text-center">
-                                            <span class="fw-bold">${appeared}</span><span class="text-muted"> / ${enrolled}</span>
+                                            <div class="fw-bold lh-sm">${appeared} <span class="text-muted fw-normal">/ ${enrolled}</span></div>
+                                            <small class="text-muted d-block" style="font-size: 9px;">Attn: ${attnRate}%</small>
                                         </td>
                                         <td class="text-center">
-                                            <span class="text-success fw-bold">${passed}</span> / <span class="text-danger fw-bold">${failed}</span>
+                                            <div class="lh-sm"><span class="text-success fw-bold">${passed}P</span> / <span class="text-danger fw-bold">${failed}F</span></div>
+                                            <small class="d-block" style="font-size: 9.5px;">PR: <strong class="text-success">${passRate}%</strong> | Avg: <strong class="text-primary">${avgMarks}%</strong></small>
                                         </td>
                                         <td class="text-center">
-                                            <span class="fw-bold text-success">${passRate}%</span>
-                                        </td>
-                                        <td class="text-center">
-                                            <span class="fw-bold text-primary">${avgMarks}%</span>
-                                        </td>
-                                        <td class="text-center">
-                                            <span class="fw-bold text-info">${excellent}</span>
+                                            <div class="fw-bold text-info lh-sm">${excellent}</div>
                                             <small class="text-muted d-block" style="font-size: 9px;">(${excellentRate}%)</small>
                                         </td>
-                                        <td class="text-center">
-                                            <span class="text-success fw-bold">${maxM}</span> - <span class="text-danger fw-bold">${minM}</span>
+                                        <td class="text-start" style="font-size: 9.5px;">
+                                            <div class="lh-sm"><span class="fw-semibold text-primary">👦 M (${maleCount}):</span> ${malePass} Pass <span class="text-muted">(${malePassRate}%)</span> • Avg: <strong class="text-dark">${maleAvg}%</strong></div>
+                                            <div class="lh-sm mt-1"><span class="fw-semibold text-danger">👧 F (${femaleCount}):</span> ${femalePass} Pass <span class="text-muted">(${femalePassRate}%)</span> • Avg: <strong class="text-dark">${femaleAvg}%</strong></div>
+                                            <div class="text-muted mt-1" style="font-size: 8.5px;">Ratio: <span class="fw-bold text-secondary">${genderRatioStr}</span></div>
+                                        </td>
+                                        <td class="text-center" style="font-size: 9.5px;">
+                                            <div class="lh-sm"><span class="text-success fw-bold">▲ ${aboveAvg}</span> | <span class="text-danger fw-bold">▼ ${belowAvg}</span></div>
+                                            <small class="text-muted d-block mt-1" style="font-size: 8.5px;">SD: <strong>${stdDev}</strong> | Var: <strong>${variance}</strong></small>
                                         </td>
                                         <td class="text-center">
-                                            <span class="badge bg-warning text-dark me-1" style="font-size: 9px;">CDI: ${cdi}</span>
-                                            <span class="badge bg-primary text-white" style="font-size: 9px;">TSPI: ${tspi}</span>
+                                            <div class="lh-sm"><span class="text-success fw-bold">${maxM}</span> - <span class="text-danger fw-bold">${minM}</span> <small class="text-muted">(${rangeVal})</small></div>
+                                            <div class="mt-1">
+                                                <span class="badge bg-warning text-dark me-1" style="font-size: 8.5px;">CDI: ${cdi}</span>
+                                                <span class="badge bg-primary text-white" style="font-size: 8.5px;">TSPI: ${tspi}</span>
+                                            </div>
                                         </td>
                                     </tr>`;
                     });
@@ -1165,9 +1189,26 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
                             formula: '(পাস শিক্ষার্থী ÷ অংশ নেওয়া শিক্ষার্থী) × ১০০ [ধাপ ১]'
                         },
                         {
-                            term: 'Excellent Rate (A+ হার %)',
-                            desc: 'সংশ্লিষ্ট বিষয়ে ৮০% বা তদূর্ধ্ব নম্বর প্রাপ্ত শিক্ষার্থীদের শতকরা হার।',
-                            formula: '(৮০%+ পাওয়া শিক্ষার্থী ÷ অংশ নেওয়া শিক্ষার্থী) × ১০০ [ধাপ ১]'
+                            term: 'Excellent Rate (উৎকর্ষ হার % - ৭০%+ নম্বর)',
+                            desc: 'সংশ্লিষ্ট বিষয়ে ৭০% বা তদূর্ধ্ব নম্বর (Grade A ও A+) প্রাপ্ত শিক্ষার্থীদের শতকরা হার।',
+                            formula: '(৭০%+ নম্বর পাওয়া শিক্ষার্থী ÷ অংশ নেওয়া শিক্ষার্থী) × ১০০ [ধাপ ১]'
+                        },
+                        {
+                            term: 'Gender Performance (লিঙ্গভিত্তিক ফলাফল ও অনুপাত)',
+                            desc: 'ছাত্র (Male) ও ছাত্রী (Female) এর অন্তর্ভুক্তি সংখ্যা, পাসের সংখ্যা, পাসের হার ও গড় নম্বরের তুলনামূলক বিশ্লেষণ।'
+                        },
+                        {
+                            term: 'Above / Below Avg (গড়ের বেশি/কম বণ্টন)',
+                            desc: 'বিষয়ের গড় নম্বরের চেয়ে বেশি (Above Avg) এবং কম (Below Avg) পাওয়া শিক্ষার্থীদের সংখ্যা।'
+                        },
+                        {
+                            term: 'Variance & Std. Dev. (বিস্তার ও আদর্শ বিচ্যুতি)',
+                            desc: 'শিক্ষার্থীদের নম্বরের ধারাবাহিকতা ও ব্যবধান। কম SD সমমানের পারফরম্যান্স ও বেশি SD নম্বরের বড় তারতম্য নির্দেশ করে।'
+                        },
+                        {
+                            term: 'Score Range (নম্বর পরিসর)',
+                            desc: 'সর্বোচ্চ (Max) ও সর্বনিম্ন (Min) নম্বরের ব্যবধান।',
+                            formula: 'সর্বোচ্চ নম্বর - সর্বনিম্ন নম্বর [ধাপ ১]'
                         },
                         {
                             term: 'CDI (Combined Difficulty Index)',
@@ -1178,15 +1219,6 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
                             term: 'TSPI (Teacher Subject Performance Index)',
                             desc: 'নির্দিষ্ট শ্রেণি-শাখায় শিক্ষকের বিষয়ের সম্মিলিত পারফরম্যান্স মানদণ্ড।',
                             formula: '(গড় নম্বর % × ০.৫০) + (পাসের হার % × ০.৫০) [ধাপ ৮a]'
-                        },
-                        {
-                            term: 'Score Range (নম্বর পরিসর)',
-                            desc: 'সর্বোচ্চ (Max) ও সর্বনিম্ন (Min) নম্বরের ব্যবধান।',
-                            formula: 'সর্বোচ্চ নম্বর - সর্বনিম্ন নম্বর [ধাপ ১]'
-                        },
-                        {
-                            term: 'Variance & Std. Dev. (বিস্তার ও বিচ্যুতি)',
-                            desc: 'শিক্ষার্থীদের নম্বরের ধারাবাহিকতা। কম মান সমমানের পারফরম্যান্স ও বেশি মান নম্বরের বড় তারতম্য নির্দেশ করে।'
                         }
                     ],
                     'পরামর্শ: যেসব বিষয়ে CDI বেশি ও TSPI কম, সেগুলোতে পাঠদান পদ্ধতি ও শিক্ষার্থীদের শিখন ঘাটতি নিবিড়ভাবে পর্যালোচনা করা প্রয়োজন।'
