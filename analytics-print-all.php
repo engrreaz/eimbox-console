@@ -1068,6 +1068,105 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
             return html;
         }
 
+        function renderTeacherTable(data) {
+            if (!data || data.length === 0) {
+                return '<div class="alert alert-warning">No teacher performance data available.</div>';
+            }
+
+            let html = `
+            <div class="detailed-teacher-table-container mb-4">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm align-middle mb-0 a4-compact-table">
+                        <thead class="table-light">
+                            <tr class="text-center align-middle" style="font-size: 10px;">
+                                <th style="width: 45px;">Rank</th>
+                                <th class="text-start" style="min-width: 130px;">Teacher & Position</th>
+                                <th class="text-start" style="min-width: 140px;">Workload (Subjects & Classes)</th>
+                                <th style="width: 85px;">Pass & Avg</th>
+                                <th style="width: 75px;">Exc. (70%+)</th>
+                                <th style="width: 95px;">Index (TPI & TIA)</th>
+                                <th style="width: 90px;">Impact (TCI & TSI)</th>
+                                <th style="width: 85px;">Consistency</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+
+            data.forEach(teacher => {
+                const rank = teacher.teacher_rank ? `#${teacher.teacher_rank}` : '-';
+                const name = teacher.tname || 'Unassigned Teacher';
+                const pos = teacher.position || 'Teacher';
+
+                const students = parseInt(teacher.total_students_taught) || 0;
+                const subjectsCount = parseInt(teacher.total_subjects_taught) || 0;
+                const classesCount = parseInt(teacher.total_classes_taught) || 0;
+
+                const subjectsList = teacher.subjects_list || 'N/A';
+                const classesList = teacher.classes_list || 'N/A';
+
+                const avgMarks = parseFloat(teacher.overall_avg_marks || 0).toFixed(1);
+                const passRate = parseFloat(teacher.overall_pass_rate || 0).toFixed(1);
+                const excRate = parseFloat(teacher.overall_excellent_rate || 0).toFixed(1);
+
+                const tpi = parseFloat(teacher.teacher_performance_index || teacher.tpi || 0).toFixed(1);
+                const tii = parseFloat(teacher.teacher_impact_index || 1).toFixed(2);
+                const tia = parseFloat(teacher.teacher_impact_adjustment || teacher.tia || 0).toFixed(1);
+
+                const tci = parseFloat(teacher.tci_score || 0);
+                const tsi = parseFloat(teacher.tsi_score || 0);
+                const tciSign = tci > 0 ? '+' : '';
+                const tsiSign = tsi > 0 ? '+' : '';
+                const tciColor = tci > 0 ? 'text-success' : (tci < 0 ? 'text-danger' : 'text-muted');
+                const tsiColor = tsi > 0 ? 'text-success' : (tsi < 0 ? 'text-danger' : 'text-muted');
+
+                const stdDev = parseFloat(teacher.avg_std_deviation || 0).toFixed(2);
+                const variance = parseFloat(teacher.avg_variance || 0).toFixed(1);
+
+                html += `
+                            <tr>
+                                <td class="text-center">
+                                    <span class="badge bg-primary fs-6 py-1 px-2">${rank}</span>
+                                </td>
+                                <td class="text-start">
+                                    <div class="fw-bold text-dark lh-sm">${name}</div>
+                                    <small class="text-muted d-block lh-sm" style="font-size: 9.5px;"><i class="bi bi-briefcase me-1"></i>${pos}</small>
+                                </td>
+                                <td class="text-start" style="font-size: 9.5px;">
+                                    <div class="lh-sm"><span class="text-dark fw-bold">${students}</span> Students | <span class="text-secondary">${classesCount} Cls</span> | <span class="text-secondary">${subjectsCount} Sub</span></div>
+                                    <div class="text-muted mt-1 text-truncate" style="max-width: 200px;" title="${classesList}"><i class="bi bi-mortarboard me-1"></i>${classesList}</div>
+                                    <div class="text-primary mt-0 text-truncate" style="max-width: 200px;" title="${subjectsList}"><i class="bi bi-book me-1"></i>${subjectsList}</div>
+                                </td>
+                                <td class="text-center">
+                                    <div class="lh-sm">PR: <strong class="text-success">${passRate}%</strong></div>
+                                    <small class="d-block" style="font-size: 9.5px;">Avg: <strong class="text-primary">${avgMarks}%</strong></small>
+                                </td>
+                                <td class="text-center">
+                                    <div class="fw-bold text-info lh-sm">${excRate}%</div>
+                                    <small class="text-muted d-block" style="font-size: 8.5px;">(70%+ Scored)</small>
+                                </td>
+                                <td class="text-center">
+                                    <div class="lh-sm"><strong class="text-primary fs-6">TIA: ${tia}</strong></div>
+                                    <small class="text-muted d-block" style="font-size: 9px;">TPI: ${tpi} • TII: ${tii}x</small>
+                                </td>
+                                <td class="text-center" style="font-size: 9.5px;">
+                                    <div class="lh-sm">Class (TCI): <strong class="${tciColor}">${tciSign}${tci.toFixed(1)}</strong></div>
+                                    <div class="lh-sm mt-1">Sub (TSI): <strong class="${tsiColor}">${tsiSign}${tsi.toFixed(1)}</strong></div>
+                                </td>
+                                <td class="text-center" style="font-size: 9px;">
+                                    <div class="lh-sm">SD: <strong>${stdDev}</strong></div>
+                                    <div class="text-muted mt-1">Var: <strong>${variance}</strong></div>
+                                </td>
+                            </tr>`;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>`;
+
+            return html;
+        }
+
         function renderExplanationCard(title, items, notes = '') {
             let html = `
             <div class="card mt-4 border-light shadow-none bg-light report-explanation-card">
@@ -1250,45 +1349,51 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
 
                 // Custom explanation card
                 html += renderExplanationCard(
-                    'শিক্ষক মূল্যায়ন সূচক ও পরিমাপ পদ্ধতি (Teacher Evaluation Guide)',
+                    'শিক্ষক মূল্যায়ন সূচক, পরিমাপ পদ্ধতি ও গণনার সূত্র (Teacher Evaluation Guide)',
                     [
                         {
-                            term: 'TPI (Teacher Performance Index - বেস স্কোর)',
-                            desc: 'শিক্ষকের পাঠদানে শিক্ষার্থীদের সরাসরি ফলাফলের ওয়েটেড বেস স্কোর।',
-                            formula: '(পাসের হার % × ০.৪০) + (A+ এর হার % × ০.২৫) + (গড় নম্বর % × ০.৩৫) [ধাপ ৮]'
+                            term: 'TPI (Teacher Performance Index - বেস পারফরম্যান্স)',
+                            desc: 'শিক্ষকের পাঠদানে শিক্ষার্থীদের সরাসরি ফলাফলের ওয়েটেড স্কোর।',
+                            formula: '(পাসের হার % × ০.৪০) + (৭০%+ উৎকর্ষ হার % × ০.২৫) + (গড় নম্বর % × ০.৩৫) [ধাপ ৮]'
                         },
                         {
-                            term: 'TII (Teacher Impact Index - প্রভাব সূচক)',
-                            desc: 'শিক্ষক যে শ্রেণিতে পড়ান তার চ্যালেঞ্জ বা কাঠিন্যের প্রভাব সমন্বয়ক (কঠিন শ্রেণিতে পড়ানো শিক্ষকের TII বেশি থাকে)।',
+                            term: 'TII (Teacher Impact Index - কাঠিন্য বুস্ট গুণক)',
+                            desc: 'শিক্ষক যে শ্রেণিতে পড়ান তার চ্যালেঞ্জ বা কাঠিন্যের প্রভাব সমন্বয়ক (কঠিন বা দুর্বল শ্রেণিতে পাঠদানকারী শিক্ষকের TII বেশি হয়)।',
                             formula: '১ + (১০০ - ক্লাসের গড় নম্বর %) ÷ ১০০ [ধাপ ৫]'
                         },
                         {
                             term: 'TIA (Teacher Impact Adjustment - চূড়ান্ত স্কোর)',
-                            desc: 'শিক্ষকের প্রকৃত মূল্যায়ন ও চূড়ান্ত স্কোর (এই স্কোরের ক্রমানুযায়ী Teacher Rank নির্ধারিত হয়)।',
-                            formula: 'TPI × TII (কাঠিন্য সমন্বিত স্কোর) [ধাপ ৮]'
+                            desc: 'কাঠিন্য সমন্বিত চূড়ান্ত স্কোর (এই স্কোরের ক্রমানুযায়ী Teacher Rank নির্ধারিত হয়)।',
+                            formula: 'TPI × TII [ধাপ ৮]'
                         },
                         {
                             term: 'TCI (Teacher Class Impact - শ্রেণি প্রভাব)',
-                            desc: 'শ্রেণির অন্যান্য বিষয়ের সামগ্রিক গড়ের তুলনায় এই শিক্ষকের বিষয়ের গড়ের পার্থক্য (+ মান হলে ক্লাসের চেয়ে ভালো)।',
+                            desc: 'শ্রেণির অন্যান্য সকল বিষয়ের সামগ্রিক গড়ের তুলনায় এই শিক্ষকের বিষয়ের গড়ের ব্যবধান (+ মান ক্লাসের চেয়ে ভালো নির্দেশ করে)।',
                             formula: 'AVG(শিক্ষকের বিষয়ের গড় % - শ্রেণির সার্বিক গড় %) [ধাপ ১২]'
                         },
                         {
                             term: 'TSI (Teacher Subject Impact - বিষয় প্রভাব)',
-                            desc: 'প্রতিষ্ঠানের একই বিষয়ের সামগ্রিক গড়ের তুলনায় এই শিক্ষকের সেকশনের গড়ের পার্থক্য (+ মান হলে সার্বিক গড়ের চেয়ে ভালো)।',
+                            desc: 'প্রতিষ্ঠানের একই বিষয়ের সামগ্রিক গড়ের তুলনায় এই শিক্ষকের সেকশনের শিক্ষার্থীদের অর্জিত গড়ের পার্থক্য (+ মান সার্বিক বিষয়ের চেয়ে ভালো নির্দেশ করে)।',
                             formula: 'AVG(শিক্ষকের বিষয়ের গড় % - প্রতিষ্ঠানের ওই বিষয়ের সার্বিক গড় %) [ধাপ ১২]'
                         },
                         {
+                            term: 'SD & Variance (ধারাবাহিকতা ও বিস্তার)',
+                            desc: 'শিক্ষকের পড়ানো বিভিন্ন শ্রেণিতে শিক্ষার্থীদের ফলাফলের তারতম্য বা ধারাবাহিকতার পরিমাপ (কম মান সুষম শিক্ষাদানের প্রতীক)।',
+                            formula: 'AVG(Standard Deviation) ও AVG(Variance) [ধাপ ৫]'
+                        },
+                        {
                             term: 'Teacher Rank (শিক্ষক র‍্যাঙ্ক)',
-                            desc: 'প্রতিষ্ঠানের সকল শিক্ষকদের মধ্যে TIA স্কোরের ক্রমানুযায়ী শিক্ষকের অবস্থান।'
+                            desc: 'প্রতিষ্ঠানের সকল শিক্ষকদের মধ্যে চূড়ান্ত TIA স্কোরের ভিত্তিতে শিক্ষকের অবস্থান (#1, #2...)।',
+                            formula: 'RANK() OVER (ORDER BY TIA DESC) [ধাপ ১৫]'
                         }
                     ],
-                    'ব্যাখ্যা: দুর্বল বা কঠিন শ্রেণিতে পাঠদানকারী শিক্ষকের পরিশ্রমের সুবিচার করতে TIA স্কোরে ক্লাসের কাঠিন্যকে বুস্ট ফ্যাক্টর হিসেবে সমন্বয় করা হয়।'
+                    'ব্যাখ্যা: দুর্বল বা কঠিন শ্রেণিতে পাঠদানকারী শিক্ষকের পরিশ্রম ও অবদানকে ন্যায্য মূল্যায়ন করতে TIA স্কোরে ক্লাসের কাঠিন্য গুণক (TII) দিয়ে চূড়ান্ত স্কোর বুস্ট করা হয়।'
                 );
 
-                // Append the raw generic table below it inside reference-data-block
+                // Append the formatted teacher table below it inside reference-data-block
                 html += '<div class="reference-data-block">';
-                html += '<h3 class="mt-5 text-muted"><i class="bi bi-table me-2"></i>Raw Data Table (Teacher Performance Reference)</h3>';
-                html += renderGenericTable('', data);
+                html += '<h3 class="mt-5 mb-3 text-muted"><i class="bi bi-table me-2"></i>Teacher\'s Performance Summary Table (Ranking & Workload)</h3>';
+                html += renderTeacherTable(data);
                 html += '</div>';
 
                 return html;
