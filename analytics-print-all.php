@@ -4,7 +4,6 @@ $dataset_id = (int) ($_GET['dataset_id'] ?? 0);
 $sccode = $_SESSION['sccode'] ?? null;
 
 if (empty($dataset_id) || empty($sccode)) {
-
     die('<div class="alert alert-danger">Error: No Dataset ID provided.</div>');
 }
 
@@ -36,8 +35,60 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
         color-adjust: exact !important;
     }
 
-    .hide-reference-data .reference-data-block {
+    /* Section Visibility */
+    .report-section-container.section-hidden {
         display: none !important;
+    }
+
+    /* Display Modes */
+    /* Mode: Table Only (শুধু টেবিল - গ্রাফিক্যাল কার্ড ও প্রগ্রেস বার ছাড়া) */
+    .mode-table-only .custom-graphical-view,
+    .mode-table-only #custom-detailed-subject-view,
+    .mode-table-only #custom-teacher-view,
+    .mode-table-only #custom-class-view,
+    .mode-table-only #custom-overall-subject-view,
+    .mode-table-only #custom-at-risk-view,
+    .mode-table-only .stat-summary-cards {
+        display: none !important;
+    }
+    .mode-table-only .reference-data-block {
+        display: block !important;
+    }
+
+    /* Mode: Graphical Only (টেবিল বাদ দিয়ে / শুধু গ্রাফিক্যাল কার্ড ও প্রগ্রেস বার) */
+    .mode-graphical-only .reference-data-block {
+        display: none !important;
+    }
+    .mode-graphical-only .custom-graphical-view,
+    .mode-graphical-only #custom-detailed-subject-view,
+    .mode-graphical-only #custom-teacher-view,
+    .mode-graphical-only #custom-class-view,
+    .mode-graphical-only #custom-overall-subject-view,
+    .mode-graphical-only #custom-at-risk-view,
+    .mode-graphical-only .stat-summary-cards {
+        display: block !important;
+    }
+
+    /* Mode: Both (গ্রাফিক্যাল + বিস্তারিত টেবিল) */
+    .mode-both .custom-graphical-view,
+    .mode-both #custom-detailed-subject-view,
+    .mode-both #custom-teacher-view,
+    .mode-both #custom-class-view,
+    .mode-both #custom-overall-subject-view,
+    .mode-both #custom-at-risk-view,
+    .mode-both .stat-summary-cards,
+    .mode-both .reference-data-block {
+        display: block !important;
+    }
+
+    /* Fine-grained Toggles */
+    .hide-explanation-cards .report-explanation-card {
+        display: none !important;
+    }
+
+    .no-page-breaks .page-break {
+        display: none !important;
+        page-break-before: auto !important;
     }
 
     /* Progress bar base styles with Inset Box-Shadow Fallback */
@@ -119,6 +170,24 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
         display: inline-block;
     }
 
+    /* Modal Styling */
+    .mode-option-card {
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+        border-width: 2px;
+    }
+    .btn-check:checked + .mode-option-card {
+        background-color: #f0f2ff;
+        border-color: #696cff !important;
+        box-shadow: 0 4px 12px rgba(105, 108, 255, 0.15);
+    }
+    .section-option-item {
+        transition: background-color 0.2s ease;
+    }
+    .section-option-item:hover {
+        background-color: #f1f3f7 !important;
+    }
+
     @media print {
         * {
             -webkit-print-color-adjust: exact !important;
@@ -126,11 +195,14 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
             color-adjust: exact !important;
         }
 
-        .no-print {
+        .no-print,
+        .modal,
+        .modal-backdrop {
             display: none !important;
+            visibility: hidden !important;
         }
-        body{
-            background:white;
+        body {
+            background: white;
         }
 
         .page-break {
@@ -149,6 +221,42 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
         #main-report-block,
         #main-report-block * {
             visibility: visible;
+        }
+
+        /* Mode rules in print */
+        .report-section-container.section-hidden {
+            display: none !important;
+            visibility: hidden !important;
+        }
+
+        .mode-table-only .custom-graphical-view,
+        .mode-table-only #custom-detailed-subject-view,
+        .mode-table-only #custom-teacher-view,
+        .mode-table-only #custom-class-view,
+        .mode-table-only #custom-overall-subject-view,
+        .mode-table-only #custom-at-risk-view,
+        .mode-table-only .stat-summary-cards {
+            display: none !important;
+            visibility: hidden !important;
+        }
+        .mode-table-only .reference-data-block {
+            display: block !important;
+            visibility: visible !important;
+        }
+
+        .mode-graphical-only .reference-data-block {
+            display: none !important;
+            visibility: hidden !important;
+        }
+
+        .hide-explanation-cards .report-explanation-card {
+            display: none !important;
+            visibility: hidden !important;
+        }
+
+        .no-page-breaks .page-break {
+            display: none !important;
+            page-break-before: auto !important;
         }
 
         /* Bulletproof Progress Bars in Print */
@@ -223,12 +331,6 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
             border-color: #dc3545 !important;
         }
 
-        .hide-reference-data .reference-data-block,
-        .hide-reference-data .reference-data-block * {
-            display: none !important;
-            visibility: hidden !important;
-        }
-
         .report-explanation-card {
             background-color: #f8f9fa !important;
             box-shadow: inset 0 0 0 1000px #f8f9fa !important;
@@ -273,36 +375,271 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
         border-radius: 5px;
     }
 </style>
+
 <div class="container-xxl flex-grow-1 container-p-y">
-    <div class="card">
+    <div class="card shadow-sm">
         <div class="card-header d-flex justify-content-between align-items-center no-print">
-            <h5 class="mb-0">Full Analytics Report</h5>
-            <div class="d-flex gap-2">
-                <a href="analytics-exam-report.php" class="btn btn-secondary"><i class="bi bi-arrow-left me-1"></i>
-                    Back</a>
-                <button type="button" id="toggleRefDataBtn" class="btn btn-outline-primary" title="Toggle Reference / Raw Data Tables">
-                    <i class="bi bi-eye-slash me-1" id="toggleRefDataIcon"></i> Reference Data
+            <h5 class="mb-0 fw-bold"><i class="bi bi-file-earmark-bar-graph me-2 text-primary"></i>Full Analytics Report</h5>
+            <div class="d-flex gap-2 align-items-center">
+                <a href="analytics-exam-report.php" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Back
+                </a>
+                <!-- Options Button with active section count badge -->
+                <button type="button" id="openReportOptionsBtn" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#reportOptionsModal" title="Configure Report Sections & Display Mode">
+                    <i class="bi bi-sliders2 me-1"></i> Options
+                    <span class="badge bg-primary rounded-pill ms-1" id="sectionCountBadge">7/7</span>
                 </button>
-                <button onclick="window.print()" class="btn btn-primary"><i class="bi bi-printer me-1"></i>
-                    Print</button>
-                <!-- PDF download button can be added later if needed -->
+                <button onclick="window.print()" class="btn btn-primary">
+                    <i class="bi bi-printer me-1"></i> Print
+                </button>
             </div>
         </div>
+
         <div class="card-body" id="main-report-block">
-            <!-- Placeholders for each report section -->
-            <div id="institute-report" class="report-section"></div>
-            <div class="page-break"></div>
-            <div id="detailed-subject-report" class="report-section"></div>
-            <div class="page-break"></div>
-            <div id="teacher-report" class="report-section"></div>
-            <div class="page-break"></div>
-            <div id="class-report" class="report-section"></div>
-            <div class="page-break"></div>
-            <div id="overall-subject-report" class="report-section"></div>
-            <div class="page-break"></div>
-            <div id="student-report" class="report-section"></div>
-            <div class="page-break"></div>
-            <div id="at-risk-students-report" class="report-section"></div>
+            <!-- Placeholders for each report section wrapped with container -->
+            <div class="report-section-container" id="container-institute-report" data-section="institute-report">
+                <div id="institute-report" class="report-section"></div>
+                <div class="page-break"></div>
+            </div>
+
+            <div class="report-section-container" id="container-detailed-subject-report" data-section="detailed-subject-report">
+                <div id="detailed-subject-report" class="report-section"></div>
+                <div class="page-break"></div>
+            </div>
+
+            <div class="report-section-container" id="container-teacher-report" data-section="teacher-report">
+                <div id="teacher-report" class="report-section"></div>
+                <div class="page-break"></div>
+            </div>
+
+            <div class="report-section-container" id="container-class-report" data-section="class-report">
+                <div id="class-report" class="report-section"></div>
+                <div class="page-break"></div>
+            </div>
+
+            <div class="report-section-container" id="container-overall-subject-report" data-section="overall-subject-report">
+                <div id="overall-subject-report" class="report-section"></div>
+                <div class="page-break"></div>
+            </div>
+
+            <div class="report-section-container" id="container-student-report" data-section="student-report">
+                <div id="student-report" class="report-section"></div>
+                <div class="page-break"></div>
+            </div>
+
+            <div class="report-section-container" id="container-at-risk-students-report" data-section="at-risk-students-report">
+                <div id="at-risk-students-report" class="report-section"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report Options Modal -->
+<div class="modal fade no-print" id="reportOptionsModal" tabindex="-1" aria-labelledby="reportOptionsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header bg-light border-bottom py-3">
+                <div>
+                    <h5 class="modal-title fw-bold text-dark mb-0" id="reportOptionsModalLabel">
+                        <i class="bi bi-sliders2 text-primary me-2"></i> Report Display & Print Options
+                    </h5>
+                    <small class="text-muted">রিপোর্টের অংশসমূহ ও ডিসপ্লে মোড কাস্টমাইজ করুন</small>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <!-- 1. Display Mode Selection -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-dark d-flex align-items-center mb-2">
+                        <i class="bi bi-display text-primary me-2"></i> Display Mode (ডিসপ্লে মোড)
+                    </label>
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <input type="radio" class="btn-check" name="displayMode" id="modeBoth" value="both" checked>
+                            <label class="btn btn-outline-primary mode-option-card w-100 text-start p-3 h-100 d-flex flex-column justify-content-between" for="modeBoth">
+                                <div>
+                                    <div class="fw-bold mb-1"><i class="bi bi-card-checklist me-1"></i> Table + Graphical</div>
+                                    <small class="text-muted d-block lh-sm" style="font-size: 11px;">ভিজ্যুয়াল কার্ড, প্রগ্রেস বার এবং র' ডাটা টেবিল উভয়ই থাকবে।</small>
+                                </div>
+                                <span class="badge bg-primary text-white mt-2 align-self-start">পূর্ণাঙ্গ ভিউ</span>
+                            </label>
+                        </div>
+                        <div class="col-md-4">
+                            <input type="radio" class="btn-check" name="displayMode" id="modeTableOnly" value="table-only">
+                            <label class="btn btn-outline-primary mode-option-card w-100 text-start p-3 h-100 d-flex flex-column justify-content-between" for="modeTableOnly">
+                                <div>
+                                    <div class="fw-bold mb-1"><i class="bi bi-table me-1"></i> Table Only</div>
+                                    <small class="text-muted d-block lh-sm" style="font-size: 11px;">কার্ড বাদ দিয়ে শুধুমাত্র পরিচ্ছন্ন অফিশিয়াল ডাটা টেবিল দেখানো হবে।</small>
+                                </div>
+                                <span class="badge bg-info text-white mt-2 align-self-start">শুধু টেবিল</span>
+                            </label>
+                        </div>
+                        <div class="col-md-4">
+                            <input type="radio" class="btn-check" name="displayMode" id="modeGraphicalOnly" value="graphical-only">
+                            <label class="btn btn-outline-primary mode-option-card w-100 text-start p-3 h-100 d-flex flex-column justify-content-between" for="modeGraphicalOnly">
+                                <div>
+                                    <div class="fw-bold mb-1"><i class="bi bi-bar-chart-line me-1"></i> Graphical Only</div>
+                                    <small class="text-muted d-block lh-sm" style="font-size: 11px;">র' রেফারেন্স টেবিল ছাড়া শুধুমাত্র সামারি কার্ড ও গ্রাফিক্স থাকবে।</small>
+                                </div>
+                                <span class="badge bg-success text-white mt-2 align-self-start">টেবিল বাদ দিয়ে</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-3">
+
+                <!-- 2. Report Sections Show/Hide -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="form-label fw-bold text-dark mb-0">
+                            <i class="bi bi-ui-checks text-primary me-2"></i> Select Report Sections (রিপোর্টের অংশসমূহ)
+                        </label>
+                        <div class="btn-group btn-group-sm">
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="selectAllSectionsBtn">
+                                <i class="bi bi-check-all me-1"></i> Select All
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="deselectAllSectionsBtn">
+                                <i class="bi bi-x me-1"></i> Deselect All
+                            </button>
+                        </div>
+                    </div>
+                    <div class="row g-2" id="sectionCheckboxesContainer">
+                        <!-- 7 Section items with clear Bangla & English titles -->
+                        <div class="col-md-6">
+                            <div class="p-2 border rounded bg-light section-option-item d-flex align-items-center justify-content-between">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input section-toggle-checkbox" type="checkbox" role="switch" id="sec_institute_report" data-target="institute-report" checked>
+                                    <label class="form-check-label fw-semibold text-dark ms-2" for="sec_institute_report">
+                                        1. Institute Performance Overview
+                                        <small class="text-muted d-block fw-normal" style="font-size: 11px;">প্রতিষ্ঠানের সামগ্রিক পারফরম্যান্স</small>
+                                    </label>
+                                </div>
+                                <span class="badge bg-secondary-subtle text-secondary small">Overview</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="p-2 border rounded bg-light section-option-item d-flex align-items-center justify-content-between">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input section-toggle-checkbox" type="checkbox" role="switch" id="sec_detailed_subject_report" data-target="detailed-subject-report" checked>
+                                    <label class="form-check-label fw-semibold text-dark ms-2" for="sec_detailed_subject_report">
+                                        2. Detailed Subject Performance
+                                        <small class="text-muted d-block fw-normal" style="font-size: 11px;">শ্রেণি ও শাখাভিত্তিক বিশদ পারফরম্যান্স</small>
+                                    </label>
+                                </div>
+                                <span class="badge bg-secondary-subtle text-secondary small">Subject Detail</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="p-2 border rounded bg-light section-option-item d-flex align-items-center justify-content-between">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input section-toggle-checkbox" type="checkbox" role="switch" id="sec_teacher_report" data-target="teacher-report" checked>
+                                    <label class="form-check-label fw-semibold text-dark ms-2" for="sec_teacher_report">
+                                        3. Teacher's Performance Report
+                                        <small class="text-muted d-block fw-normal" style="font-size: 11px;">শিক্ষকদের পারফরম্যান্স ও র‍্যাঙ্কিং</small>
+                                    </label>
+                                </div>
+                                <span class="badge bg-secondary-subtle text-secondary small">Teachers</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="p-2 border rounded bg-light section-option-item d-flex align-items-center justify-content-between">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input section-toggle-checkbox" type="checkbox" role="switch" id="sec_class_report" data-target="class-report" checked>
+                                    <label class="form-check-label fw-semibold text-dark ms-2" for="sec_class_report">
+                                        4. Class Performance Report
+                                        <small class="text-muted d-block fw-normal" style="font-size: 11px;">শ্রেণিভিত্তিক পারফরম্যান্স ও কাঠিন্য সূচক</small>
+                                    </label>
+                                </div>
+                                <span class="badge bg-secondary-subtle text-secondary small">Classes</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="p-2 border rounded bg-light section-option-item d-flex align-items-center justify-content-between">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input section-toggle-checkbox" type="checkbox" role="switch" id="sec_overall_subject_report" data-target="overall-subject-report" checked>
+                                    <label class="form-check-label fw-semibold text-dark ms-2" for="sec_overall_subject_report">
+                                        5. Overall Subject Performance
+                                        <small class="text-muted d-block fw-normal" style="font-size: 11px;">সামগ্রিক বিষয়ভিত্তিক পারফরম্যান্স ও SDF</small>
+                                    </label>
+                                </div>
+                                <span class="badge bg-secondary-subtle text-secondary small">Subjects</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="p-2 border rounded bg-light section-option-item d-flex align-items-center justify-content-between">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input section-toggle-checkbox" type="checkbox" role="switch" id="sec_student_report" data-target="student-report" checked>
+                                    <label class="form-check-label fw-semibold text-dark ms-2" for="sec_student_report">
+                                        6. Student Merit List
+                                        <small class="text-muted d-block fw-normal" style="font-size: 11px;">শিক্ষার্থীদের মেধাতালিকা ও গ্রেডিং</small>
+                                    </label>
+                                </div>
+                                <span class="badge bg-secondary-subtle text-secondary small">Merit List</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="p-2 border rounded bg-light section-option-item d-flex align-items-center justify-content-between">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input section-toggle-checkbox" type="checkbox" role="switch" id="sec_at_risk_students_report" data-target="at-risk-students-report" checked>
+                                    <label class="form-check-label fw-semibold text-dark ms-2" for="sec_at_risk_students_report">
+                                        7. At-Risk Students Report
+                                        <small class="text-muted d-block fw-normal" style="font-size: 11px;">ঝুঁকিপূর্ণ শিক্ষার্থীদের তালিকা ও কারণ</small>
+                                    </label>
+                                </div>
+                                <span class="badge bg-danger-subtle text-danger small">At-Risk</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-3">
+
+                <!-- 3. Additional Settings -->
+                <div>
+                    <label class="form-label fw-bold text-dark mb-2">
+                        <i class="bi bi-gear-wide-connected text-primary me-2"></i> Additional Settings (অতিরিক্ত সেটিংস)
+                    </label>
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <div class="p-2 border rounded bg-light section-option-item">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="opt_show_explanation" checked>
+                                    <label class="form-check-label fw-semibold text-dark ms-2" for="opt_show_explanation">
+                                        Show Explanation Cards
+                                        <small class="text-muted d-block fw-normal" style="font-size: 11px;">ব্যাখ্যা ও সূত্র নির্দেশিকা কার্ড দেখান</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-2 border rounded bg-light section-option-item">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="opt_page_breaks" checked>
+                                    <label class="form-check-label fw-semibold text-dark ms-2" for="opt_page_breaks">
+                                        Page Breaks on Print
+                                        <small class="text-muted d-block fw-normal" style="font-size: 11px;">প্রিন্টে প্রতিটি সেকশনে নতুন পেজ ব্রেক</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-top d-flex justify-content-between py-2 px-4">
+                <button type="button" class="btn btn-outline-secondary" id="resetReportOptionsBtn">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> Reset to Default (ডিফল্ট)
+                </button>
+                <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal" id="applyReportOptionsBtn">
+                    <i class="bi bi-check2-circle me-1"></i> Apply & Close (প্রয়োগ করুন)
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -312,32 +649,185 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
         const datasetId = <?= json_encode($dataset_id) ?>;
         const loadingHTML = `<div class="loading-placeholder"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>`;
 
-        // Toggle Reference / Raw Data Button Handler
-        const toggleRefBtn = document.getElementById('toggleRefDataBtn');
-        const toggleRefIcon = document.getElementById('toggleRefDataIcon');
-        const reportBlock = document.getElementById('main-report-block');
+        // Default State Configuration
+        const defaultOptions = {
+            mode: 'both', // 'both' | 'table-only' | 'graphical-only'
+            sections: {
+                'institute-report': true,
+                'detailed-subject-report': true,
+                'teacher-report': true,
+                'class-report': true,
+                'overall-subject-report': true,
+                'student-report': true,
+                'at-risk-students-report': true
+            },
+            showExplanation: true,
+            pageBreaks: true
+        };
 
-        if (toggleRefBtn && reportBlock) {
-            toggleRefBtn.addEventListener('click', function () {
-                reportBlock.classList.toggle('hide-reference-data');
-                const isHidden = reportBlock.classList.contains('hide-reference-data');
-                if (isHidden) {
-                    toggleRefBtn.classList.remove('btn-outline-primary');
-                    toggleRefBtn.classList.add('btn-outline-secondary');
-                    if (toggleRefIcon) {
-                        toggleRefIcon.className = 'bi bi-eye me-1';
+        let currentOptions = JSON.parse(JSON.stringify(defaultOptions));
+
+        // Load saved preferences from localStorage if exists
+        try {
+            const saved = localStorage.getItem('eimbox_analytics_report_options');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                currentOptions = {
+                    ...defaultOptions,
+                    ...parsed,
+                    sections: { ...defaultOptions.sections, ...(parsed.sections || {}) }
+                };
+            }
+        } catch (e) {
+            console.warn('Could not read from localStorage', e);
+        }
+
+        // Function to apply UI state based on currentOptions
+        function applyOptions() {
+            const reportBlock = document.getElementById('main-report-block');
+            if (!reportBlock) return;
+
+            // 1. Display Mode
+            reportBlock.classList.remove('mode-both', 'mode-table-only', 'mode-graphical-only');
+            reportBlock.classList.add(`mode-${currentOptions.mode}`);
+
+            // Sync radio button
+            const modeRadio = document.querySelector(`input[name="displayMode"][value="${currentOptions.mode}"]`);
+            if (modeRadio) {
+                modeRadio.checked = true;
+            }
+
+            // 2. Section Visibility
+            let activeCount = 0;
+            const totalCount = Object.keys(currentOptions.sections).length;
+
+            for (const [sectionId, isVisible] of Object.entries(currentOptions.sections)) {
+                const container = document.getElementById(`container-${sectionId}`);
+                const checkbox = document.querySelector(`.section-toggle-checkbox[data-target="${sectionId}"]`);
+                if (checkbox) {
+                    checkbox.checked = !!isVisible;
+                }
+
+                if (container) {
+                    if (isVisible) {
+                        container.classList.remove('section-hidden');
+                        activeCount++;
+                    } else {
+                        container.classList.add('section-hidden');
                     }
-                    toggleRefBtn.setAttribute('title', 'Show Reference / Raw Data Tables');
+                }
+            }
+
+            // Update badge on Options button
+            const badge = document.getElementById('sectionCountBadge');
+            if (badge) {
+                badge.textContent = `${activeCount}/${totalCount}`;
+                if (activeCount === totalCount) {
+                    badge.className = 'badge bg-primary rounded-pill ms-1';
+                } else if (activeCount === 0) {
+                    badge.className = 'badge bg-danger rounded-pill ms-1';
                 } else {
-                    toggleRefBtn.classList.remove('btn-outline-secondary');
-                    toggleRefBtn.classList.add('btn-outline-primary');
-                    if (toggleRefIcon) {
-                        toggleRefIcon.className = 'bi bi-eye-slash me-1';
-                    }
-                    toggleRefBtn.setAttribute('title', 'Hide Reference / Raw Data Tables');
+                    badge.className = 'badge bg-warning text-dark rounded-pill ms-1';
+                }
+            }
+
+            // 3. Explanation Cards
+            if (currentOptions.showExplanation) {
+                reportBlock.classList.remove('hide-explanation-cards');
+            } else {
+                reportBlock.classList.add('hide-explanation-cards');
+            }
+            const expSwitch = document.getElementById('opt_show_explanation');
+            if (expSwitch) expSwitch.checked = !!currentOptions.showExplanation;
+
+            // 4. Page Breaks
+            if (currentOptions.pageBreaks) {
+                reportBlock.classList.remove('no-page-breaks');
+            } else {
+                reportBlock.classList.add('no-page-breaks');
+            }
+            const pbSwitch = document.getElementById('opt_page_breaks');
+            if (pbSwitch) pbSwitch.checked = !!currentOptions.pageBreaks;
+
+            // Save to localStorage
+            try {
+                localStorage.setItem('eimbox_analytics_report_options', JSON.stringify(currentOptions));
+            } catch (e) {
+                console.warn('Could not save to localStorage', e);
+            }
+        }
+
+        // Event Listeners for Modal Controls
+        // Display Mode Radio change
+        document.querySelectorAll('input[name="displayMode"]').forEach(radio => {
+            radio.addEventListener('change', function () {
+                currentOptions.mode = this.value;
+                applyOptions();
+            });
+        });
+
+        // Section Toggle Checkboxes
+        document.querySelectorAll('.section-toggle-checkbox').forEach(chk => {
+            chk.addEventListener('change', function () {
+                const target = this.getAttribute('data-target');
+                if (target) {
+                    currentOptions.sections[target] = this.checked;
+                    applyOptions();
                 }
             });
+        });
+
+        // Select All Sections
+        const selectAllBtn = document.getElementById('selectAllSectionsBtn');
+        if (selectAllBtn) {
+            selectAllBtn.addEventListener('click', function () {
+                for (const key of Object.keys(currentOptions.sections)) {
+                    currentOptions.sections[key] = true;
+                }
+                applyOptions();
+            });
         }
+
+        // Deselect All Sections
+        const deselectAllBtn = document.getElementById('deselectAllSectionsBtn');
+        if (deselectAllBtn) {
+            deselectAllBtn.addEventListener('click', function () {
+                for (const key of Object.keys(currentOptions.sections)) {
+                    currentOptions.sections[key] = false;
+                }
+                applyOptions();
+            });
+        }
+
+        // Explanation Cards Toggle
+        const optShowExp = document.getElementById('opt_show_explanation');
+        if (optShowExp) {
+            optShowExp.addEventListener('change', function () {
+                currentOptions.showExplanation = this.checked;
+                applyOptions();
+            });
+        }
+
+        // Page Breaks Toggle
+        const optPageBreaks = document.getElementById('opt_page_breaks');
+        if (optPageBreaks) {
+            optPageBreaks.addEventListener('change', function () {
+                currentOptions.pageBreaks = this.checked;
+                applyOptions();
+            });
+        }
+
+        // Reset to Default
+        const resetBtn = document.getElementById('resetReportOptionsBtn');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', function () {
+                currentOptions = JSON.parse(JSON.stringify(defaultOptions));
+                applyOptions();
+            });
+        }
+
+        // Apply initially
+        applyOptions();
 
         const reportSections = [
             { id: 'institute-report', title: 'Institute Performance Overview', endpoint: 'get_institute_report.php' },
@@ -352,6 +842,7 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
         // Function to fetch and render a single report
         async function loadReport(section) {
             const container = document.getElementById(section.id);
+            if (!container) return;
             container.innerHTML = loadingHTML;
 
             try {
@@ -382,7 +873,7 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
 
         function renderGenericTable(title, data) {
             if (!data || data.length === 0) {
-                return `<h1>${title}</h1><div class="alert alert-warning">No data available for this report.</div>`;
+                return title ? `<h1>${title}</h1><div class="alert alert-warning">No data available for this report.</div>` : '';
             }
 
             let html = title ? `<h1>${title}</h1>` : '';
@@ -447,14 +938,14 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
                 let html = '<h1>Institute Performance Overview (প্রতিষ্ঠানের সামগ্রিক পারফরম্যান্স)</h1>';
                 const summary = data.summary || {};
                 html += `
-                        <div class='row g-3 mb-4'>
+                        <div class='row g-3 mb-4 stat-summary-cards custom-graphical-view'>
                             <div class='col-md-4'><div class='card text-center'><div class='card-body'><h4>Total Students</h4><p style='font-size: 24px;'>${summary.total_students || 0}</p></div></div></div>
                             <div class='col-md-4'><div class='card text-center'><div class='card-body'><h4>Pass Rate</h4><p style='font-size: 24px;'>${parseFloat(summary.pass_rate || 0).toFixed(2)}%</p></div></div></div>
                             <div class='col-md-4'><div class='card text-center'><div class='card-body'><h4>Average Marks</h4><p style='font-size: 24px;'>${parseFloat(summary.overall_avg_marks_percentage || 0).toFixed(2)}%</p></div></div></div>
                         </div>`;
 
                 html += "<div class='row g-3'><div class='col-md-6'><h3>Grade Distribution</h3>";
-                html += "<table class='table table-sm'><thead><tr><th>Grade</th><th>Number of Students</th><th>Percentage</th></tr></thead><tbody>";
+                html += "<table class='table table-sm table-bordered table-striped'><thead><tr><th>Grade</th><th>Number of Students</th><th>Percentage</th></tr></thead><tbody>";
                 const total_students = summary.total_students > 0 ? summary.total_students : 1;
                 (data.grade_distribution || []).forEach(grade => {
                     const percentage = (grade.student_count / total_students) * 100;
@@ -463,9 +954,9 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
                 html += "</tbody></table></div>";
 
                 html += "<div class='col-md-6'><h3>Weakest Subjects</h3>";
-                html += "<table class='table table-sm'><thead><tr><th>Subject</th><th>Failure Rate</th></tr></thead><tbody>";
+                html += "<table class='table table-sm table-bordered table-striped'><thead><tr><th>Subject</th><th>Failure Rate</th></tr></thead><tbody>";
                 (data.weakest_subjects || []).forEach(subject => {
-                    html += `<tr><td>${subject.subject_name}</td><td class='text-danger'>${parseFloat(subject.failure_rate).toFixed(2)}%</td></tr>`;
+                    html += `<tr><td>${subject.subject_name}</td><td class='text-danger fw-bold'>${parseFloat(subject.failure_rate).toFixed(2)}%</td></tr>`;
                 });
                 html += "</tbody></table></div></div>";
 
@@ -504,15 +995,17 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
                 let html = '<h1>Detailed Subject Performance (Class & Section wise)</h1>';
 
                 // Placeholder for the custom view
-                html += '<div id="custom-detailed-subject-view"><div class="loading-placeholder"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading Custom View...</span></div></div></div>';
+                html += '<div id="custom-detailed-subject-view" class="custom-graphical-view"><div class="loading-placeholder"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading Custom View...</span></div></div></div>';
 
                 fetch(`analytics/display_detailed_subject_report.php?dataset_id=${datasetId}`)
                     .then(response => response.text())
                     .then(customHtml => {
-                        document.getElementById('custom-detailed-subject-view').innerHTML = customHtml;
+                        const target = document.getElementById('custom-detailed-subject-view');
+                        if (target) target.innerHTML = customHtml;
                     })
                     .catch(error => {
-                        document.getElementById('custom-detailed-subject-view').innerHTML = `<div class="alert alert-danger">Failed to load custom view: ${error}</div>`;
+                        const target = document.getElementById('custom-detailed-subject-view');
+                        if (target) target.innerHTML = `<div class="alert alert-danger">Failed to load custom view: ${error}</div>`;
                     });
 
                 // Custom explanation card
@@ -556,9 +1049,9 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
                     'পরামর্শ: যেসব বিষয়ে CDI বেশি ও TSPI কম, সেগুলোতে পাঠদান পদ্ধতি ও শিক্ষার্থীদের শিখন ঘাটতি নিবিড়ভাবে পর্যালোচনা করা প্রয়োজন।'
                 );
 
-                // Append the old generic table below it inside reference-data-block
+                // Append the raw generic table below it inside reference-data-block
                 html += '<div class="reference-data-block">';
-                html += '<h3 class="mt-5 text-muted">Raw Data Table (for reference)</h3>';
+                html += '<h3 class="mt-5 text-muted"><i class="bi bi-table me-2"></i>Raw Data Table (Detailed Subject Reference)</h3>';
                 html += renderGenericTable('', data);
                 html += '</div>';
                 return html;
@@ -567,15 +1060,17 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
                 let html = '<h1>Teacher\'s Performance Report (শিক্ষকদের পারফরম্যান্স)</h1>';
 
                 // Placeholder for the custom view
-                html += '<div id="custom-teacher-view"><div class="loading-placeholder"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading Custom View...</span></div></div></div>';
+                html += '<div id="custom-teacher-view" class="custom-graphical-view"><div class="loading-placeholder"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading Custom View...</span></div></div></div>';
 
                 fetch(`analytics/display_teacher_report.php?dataset_id=${datasetId}`)
                     .then(response => response.text())
                     .then(customHtml => {
-                        document.getElementById('custom-teacher-view').innerHTML = customHtml;
+                        const target = document.getElementById('custom-teacher-view');
+                        if (target) target.innerHTML = customHtml;
                     })
                     .catch(error => {
-                        document.getElementById('custom-teacher-view').innerHTML = `<div class="alert alert-danger">Failed to load custom view: ${error}</div>`;
+                        const target = document.getElementById('custom-teacher-view');
+                        if (target) target.innerHTML = `<div class="alert alert-danger">Failed to load custom view: ${error}</div>`;
                     });
 
                 // Custom explanation card
@@ -615,9 +1110,9 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
                     'ব্যাখ্যা: দুর্বল বা কঠিন শ্রেণিতে পাঠদানকারী শিক্ষকের পরিশ্রমের সুবিচার করতে TIA স্কোরে ক্লাসের কাঠিন্যকে বুস্ট ফ্যাক্টর হিসেবে সমন্বয় করা হয়।'
                 );
 
-                // Append the old generic table below it inside reference-data-block
+                // Append the raw generic table below it inside reference-data-block
                 html += '<div class="reference-data-block">';
-                html += '<h3 class="mt-5 text-muted">Raw Data Table (for reference)</h3>';
+                html += '<h3 class="mt-5 text-muted"><i class="bi bi-table me-2"></i>Raw Data Table (Teacher Performance Reference)</h3>';
                 html += renderGenericTable('', data);
                 html += '</div>';
 
@@ -625,9 +1120,12 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
             }
             if (sectionId === 'class-report') {
                 let html = '<h1>Class Performance Report (শ্রেণিভিত্তিক পারফরম্যান্স)</h1>';
-                html += '<div id="custom-class-view"><div class="loading-placeholder"><div class="spinner-border text-primary" role="status"></div></div></div>';
+                html += '<div id="custom-class-view" class="custom-graphical-view"><div class="loading-placeholder"><div class="spinner-border text-primary" role="status"></div></div></div>';
                 fetch(`analytics/display_class_report.php?dataset_id=${datasetId}`)
-                    .then(r => r.text()).then(h => document.getElementById('custom-class-view').innerHTML = h);
+                    .then(r => r.text()).then(h => {
+                        const target = document.getElementById('custom-class-view');
+                        if (target) target.innerHTML = h;
+                    });
 
                 // Custom explanation card
                 html += renderExplanationCard(
@@ -656,16 +1154,19 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
                 );
 
                 html += '<div class="reference-data-block">';
-                html += '<h3 class="mt-5 text-muted">Raw Data Table (for reference)</h3>';
+                html += '<h3 class="mt-5 text-muted"><i class="bi bi-table me-2"></i>Raw Data Table (Class Performance Reference)</h3>';
                 html += renderGenericTable('', data);
                 html += '</div>';
                 return html;
             }
             if (sectionId === 'overall-subject-report') {
                 let html = '<h1>Overall Subject Performance (সামগ্রিক বিষয়ভিত্তিক পারফরম্যান্স)</h1>';
-                html += '<div id="custom-overall-subject-view"><div class="loading-placeholder"><div class="spinner-border text-primary" role="status"></div></div></div>';
+                html += '<div id="custom-overall-subject-view" class="custom-graphical-view"><div class="loading-placeholder"><div class="spinner-border text-primary" role="status"></div></div></div>';
                 fetch(`analytics/display_overall_subject_report.php?dataset_id=${datasetId}`)
-                    .then(r => r.text()).then(h => document.getElementById('custom-overall-subject-view').innerHTML = h);
+                    .then(r => r.text()).then(h => {
+                        const target = document.getElementById('custom-overall-subject-view');
+                        if (target) target.innerHTML = h;
+                    });
 
                 // Custom explanation card
                 html += renderExplanationCard(
@@ -689,7 +1190,7 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
                 );
 
                 html += '<div class="reference-data-block">';
-                html += '<h3 class="mt-5 text-muted">Raw Data Table (for reference)</h3>';
+                html += '<h3 class="mt-5 text-muted"><i class="bi bi-table me-2"></i>Raw Data Table (Overall Subject Reference)</h3>';
                 html += renderGenericTable('', data);
                 html += '</div>';
                 return html;
@@ -698,7 +1199,10 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
                 let html = '<h1>Student Merit List (শিক্ষার্থীদের মেধাতালিকা)</h1>';
                 html += '<div id="custom-student-view"><div class="loading-placeholder"><div class="spinner-border text-primary" role="status"></div></div></div>';
                 fetch(`analytics/display_student_report.php?dataset_id=${datasetId}`)
-                    .then(r => r.text()).then(h => document.getElementById('custom-student-view').innerHTML = h);
+                    .then(r => r.text()).then(h => {
+                        const target = document.getElementById('custom-student-view');
+                        if (target) target.innerHTML = h;
+                    });
 
                 // Custom explanation card
                 html += renderExplanationCard(
@@ -726,16 +1230,19 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
                 );
 
                 html += '<div class="reference-data-block">';
-                html += '<h3 class="mt-5 text-muted">Full Merit List (for reference)</h3>';
+                html += '<h3 class="mt-5 text-muted"><i class="bi bi-table me-2"></i>Full Merit List (for reference)</h3>';
                 html += renderGenericTable('', data);
                 html += '</div>';
                 return html;
             }
             if (sectionId === 'at-risk-students-report') {
                 let html = '<h1>At-Risk Students Report (ঝুঁকিপূর্ণ শিক্ষার্থী)</h1>';
-                html += '<div id="custom-at-risk-view"><div class="loading-placeholder"><div class="spinner-border text-primary" role="status"></div></div></div>';
+                html += '<div id="custom-at-risk-view" class="custom-graphical-view"><div class="loading-placeholder"><div class="spinner-border text-primary" role="status"></div></div></div>';
                 fetch(`analytics/display_at_risk_students_report.php?dataset_id=${datasetId}`)
-                    .then(r => r.text()).then(h => document.getElementById('custom-at-risk-view').innerHTML = h);
+                    .then(r => r.text()).then(h => {
+                        const target = document.getElementById('custom-at-risk-view');
+                        if (target) target.innerHTML = h;
+                    });
 
                 // Custom explanation card
                 html += renderExplanationCard(
@@ -763,7 +1270,7 @@ function create_bar_html($value, $max_value = 100, $color_class = 'bg-primary')
                 );
 
                 html += '<div class="reference-data-block">';
-                html += '<h3 class="mt-5 text-muted">Raw Data Table (for reference)</h3>';
+                html += '<h3 class="mt-5 text-muted"><i class="bi bi-table me-2"></i>Raw Data Table (At-Risk Students Reference)</h3>';
                 html += renderGenericTable('', data);
                 html += '</div>';
                 return html;
