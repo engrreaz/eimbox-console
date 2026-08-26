@@ -250,11 +250,32 @@ try {
     $sql_classes = "
         SELECT 
             acp.*,
+            COALESCE(stu_stats.student_appeared_count, acp.total_students_appeared) AS total_students_appeared,
             COALESCE(sub_stats.total_enrolled, acp.total_students_appeared) AS total_enrolled,
-            COALESCE(sub_stats.total_passed, 0) AS total_passed,
-            COALESCE(sub_stats.total_failed, 0) AS total_failed,
-            COALESCE(sub_stats.aplus_count, 0) AS aplus_count
+            COALESCE(stu_stats.student_passed_count, sub_stats.total_passed, 0) AS total_passed,
+            COALESCE(stu_stats.student_failed_count, sub_stats.total_failed, 0) AS total_failed,
+            COALESCE(stu_stats.student_pass_rate, acp.pass_rate, 0) AS pass_rate,
+            COALESCE(stu_stats.student_gpa5_count, sub_stats.aplus_count, 0) AS aplus_count,
+            COALESCE(stu_stats.class_avg_gpa, 0) AS avg_gpa
         FROM analytics_class_performance AS acp
+        LEFT JOIN (
+            SELECT 
+                dataset_id,
+                classname,
+                sectionname,
+                COUNT(asp.stid) AS student_appeared_count,
+                SUM(CASE WHEN asp.failed_subjects = 0 THEN 1 ELSE 0 END) AS student_passed_count,
+                SUM(CASE WHEN asp.failed_subjects > 0 THEN 1 ELSE 0 END) AS student_failed_count,
+                COALESCE(SUM(CASE WHEN asp.failed_subjects = 0 THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(asp.stid), 0), 0) AS student_pass_rate,
+                SUM(CASE WHEN asp.gpa >= 5.00 THEN 1 ELSE 0 END) AS student_gpa5_count,
+                AVG(asp.gpa) AS class_avg_gpa
+            FROM analytics_student_performance asp
+            WHERE dataset_id = ?
+            GROUP BY dataset_id, classname, sectionname
+        ) AS stu_stats 
+            ON acp.dataset_id = stu_stats.dataset_id
+            AND acp.classname COLLATE utf8mb4_unicode_ci = stu_stats.classname COLLATE utf8mb4_unicode_ci
+            AND acp.sectionname COLLATE utf8mb4_unicode_ci = stu_stats.sectionname COLLATE utf8mb4_unicode_ci
         LEFT JOIN (
             SELECT 
                 dataset_id, classname, sectionname,
@@ -273,7 +294,7 @@ try {
         ORDER BY acp.class_rank ASC, acp.cpi_score DESC;
     ";
     $stmt_classes = $conn->prepare($sql_classes);
-    $stmt_classes->bind_param("ii", $dataset_id, $dataset_id);
+    $stmt_classes->bind_param("iii", $dataset_id, $dataset_id, $dataset_id);
     $stmt_classes->execute();
     $report_data['classes_summary'] = $stmt_classes->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmt_classes->close();
