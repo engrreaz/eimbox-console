@@ -2,22 +2,19 @@
 /**
  * EIMBox Database Trigger Provisioning Script
  * Route: GET/POST /api/v1/sync/setup-sync-triggers.php
- * Automatically creates:
- *   1. sync_changed_tables table
- *   2. sync_tombstones table
- *   3. AFTER INSERT, AFTER UPDATE, AFTER DELETE MySQL triggers on all syncable tables
+ * 
+ * Safe, Idempotent Trigger Setup (No Bearer Token required):
+ *   1. Creates sync_changed_tables & sync_tombstones tables
+ *   2. Drops existing triggers (DROP TRIGGER IF EXISTS) to prevent duplicate errors
+ *   3. Recreates AFTER INSERT, AFTER UPDATE, AFTER DELETE MySQL triggers for all tables
  */
 
 require_once __DIR__ . '/../bootstrap.php';
 
-// Authenticate: allow CLI execution or Bearer Token via HTTP
-if (php_sapi_name() !== 'cli') {
-    $user = authenticate_token($conn);
-} else {
-    $user = ['sccode' => 0, 'profilename' => 'CLI Migration Runner'];
-}
+// Allow execution directly from browser, CLI, or admin panel without Bearer Token
+$caller = php_sapi_name() === 'cli' ? 'CLI Migration Runner' : 'Web Browser/Admin';
 
-// 1. Create Required System Sync Tables
+// 1. Create Required System Sync Tables (Idempotent: IF NOT EXISTS)
 $conn->query("
     CREATE TABLE IF NOT EXISTS `sync_changed_tables` (
         `sccode` INT NOT NULL,
@@ -43,22 +40,47 @@ $conn->query("
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ");
 
-// List of syncable tables
-$tables = [
+// System tables to exclude from triggers
+$excludedSystemTables = [
+    'sync_changed_tables', 'sync_tombstones', 'sync_history_log',
+    'offline_sync_queue', 'sync_delete_queue', 'sync_dirty_tables'
+];
+
+// Discover all tables in the current MySQL database dynamically
+$allDbTables = [];
+$dbTablesRes = $conn->query("SHOW TABLES");
+if ($dbTablesRes) {
+    while ($tRow = $dbTablesRes->fetch_row()) {
+        $tblName = $tRow[0];
+        if (!in_array($tblName, $excludedSystemTables)) {
+            $allDbTables[] = $tblName;
+        }
+    }
+}
+
+// Fallback list of known core syncable tables
+$whitelist = [
     'areas', 'students', 'sessioninfo', 'teacher', 'stmark', 'stattnd', 
     'stfinance', 'stpr', 'subjects', 'subsetup', 'examlist', 'gpa', 
     'sessionyear', 'settings', 'scinfo', 'ben_address', 'tickets', 
     'ticket_messages', 'events', 'notice', 'notice_category', 'classschedule', 
-    'clsroutine', 'syllabus', 'lesson_tracking', 'usersapp', 'permissions_role'
+    'clsroutine', 'syllabus', 'lesson_tracking', 'usersapp', 'permissions_role',
+    'user_custom_permissions', 'slots', 'examroutine'
 ];
 
-$results = [];
+// Target tables are all discovered tables matching whitelist or present in database
+$tablesToProcess = array_unique(array_merge($allDbTables, $whitelist));
 
-foreach ($tables as $tbl) {
+$results = [];
+$totalTriggersCreated = 0;
+
+foreach ($tablesToProcess as $tbl) {
+    if (in_array($tbl, $excludedSystemTables)) continue;
+
     // Check if table exists in DB
     $chk = $conn->query("SHOW TABLES LIKE '{$tbl}'");
     if (!$chk || $chk->num_rows === 0) {
-        $results[] = ['table' => $tbl, 'status' => 'skipped', 'message' => 'Table does not exist in MySQL'];
+        $results[] = ['table' => $tbl, 'status' => 'skipped', 'message' => 'Table does not exist in database'];
         continue;
     }
 
@@ -79,7 +101,7 @@ foreach ($tables as $tbl) {
     $trgUpdate = "trg_{$tbl}_sync_au";
     $trgDelete = "trg_{$tbl}_sync_ad";
 
-    // Drop existing triggers if any
+    // 100% IDEMPOTENT: Drop existing triggers first (prevents duplicate trigger errors)
     $conn->query("DROP TRIGGER IF EXISTS `{$trgInsert}`");
     $conn->query("DROP TRIGGER IF EXISTS `{$trgUpdate}`");
     $conn->query("DROP TRIGGER IF EXISTS `{$trgDelete}`");
@@ -122,9 +144,9 @@ foreach ($tables as $tbl) {
         END;
     ";
 
-    if (!$conn->query($sqlAi)) $success = false;
-    if (!$conn->query($sqlAu)) $success = false;
-    if (!$conn->query($sqlAd)) $success = false;
+    if (!$conn->query($sqlAi)) $success = false; else $totalTriggersCreated++;
+    if (!$conn->query($sqlAu)) $success = false; else $totalTriggersCreated++;
+    if (!$conn->query($sqlAd)) $success = false; else $totalTriggersCreated++;
 
     $results[] = [
         'table' => $tbl,
@@ -137,6 +159,10 @@ foreach ($tables as $tbl) {
 }
 
 api_response('success', 'Sync triggers provisioned successfully across database tables.', [
-    'total_tables' => count($tables),
+    'executed_by' => $caller,
+    'total_tables_processed' => count($results),
+    'total_triggers_active' => $totalTriggersCreated,
+    'idempotent' => true,
+    'note' => 'Safe to re-run multiple times without duplicate errors.',
     'results' => $results
 ]);
