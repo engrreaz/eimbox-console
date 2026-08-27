@@ -10,8 +10,12 @@
 
 require_once __DIR__ . '/../bootstrap.php';
 
-// Authenticate Bearer Token
-$user = authenticate_token($conn);
+// Authenticate: allow CLI execution or Bearer Token via HTTP
+if (php_sapi_name() !== 'cli') {
+    $user = authenticate_token($conn);
+} else {
+    $user = ['sccode' => 0, 'profilename' => 'CLI Migration Runner'];
+}
 
 // 1. Create Required System Sync Tables
 $conn->query("
