@@ -195,7 +195,7 @@ SELECT
     /* Pass Count */
     SUM(
         CASE
-            WHEN (sm.presence = 1 OR sm.markobt > 0) AND (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 >= 33 THEN 1
+            WHEN (sm.presence = 1 OR sm.markobt > 0) AND (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 >= 33 AND sm.gp > 0 THEN 1
             ELSE 0
         END
     ),
@@ -203,16 +203,16 @@ SELECT
     /* Fail Count */
     SUM(
         CASE
-            WHEN (sm.presence = 1 OR sm.markobt > 0) AND (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 < 33 THEN 1
+            WHEN (sm.presence = 1 OR sm.markobt > 0) AND ((sm.markobt / NULLIF(sm.fullmark, 1)) * 100 < 33 OR sm.gp <= 0 OR sm.gp IS NULL) THEN 1
             ELSE 0
         END
     ),
 
     /* Male Pass Count */
-    SUM(CASE WHEN (sm.presence = 1 OR sm.markobt > 0) AND (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 >= 33 AND st.gender IN ('Male', 'Boy') THEN 1 ELSE 0 END),
+    SUM(CASE WHEN (sm.presence = 1 OR sm.markobt > 0) AND (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 >= 33 AND sm.gp > 0 AND st.gender IN ('Male', 'Boy') THEN 1 ELSE 0 END),
 
     /* Female Pass Count */
-    SUM(CASE WHEN (sm.presence = 1 OR sm.markobt > 0) AND (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 >= 33 AND st.gender IN ('Female', 'Girl') THEN 1 ELSE 0 END),
+    SUM(CASE WHEN (sm.presence = 1 OR sm.markobt > 0) AND (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 >= 33 AND sm.gp > 0 AND st.gender IN ('Female', 'Girl') THEN 1 ELSE 0 END),
 
     /* Male Avg Marks */
     COALESCE(AVG(CASE WHEN (sm.presence = 1 OR sm.markobt > 0) AND st.gender IN ('Male', 'Boy') THEN (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 END), 0),
@@ -227,7 +227,7 @@ SELECT
         (
             SUM(
                 CASE
-                    WHEN (sm.presence = 1 OR sm.markobt > 0) AND (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 >= 33 THEN 1
+                    WHEN (sm.presence = 1 OR sm.markobt > 0) AND (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 >= 33 AND sm.gp > 0 THEN 1
                     ELSE 0
                 END
             ) * 100
@@ -240,7 +240,7 @@ SELECT
         (
             SUM(
                 CASE
-                    WHEN (sm.presence = 1 OR sm.markobt > 0) AND (sm.markobt / NULLIF(sm.fullmark, 1)) * 100 < 33 THEN 1
+                    WHEN (sm.presence = 1 OR sm.markobt > 0) AND ((sm.markobt / NULLIF(sm.fullmark, 1)) * 100 < 33 OR sm.gp <= 0 OR sm.gp IS NULL) THEN 1
                     ELSE 0
                 END
             ) * 100

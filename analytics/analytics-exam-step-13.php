@@ -32,7 +32,7 @@ $sql = "
     SELECT
         sm.stid,
         -- বিষয় ঝুঁকি (SR) = (SDF * ওজন) + (Marks Deficit % * ওজন)
-        ( (COALESCE(aosp.subject_difficulty_factor, 40) * " . SDF_WEIGHT . ") + ((" . PASS_MARK_PERCENTAGE . " - (sm.markobt / sm.fullmark * 100)) * " . MARK_DEFICIT_WEIGHT . ") )
+        ( (COALESCE(aosp.subject_difficulty_factor, 40) * " . SDF_WEIGHT . ") + (GREATEST(0, (" . PASS_MARK_PERCENTAGE . " - (sm.markobt / sm.fullmark * 100))) * " . MARK_DEFICIT_WEIGHT . ") )
         *
         -- শিক্ষক ঝুঁকি মডিফায়ার (TRM) = 1 + ((50 - TSPI) / 100)
         ( 1 + ( (50 - COALESCE(asp.tspi, 50)) / 100 ) )
@@ -57,7 +57,7 @@ $sql = "
         AND sm.slot = ?
         AND (sm.presence = 1 OR sm.markobt > 0)
         -- শুধুমাত্র অকৃতকার্য বিষয়গুলো ফিল্টার করা
-        AND (sm.markobt / sm.fullmark * 100) < " . PASS_MARK_PERCENTAGE . "
+        AND ((sm.markobt / sm.fullmark * 100) < " . PASS_MARK_PERCENTAGE . " OR sm.gp <= 0 OR sm.gp IS NULL)
 ";
 
 $stmt = $conn->prepare($sql);

@@ -37,7 +37,7 @@ function getFinalGrade(float $gpa) {
 // Fetch all subjects and marks for the dataset
 // Join with subsetup to identify optional subjects
 $sql = "
-    SELECT sm.stid, sm.markobt, sm.fullmark, ss.fourth
+    SELECT sm.stid, sm.markobt, sm.fullmark, sm.gp, ss.fourth
     FROM stmark sm
     JOIN subsetup ss ON sm.sccode = ss.sccode AND sm.sessionyear = ss.sessionyear AND sm.classname = ss.classname AND sm.sectionname = ss.sectionname AND sm.subject = ss.subject
     WHERE sm.sccode = ? AND sm.sessionyear = ? AND sm.examid IN (" . $examid_list_str . ")
@@ -51,9 +51,15 @@ $result = $stmt->get_result();
 $student_points = [];
 while ($row = $result->fetch_assoc()) {
     $stid = $row['stid'];
-    $percentage = ($row['markobt'] / $row['fullmark']) * 100;
+    $percentage = ($row['fullmark'] > 0) ? ($row['markobt'] / $row['fullmark']) * 100 : 0;
     $point = getGradePoint($percentage);
     $is_optional = $row['fourth'] ?? 0;
+
+    // Check if separate subject/objective/practical fail caused gp <= 0 in stmark
+    $sm_gp = isset($row['gp']) ? (float)$row['gp'] : null;
+    if ($sm_gp !== null && $sm_gp <= 0.0) {
+        $point = 0.0;
+    }
 
     if (!isset($student_points[$stid])) {
         $student_points[$stid] = ['total_points' => 0, 'subject_count' => 0, 'has_failed' => false, 'optional_points' => 0];
