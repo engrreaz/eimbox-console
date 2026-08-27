@@ -29,12 +29,17 @@ $res = $stmt->get_result();
 $notices = [];
 while ($row = $res->fetch_assoc()) {
     $notices[] = [
-        'id' => intval($row['id']),
-        'title' => $row['title'],
+        'id'          => intval($row['id']),
+        'title'       => $row['title'],
+        // SQLite-compatible column names (used by desktop sync engine)
+        'descrip'     => $row['descrip'] ?? '',
+        'entryby'     => $row['entryby'] ?? '',
+        'entrytime'   => $row['entrytime'] ?? null,
+        // Legacy / web-dashboard-friendly aliases
         'description' => $row['descrip'] ?? '',
-        'published_by' => $row['entryby'],
-        'date' => date('Y-m-d', strtotime($row['entrytime'])),
-        'timestamp' => $row['entrytime']
+        'published_by' => $row['entryby'] ?? '',
+        'date'        => isset($row['entrytime']) ? date('Y-m-d', strtotime($row['entrytime'])) : null,
+        'timestamp'   => $row['entrytime'] ?? null,
     ];
 }
 $stmt->close();
