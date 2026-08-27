@@ -38,7 +38,7 @@ SELECT
     COALESCE(SUM(CASE WHEN (sm.presence = 1 OR sm.markobt > 0) THEN sm.markobt ELSE 0 END), 0) AS total_marks_obtained,
     COALESCE(SUM(CASE WHEN (sm.presence = 1 OR sm.markobt > 0) THEN sm.fullmark ELSE 0 END), 0) AS total_full_marks,
     COALESCE((SUM(CASE WHEN (sm.presence = 1 OR sm.markobt > 0) THEN sm.markobt ELSE 0 END) / NULLIF(SUM(CASE WHEN (sm.presence = 1 OR sm.markobt > 0) THEN sm.fullmark ELSE 0 END), 0)) * 100, 0) AS percentage,
-    COUNT(DISTINCT CASE WHEN (sm.presence = 1 OR sm.markobt > 0) AND ((sm.markobt / NULLIF(sm.fullmark, 1) * 100) < 33 OR sm.gp <= 0 OR sm.gp IS NULL) THEN sm.subject END) AS failed_subjects,
+    COUNT(DISTINCT CASE WHEN (sm.presence = 1 OR sm.markobt > 0) AND COALESCE(ss.fourth, 0) = 0 AND ((sm.markobt / NULLIF(sm.fullmark, 1) * 100) < 33 OR sm.gp <= 0 OR sm.gp IS NULL) THEN sm.subject END) AS failed_subjects,
     COALESCE(ts.gpa, 0) AS gpa,
     COALESCE(ts.gla, 'F') AS grade,
     COALESCE(ts.meritnumcomb, 0) AS class_rank,
@@ -50,13 +50,14 @@ SELECT
     GROUP_CONCAT(DISTINCT CASE WHEN (sm.presence = 1 OR sm.markobt > 0) AND ((sm.markobt / NULLIF(sm.fullmark, 1) * 100) < 33 OR sm.gp <= 0 OR sm.gp IS NULL) THEN sub.subject ELSE NULL END ORDER BY sm.subject SEPARATOR ', ') AS failed_subject_names
 FROM stmark sm
 JOIN sessioninfo si ON sm.stid = si.stid AND sm.sccode = si.sccode AND sm.sessionyear = si.sessionyear AND sm.slot = si.slot
+LEFT JOIN subsetup ss ON sm.sccode = ss.sccode AND sm.sessionyear = ss.sessionyear AND sm.classname = ss.classname AND sm.sectionname = ss.sectionname AND sm.subject = ss.subject
 LEFT JOIN subjects sub ON sm.subject = sub.subcode
     AND (sub.sccode = sm.sccode OR sub.sccode = '0')
     AND sub.sccategory = '$sctype'
     AND sub.id = (SELECT id FROM subjects s2
                   WHERE s2.subcode = sm.subject AND (s2.sccode = sm.sccode OR s2.sccode = '0') AND s2.sccategory = '$sctype'
                   ORDER BY s2.sccode DESC LIMIT 1)
-LEFT JOIN examlist el ON el.id IN (" . $examid_list_str . ")
+LEFT JOIN examlist el ON el.id = sm.examid
 LEFT JOIN tabulatingsheet ts ON sm.stid = ts.stid 
     AND sm.sccode = ts.sccode 
     AND sm.sessionyear = ts.sessionyear 

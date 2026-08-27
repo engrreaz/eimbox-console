@@ -65,7 +65,7 @@ while ($row = $result->fetch_assoc()) {
         $student_points[$stid] = ['total_points' => 0, 'subject_count' => 0, 'has_failed' => false, 'optional_points' => 0];
     }
 
-    if ($point == 0.0) {
+    if ($point == 0.0 && $is_optional != 1) {
         $student_points[$stid]['has_failed'] = true;
     }
 
