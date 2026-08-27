@@ -10,7 +10,6 @@ require_once __DIR__ . '/../bootstrap.php';
 // Authenticate caller
 $user = authenticate_token($conn);
 
-error_log("User : " . print_r($user, true));
 $sccode = intval($_GET['sccode'] ?? $user['sccode'] ?? 0);
 $limit = intval($_GET['limit'] ?? 20);
 if ($limit <= 0 || $limit > 100) $limit = 20;
@@ -40,7 +39,7 @@ while ($row = $res->fetch_assoc()) {
 }
 $stmt->close();
 
-error_log("Notice : " . print_r($notices, true));
+
 api_response('success', 'Notices loaded successfully.', [
     'sccode' => $sccode,
     'total_count' => count($notices),
