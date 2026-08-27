@@ -8,10 +8,13 @@
 require_once __DIR__ . '/../bootstrap.php';
 
 // Authenticate Request
-$user = api_authenticate_request();
+$user = function_exists('api_authenticate_request') ? api_authenticate_request() : authenticate_token($conn);
 $sccode = (int)($user['sccode'] ?? 0);
 
-$conn = api_get_db_connection();
+if (!isset($conn) || !$conn) {
+    $conn = function_exists('api_get_db_connection') ? api_get_db_connection() : db_connect();
+}
+
 $tableName = preg_replace('/[^a-zA-Z0-9_]/', '', trim($_GET['table'] ?? ''));
 $activeSccode = isset($_GET['sccode']) && (int)$_GET['sccode'] > 0 ? (int)$_GET['sccode'] : $sccode;
 $since = trim($_GET['since'] ?? '');
@@ -21,17 +24,32 @@ $allowedTables = [
     'gpa', 'examroutine', 'examlist', 'subjects', 'subsetup', 'areas', 
     'students', 'sessioninfo', 'stmark', 'stattnd', 'stfinance', 'stpr', 
     'slots', 'teacher', 'classschedule', 'clsroutine', 'syllabus', 
-    'lesson_tracking', 'sessionyear', 'settings', 'scinfo', 'ben_address'
+    'lesson_tracking', 'sessionyear', 'settings', 'scinfo', 'ben_address',
+    'tickets', 'ticket_messages', 'events', 'notice', 'notice_category',
+    'usersapp', 'permissions_role', 'user_custom_permissions'
 ];
 
 if (empty($tableName) || !in_array($tableName, $allowedTables)) {
-    api_send_response(422, false, "Invalid or unauthorized table: " . htmlspecialchars($tableName));
+    if (function_exists('api_send_response')) {
+        api_send_response(422, false, "Invalid or unauthorized table: " . htmlspecialchars($tableName));
+    } else {
+        api_response('error', "Invalid or unauthorized table: " . htmlspecialchars($tableName), null, 422);
+    }
 }
 
-// Build query based on table schema peculiarities
-$hasSccode = true;
-$hasModified = true;
-$hasSession = false;
+// Ensure sync_tombstones exists
+$conn->query("
+    CREATE TABLE IF NOT EXISTS `sync_tombstones` (
+        `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+        `sccode` INT NOT NULL,
+        `table_name` VARCHAR(64) NOT NULL,
+        `record_id` BIGINT NOT NULL,
+        `local_id` VARCHAR(128) DEFAULT NULL,
+        `deleted_by` VARCHAR(128) DEFAULT NULL,
+        `deleted_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+        INDEX `idx_sync_tomb` (`sccode`, `table_name`, `deleted_at`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+");
 
 // Tables with global sccode=0 fallback
 $supportsGlobal = in_array($tableName, ['gpa', 'subjects', 'examlist', 'slots', 'settings', 'classschedule']);
@@ -78,10 +96,32 @@ while ($row = $result->fetch_assoc()) {
 }
 $stmt->close();
 
-api_send_response(200, true, "Table rows pulled successfully.", [
+// Fetch deleted tombstones if incremental sync timestamp provided
+$deletedIds = [];
+if (!empty($since) && strtotime($since)) {
+    $tombStmt = $conn->prepare("SELECT record_id FROM `sync_tombstones` WHERE (sccode = ? OR sccode = 0) AND table_name = ? AND deleted_at >= ? LIMIT 1000");
+    if ($tombStmt) {
+        $tombStmt->bind_param('iss', $activeSccode, $tableName, $since);
+        $tombStmt->execute();
+        $tombRes = $tombStmt->get_result();
+        while ($tRow = $tombRes->fetch_assoc()) {
+            $deletedIds[] = (int)$tRow['record_id'];
+        }
+        $tombStmt->close();
+    }
+}
+
+$responseData = [
     'table' => $tableName,
     'sccode' => $activeSccode,
     'count' => count($rows),
     'rows' => $rows,
+    'deleted_ids' => $deletedIds,
     'server_time' => date('Y-m-d H:i:s')
-]);
+];
+
+if (function_exists('api_send_response')) {
+    api_send_response(200, true, "Table rows pulled successfully.", $responseData);
+} else {
+    api_response('success', "Table rows pulled successfully.", $responseData, 200);
+}

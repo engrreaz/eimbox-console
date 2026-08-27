@@ -27,14 +27,23 @@ if (!is_array($transactions) || empty($transactions)) {
     api_response('error', 'Transactions queue array cannot be empty.', null, 400);
 }
 
+$allowedTables = [
+    'gpa', 'examroutine', 'examlist', 'subjects', 'subsetup', 'areas', 
+    'students', 'sessioninfo', 'stmark', 'stattnd', 'stfinance', 'stpr', 
+    'slots', 'teacher', 'classschedule', 'clsroutine', 'syllabus', 
+    'lesson_tracking', 'sessionyear', 'settings', 'scinfo', 'ben_address',
+    'tickets', 'ticket_messages', 'events', 'notice', 'notice_category'
+];
+
 $results = [];
 $syncedCount = 0;
 $failedCount = 0;
 
 foreach ($transactions as $tx) {
     $queueId = $tx['queue_id'] ?? null;
-    $module = strtolower(trim($tx['module_name'] ?? ''));
-    $action = strtoupper(trim($tx['action_type'] ?? ''));
+    $module = strtolower(trim($tx['module_name'] ?? $tx['module'] ?? ''));
+    $action = strtoupper(trim($tx['action_type'] ?? $tx['action'] ?? ''));
+    $localId = trim($tx['local_id'] ?? '');
     $payload = $tx['payload'] ?? [];
 
     if (is_string($payload)) {
@@ -42,6 +51,7 @@ foreach ($transactions as $tx) {
     }
 
     $conn->begin_transaction();
+    $assignedServerId = null;
 
     try {
         if ($module === 'finance' || str_contains($action, 'FEE') || str_contains($action, 'PAYMENT')) {
@@ -137,6 +147,7 @@ foreach ($transactions as $tx) {
                 $emptyTxt, $zeroVal, $mobile, $zeroVal, $emptyTxt, $collectionMedia
             );
             $insPr->execute();
+            $assignedServerId = $conn->insert_id;
             $insPr->close();
 
             $upSess = $conn->prepare("UPDATE sessioninfo SET lastpr = ? WHERE sccode = ? AND stid = ? AND sessionyear LIKE ?");
@@ -190,6 +201,7 @@ foreach ($transactions as $tx) {
                         WHERE id = ?");
                     $upStmt->bind_param('sdddddddsdsi', $slot, $fullmark, $subj, $obj, $pra, $ca, $markobt, $on100, $gp, $gl, $entryby, $chkRes['id']);
                     $upStmt->execute();
+                    $assignedServerId = $chkRes['id'];
                     $upStmt->close();
                 } else {
                     $insStmt = $conn->prepare("INSERT INTO stmark (
@@ -200,6 +212,7 @@ foreach ($transactions as $tx) {
                         $subj, $obj, $pra, $ca, $markobt, $on100, $gp, $gl, $entryby
                     );
                     $insStmt->execute();
+                    $assignedServerId = $conn->insert_id;
                     $insStmt->close();
                 }
             }
@@ -233,6 +246,7 @@ foreach ($transactions as $tx) {
                         WHERE id = ?");
                     $upStmt->bind_param('isssi', $yn, $intime, $outtime, $entryby, $chkRes['id']);
                     $upStmt->execute();
+                    $assignedServerId = $chkRes['id'];
                     $upStmt->close();
                 } else {
                     $insStmt = $conn->prepare("INSERT INTO stattnd (
@@ -242,6 +256,7 @@ foreach ($transactions as $tx) {
                         $sccode, $sessionyear, $stid, $adate, $yn, $intime, $outtime, $recClass, $recSec, $rollno, $entryby
                     );
                     $insStmt->execute();
+                    $assignedServerId = $conn->insert_id;
                     $insStmt->close();
                 }
             }
@@ -267,8 +282,41 @@ foreach ($transactions as $tx) {
                 ");
                 $stmt->bind_param('isssis', $sccode, $eng_str, $ben_str, $field_type, $quota_pct, $remarks);
                 $stmt->execute();
+                $assignedServerId = $conn->insert_id;
                 $stmt->close();
             }
+
+        } elseif (str_contains($action, 'TABLE_') || in_array($module, $allowedTables)) {
+            // Generic Table Upsert Handler
+            $targetTable = in_array($module, $allowedTables) ? $module : preg_replace('/[^a-zA-Z0-9_]/', '', strtolower(trim($payload['table'] ?? '')));
+            if (!in_array($targetTable, $allowedTables)) {
+                throw new Exception("Unauthorized table for generic push: {$targetTable}");
+            }
+
+            $rowRecord = $payload['record'] ?? $payload['data'] ?? $payload;
+            unset($rowRecord['table'], $rowRecord['local_id'], $rowRecord['sync_status']);
+
+            $rowRecord['sccode'] = $sccode;
+            $rowRecord['modifieddate'] = date('Y-m-d H:i:s');
+
+            $existingId = intval($rowRecord['id'] ?? 0);
+            $fields = array_keys($rowRecord);
+            $placeholders = implode(', ', array_fill(0, count($fields), '?'));
+            $fieldList = '`' . implode('`, `', $fields) . '`';
+            $updateList = implode(', ', array_map(fn($f) => "`{$f}` = VALUES(`{$f}`)", $fields));
+
+            $sql = "INSERT INTO `{$targetTable}` ({$fieldList}) VALUES ({$placeholders}) ON DUPLICATE KEY UPDATE {$updateList}";
+            $stmt = $conn->prepare($sql);
+            if (!$stmt) {
+                throw new Exception("Prepare failed on {$targetTable}: " . $conn->error);
+            }
+
+            $types = str_repeat('s', count($fields));
+            $vals = array_values($rowRecord);
+            $stmt->bind_param($types, ...$vals);
+            $stmt->execute();
+            $assignedServerId = $existingId > 0 ? $existingId : $conn->insert_id;
+            $stmt->close();
 
         } else {
             throw new Exception("Unknown module or action: {$module} / {$action}");
@@ -279,6 +327,9 @@ foreach ($transactions as $tx) {
         $syncedCount++;
         $results[] = [
             'queue_id' => $queueId,
+            'local_id' => $localId,
+            'server_id' => $assignedServerId,
+            'module' => $module,
             'status' => 'synced',
             'error' => null
         ];
@@ -288,6 +339,9 @@ foreach ($transactions as $tx) {
         $failedCount++;
         $results[] = [
             'queue_id' => $queueId,
+            'local_id' => $localId,
+            'server_id' => null,
+            'module' => $module,
             'status' => 'failed',
             'error' => $e->getMessage()
         ];
@@ -298,5 +352,6 @@ api_response('success', 'Batch synchronization processed.', [
     'total_processed' => count($transactions),
     'synced_count' => $syncedCount,
     'failed_count' => $failedCount,
-    'results' => $results
+    'results' => $results,
+    'server_time' => date('Y-m-d H:i:s')
 ]);
