@@ -10,6 +10,8 @@
 
 require_once __DIR__ . '/../bootstrap.php';
 
+error_log("Class Schedule API: " . print_r($_REQUEST, true));
+
 // Authenticate Request
 $user = api_authenticate_request();
 $input = get_api_input();
