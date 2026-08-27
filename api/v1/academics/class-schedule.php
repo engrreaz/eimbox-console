@@ -21,6 +21,7 @@ $action = $_GET['action'] ?? $input['action'] ?? '';
 // 1. Resolve School Code
 $sccode = intval($_GET['sccode'] ?? $input['sccode'] ?? $user['sccode'] ?? 0);
 
+
 if ($sccode <= 0) {
     api_response('error', 'Valid School Code (sccode) is required.', null, 400);
 }
