@@ -275,7 +275,7 @@ $top_teacher = $report_data['top_teacher'] ?? [];
         </div>
 
         <!-- Grade Distribution Card -->
-        <div class="col-lg-6">
+        <div class="col-lg-6 " style="page-break-before:always;">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-white py-3 border-bottom">
                     <h5 class="fw-bold mb-0 text-dark">
@@ -339,7 +339,7 @@ $top_teacher = $report_data['top_teacher'] ?? [];
                             <th style="width: 90px;">Appeared / Enrolled</th>
                             <th style="width: 90px;">Pass / Fail</th>
                             <th style="width: 80px;">Pass Rate %</th>
-                            <th style="width: 80px;">GPA 5.0 (A+)</th>
+                            <th style="width: 80px;">>A</th>
                             <th style="width: 80px;">Avg Marks %</th>
                             <th style="width: 85px;">CPI Score</th>
                             <th style="width: 85px;">Difficulty (CDF)</th>
