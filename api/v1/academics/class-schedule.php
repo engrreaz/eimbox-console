@@ -195,7 +195,7 @@ if ($method === 'GET') {
             'timeend' => $row['timeend'] ?: '',
             'start' => substr($row['timestart'] ?: '08:00', 0, 5),
             'end' => substr($row['timeend'] ?: '08:45', 0, 5),
-            'duration' => intval($row['duration'] ?: 45)
+            'duration' => intval($row['duration'] ?: 45*60)
         ];
     }
     $stmt->close();

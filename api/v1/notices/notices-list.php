@@ -39,6 +39,7 @@ while ($row = $res->fetch_assoc()) {
 }
 $stmt->close();
 
+error_log("Notice : " . print_r($notices, true));
 api_response('success', 'Notices loaded successfully.', [
     'sccode' => $sccode,
     'total_count' => count($notices),
