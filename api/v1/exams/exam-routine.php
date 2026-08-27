@@ -99,6 +99,8 @@ if ($method === 'GET') {
     }
     $dStmt->close();
 
+    error_log("Routine Debug: " . json_encode(['rows' => $rows, 'exams' => $exams, 'classes' => $classes, 'sections' => $sections]));
+
     api_send_response(200, true, "Exam routine loaded.", [
         'rows' => $rows,
         'exams' => $exams,
