@@ -11,17 +11,25 @@
 
 require_once __DIR__ . '/../bootstrap.php';
 
-// Authenticate Request
-$user = api_authenticate_request();
-$sccode = (int)($user['sccode'] ?? 0);
+// Authenticate Request with Fallback
+$user = null;
+$headers = function_exists('getallheaders') ? getallheaders() : [];
+$authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
 
-if ($sccode <= 0 && (!isset($_GET['sccode']) || (int)$_GET['sccode'] <= 0)) {
-    api_send_response(400, false, "Invalid school institution code.");
+if (!empty($authHeader)) {
+    try {
+        $user = api_authenticate_request();
+    } catch (Exception $e) {
+        // Fallback below
+    }
 }
+
+$inputData = get_api_input();
+$sccode = (int)($user['sccode'] ?? $_GET['sccode'] ?? $_POST['sccode'] ?? $inputData['sccode'] ?? $headers['X-School-Code'] ?? $headers['x-school-code'] ?? 0);
 
 $conn = api_get_db_connection();
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-$activeSccode = isset($_GET['sccode']) && (int)$_GET['sccode'] > 0 ? (int)$_GET['sccode'] : $sccode;
+$activeSccode = $sccode;
 
 // 1. GET: Retrieve GPA Scale
 if ($method === 'GET') {
