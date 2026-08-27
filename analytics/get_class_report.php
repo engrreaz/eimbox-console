@@ -43,15 +43,15 @@ $sql = "
             classname,
             sectionname,
             COUNT(asp.stid) AS student_appeared_count,
-            SUM(CASE WHEN asp.failed_subjects = 0 THEN 1 ELSE 0 END) AS student_passed_count,
-            SUM(CASE WHEN asp.failed_subjects > 0 THEN 1 ELSE 0 END) AS student_failed_count,
-            COALESCE(SUM(CASE WHEN asp.failed_subjects = 0 THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(asp.stid), 0), 0) AS student_pass_rate,
+            SUM(CASE WHEN asp.failed_subjects = 0 AND asp.grade != 'F' AND asp.gpa > 0 THEN 1 ELSE 0 END) AS student_passed_count,
+            SUM(CASE WHEN asp.failed_subjects > 0 OR asp.grade = 'F' OR asp.gpa = 0 THEN 1 ELSE 0 END) AS student_failed_count,
+            COALESCE(SUM(CASE WHEN asp.failed_subjects = 0 AND asp.grade != 'F' AND asp.gpa > 0 THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(asp.stid), 0), 0) AS student_pass_rate,
             SUM(CASE WHEN asp.gpa >= 5.00 THEN 1 ELSE 0 END) AS student_gpa5_count,
             AVG(asp.gpa) AS class_avg_gpa,
             SUM(CASE WHEN (s.gender = 'Male' OR s.gender = 'Boy') THEN 1 ELSE 0 END) AS male_appeared,
             SUM(CASE WHEN (s.gender = 'Female' OR s.gender = 'Girl') THEN 1 ELSE 0 END) AS female_appeared,
-            SUM(CASE WHEN (s.gender = 'Male' OR s.gender = 'Boy') AND asp.failed_subjects = 0 THEN 1 ELSE 0 END) AS male_passed_count,
-            SUM(CASE WHEN (s.gender = 'Female' OR s.gender = 'Girl') AND asp.failed_subjects = 0 THEN 1 ELSE 0 END) AS female_passed_count
+            SUM(CASE WHEN (s.gender = 'Male' OR s.gender = 'Boy') AND asp.failed_subjects = 0 AND asp.grade != 'F' AND asp.gpa > 0 THEN 1 ELSE 0 END) AS male_passed_count,
+            SUM(CASE WHEN (s.gender = 'Female' OR s.gender = 'Girl') AND asp.failed_subjects = 0 AND asp.grade != 'F' AND asp.gpa > 0 THEN 1 ELSE 0 END) AS female_passed_count
         FROM analytics_student_performance asp
         LEFT JOIN students s ON asp.stid = s.stid AND asp.sccode = s.sccode
         WHERE dataset_id = ?

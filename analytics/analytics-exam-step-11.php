@@ -37,11 +37,10 @@ function getFinalGrade(float $gpa) {
 // Fetch all subjects and marks for the dataset
 // Join with subsetup to identify optional subjects
 $sql = "
-    SELECT sm.stid, sm.markobt, sm.fullmark, sm.gp, ss.fourth
+    SELECT sm.stid, sm.markobt, sm.fullmark, sm.gp, sm.presence, ss.fourth
     FROM stmark sm
     JOIN subsetup ss ON sm.sccode = ss.sccode AND sm.sessionyear = ss.sessionyear AND sm.classname = ss.classname AND sm.sectionname = ss.sectionname AND sm.subject = ss.subject
     WHERE sm.sccode = ? AND sm.sessionyear = ? AND sm.examid IN (" . $examid_list_str . ")
-      AND (sm.presence = 1 OR sm.markobt > 0)
 ";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("ss", $sccode, $sessionyear);
@@ -51,8 +50,9 @@ $result = $stmt->get_result();
 $student_points = [];
 while ($row = $result->fetch_assoc()) {
     $stid = $row['stid'];
-    $percentage = ($row['fullmark'] > 0) ? ($row['markobt'] / $row['fullmark']) * 100 : 0;
-    $point = getGradePoint($percentage);
+    $is_present = ($row['presence'] == 1 || $row['markobt'] > 0);
+    $percentage = ($is_present && $row['fullmark'] > 0) ? ($row['markobt'] / $row['fullmark']) * 100 : 0;
+    $point = $is_present ? getGradePoint($percentage) : 0.0;
     $is_optional = $row['fourth'] ?? 0;
 
     // Check if separate subject/objective/practical fail caused gp <= 0 in stmark

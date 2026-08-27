@@ -78,9 +78,9 @@ try {
     $sql_summary = "
         SELECT
             COUNT(DISTINCT asp.stid) AS total_students_appeared,
-            SUM(CASE WHEN asp.failed_subjects = 0 THEN 1 ELSE 0 END) AS total_passed_students,
-            SUM(CASE WHEN asp.failed_subjects > 0 THEN 1 ELSE 0 END) AS total_failed_students,
-            SUM(CASE WHEN asp.failed_subjects = 0 AND (asp.gpa = 5.0 OR asp.grade = 'A+') THEN 1 ELSE 0 END) AS total_aplus_students,
+            SUM(CASE WHEN asp.failed_subjects = 0 AND asp.grade != 'F' AND asp.gpa > 0 THEN 1 ELSE 0 END) AS total_passed_students,
+            SUM(CASE WHEN asp.failed_subjects > 0 OR asp.grade = 'F' OR asp.gpa = 0 THEN 1 ELSE 0 END) AS total_failed_students,
+            SUM(CASE WHEN asp.failed_subjects = 0 AND asp.grade != 'F' AND (asp.gpa = 5.0 OR asp.grade = 'A+') THEN 1 ELSE 0 END) AS total_aplus_students,
             SUM(CASE WHEN asp.percentage >= 70 THEN 1 ELSE 0 END) AS total_excellent_students,
             SUM(asp.total_marks_obtained) AS total_marks_obtained_sum,
             SUM(asp.total_full_marks) AS total_full_marks_sum,
@@ -161,8 +161,8 @@ try {
         SELECT
             SUM(CASE WHEN LOWER(COALESCE(s.gender, si.gender, '')) IN ('male', 'boy', 'ছেলে', 'ছাত্র') THEN 1 ELSE 0 END) AS total_males,
             SUM(CASE WHEN LOWER(COALESCE(s.gender, si.gender, '')) IN ('female', 'girl', 'মেয়ে', 'ছাত্রী') THEN 1 ELSE 0 END) AS total_females,
-            SUM(CASE WHEN LOWER(COALESCE(s.gender, si.gender, '')) IN ('male', 'boy', 'ছেলে', 'ছাত্র') AND asp.failed_subjects = 0 THEN 1 ELSE 0 END) AS passed_males,
-            SUM(CASE WHEN LOWER(COALESCE(s.gender, si.gender, '')) IN ('female', 'girl', 'মেয়ে', 'ছাত্রী') AND asp.failed_subjects = 0 THEN 1 ELSE 0 END) AS passed_females,
+            SUM(CASE WHEN LOWER(COALESCE(s.gender, si.gender, '')) IN ('male', 'boy', 'ছেলে', 'ছাত্র') AND asp.failed_subjects = 0 AND asp.grade != 'F' AND asp.gpa > 0 THEN 1 ELSE 0 END) AS passed_males,
+            SUM(CASE WHEN LOWER(COALESCE(s.gender, si.gender, '')) IN ('female', 'girl', 'মেয়ে', 'ছাত্রী') AND asp.failed_subjects = 0 AND asp.grade != 'F' AND asp.gpa > 0 THEN 1 ELSE 0 END) AS passed_females,
             SUM(CASE WHEN LOWER(COALESCE(s.gender, si.gender, '')) IN ('male', 'boy', 'ছেলে', 'ছাত্র') AND asp.failed_subjects = 0 AND (asp.gpa = 5.0 OR asp.grade = 'A+') THEN 1 ELSE 0 END) AS aplus_males,
             SUM(CASE WHEN LOWER(COALESCE(s.gender, si.gender, '')) IN ('female', 'girl', 'মেয়ে', 'ছাত্রী') AND asp.failed_subjects = 0 AND (asp.gpa = 5.0 OR asp.grade = 'A+') THEN 1 ELSE 0 END) AS aplus_females,
             AVG(CASE WHEN LOWER(COALESCE(s.gender, si.gender, '')) IN ('male', 'boy', 'ছেলে', 'ছাত্র') THEN asp.percentage END) AS avg_male_marks,
@@ -198,6 +198,8 @@ try {
         'aplus_females' => (int)($gender_result['aplus_females'] ?? 0),
         'avg_male_marks' => (float)($gender_result['avg_male_marks'] ?? 0),
         'avg_female_marks' => (float)($gender_result['avg_female_marks'] ?? 0),
+        'male_excellence_rate' => ($male_count > 0) ? ((int)($gender_result['aplus_males'] ?? 0) / $male_count) * 100 : 0,
+        'female_excellence_rate' => ($female_count > 0) ? ((int)($gender_result['aplus_females'] ?? 0) / $female_count) * 100 : 0,
         'ratio' => "{$male_count}M : {$female_count}F"
     ];
 
@@ -264,9 +266,9 @@ try {
                 classname,
                 sectionname,
                 COUNT(asp.stid) AS student_appeared_count,
-                SUM(CASE WHEN asp.failed_subjects = 0 THEN 1 ELSE 0 END) AS student_passed_count,
-                SUM(CASE WHEN asp.failed_subjects > 0 THEN 1 ELSE 0 END) AS student_failed_count,
-                COALESCE(SUM(CASE WHEN asp.failed_subjects = 0 THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(asp.stid), 0), 0) AS student_pass_rate,
+                SUM(CASE WHEN asp.failed_subjects = 0 AND asp.grade != 'F' AND asp.gpa > 0 THEN 1 ELSE 0 END) AS student_passed_count,
+                SUM(CASE WHEN asp.failed_subjects > 0 OR asp.grade = 'F' OR asp.gpa = 0 THEN 1 ELSE 0 END) AS student_failed_count,
+                COALESCE(SUM(CASE WHEN asp.failed_subjects = 0 AND asp.grade != 'F' AND asp.gpa > 0 THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(asp.stid), 0), 0) AS student_pass_rate,
                 SUM(CASE WHEN asp.gpa >= 5.00 THEN 1 ELSE 0 END) AS student_gpa5_count,
                 AVG(asp.gpa) AS class_avg_gpa
             FROM analytics_student_performance asp
