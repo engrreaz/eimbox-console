@@ -200,7 +200,7 @@ if ($method === 'GET') {
     $stmt->close();
 
     // Default seed if completely empty for this institution
- error_log("Class Schedule API: " . print_r($period, true));
+    error_log("Class Schedule API periods: " . print_r($periods, true));
 
 
     api_response('success', 'Class schedule period bell timings loaded.', [
