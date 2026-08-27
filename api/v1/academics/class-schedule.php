@@ -200,17 +200,8 @@ if ($method === 'GET') {
     $stmt->close();
 
     // Default seed if completely empty for this institution
-    if (empty($periods)) {
-        $periods = [
-            ['id' => 1, 'period' => 1, 'slot' => $slot, 'timestart' => '07:30:00', 'timeend' => '07:50:00', 'start' => '07:30', 'end' => '07:50', 'duration' => 20, 'name' => 'Assembly', 'type' => 'Assembly'],
-            ['id' => 2, 'period' => 2, 'slot' => $slot, 'timestart' => '07:50:00', 'timeend' => '08:35:00', 'start' => '07:50', 'end' => '08:35', 'duration' => 45, 'name' => '1st Period', 'type' => 'Class'],
-            ['id' => 3, 'period' => 3, 'slot' => $slot, 'timestart' => '08:35:00', 'timeend' => '09:20:00', 'start' => '08:35', 'end' => '09:20', 'duration' => 45, 'name' => '2nd Period', 'type' => 'Class'],
-            ['id' => 4, 'period' => 4, 'slot' => $slot, 'timestart' => '09:20:00', 'timeend' => '10:05:00', 'start' => '09:20', 'end' => '10:05', 'duration' => 45, 'name' => '3rd Period', 'type' => 'Class'],
-            ['id' => 5, 'period' => 5, 'slot' => $slot, 'timestart' => '10:05:00', 'timeend' => '10:35:00', 'start' => '10:05', 'end' => '10:35', 'duration' => 30, 'name' => 'Tiffin Break', 'type' => 'Break'],
-            ['id' => 6, 'period' => 6, 'slot' => $slot, 'timestart' => '10:35:00', 'timeend' => '11:15:00', 'start' => '10:35', 'end' => '11:15', 'duration' => 40, 'name' => '4th Period', 'type' => 'Class'],
-            ['id' => 7, 'period' => 7, 'slot' => $slot, 'timestart' => '11:15:00', 'timeend' => '11:55:00', 'start' => '11:15', 'end' => '11:55', 'duration' => 40, 'name' => '5th Period', 'type' => 'Class']
-        ];
-    }
+ error_log("Class Schedule API: " . print_r($period, true));
+
 
     api_response('success', 'Class schedule period bell timings loaded.', [
         'sccode' => $sccode,
