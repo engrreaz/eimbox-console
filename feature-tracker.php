@@ -2,7 +2,7 @@
 /**
  * EIMBox Multi-Platform Feature & Issue Tracker
  * Advanced Multi-Task & Multi-Issue Architecture
- * Pure Bootstrap 5 Implementation
+ * Pure Bootstrap 5 Implementation with 100% Reactive AJAX Engine
  */
 
 require_once 'core/init.php';
@@ -53,19 +53,15 @@ function ensure_tracker_schema($conn) {
             $conn->query("ALTER TABLE `eimbox_platform_tracker` ADD COLUMN `task_title` VARCHAR(255) NOT NULL DEFAULT 'Main Implementation' AFTER `platform`");
         }
 
-        // Migration 2: Drop UNIQUE index safely without violating foreign key constraints
+        // Migration 2: Drop UNIQUE index safely if it exists
         $chk_idx = $conn->query("SHOW INDEX FROM `eimbox_platform_tracker` WHERE Key_name = 'idx_feature_platform' AND Non_unique = 0");
         if ($chk_idx && $chk_idx->num_rows > 0) {
-            // Add a new non-unique index first to satisfy any foreign key dependencies
             $conn->query("ALTER TABLE `eimbox_platform_tracker` ADD INDEX `idx_feat_plat_temp` (`feature_id`, `platform`)");
-            // Drop the old unique index
             $conn->query("ALTER TABLE `eimbox_platform_tracker` DROP INDEX `idx_feature_platform`");
-            // Rename the new index back to standard name
             $conn->query("ALTER TABLE `eimbox_platform_tracker` ADD INDEX `idx_feature_platform` (`feature_id`, `platform`)");
             $conn->query("ALTER TABLE `eimbox_platform_tracker` DROP INDEX `idx_feat_plat_temp`");
         }
     } catch (Throwable $e) {
-        // Log schema setup notice if any without crashing the application
         error_log("Schema ensure notice: " . $e->getMessage());
     }
 }
@@ -73,7 +69,122 @@ function ensure_tracker_schema($conn) {
 ensure_tracker_schema($conn);
 
 // ==============================================================
-// 2. BACKEND CRUD HANDLERS (AJAX POST)
+// 2. HELPER FUNCTIONS & DATA RETRIEVAL LOGIC
+// ==============================================================
+function fetch_matrix_data_array($conn, $f_module = 'all', $f_platform = 'all', $f_status = 'all', $f_search = '', $f_issues = false) {
+    $where_clauses = ["1=1"];
+    if ($f_module !== 'all' && !empty($f_module)) {
+        $where_clauses[] = "m.module = '" . $conn->real_escape_string($f_module) . "'";
+    }
+    if (!empty($f_search)) {
+        $s_term = $conn->real_escape_string($f_search);
+        $where_clauses[] = "(m.feature_name LIKE '%$s_term%' OR m.module LIKE '%$s_term%' OR m.description LIKE '%$s_term%' OR EXISTS (
+            SELECT 1 FROM eimbox_platform_tracker pt WHERE pt.feature_id = m.id AND (pt.script_path LIKE '%$s_term%' OR pt.task_title LIKE '%$s_term%' OR pt.issue_notes LIKE '%$s_term%' OR pt.dev_response LIKE '%$s_term%')
+        ))";
+    }
+    if ($f_issues) {
+        $where_clauses[] = "EXISTS (
+            SELECT 1 FROM eimbox_platform_tracker pt WHERE pt.feature_id = m.id AND (pt.status = 'Issue' OR (pt.issue_notes IS NOT NULL AND TRIM(pt.issue_notes) != ''))
+        )";
+    }
+    if ($f_status !== 'all' && !empty($f_status)) {
+        $st_term = $conn->real_escape_string($f_status);
+        $where_clauses[] = "EXISTS (
+            SELECT 1 FROM eimbox_platform_tracker pt WHERE pt.feature_id = m.id AND pt.status = '$st_term'
+        )";
+    }
+    if ($f_platform !== 'all' && !empty($f_platform)) {
+        $pl_term = $conn->real_escape_string($f_platform);
+        $where_clauses[] = "EXISTS (
+            SELECT 1 FROM eimbox_platform_tracker pt WHERE pt.feature_id = m.id AND pt.platform = '$pl_term'
+        )";
+    }
+
+    $where_sql = implode(' AND ', $where_clauses);
+    $sql = "SELECT m.* FROM eimbox_features_master m WHERE $where_sql ORDER BY m.id DESC";
+
+    $features_res = $conn->query($sql);
+    $features = [];
+    $feature_ids = [];
+
+    if ($features_res && $features_res->num_rows > 0) {
+        while ($row = $features_res->fetch_assoc()) {
+            $features[$row['id']] = [
+                'master' => $row,
+                'platforms' => [
+                    'dashboard' => [],
+                    'console' => [],
+                    'android_lite' => [],
+                    'premium' => [],
+                    'desktop' => []
+                ]
+            ];
+            $feature_ids[] = intval($row['id']);
+        }
+    }
+
+    if (!empty($feature_ids)) {
+        $f_ids_str = implode(',', $feature_ids);
+        $plat_res = $conn->query("SELECT * FROM eimbox_platform_tracker WHERE feature_id IN ($f_ids_str) ORDER BY id ASC");
+        if ($plat_res) {
+            while ($prow = $plat_res->fetch_assoc()) {
+                $fid = intval($prow['feature_id']);
+                $plat = $prow['platform'];
+                if (isset($features[$fid]['platforms'][$plat])) {
+                    $features[$fid]['platforms'][$plat][] = $prow;
+                }
+            }
+        }
+    }
+
+    // Global counts
+    $total_features_count = 0;
+    $c_res = $conn->query("SELECT COUNT(*) as c FROM eimbox_features_master");
+    if ($c_res) $total_features_count = intval($c_res->fetch_assoc()['c'] ?? 0);
+
+    $total_issues_count = 0;
+    $i_res = $conn->query("SELECT COUNT(*) as c FROM eimbox_platform_tracker WHERE status = 'Issue' OR (issue_notes IS NOT NULL AND TRIM(issue_notes) != '')");
+    if ($i_res) $total_issues_count = intval($i_res->fetch_assoc()['c'] ?? 0);
+
+    $plat_stats = [
+        'dashboard'    => ['total' => 0, 'completed' => 0, 'percent' => 0],
+        'console'      => ['total' => 0, 'completed' => 0, 'percent' => 0],
+        'android_lite' => ['total' => 0, 'completed' => 0, 'percent' => 0],
+        'premium'      => ['total' => 0, 'completed' => 0, 'percent' => 0],
+        'desktop'      => ['total' => 0, 'completed' => 0, 'percent' => 0]
+    ];
+
+    $ps_res = $conn->query("
+        SELECT platform, 
+               COUNT(*) as total_tasks,
+               SUM(CASE WHEN status = 'Completed' OR progress_percent = 100 THEN 1 ELSE 0 END) as completed_tasks,
+               AVG(progress_percent) as avg_progress
+        FROM eimbox_platform_tracker
+        GROUP BY platform
+    ");
+    if ($ps_res) {
+        while ($sp = $ps_res->fetch_assoc()) {
+            $pk = $sp['platform'];
+            if (isset($plat_stats[$pk])) {
+                $plat_stats[$pk] = [
+                    'total' => intval($sp['total_tasks']),
+                    'completed' => intval($sp['completed_tasks']),
+                    'percent' => round(floatval($sp['avg_progress'] ?? 0))
+                ];
+            }
+        }
+    }
+
+    return [
+        'features' => array_values($features),
+        'plat_stats' => $plat_stats,
+        'total_features_count' => $total_features_count,
+        'total_issues_count' => $total_issues_count
+    ];
+}
+
+// ==============================================================
+// 3. BACKEND CRUD & AJAX API HANDLERS
 // ==============================================================
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     while (ob_get_level()) { ob_end_clean(); }
@@ -81,7 +192,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     $action = $_POST['action'];
 
-    // 2.1 Add Feature
+    // 3.1 Get Filtered Matrix Data (AJAX)
+    if ($action === 'get_matrix_data') {
+        try {
+            $f_module = $_POST['module'] ?? 'all';
+            $f_platform = $_POST['platform'] ?? 'all';
+            $f_status = $_POST['status'] ?? 'all';
+            $f_search = trim($_POST['search'] ?? '');
+            $f_issues = isset($_POST['issues_only']) && ($_POST['issues_only'] == '1' || $_POST['issues_only'] == 'true');
+
+            $data = fetch_matrix_data_array($conn, $f_module, $f_platform, $f_status, $f_search, $f_issues);
+
+            echo json_encode([
+                'status' => 'success',
+                'data' => $data
+            ]);
+        } catch (Throwable $e) {
+            echo json_encode(['status' => 'error', 'message' => 'Server error: ' . $e->getMessage()]);
+        }
+        exit;
+    }
+
+    // 3.2 Add Feature
     if ($action === 'add_feature') {
         try {
             $module = trim($_POST['module'] ?? '');
@@ -101,7 +233,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $new_id = $stmt->insert_id;
                 $stmt->close();
 
-                // Only insert initial task for selected applicable platforms
                 if (is_array($selected_platforms) && count($selected_platforms) > 0) {
                     $p_stmt = $conn->prepare("INSERT INTO eimbox_platform_tracker (feature_id, platform, task_title, status, progress_percent, priority, script_path) VALUES (?, ?, 'Main Implementation', 'Planned', 0, 'Medium', '')");
                     foreach ($selected_platforms as $pk) {
@@ -113,7 +244,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     $p_stmt->close();
                 }
 
-                echo json_encode(['status' => 'success', 'message' => 'New feature created successfully!']);
+                echo json_encode(['status' => 'success', 'message' => 'New feature created successfully!', 'feature_id' => $new_id]);
             } else {
                 echo json_encode(['status' => 'error', 'message' => 'Failed to create feature: ' . $conn->error]);
             }
@@ -123,7 +254,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         exit;
     }
 
-    // 2.2 Edit Master Feature
+    // 3.3 Edit Master Feature
     if ($action === 'edit_master_feature') {
         try {
             $id = intval($_POST['id'] ?? 0);
@@ -151,7 +282,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         exit;
     }
 
-    // 2.3 Delete Feature
+    // 3.4 Delete Feature
     if ($action === 'delete_feature') {
         try {
             $id = intval($_POST['id'] ?? 0);
@@ -168,15 +299,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         exit;
     }
 
-    // 2.4 Get All Tasks for a Platform
+    // 3.5 Get All Tasks & Details for a Platform
     if ($action === 'get_platform_tasks') {
         try {
             $feature_id = intval($_POST['feature_id'] ?? 0);
             $platform = trim($_POST['platform'] ?? '');
 
-            // Get Feature master info
-            $f_res = $conn->query("SELECT feature_name, module FROM eimbox_features_master WHERE id = $feature_id LIMIT 1");
-            $f_data = $f_res ? $f_res->fetch_assoc() : ['feature_name' => 'Feature #' . $feature_id, 'module' => ''];
+            $f_res = $conn->query("SELECT id, feature_name, module, description FROM eimbox_features_master WHERE id = $feature_id LIMIT 1");
+            $f_data = $f_res ? $f_res->fetch_assoc() : ['id' => $feature_id, 'feature_name' => 'Feature #' . $feature_id, 'module' => '', 'description' => ''];
 
             $stmt = $conn->prepare("SELECT * FROM eimbox_platform_tracker WHERE feature_id = ? AND platform = ? ORDER BY id ASC");
             $stmt->bind_param("is", $feature_id, $platform);
@@ -191,6 +321,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             echo json_encode([
                 'status' => 'success',
                 'feature' => $f_data,
+                'platform' => $platform,
                 'tasks' => $tasks
             ]);
         } catch (Throwable $e) {
@@ -199,7 +330,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         exit;
     }
 
-    // 2.5 Save Platform Task (Create or Update)
+    // 3.6 Save Platform Task (Create or Update)
     if ($action === 'save_platform_task') {
         try {
             $task_id = intval($_POST['task_id'] ?? 0);
@@ -223,7 +354,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
 
             if ($task_id > 0) {
-                // Update Existing Task
                 $stmt = $conn->prepare("
                     UPDATE eimbox_platform_tracker
                     SET task_title = ?, script_path = ?, status = ?, priority = ?, progress_percent = ?,
@@ -231,11 +361,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     WHERE id = ?
                 ");
                 $stmt->bind_param("ssssissssi", $task_title, $script_path, $status, $priority, $progress, $issue_notes, $dev_response, $assigned_to, $deadline, $task_id);
-                $exec = $stmt->execute();
+                $stmt->execute();
                 $stmt->close();
-                echo json_encode(['status' => 'success', 'message' => 'Task updated successfully!']);
+                echo json_encode(['status' => 'success', 'message' => 'Task updated successfully!', 'task_id' => $task_id]);
             } else {
-                // Insert New Task
                 if ($feature_id <= 0 || empty($platform)) {
                     echo json_encode(['status' => 'error', 'message' => 'Invalid feature ID or platform.']);
                     exit;
@@ -247,9 +376,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
                 ");
                 $stmt->bind_param("isssssissss", $feature_id, $platform, $task_title, $script_path, $status, $priority, $progress, $issue_notes, $dev_response, $assigned_to, $deadline);
-                $exec = $stmt->execute();
+                $stmt->execute();
+                $new_task_id = $stmt->insert_id;
                 $stmt->close();
-                echo json_encode(['status' => 'success', 'message' => 'New task added successfully!']);
+                echo json_encode(['status' => 'success', 'message' => 'New task / issue added successfully!', 'task_id' => $new_task_id]);
             }
         } catch (Throwable $e) {
             echo json_encode(['status' => 'error', 'message' => 'Server error: ' . $e->getMessage()]);
@@ -257,7 +387,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         exit;
     }
 
-    // 2.6 Delete Individual Platform Task
+    // 3.7 Delete Individual Platform Task
     if ($action === 'delete_platform_task') {
         try {
             $task_id = intval($_POST['task_id'] ?? 0);
@@ -273,7 +403,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         exit;
     }
 
-    // 2.7 Seed Realistic Default Data
+    // 3.8 Seed Realistic Default Data
     if ($action === 'seed_default_data') {
         try {
             $sample_features = [
@@ -294,7 +424,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                             ['title' => 'Guardian SMS Alert Trigger', 'path' => 'lib/services/sms_service.dart', 'status' => 'In Progress', 'pct' => 60, 'prio' => 'High', 'date' => '2026-09-10']
                         ],
                         'premium' => [
-                            ['title' => 'Offline Biometric Punch Sync Engine', 'path' => 'core/offline_sync.php', 'status' => 'In Progress', 'pct' => 45, 'prio' => 'High', 'date' => '2026-09-18', 'issue' => 'Conflict resolution on duplicate RFID punches']
+                            ['title' => 'Offline Biometric Punch Sync Engine', 'path' => 'core/offline_sync.php', 'status' => 'In Progress', 'pct' => 45, 'prio' => 'High', 'date' => '2026-09-18', 'issue' => 'Conflict resolution on duplicate RFID punches', 'dev' => 'Added timestamp reconciliation window']
                         ],
                         'desktop' => [
                             ['title' => 'ZKTeco / Realtime USB Device Listener', 'path' => 'desktop/biometric_daemon.exe', 'status' => 'Issue', 'pct' => 30, 'prio' => 'Critical', 'date' => '2026-09-25', 'issue' => 'COM port disconnection on Windows 11 sleep mode', 'dev' => 'Investigating auto-reconnect watchdog daemon']
@@ -310,7 +440,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                             ['title' => 'Exam Result Master & Grade Matrix', 'path' => 'exam-matrix.php', 'status' => 'Completed', 'pct' => 100, 'prio' => 'High', 'date' => '2026-08-10']
                         ],
                         'android_lite' => [
-                            ['title' => 'Mobile Camera OMR Bubble Detection', 'path' => 'lib/scanner/omr_vision.dart', 'status' => 'In Progress', 'pct' => 70, 'prio' => 'Critical', 'date' => '2026-09-12', 'issue' => 'Skewed perspective correction needed for angled capture']
+                            ['title' => 'Mobile Camera OMR Bubble Detection', 'path' => 'lib/scanner/omr_vision.dart', 'status' => 'In Progress', 'pct' => 70, 'prio' => 'Critical', 'date' => '2026-09-12', 'issue' => 'Skewed perspective correction needed for angled capture', 'dev' => 'Added OpenCV warp perspective matrix filter']
                         ],
                         'premium' => [
                             ['title' => 'High-Speed Batch Scanner Driver', 'path' => 'premium/omr_driver.dll', 'status' => 'Testing', 'pct' => 90, 'prio' => 'High', 'date' => '2026-09-02']
@@ -349,7 +479,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                             ['title' => 'Embedded Apache/MySQL Offline Server Bundle', 'path' => 'premium/installer.nsi', 'status' => 'Testing', 'pct' => 80, 'prio' => 'High', 'date' => '2026-09-08']
                         ],
                         'desktop' => [
-                            ['title' => 'Auto Differential Cloud Sync Daemon', 'path' => 'desktop/sync_daemon.py', 'status' => 'In Progress', 'pct' => 50, 'prio' => 'Critical', 'date' => '2026-09-20', 'issue' => 'Delta sync conflict when two devices edit same student record simultaneously']
+                            ['title' => 'Auto Differential Cloud Sync Daemon', 'path' => 'desktop/sync_daemon.py', 'status' => 'In Progress', 'pct' => 50, 'prio' => 'Critical', 'date' => '2026-09-20', 'issue' => 'Delta sync conflict when two devices edit same student record simultaneously', 'dev' => 'Implementing last-write-wins CRDT structure']
                         ]
                     ]
                 ]
@@ -394,9 +524,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 }
 
 // ==============================================================
-// 3. FRONTEND DATA LOADING & AGGREGATIONS
+// 4. INITIAL FRONTEND DATA PREPARATION
 // ==============================================================
-
 $platforms = [
     'dashboard'    => ['title' => 'Dashboard',    'sub' => 'Web App',       'color' => 'primary', 'icon' => 'bi bi-laptop'],
     'console'      => ['title' => 'Console',      'sub' => 'Superadmin',    'color' => 'dark',    'icon' => 'bi bi-terminal'],
@@ -406,13 +535,13 @@ $platforms = [
 ];
 
 $plat_color_hexes = [
-    'primary' => '#696cff',
-    'dark'    => '#233446',
-    'success' => '#71dd37',
-    'warning' => '#ffab00',
-    'info'    => '#03c3ec',
-    'danger'  => '#ff3e1d',
-    'secondary'=> '#8592a3'
+    'primary'   => '#696cff',
+    'dark'      => '#233446',
+    'success'   => '#71dd37',
+    'warning'   => '#ffab00',
+    'info'      => '#03c3ec',
+    'danger'    => '#ff3e1d',
+    'secondary' => '#8592a3'
 ];
 
 $status_badges = [
@@ -423,6 +552,48 @@ $status_badges = [
     'Issue'       => 'bg-danger',
     'On Hold'     => 'bg-warning'
 ];
+
+$priority_badges = [
+    'Critical' => 'bg-danger text-white',
+    'High'     => 'bg-warning text-dark',
+    'Medium'   => 'bg-primary text-white',
+    'Low'      => 'bg-secondary text-white'
+];
+
+// Fetch Master Modules for Filter Dropdown
+$modules_list = [];
+$mod_query = $conn->query("SELECT DISTINCT module_name, core FROM modulelist ORDER BY slno ASC, module_name ASC");
+if ($mod_query && $mod_query->num_rows > 0) {
+    while ($m_row = $mod_query->fetch_assoc()) {
+        $modules_list[] = $m_row;
+    }
+}
+if (empty($modules_list)) {
+    $modules_list = [
+        ['module_name' => 'Student', 'core' => 1],
+        ['module_name' => 'Accounts', 'core' => 1],
+        ['module_name' => 'Exam', 'core' => 1],
+        ['module_name' => 'HR/Payroll', 'core' => 1],
+        ['module_name' => 'Academic', 'core' => 1],
+        ['module_name' => 'Library', 'core' => 0],
+        ['module_name' => 'Offline Core', 'core' => 0],
+        ['module_name' => 'Settings', 'core' => 1]
+    ];
+}
+
+// Initial Filter States
+$f_module = $_GET['module'] ?? 'all';
+$f_platform = $_GET['platform'] ?? 'all';
+$f_status = $_GET['status'] ?? 'all';
+$f_search = trim($_GET['search'] ?? '');
+$f_issues = isset($_GET['issues_only']) && $_GET['issues_only'] == '1';
+
+// Initial Data Load
+$initial_data = fetch_matrix_data_array($conn, $f_module, $f_platform, $f_status, $f_search, $f_issues);
+$features = $initial_data['features'];
+$plat_stats = $initial_data['plat_stats'];
+$total_features_count = $initial_data['total_features_count'];
+$total_issues_count = $initial_data['total_issues_count'];
 
 // Helper: Circular Progress SVG Generator
 function render_circular_progress($pct, $color = '#696cff', $size = 40, $stroke = 3.5, $font_size = '0.7rem') {
@@ -453,124 +624,6 @@ function get_progress_color($pct, $status = '') {
     return '#8592a3';
 }
 
-// Fetch Master Modules for Filter Dropdown
-$modules_list = [];
-$mod_query = $conn->query("SELECT DISTINCT module_name, core FROM modulelist ORDER BY slno ASC, module_name ASC");
-if ($mod_query && $mod_query->num_rows > 0) {
-    while ($m_row = $mod_query->fetch_assoc()) {
-        $modules_list[] = $m_row;
-    }
-}
-if (empty($modules_list)) {
-    $modules_list = [
-        ['module_name' => 'Student', 'core' => 1],
-        ['module_name' => 'Accounts', 'core' => 1],
-        ['module_name' => 'Exam', 'core' => 1],
-        ['module_name' => 'HR/Payroll', 'core' => 1],
-        ['module_name' => 'Academic', 'core' => 1],
-        ['module_name' => 'Library', 'core' => 0],
-        ['module_name' => 'Offline Core', 'core' => 0],
-        ['module_name' => 'Settings', 'core' => 1]
-    ];
-}
-
-// Filters
-$f_module = $_GET['module'] ?? 'all';
-$f_platform = $_GET['platform'] ?? 'all';
-$f_status = $_GET['status'] ?? 'all';
-$f_search = trim($_GET['search'] ?? '');
-$f_issues = isset($_GET['issues_only']) && $_GET['issues_only'] == '1';
-
-// Build SQL Query for Master Features
-$where_clauses = ["1=1"];
-if ($f_module !== 'all' && !empty($f_module)) {
-    $where_clauses[] = "m.module = '" . $conn->real_escape_string($f_module) . "'";
-}
-if (!empty($f_search)) {
-    $s_term = $conn->real_escape_string($f_search);
-    $where_clauses[] = "(m.feature_name LIKE '%$s_term%' OR m.module LIKE '%$s_term%' OR m.description LIKE '%$s_term%' OR EXISTS (
-        SELECT 1 FROM eimbox_platform_tracker pt WHERE pt.feature_id = m.id AND (pt.script_path LIKE '%$s_term%' OR pt.task_title LIKE '%$s_term%' OR pt.issue_notes LIKE '%$s_term%')
-    ))";
-}
-if ($f_issues) {
-    $where_clauses[] = "EXISTS (
-        SELECT 1 FROM eimbox_platform_tracker pt WHERE pt.feature_id = m.id AND (pt.status = 'Issue' OR (pt.issue_notes IS NOT NULL AND TRIM(pt.issue_notes) != ''))
-    )";
-}
-if ($f_status !== 'all' && !empty($f_status)) {
-    $st_term = $conn->real_escape_string($f_status);
-    $where_clauses[] = "EXISTS (
-        SELECT 1 FROM eimbox_platform_tracker pt WHERE pt.feature_id = m.id AND pt.status = '$st_term'
-    )";
-}
-if ($f_platform !== 'all' && !empty($f_platform)) {
-    $pl_term = $conn->real_escape_string($f_platform);
-    $where_clauses[] = "EXISTS (
-        SELECT 1 FROM eimbox_platform_tracker pt WHERE pt.feature_id = m.id AND pt.platform = '$pl_term'
-    )";
-}
-
-$where_sql = implode(' AND ', $where_clauses);
-$sql = "
-    SELECT m.* 
-    FROM eimbox_features_master m
-    WHERE $where_sql
-    ORDER BY m.id DESC
-";
-
-$features_res = $conn->query($sql);
-$features = [];
-$feature_ids = [];
-
-if ($features_res && $features_res->num_rows > 0) {
-    while ($row = $features_res->fetch_assoc()) {
-        $features[$row['id']] = [
-            'master' => $row,
-            'platforms' => []
-        ];
-        $feature_ids[] = $row['id'];
-    }
-}
-
-// Fetch Tasks for these Features
-if (!empty($feature_ids)) {
-    $f_ids_str = implode(',', $feature_ids);
-    $plat_res = $conn->query("SELECT * FROM eimbox_platform_tracker WHERE feature_id IN ($f_ids_str) ORDER BY id ASC");
-    if ($plat_res) {
-        while ($prow = $plat_res->fetch_assoc()) {
-            $features[$prow['feature_id']]['platforms'][$prow['platform']][] = $prow;
-        }
-    }
-}
-
-// Global Summary Statistics
-$total_features_count = 0;
-$c_res = $conn->query("SELECT COUNT(*) as c FROM eimbox_features_master");
-if ($c_res) $total_features_count = intval($c_res->fetch_assoc()['c'] ?? 0);
-
-$total_issues_count = 0;
-$i_res = $conn->query("SELECT COUNT(*) as c FROM eimbox_platform_tracker WHERE status = 'Issue' OR (issue_notes IS NOT NULL AND TRIM(issue_notes) != '')");
-if ($i_res) $total_issues_count = intval($i_res->fetch_assoc()['c'] ?? 0);
-
-$plat_stats = [];
-$ps_res = $conn->query("
-    SELECT platform, 
-           COUNT(*) as total_tasks,
-           SUM(CASE WHEN status = 'Completed' OR progress_percent = 100 THEN 1 ELSE 0 END) as completed_tasks,
-           AVG(progress_percent) as avg_progress
-    FROM eimbox_platform_tracker
-    GROUP BY platform
-");
-if ($ps_res) {
-    while ($sp = $ps_res->fetch_assoc()) {
-        $plat_stats[$sp['platform']] = [
-            'total' => intval($sp['total_tasks']),
-            'completed' => intval($sp['completed_tasks']),
-            'percent' => round(floatval($sp['avg_progress'] ?? 0))
-        ];
-    }
-}
-
 require_once 'header.php';
 ?>
 
@@ -582,12 +635,17 @@ require_once 'header.php';
         transform: scale(1.08);
     }
     .platform-cell-box {
-        min-height: 72px;
-        transition: background-color 0.15s ease;
-        border-radius: 6px;
+        min-height: 76px;
+        transition: all 0.18s ease-in-out;
+        border-radius: 8px;
     }
     .platform-cell-box:hover {
-        background-color: rgba(105, 108, 255, 0.06);
+        background-color: rgba(105, 108, 255, 0.08);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+    .platform-cell-box.has-issue {
+        background-color: rgba(255, 62, 29, 0.04);
+        border: 1px dashed rgba(255, 62, 29, 0.3);
     }
     .na-badge {
         font-size: 0.72rem;
@@ -598,16 +656,36 @@ require_once 'header.php';
     .task-card {
         transition: all 0.2s ease;
         border-left: 4px solid #696cff;
+        border-radius: 8px;
     }
-    .task-card.task-issue {
-        border-left-color: #ff3e1d;
-        background-color: #fffaf9;
+    .task-card.task-has-issue {
+        border-left: 4px solid #ff3e1d !important;
+        background-color: #fff9f8;
     }
     .task-card.task-completed {
-        border-left-color: #71dd37;
+        border-left: 4px solid #71dd37;
     }
     .task-card.task-testing {
-        border-left-color: #03c3ec;
+        border-left: 4px solid #03c3ec;
+    }
+    .tracker-toast {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 10999;
+        min-width: 280px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+    }
+    .search-spinner {
+        display: none;
+    }
+    .search-spinner.active {
+        display: inline-block;
+    }
+    .table th {
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 </style>
 
@@ -617,20 +695,20 @@ require_once 'header.php';
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
         <div>
             <h4 class="fw-bold mb-1"><i class="bi bi-diagram-3-fill text-primary me-2"></i>EIMBox Multi-Platform Feature Tracker</h4>
-            <p class="text-muted small mb-0">Multi-issue & multi-task matrix with dynamic platform applicability across Dashboard, Console, Android Lite, Offline Premium & Desktop</p>
+            <p class="text-muted small mb-0">Multi-issue & multi-task matrix with reactive background AJAX processing across Dashboard, Console, Android Lite, Offline Premium & Desktop</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="feature-tracker.php?issues_only=<?= $f_issues ? '0' : '1' ?>" class="btn btn-sm <?= $f_issues ? 'btn-danger' : 'btn-outline-danger' ?>">
-                <i class="bi bi-bug-fill me-1"></i> Issues Only (<?= $total_issues_count ?>)
-            </a>
-            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addFeatureModal">
+            <button type="button" id="btnIssuesOnly" class="btn btn-sm <?= $f_issues ? 'btn-danger' : 'btn-outline-danger' ?>" onclick="toggleIssuesOnly()">
+                <i class="bi bi-bug-fill me-1"></i> Issues Only (<span id="countIssuesHeader"><?= $total_issues_count ?></span>)
+            </button>
+            <button type="button" class="btn btn-primary btn-sm" onclick="showModal('addFeatureModal')">
                 <i class="bi bi-plus-lg me-1"></i> Add New Feature
             </button>
         </div>
     </div>
 
     <!-- Platform KPI Cards -->
-    <div class="row g-2 mb-3">
+    <div class="row g-2 mb-3" id="kpiCardsContainer">
         <?php foreach ($platforms as $pk => $pinfo): 
             $st_total = $plat_stats[$pk]['total'] ?? 0;
             $st_comp = $plat_stats[$pk]['completed'] ?? 0;
@@ -643,10 +721,10 @@ require_once 'header.php';
                         <div class="text-<?= $pinfo['color'] ?> fw-semibold small mb-1">
                             <i class="<?= $pinfo['icon'] ?> me-1"></i> <?= $pinfo['title'] ?>
                         </div>
-                        <div class="my-1">
+                        <div class="my-1" id="kpi_circ_<?= $pk ?>">
                             <?= render_circular_progress($st_pct, $kpi_color, 46, 3.4, '0.72rem') ?>
                         </div>
-                        <small class="text-muted" style="font-size: 0.7rem;"><?= $st_comp ?>/<?= $st_total ?> Tasks Done</small>
+                        <small class="text-muted" style="font-size: 0.7rem;" id="kpi_text_<?= $pk ?>"><?= $st_comp ?>/<?= $st_total ?> Tasks Done</small>
                     </div>
                 </div>
             </div>
@@ -656,26 +734,31 @@ require_once 'header.php';
             <div class="card text-center h-100 bg-primary text-white shadow-sm border-0">
                 <div class="card-body p-2 d-flex flex-column align-items-center justify-content-center">
                     <div class="small fw-semibold mb-1"><i class="bi bi-list-task me-1"></i> All Features</div>
-                    <div class="fs-4 fw-bold my-1"><?= $total_features_count ?></div>
-                    <a href="feature-tracker.php" class="text-white-50 text-decoration-none d-block small" style="font-size: 0.7rem;">Reset All Filters</a>
+                    <div class="fs-4 fw-bold my-1" id="totalFeaturesCard"><?= $total_features_count ?></div>
+                    <a href="javascript:void(0)" onclick="resetFiltersAjax()" class="text-white-50 text-decoration-none d-block small" style="font-size: 0.7rem;"><i class="bi bi-arrow-clockwise me-1"></i>Reset All Filters</a>
                 </div>
             </div>
         </div>
+    </div>
+
     <!-- Filter & Live Search Toolbar -->
     <div class="card mb-3 shadow-sm border-0">
         <div class="card-body p-3">
-            <form method="get" action="feature-tracker.php" class="row g-2 align-items-center">
-                <!-- Search Input -->
+            <form id="filterForm" onsubmit="event.preventDefault(); applyFiltersAjax();" class="row g-2 align-items-center">
+                <!-- Search Input with Debounce -->
                 <div class="col-lg-3 col-md-6">
                     <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
-                        <input type="text" class="form-control" name="search" value="<?= htmlspecialchars($f_search) ?>" placeholder="Search feature, module or script...">
+                        <span class="input-group-text bg-light">
+                            <i class="bi bi-search" id="searchIcon"></i>
+                            <div class="spinner-border spinner-border-sm text-primary search-spinner" id="searchSpinner" role="status"></div>
+                        </span>
+                        <input type="text" class="form-control" id="filter_search" name="search" value="<?= htmlspecialchars($f_search) ?>" placeholder="Search feature, module, script, issues..." oninput="onSearchInput(this.value)">
                     </div>
                 </div>
 
                 <!-- Module Select -->
                 <div class="col-lg-2 col-md-3 col-6">
-                    <select class="form-select form-select-sm" name="module" onchange="this.form.submit()">
+                    <select class="form-select form-select-sm" id="filter_module" name="module" onchange="applyFiltersAjax()">
                         <option value="all">All Modules</option>
                         <?php foreach ($modules_list as $mod): ?>
                             <option value="<?= htmlspecialchars($mod['module_name']) ?>" <?= $f_module === $mod['module_name'] ? 'selected' : '' ?>>
@@ -687,7 +770,7 @@ require_once 'header.php';
 
                 <!-- Platform Select -->
                 <div class="col-lg-2 col-md-3 col-6">
-                    <select class="form-select form-select-sm" name="platform" onchange="this.form.submit()">
+                    <select class="form-select form-select-sm" id="filter_platform" name="platform" onchange="applyFiltersAjax()">
                         <option value="all">All Platforms</option>
                         <?php foreach ($platforms as $pk => $pinfo): ?>
                             <option value="<?= $pk ?>" <?= $f_platform === $pk ? 'selected' : '' ?>><?= $pinfo['title'] ?></option>
@@ -697,7 +780,7 @@ require_once 'header.php';
 
                 <!-- Status Select -->
                 <div class="col-lg-2 col-md-3 col-6">
-                    <select class="form-select form-select-sm" name="status" onchange="this.form.submit()">
+                    <select class="form-select form-select-sm" id="filter_status" name="status" onchange="applyFiltersAjax()">
                         <option value="all">All Statuses</option>
                         <?php foreach ($status_badges as $st_key => $st_badge): ?>
                             <option value="<?= $st_key ?>" <?= $f_status === $st_key ? 'selected' : '' ?>><?= $st_key ?></option>
@@ -707,8 +790,8 @@ require_once 'header.php';
 
                 <!-- Action buttons -->
                 <div class="col-lg-3 col-md-9 col-6 text-end">
-                    <button type="submit" class="btn btn-sm btn-primary me-1"><i class="bi bi-funnel-fill me-1"></i> Filter</button>
-                    <a href="feature-tracker.php" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-clockwise me-1"></i> Reset</a>
+                    <button type="button" class="btn btn-sm btn-primary me-1" onclick="applyFiltersAjax()"><i class="bi bi-funnel-fill me-1"></i> Filter</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="resetFiltersAjax()"><i class="bi bi-arrow-clockwise me-1"></i> Reset</button>
                 </div>
             </form>
         </div>
@@ -717,29 +800,30 @@ require_once 'header.php';
     <!-- Main Features Matrix Table -->
     <div class="card shadow-sm border-0">
         <div class="table-responsive">
-            <table class="table table-bordered table-striped table-hover align-middle mb-0">
+            <table class="table table-bordered table-striped table-hover align-middle mb-0" id="featuresMatrixTable">
                 <thead class="table-light">
                     <tr>
-                        <th class="text-center" >#</th>
-                        <th >Module & Feature Name</th>
+                        <th class="text-center" style="width: 50px;">#</th>
+                        <th style="min-width: 220px;">Module & Feature Name</th>
                         <?php foreach ($platforms as $pk => $pinfo): ?>
-                            <th class="text-center" >
+                            <th class="text-center" style="min-width: 130px;">
                                 <div class="text-<?= $pinfo['color'] ?> fw-bold">
                                     <i class="<?= $pinfo['icon'] ?> me-1"></i> <?= $pinfo['title'] ?>
                                 </div>
                                 <span class="text-muted font-monospace" style="font-size: 0.65rem;"><?= $pinfo['sub'] ?></span>
                             </th>
                         <?php endforeach; ?>
-                        <th class="text-center" >Actions</th>
+                        <th class="text-center" style="width: 100px;">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="matrixTableBody">
+                    <!-- Dynamic rendering via JavaScript & initial PHP hydration -->
                     <?php if (empty($features)): ?>
-                        <tr>
+                        <tr id="emptyMatrixRow">
                             <td colspan="8" class="text-center py-5 text-muted">
                                 <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary"></i>
                                 <h5>No records found!</h5>
-                                <button type="button" class="btn btn-sm btn-outline-success" onclick="seedDemoData()">Load Demo Data</button>
+                                <button type="button" class="btn btn-sm btn-outline-success mt-2" onclick="seedDemoData()"><i class="bi bi-cloud-arrow-down me-1"></i> Load Demo Data</button>
                             </td>
                         </tr>
                     <?php else: ?>
@@ -748,7 +832,7 @@ require_once 'header.php';
                             $p_data = $f_item['platforms'];
                             $m_json = htmlspecialchars(json_encode($m), ENT_QUOTES, 'UTF-8');
                         ?>
-                            <tr>
+                            <tr id="feature_row_<?= $m['id'] ?>">
                                 <td class="text-center text-muted fw-bold"><?= $m['id'] ?></td>
                                 <td>
                                     <span class="badge bg-primary-subtle text-primary border mb-1 font-monospace">
@@ -767,12 +851,12 @@ require_once 'header.php';
                                     $task_count = count($tasks);
                                     
                                     if ($task_count === 0): ?>
-                                        <td class="text-center p-2" style="cursor: pointer;" onclick='openPlatformWorkspace(<?= $m['id'] ?>, "<?= $pk ?>", "<?= htmlspecialchars($m['feature_name'], ENT_QUOTES) ?>")' title="Click to configure or add tasks">
+                                        <td class="text-center p-2" style="cursor: pointer;" onclick='openPlatformWorkspace(<?= $m['id'] ?>, "<?= $pk ?>", <?= json_encode($m['feature_name']) ?>)' title="Click to configure tasks for <?= $pinfo['title'] ?>">
                                             <div class="platform-cell-box d-flex flex-column align-items-center justify-content-center p-1">
                                                 <span class="badge na-badge px-2 py-1 mb-1">
                                                     <i class="bi bi-slash-circle me-1"></i>N/A
                                                 </span>
-                                                <span class="text-muted" style="font-size: 0.65rem;">Not Applicable</span>
+                                                <span class="text-muted" style="font-size: 0.65rem;">Not Configured</span>
                                             </div>
                                         </td>
                                     <?php else: 
@@ -806,15 +890,15 @@ require_once 'header.php';
                                         $badge_class = $status_badges[$composite_status] ?? 'bg-secondary';
                                         $prog_color = get_progress_color($avg_progress, $composite_status);
                                     ?>
-                                        <td class="text-center p-2" style="cursor: pointer;" onclick='openPlatformWorkspace(<?= $m['id'] ?>, "<?= $pk ?>", "<?= htmlspecialchars($m['feature_name'], ENT_QUOTES) ?>")' title="Click to view & manage <?= $task_count ?> task(s)">
-                                            <div class="platform-cell-box d-flex flex-column align-items-center justify-content-center p-1">
+                                        <td class="text-center p-2" style="cursor: pointer;" onclick='openPlatformWorkspace(<?= $m['id'] ?>, "<?= $pk ?>", <?= json_encode($m['feature_name']) ?>)' title="Click to view & manage <?= $task_count ?> task(s)">
+                                            <div class="platform-cell-box <?= $issue_count > 0 ? 'has-issue' : '' ?> d-flex flex-column align-items-center justify-content-center p-1">
                                                 <div class="mb-1">
                                                     <?= render_circular_progress($avg_progress, $prog_color, 36, 3.2, '0.65rem') ?>
                                                 </div>
                                                 <span class="badge <?= $badge_class ?> px-2 py-1 mb-1" style="font-size: 0.62rem;"><?= htmlspecialchars($composite_status) ?></span>
                                                 <span class="text-muted" style="font-size: 0.65rem; font-weight: 600; line-height: 1.1;"><?= $completed_tasks ?>/<?= $task_count ?> Tasks</span>
                                                 <?php if ($issue_count > 0): ?>
-                                                    <span class="badge bg-danger-subtle text-danger border px-1 mt-1" style="font-size: 0.60rem;" title="<?= $issue_count ?> task(s) have pending issues">
+                                                    <span class="badge bg-danger text-white px-1 mt-1 shadow-sm" style="font-size: 0.60rem;" title="<?= $issue_count ?> task(s) have pending issues">
                                                         <i class="bi bi-bug-fill me-1"></i><?= $issue_count ?> Issue<?= $issue_count > 1 ? 's' : '' ?>
                                                     </span>
                                                 <?php elseif ($latest_deadline): ?>
@@ -829,7 +913,7 @@ require_once 'header.php';
                                 <td class="text-center">
                                     <div class="btn-group btn-group-sm">
                                         <button type="button" class="btn btn-outline-primary" title="Edit Feature" onclick='openMasterEditModal(<?= $m_json ?>)'><i class="bi bi-pencil-square"></i></button>
-                                        <button type="button" class="btn btn-outline-danger" title="Delete Feature" onclick='deleteFeature(<?= $m['id'] ?>, "<?= htmlspecialchars($m['feature_name'], ENT_QUOTES) ?>")'><i class="bi bi-trash3"></i></button>
+                                        <button type="button" class="btn btn-outline-danger" title="Delete Feature" onclick='deleteFeature(<?= $m['id'] ?>, <?= json_encode($m['feature_name']) ?>)'><i class="bi bi-trash3"></i></button>
                                     </div>
                                 </td>
                             </tr>
@@ -841,15 +925,25 @@ require_once 'header.php';
     </div>
 </div>
 
+<!-- Toast Notification Container -->
+<div id="toastNotification" class="toast align-items-center text-white bg-primary border-0 tracker-toast" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+        <div class="toast-body d-flex align-items-center" id="toastMessage">
+            <i class="bi bi-check-circle-fill me-2 fs-5"></i> Operation completed successfully.
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+</div>
+
 <!-- ============================================================== -->
-<!-- 4. BOOTSTRAP 5 MODALS                                          -->
+<!-- 5. BOOTSTRAP 5 MODALS                                          -->
 <!-- ============================================================== -->
 
-<!-- 4.1 Add Master Feature Modal -->
+<!-- 5.1 Add Master Feature Modal -->
 <div class="modal fade" id="addFeatureModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
+        <div class="modal-content shadow border-0">
+            <div class="modal-header bg-light">
                 <h5 class="modal-title fw-bold"><i class="bi bi-plus-circle text-primary me-2"></i>Add New Feature</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -876,7 +970,7 @@ require_once 'header.php';
                         </div>
                         <div class="col-12">
                             <label class="form-label fw-semibold d-block"><i class="bi bi-grid-3x3-gap-fill me-1 text-primary"></i>Applicable Platforms</label>
-                            <span class="text-muted small d-block mb-2">Check the platforms where this feature applies.</span>
+                            <span class="text-muted small d-block mb-2">Select the platforms where this feature is applicable:</span>
                             <div class="d-flex flex-wrap gap-3 p-3 bg-light rounded border">
                                 <?php foreach ($platforms as $pk => $pinfo): ?>
                                     <div class="form-check form-check-inline">
@@ -888,141 +982,877 @@ require_once 'header.php';
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="btnAddSubmit">Save Feature</button>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm" id="btnAddSubmit"><i class="bi bi-check-lg me-1"></i>Save Feature</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<!-- 4.3 Platform Multi-Task & Issue Workspace Modal -->
+<!-- 5.2 Edit Master Feature Modal -->
+<div class="modal fade" id="editFeatureModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow border-0">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square text-primary me-2"></i>Edit Feature Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editFeatureForm" onsubmit="submitEditMasterFeature(event)">
+                <input type="hidden" name="action" value="edit_master_feature">
+                <input type="hidden" name="id" id="edit_feature_id">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-5">
+                            <label class="form-label fw-semibold"><i class="bi bi-folder2-open me-1 text-primary"></i>Module <span class="text-danger">*</span></label>
+                            <select class="form-select" name="module" id="edit_feature_module" required>
+                                <option value="">-- Select Module --</option>
+                                <?php foreach ($modules_list as $mod): ?>
+                                    <option value="<?= htmlspecialchars($mod['module_name']) ?>"><?= htmlspecialchars($mod['module_name']) ?> <?= $mod['core'] == 1 ? '(Core)' : '' ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-7">
+                            <label class="form-label fw-semibold"><i class="bi bi-tag-fill me-1 text-primary"></i>Feature Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="feature_name" id="edit_feature_name" placeholder="Enter feature name..." required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold"><i class="bi bi-card-text me-1 text-primary"></i>Description</label>
+                            <textarea class="form-control" name="description" id="edit_feature_description" rows="3" placeholder="Brief description of the feature..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm" id="btnEditSubmit"><i class="bi bi-check-lg me-1"></i>Update Feature</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 5.3 Platform Multi-Task & Issue Workspace Modal -->
 <div class="modal fade" id="platformWorkspaceModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-light">
+            <!-- Modal Header -->
+            <div class="modal-header bg-light py-3">
                 <div>
-                    <h5 class="modal-title fw-bold mb-0" id="pw_modal_title"><i class="bi bi-gear-wide-connected text-primary me-2"></i>Platform Workspace</h5>
-                    <span class="text-muted small" id="pw_modal_sub">Feature: ...</span>
+                    <h5 class="modal-title fw-bold mb-0" id="pw_modal_title">
+                        <i class="bi bi-gear-wide-connected text-primary me-2"></i>Platform Workspace
+                    </h5>
+                    <div class="d-flex align-items-center gap-2 mt-1">
+                        <span class="badge bg-primary-subtle text-primary border" id="pw_modal_module">Module: ...</span>
+                        <span class="text-dark fw-semibold small" id="pw_modal_sub">Feature: ...</span>
+                    </div>
                 </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+
+            <!-- Workspace KPI & Action Banner -->
             <div class="p-3 bg-primary-subtle border-bottom d-flex flex-wrap align-items-center justify-content-between gap-3">
                 <div class="d-flex align-items-center gap-3">
                     <div id="pw_summary_circ"></div>
                     <div>
                         <div class="fw-bold fs-6 text-dark" id="pw_summary_text">0 / 0 Tasks Completed</div>
-                        <small class="text-muted" id="pw_summary_deadline">Target Deadline: N/A</small>
+                        <div class="small text-muted d-flex align-items-center gap-2">
+                            <span id="pw_summary_deadline"><i class="bi bi-calendar-event me-1 text-primary"></i>Target Deadline: N/A</span>
+                            <span id="pw_summary_issues" class="badge bg-danger text-white d-none"><i class="bi bi-bug-fill me-1"></i>0 Issues</span>
+                        </div>
                     </div>
                 </div>
-                <div><button type="button" class="btn btn-primary btn-sm" onclick="showNewTaskForm()"><i class="bi bi-plus-lg me-1"></i> Add Task</button></div>
+                <div>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="toggleNewTaskForm()">
+                        <i class="bi bi-plus-lg me-1"></i> Add Task / Issue
+                    </button>
+                </div>
             </div>
-            <div class="modal-body p-3">
+
+            <!-- Modal Body -->
+            <div class="modal-body p-3" style="max-height: 75vh; overflow-y: auto;">
+                
+                <!-- Add New Task / Issue Form (Collapsible) -->
                 <div id="pw_new_task_box" class="card mb-3 border-primary shadow-sm" style="display: none;">
                     <div class="card-header bg-primary text-white py-2 d-flex justify-content-between align-items-center">
-                        <span class="fw-bold small">Add New Task or Issue Item</span>
+                        <span class="fw-bold small"><i class="bi bi-plus-circle-fill me-1"></i> Add New Task or Issue Item</span>
                         <button type="button" class="btn-close btn-close-white btn-sm" onclick="hideNewTaskForm()"></button>
                     </div>
-                    <div class="card-body p-3">
+                    <div class="card-body p-3 bg-light">
                         <form id="pwNewTaskForm" onsubmit="submitNewTask(event)">
                             <input type="hidden" name="action" value="save_platform_task">
                             <input type="hidden" name="task_id" value="0">
                             <input type="hidden" name="feature_id" id="nt_feature_id">
                             <input type="hidden" name="platform" id="nt_platform">
+
                             <div class="row g-2">
-                                <div class="col-md-5"><label class="small fw-semibold text-muted">Title <span class="text-danger">*</span></label><input type="text" class="form-control form-control-sm" name="task_title" required></div>
-                                <div class="col-md-4"><label class="small fw-semibold text-muted">Path</label><input type="text" class="form-control form-control-sm" name="script_path"></div>
-                                <div class="col-md-3"><label class="small fw-semibold text-muted">Status</label><select class="form-select form-select-sm" name="status"><?php foreach ($status_badges as $sn => $sb) echo "<option value='$sn'>$sn</option>"; ?></select></div>
-                                <div class="col-md-4"><label class="small fw-semibold text-muted">Progress (%)</label><input type="number" class="form-control form-control-sm" name="progress_percent" min="0" max="100" value="0"></div>
-                                <div class="col-md-4"><label class="small fw-semibold text-muted">Priority</label><select class="form-select form-select-sm" name="priority"><option value="Critical">Critical</option><option value="High">High</option><option value="Medium" selected>Medium</option></select></div>
-                                <div class="col-md-4"><label class="small fw-semibold text-muted">Deadline</label><input type="date" class="form-control form-control-sm" name="estimated_deadline"></div>
-                                <div class="col-md-6"><label class="small fw-semibold text-danger">Issues</label><textarea class="form-control form-control-sm" name="issue_notes" rows="2"></textarea></div>
-                                <div class="col-md-6"><label class="small fw-semibold text-success">Fix/Note</label><textarea class="form-control form-control-sm" name="dev_response" rows="2"></textarea></div>
-                                <div class="col-12 text-end"><button type="button" class="btn btn-sm btn-secondary" onclick="hideNewTaskForm()">Cancel</button><button type="submit" class="btn btn-sm btn-primary" id="btnSaveNewTask">Save Task</button></div>
+                                <div class="col-md-5">
+                                    <label class="form-label small fw-semibold text-muted mb-1">Task / Issue Title <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control form-control-sm" name="task_title" id="nt_task_title" placeholder="e.g. Implement camera scanner / Fix sync bug" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-semibold text-muted mb-1">Script / File Path</label>
+                                    <input type="text" class="form-control form-control-sm font-monospace" name="script_path" id="nt_script_path" placeholder="e.g. attendance-daily.php or lib/scanner.dart">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-semibold text-muted mb-1">Status</label>
+                                    <select class="form-select form-select-sm" name="status" id="nt_status" onchange="onNewTaskStatusChange(this.value)">
+                                        <?php foreach ($status_badges as $sn => $sb): ?>
+                                            <option value="<?= $sn ?>"><?= $sn ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-semibold text-muted mb-1">Progress (<span id="nt_prog_label">0</span>%)</label>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <input type="range" class="form-range" min="0" max="100" value="0" id="nt_progress_range" oninput="document.getElementById('nt_progress_percent').value = this.value; document.getElementById('nt_prog_label').innerText = this.value;">
+                                        <input type="number" class="form-control form-control-sm text-center" style="width: 65px;" name="progress_percent" id="nt_progress_percent" min="0" max="100" value="0" oninput="document.getElementById('nt_progress_range').value = this.value; document.getElementById('nt_prog_label').innerText = this.value;">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-semibold text-muted mb-1">Priority</label>
+                                    <select class="form-select form-select-sm" name="priority" id="nt_priority">
+                                        <option value="Critical">Critical</option>
+                                        <option value="High">High</option>
+                                        <option value="Medium" selected>Medium</option>
+                                        <option value="Low">Low</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-semibold text-muted mb-1">Target Deadline</label>
+                                    <input type="date" class="form-control form-control-sm" name="estimated_deadline" id="nt_deadline">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-semibold text-muted mb-1">Assigned To</label>
+                                    <input type="text" class="form-control form-control-sm" name="assigned_to" id="nt_assigned" placeholder="Developer / Lead">
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold text-danger mb-1"><i class="bi bi-bug-fill me-1"></i>Issue Description / Bug Notes</label>
+                                    <textarea class="form-control form-control-sm border-danger-subtle" name="issue_notes" id="nt_issue_notes" rows="2" placeholder="Describe any bug, blocker or issue encountered..."></textarea>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold text-success mb-1"><i class="bi bi-check-circle-fill me-1"></i>Developer Fix / Resolution Notes</label>
+                                    <textarea class="form-control form-control-sm border-success-subtle" name="dev_response" id="nt_dev_response" rows="2" placeholder="Describe developer response or solution implemented..."></textarea>
+                                </div>
+
+                                <div class="col-12 text-end pt-2">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary me-1" onclick="hideNewTaskForm()">Cancel</button>
+                                    <button type="submit" class="btn btn-sm btn-primary" id="btnSaveNewTask"><i class="bi bi-save me-1"></i>Save Task</button>
+                                </div>
                             </div>
                         </form>
                     </div>
                 </div>
-                <div id="pw_tasks_container"></div>
+
+                <!-- Tasks & Issues Container -->
+                <div id="pw_tasks_container">
+                    <div class="text-center py-4 text-muted">
+                        <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                        <span>Loading platform tasks...</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer bg-light py-2">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
 
+
+<?php require_once 'footer.php'; ?>
+
+<!-- ============================================================== -->
+<!-- 6. JAVASCRIPT REACTIVE AJAX ENGINE                             -->
+<!-- ============================================================== -->
 <script>
     const platformsInfo = <?= json_encode($platforms) ?>;
     const statusBadgesList = <?= json_encode($status_badges) ?>;
-    let currentWorkspaceFeatureId = 0, currentWorkspacePlatform = '';
+    const priorityBadgesList = <?= json_encode($priority_badges) ?>;
+    const platColorHexes = <?= json_encode($plat_color_hexes) ?>;
 
-    function showModal(id) { bootstrap.Modal.getOrCreateInstance(document.getElementById(id)).show(); }
-    function hideModal(id) { const m = bootstrap.Modal.getInstance(document.getElementById(id)); if (m) m.hide(); }
+    let currentWorkspaceFeatureId = 0;
+    let currentWorkspacePlatform = '';
+    let isIssuesOnlyActive = <?= $f_issues ? 'true' : 'false' ?>;
+    let searchDebounceTimer = null;
 
-    function submitAddFeature(e) {
-        e.preventDefault();
-        const fd = new FormData(document.getElementById('addFeatureForm'));
-        fetch('feature-tracker.php', { method: 'POST', body: fd }).then(r => r.json()).then(res => {
-            if (res.status === 'success') location.reload(); else alert(res.message);
+    // -------------------------------------------------------------
+    // Utility & Modal Helpers
+    // -------------------------------------------------------------
+    function showModal(id) { 
+        bootstrap.Modal.getOrCreateInstance(document.getElementById(id)).show(); 
+    }
+    
+    function hideModal(id) { 
+        const m = bootstrap.Modal.getInstance(document.getElementById(id)); 
+        if (m) m.hide(); 
+    }
+
+    function showToast(message, isError = false) {
+        const toastEl = document.getElementById('toastNotification');
+        const toastMsg = document.getElementById('toastMessage');
+        if (toastEl && toastMsg) {
+            toastEl.className = `toast align-items-center text-white ${isError ? 'bg-danger' : 'bg-success'} border-0 tracker-toast`;
+            toastMsg.innerHTML = `<i class="bi ${isError ? 'bi-exclamation-triangle-fill' : 'bi-check-circle-fill'} me-2 fs-5"></i> ${escapeHtml(message)}`;
+            const toast = bootstrap.Toast.getOrCreateInstance(toastEl, { delay: 3000 });
+            toast.show();
+        }
+    }
+
+    function escapeHtml(str) { 
+        if (str === null || str === undefined) return '';
+        return String(str).replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'}[m])); 
+    }
+
+    function getProgressColorJs(pct, status) {
+        if (status === 'Issue') return '#ff3e1d';
+        if (status === 'Completed' || pct >= 100) return '#71dd37';
+        if (pct >= 70) return '#03c3ec';
+        if (pct >= 30) return '#696cff';
+        if (pct > 0) return '#ffab00';
+        return '#8592a3';
+    }
+
+    function renderCircularProgressSvg(pct, color = '#696cff', size = 40, stroke = 3.5, fontSize = '0.7rem') {
+        pct = Math.max(0, Math.min(100, parseInt(pct || 0)));
+        const radius = (size - stroke) / 2;
+        const circ = 2 * Math.PI * radius;
+        const offset = circ - (pct / 100) * circ;
+        return `
+        <div class="circular-progress-box position-relative d-inline-flex align-items-center justify-content-center" style="width: ${size}px; height: ${size}px;">
+            <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" class="d-block" style="transform: rotate(-90deg);">
+                <circle cx="${size/2}" cy="${size/2}" r="${radius}" fill="none" stroke="#e7e7e7" stroke-width="${stroke}" />
+                <circle cx="${size/2}" cy="${size/2}" r="${radius}" fill="none" stroke="${color}" stroke-width="${stroke}" 
+                        stroke-dasharray="${circ}" stroke-dashoffset="${offset}" stroke-linecap="round" />
+            </svg>
+            <span class="position-absolute fw-bold" style="font-size: ${fontSize}; color: ${color}; line-height: 1; user-select: none;">
+                ${pct}%
+            </span>
+        </div>`;
+    }
+
+    // -------------------------------------------------------------
+    // Live AJAX Filtering & Real-time Search
+    // -------------------------------------------------------------
+    function onSearchInput(val) {
+        const spinner = document.getElementById('searchSpinner');
+        const icon = document.getElementById('searchIcon');
+        if (spinner && icon) {
+            spinner.classList.add('active');
+            icon.style.display = 'none';
+        }
+        clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(() => {
+            applyFiltersAjax();
+        }, 320);
+    }
+
+    function toggleIssuesOnly() {
+        isIssuesOnlyActive = !isIssuesOnlyActive;
+        const btn = document.getElementById('btnIssuesOnly');
+        if (btn) {
+            btn.className = isIssuesOnlyActive ? 'btn btn-sm btn-danger' : 'btn btn-sm btn-outline-danger';
+        }
+        applyFiltersAjax();
+    }
+
+    function resetFiltersAjax() {
+        document.getElementById('filter_search').value = '';
+        document.getElementById('filter_module').value = 'all';
+        document.getElementById('filter_platform').value = 'all';
+        document.getElementById('filter_status').value = 'all';
+        isIssuesOnlyActive = false;
+        const btn = document.getElementById('btnIssuesOnly');
+        if (btn) btn.className = 'btn btn-sm btn-outline-danger';
+        applyFiltersAjax();
+    }
+
+    function applyFiltersAjax() {
+        const sVal = document.getElementById('filter_search').value.trim();
+        const mVal = document.getElementById('filter_module').value;
+        const pVal = document.getElementById('filter_platform').value;
+        const stVal = document.getElementById('filter_status').value;
+
+        const spinner = document.getElementById('searchSpinner');
+        const icon = document.getElementById('searchIcon');
+
+        const fd = new FormData();
+        fd.append('action', 'get_matrix_data');
+        fd.append('search', sVal);
+        fd.append('module', mVal);
+        fd.append('platform', pVal);
+        fd.append('status', stVal);
+        fd.append('issues_only', isIssuesOnlyActive ? '1' : '0');
+
+        fetch('feature-tracker.php', {
+            method: 'POST',
+            body: fd
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (spinner && icon) {
+                spinner.classList.remove('active');
+                icon.style.display = 'inline-block';
+            }
+            if (res.status === 'success' && res.data) {
+                renderMatrixTable(res.data.features || []);
+                updateKpiStats(res.data.plat_stats || {}, res.data.total_features_count || 0, res.data.total_issues_count || 0);
+            }
+        })
+        .catch(err => {
+            if (spinner && icon) {
+                spinner.classList.remove('active');
+                icon.style.display = 'inline-block';
+            }
+            console.error('Filter error:', err);
         });
     }
 
-    function deleteFeature(id, name) {
-        if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
-        const fd = new FormData(); fd.append('action', 'delete_feature'); fd.append('id', id);
-        fetch('feature-tracker.php', { method: 'POST', body: fd }).then(r => r.json()).then(() => location.reload());
+    function updateKpiStats(platStats, totalFeatures, totalIssues) {
+        document.getElementById('totalFeaturesCard').innerText = totalFeatures;
+        document.getElementById('countIssuesHeader').innerText = totalIssues;
+
+        for (const pk in platformsInfo) {
+            const pinfo = platformsInfo[pk];
+            const pstat = platStats[pk] || { total: 0, completed: 0, percent: 0 };
+            const kpiColor = platColorHexes[pinfo.color] || '#696cff';
+
+            const circEl = document.getElementById(`kpi_circ_${pk}`);
+            if (circEl) circEl.innerHTML = renderCircularProgressSvg(pstat.percent, kpiColor, 46, 3.4, '0.72rem');
+
+            const textEl = document.getElementById(`kpi_text_${pk}`);
+            if (textEl) textEl.innerText = `${pstat.completed}/${pstat.total} Tasks Done`;
+        }
     }
 
+    function renderMatrixTable(features) {
+        const tbody = document.getElementById('matrixTableBody');
+        if (!features || features.length === 0) {
+            tbody.innerHTML = `
+                <tr id="emptyMatrixRow">
+                    <td colspan="8" class="text-center py-5 text-muted">
+                        <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary"></i>
+                        <h5>No records found!</h5>
+                        <button type="button" class="btn btn-sm btn-outline-success mt-2" onclick="seedDemoData()"><i class="bi bi-cloud-arrow-down me-1"></i> Load Demo Data</button>
+                    </td>
+                </tr>`;
+            return;
+        }
+
+        let html = '';
+        features.forEach(fItem => {
+            const m = fItem.master;
+            const pData = fItem.platforms || {};
+            const mJson = escapeHtml(JSON.stringify(m));
+
+            html += `
+            <tr id="feature_row_${m.id}">
+                <td class="text-center text-muted fw-bold">${m.id}</td>
+                <td>
+                    <span class="badge bg-primary-subtle text-primary border mb-1 font-monospace">
+                        <i class="bi bi-folder2-open me-1"></i>${escapeHtml(m.module)}
+                    </span>
+                    <div class="fw-bold text-dark">${escapeHtml(m.feature_name)}</div>
+                    ${m.description ? `<div class="text-muted small text-truncate" style="max-width: 280px;" title="${escapeHtml(m.description)}">${escapeHtml(m.description)}</div>` : ''}
+                </td>`;
+
+            for (const pk in platformsInfo) {
+                const pinfo = platformsInfo[pk];
+                const tasks = pData[pk] || [];
+                const taskCount = tasks.length;
+
+                if (taskCount === 0) {
+                    html += `
+                    <td class="text-center p-2" style="cursor: pointer;" onclick="openPlatformWorkspace(${m.id}, '${pk}', '${escapeHtml(m.feature_name)}')" title="Click to configure tasks for ${pinfo.title}">
+                        <div class="platform-cell-box d-flex flex-column align-items-center justify-content-center p-1">
+                            <span class="badge na-badge px-2 py-1 mb-1">
+                                <i class="bi bi-slash-circle me-1"></i>N/A
+                            </span>
+                            <span class="text-muted" style="font-size: 0.65rem;">Not Configured</span>
+                        </div>
+                    </td>`;
+                } else {
+                    let completedTasks = 0;
+                    let totalProgressSum = 0;
+                    let issueCount = 0;
+                    let latestDeadline = null;
+
+                    tasks.forEach(t => {
+                        const pct = parseInt(t.progress_percent || 0);
+                        totalProgressSum += pct;
+                        if (t.status === 'Completed' || pct >= 100) completedTasks++;
+                        if (t.status === 'Issue' || (t.issue_notes && t.issue_notes.trim())) issueCount++;
+                        if (t.estimated_deadline) {
+                            if (!latestDeadline || t.estimated_deadline > latestDeadline) {
+                                latestDeadline = t.estimated_deadline;
+                            }
+                        }
+                    });
+
+                    const avgProgress = Math.round(totalProgressSum / taskCount);
+                    let compositeStatus = 'Planned';
+                    if (issueCount > 0) compositeStatus = 'Issue';
+                    else if (completedTasks === taskCount) compositeStatus = 'Completed';
+                    else if (avgProgress > 0) compositeStatus = 'In Progress';
+
+                    const badgeClass = statusBadgesList[compositeStatus] || 'bg-secondary';
+                    const progColor = getProgressColorJs(avgProgress, compositeStatus);
+
+                    html += `
+                    <td class="text-center p-2" style="cursor: pointer;" onclick="openPlatformWorkspace(${m.id}, '${pk}', '${escapeHtml(m.feature_name)}')" title="Click to view & manage ${taskCount} task(s)">
+                        <div class="platform-cell-box ${issueCount > 0 ? 'has-issue' : ''} d-flex flex-column align-items-center justify-content-center p-1">
+                            <div class="mb-1">
+                                ${renderCircularProgressSvg(avgProgress, progColor, 36, 3.2, '0.65rem')}
+                            </div>
+                            <span class="badge ${badgeClass} px-2 py-1 mb-1" style="font-size: 0.62rem;">${escapeHtml(compositeStatus)}</span>
+                            <span class="text-muted" style="font-size: 0.65rem; font-weight: 600; line-height: 1.1;">${completedTasks}/${taskCount} Tasks</span>
+                            ${issueCount > 0 ? `
+                                <span class="badge bg-danger text-white px-1 mt-1 shadow-sm" style="font-size: 0.60rem;" title="${issueCount} task(s) have pending issues">
+                                    <i class="bi bi-bug-fill me-1"></i>${issueCount} Issue${issueCount > 1 ? 's' : ''}
+                                </span>` : (latestDeadline ? `
+                                <span class="text-muted font-monospace mt-1" style="font-size: 0.62rem;" title="Target Deadline: ${escapeHtml(latestDeadline)}">
+                                    <i class="bi bi-calendar-event me-1 text-primary"></i>${escapeHtml(latestDeadline)}
+                                </span>` : '')
+                            }
+                        </div>
+                    </td>`;
+                }
+            }
+
+            html += `
+                <td class="text-center">
+                    <div class="btn-group btn-group-sm">
+                        <button type="button" class="btn btn-outline-primary" title="Edit Feature" onclick='openMasterEditModal(${JSON.stringify(m)})'><i class="bi bi-pencil-square"></i></button>
+                        <button type="button" class="btn btn-outline-danger" title="Delete Feature" onclick='deleteFeature(${m.id}, "${escapeHtml(m.feature_name)}")'><i class="bi bi-trash3"></i></button>
+                    </div>
+                </td>
+            </tr>`;
+        });
+
+        tbody.innerHTML = html;
+    }
+
+    // -------------------------------------------------------------
+    // Master Feature Add / Edit / Delete (Pure AJAX)
+    // -------------------------------------------------------------
+    function submitAddFeature(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btnAddSubmit');
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status"></span> Saving...`;
+
+        const form = document.getElementById('addFeatureForm');
+        const fd = new FormData(form);
+
+        fetch('feature-tracker.php', { method: 'POST', body: fd })
+            .then(r => r.json())
+            .then(res => {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="bi bi-check-lg me-1"></i>Save Feature`;
+                if (res.status === 'success') {
+                    hideModal('addFeatureModal');
+                    form.reset();
+                    showToast(res.message);
+                    applyFiltersAjax();
+                } else {
+                    alert(res.message || 'Failed to save feature.');
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="bi bi-check-lg me-1"></i>Save Feature`;
+                alert('Network error while saving feature.');
+            });
+    }
+
+    function openMasterEditModal(masterData) {
+        document.getElementById('edit_feature_id').value = masterData.id || 0;
+        document.getElementById('edit_feature_module').value = masterData.module || '';
+        document.getElementById('edit_feature_name').value = masterData.feature_name || '';
+        document.getElementById('edit_feature_description').value = masterData.description || '';
+        showModal('editFeatureModal');
+    }
+
+    function submitEditMasterFeature(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btnEditSubmit');
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status"></span> Updating...`;
+
+        const form = document.getElementById('editFeatureForm');
+        const fd = new FormData(form);
+
+        fetch('feature-tracker.php', { method: 'POST', body: fd })
+            .then(r => r.json())
+            .then(res => {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="bi bi-check-lg me-1"></i>Update Feature`;
+                if (res.status === 'success') {
+                    hideModal('editFeatureModal');
+                    showToast(res.message);
+                    applyFiltersAjax();
+                } else {
+                    alert(res.message || 'Failed to update feature.');
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="bi bi-check-lg me-1"></i>Update Feature`;
+                alert('Network error while updating feature.');
+            });
+    }
+
+    function deleteFeature(id, name) {
+        if (!confirm(`Are you sure you want to delete "${name}" and all its platform tasks?`)) return;
+        const fd = new FormData();
+        fd.append('action', 'delete_feature');
+        fd.append('id', id);
+
+        fetch('feature-tracker.php', { method: 'POST', body: fd })
+            .then(r => r.json())
+            .then(res => {
+                if (res.status === 'success') {
+                    showToast(res.message);
+                    applyFiltersAjax();
+                } else {
+                    alert(res.message || 'Failed to delete feature.');
+                }
+            })
+            .catch(err => alert('Network error while deleting feature.'));
+    }
+
+    function seedDemoData() {
+        if (!confirm('Load sample multi-platform features & tasks?')) return;
+        const fd = new FormData();
+        fd.append('action', 'seed_default_data');
+
+        fetch('feature-tracker.php', { method: 'POST', body: fd })
+            .then(r => r.json())
+            .then(res => {
+                if (res.status === 'success') {
+                    showToast(res.message);
+                    applyFiltersAjax();
+                } else {
+                    alert(res.message || 'Failed to load demo data.');
+                }
+            })
+            .catch(err => alert('Network error loading demo data.'));
+    }
+
+    // -------------------------------------------------------------
+    // Platform Workspace Modal & Task/Issue Management
+    // -------------------------------------------------------------
     function openPlatformWorkspace(featureId, platformKey, featureName) {
-        currentWorkspaceFeatureId = featureId; currentWorkspacePlatform = platformKey;
-        const pinfo = platformsInfo[platformKey];
-        document.getElementById('pw_modal_title').innerHTML = `<i class="${pinfo.icon} text-${pinfo.color} me-2"></i> ${pinfo.title} Workspace`;
+        currentWorkspaceFeatureId = featureId;
+        currentWorkspacePlatform = platformKey;
+
+        const pinfo = platformsInfo[platformKey] || { title: platformKey, color: 'primary', icon: 'bi bi-laptop' };
+        document.getElementById('pw_modal_title').innerHTML = `
+            <i class="${pinfo.icon} text-${pinfo.color} me-2"></i> ${pinfo.title} Platform Workspace
+        `;
         document.getElementById('pw_modal_sub').innerText = `Feature: ${featureName}`;
-        document.getElementById('nt_feature_id').value = featureId; document.getElementById('nt_platform').value = platformKey;
-        hideNewTaskForm(); loadPlatformTasks(); showModal('platformWorkspaceModal');
+        document.getElementById('pw_modal_module').innerText = `Loading...`;
+
+        document.getElementById('nt_feature_id').value = featureId;
+        document.getElementById('nt_platform').value = platformKey;
+
+        hideNewTaskForm();
+        loadPlatformTasks();
+        showModal('platformWorkspaceModal');
     }
 
     function loadPlatformTasks() {
-        const fd = new FormData(); fd.append('action', 'get_platform_tasks'); fd.append('feature_id', currentWorkspaceFeatureId); fd.append('platform', currentWorkspacePlatform);
-        fetch('feature-tracker.php', { method: 'POST', body: fd }).then(r => r.json()).then(res => { if (res.status === 'success') renderPlatformTasks(res.tasks || []); });
+        const container = document.getElementById('pw_tasks_container');
+        container.innerHTML = `
+            <div class="text-center py-4 text-muted">
+                <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                <span>Loading tasks & issues...</span>
+            </div>`;
+
+        const fd = new FormData();
+        fd.append('action', 'get_platform_tasks');
+        fd.append('feature_id', currentWorkspaceFeatureId);
+        fd.append('platform', currentWorkspacePlatform);
+
+        fetch('feature-tracker.php', { method: 'POST', body: fd })
+            .then(r => r.json())
+            .then(res => {
+                if (res.status === 'success') {
+                    const f = res.feature || {};
+                    document.getElementById('pw_modal_module').innerText = f.module ? `Module: ${f.module}` : '';
+                    if (f.feature_name) {
+                        document.getElementById('pw_modal_sub').innerText = `Feature: ${f.feature_name}`;
+                    }
+                    renderPlatformTasks(res.tasks || []);
+                } else {
+                    container.innerHTML = `<div class="alert alert-danger py-2 small">${escapeHtml(res.message)}</div>`;
+                }
+            })
+            .catch(err => {
+                container.innerHTML = `<div class="alert alert-danger py-2 small">Error loading tasks from server.</div>`;
+            });
     }
 
     function renderPlatformTasks(tasks) {
         const container = document.getElementById('pw_tasks_container');
-        let completed = 0, totalSum = 0, latestDate = null, issues = 0;
+        let completed = 0;
+        let totalSum = 0;
+        let latestDate = null;
+        let issueCount = 0;
+
         tasks.forEach(t => {
-            const pct = parseInt(t.progress_percent || 0); totalSum += pct;
+            const pct = parseInt(t.progress_percent || 0);
+            totalSum += pct;
             if (t.status === 'Completed' || pct >= 100) completed++;
-            if (t.status === 'Issue' || (t.issue_notes && t.issue_notes.trim())) issues++;
-            if (t.estimated_deadline) latestDate = (!latestDate || t.estimated_deadline > latestDate) ? t.estimated_deadline : latestDate;
+            if (t.status === 'Issue' || (t.issue_notes && t.issue_notes.trim())) issueCount++;
+            if (t.estimated_deadline) {
+                if (!latestDate || t.estimated_deadline > latestDate) {
+                    latestDate = t.estimated_deadline;
+                }
+            }
         });
-        const total = tasks.length, avg = total > 0 ? Math.round(totalSum / total) : 0;
-        document.getElementById('pw_summary_text').innerText = `${completed} of ${total} Tasks Completed (Avg: ${avg}%)`;
-        document.getElementById('pw_summary_deadline').innerHTML = latestDate ? `Target: <strong>${latestDate}</strong>` : `No deadline`;
+
+        const total = tasks.length;
+        const avg = total > 0 ? Math.round(totalSum / total) : 0;
+        const circColor = getProgressColorJs(avg, issueCount > 0 ? 'Issue' : (completed === total ? 'Completed' : 'In Progress'));
+
+        document.getElementById('pw_summary_circ').innerHTML = renderCircularProgressSvg(avg, circColor, 44, 3.5, '0.72rem');
+        document.getElementById('pw_summary_text').innerText = `${completed} of ${total} Tasks Completed (${avg}%)`;
+        document.getElementById('pw_summary_deadline').innerHTML = latestDate ? `<i class="bi bi-calendar-event me-1 text-primary"></i>Target: <strong>${escapeHtml(latestDate)}</strong>` : `<i class="bi bi-calendar-event me-1 text-muted"></i>No deadline set`;
+
+        const issuesBadge = document.getElementById('pw_summary_issues');
+        if (issueCount > 0) {
+            issuesBadge.className = 'badge bg-danger text-white';
+            issuesBadge.innerHTML = `<i class="bi bi-bug-fill me-1"></i>${issueCount} Active Issue${issueCount > 1 ? 's' : ''}`;
+        } else {
+            issuesBadge.className = 'badge bg-danger text-white d-none';
+        }
+
+        if (total === 0) {
+            container.innerHTML = `
+                <div class="text-center py-5 bg-light rounded border border-dashed">
+                    <i class="bi bi-list-check fs-1 d-block mb-2 text-secondary"></i>
+                    <h6 class="fw-bold text-dark">No tasks or issues configured for this platform yet!</h6>
+                    <p class="text-muted small mb-3">Add implementation tasks, script paths, or bug reports to track platform progress.</p>
+                    <button type="button" class="btn btn-sm btn-primary" onclick="showNewTaskForm()"><i class="bi bi-plus-lg me-1"></i>Add First Task / Issue</button>
+                </div>`;
+            return;
+        }
 
         let html = '';
         tasks.forEach((t, idx) => {
-            html += `<div class="card shadow-sm mb-3"><div class="card-body p-3"><form onsubmit="submitUpdateTask(event, ${t.id})"><input type="hidden" name="action" value="save_platform_task"><input type="hidden" name="task_id" value="${t.id}"><input type="hidden" name="feature_id" value="${t.feature_id}"><input type="hidden" name="platform" value="${t.platform}"><div class="row g-2"><div class="col-md-5"><input type="text" class="form-control form-control-sm" name="task_title" value="${escapeHtml(t.task_title)}" required></div><div class="col-md-3"><select class="form-select form-select-sm" name="status">${Object.keys(statusBadgesList).map(st => `<option value="${st}" ${t.status === st ? 'selected' : ''}>${st}</option>`).join('')}</select></div><div class="col-md-2"><div class="input-group input-group-sm"><input type="number" class="form-control" name="progress_percent" value="${t.progress_percent}"></div></div><div class="col-md-2 text-end"><button type="submit" class="btn btn-sm btn-primary">Update</button></div></div></form></div></div>`;
+            const hasIssue = (t.status === 'Issue' || (t.issue_notes && t.issue_notes.trim()));
+            const isCompleted = (t.status === 'Completed' || parseInt(t.progress_percent) >= 100);
+            const cardClass = hasIssue ? 'task-has-issue' : (isCompleted ? 'task-completed' : (t.status === 'Testing' ? 'task-testing' : ''));
+
+            html += `
+            <div class="card task-card ${cardClass} shadow-sm mb-3" id="task_card_${t.id}">
+                <div class="card-header bg-white py-2 px-3 d-flex flex-wrap align-items-center justify-content-between gap-2 border-bottom">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-secondary-subtle text-secondary border font-monospace" style="font-size: 0.68rem;">#${idx + 1}</span>
+                        <span class="fw-bold text-dark" style="font-size: 0.92rem;">${escapeHtml(t.task_title)}</span>
+                        ${hasIssue ? `<span class="badge bg-danger text-white"><i class="bi bi-bug-fill me-1"></i>Issue</span>` : ''}
+                        ${t.priority ? `<span class="badge ${priorityBadgesList[t.priority] || 'bg-secondary'}" style="font-size: 0.65rem;">${escapeHtml(t.priority)}</span>` : ''}
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge ${statusBadgesList[t.status] || 'bg-secondary'} px-2 py-1">${escapeHtml(t.status)}</span>
+                        <span class="fw-bold text-primary small">${t.progress_percent}%</span>
+                        <button type="button" class="btn btn-outline-danger btn-sm py-0 px-2" title="Delete Task" onclick="deletePlatformTask(${t.id})"><i class="bi bi-trash3"></i></button>
+                    </div>
+                </div>
+
+                <div class="card-body p-3">
+                    <form onsubmit="submitUpdateTask(event, ${t.id})" id="form_task_${t.id}">
+                        <input type="hidden" name="action" value="save_platform_task">
+                        <input type="hidden" name="task_id" value="${t.id}">
+                        <input type="hidden" name="feature_id" value="${t.feature_id}">
+                        <input type="hidden" name="platform" value="${t.platform}">
+
+                        <div class="row g-2">
+                            <!-- Title & Path -->
+                            <div class="col-md-5">
+                                <label class="form-label small fw-semibold text-muted mb-1">Task Title <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-sm" name="task_title" value="${escapeHtml(t.task_title)}" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold text-muted mb-1">Script / File Path</label>
+                                <input type="text" class="form-control form-control-sm font-monospace" name="script_path" value="${escapeHtml(t.script_path || '')}" placeholder="path/to/file.php">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold text-muted mb-1">Status</label>
+                                <select class="form-select form-select-sm" name="status">
+                                    ${Object.keys(statusBadgesList).map(st => `<option value="${st}" ${t.status === st ? 'selected' : ''}>${st}</option>`).join('')}
+                                </select>
+                            </div>
+
+                            <!-- Progress & Range Slider -->
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold text-muted mb-1">Progress (<span id="task_prog_lbl_${t.id}">${t.progress_percent}</span>%)</label>
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="range" class="form-range" min="0" max="100" value="${t.progress_percent}" oninput="document.getElementById('task_prog_val_${t.id}').value = this.value; document.getElementById('task_prog_lbl_${t.id}').innerText = this.value;">
+                                    <input type="number" class="form-control form-control-sm text-center" style="width: 60px;" name="progress_percent" id="task_prog_val_${t.id}" min="0" max="100" value="${t.progress_percent}" oninput="document.getElementById('task_prog_lbl_${t.id}').innerText = this.value;">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold text-muted mb-1">Priority</label>
+                                <select class="form-select form-select-sm" name="priority">
+                                    <option value="Critical" ${t.priority === 'Critical' ? 'selected' : ''}>Critical</option>
+                                    <option value="High" ${t.priority === 'High' ? 'selected' : ''}>High</option>
+                                    <option value="Medium" ${t.priority === 'Medium' ? 'selected' : ''}>Medium</option>
+                                    <option value="Low" ${t.priority === 'Low' ? 'selected' : ''}>Low</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold text-muted mb-1">Target Deadline</label>
+                                <input type="date" class="form-control form-control-sm" name="estimated_deadline" value="${escapeHtml(t.estimated_deadline || '')}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold text-muted mb-1">Assigned To</label>
+                                <input type="text" class="form-control form-control-sm" name="assigned_to" value="${escapeHtml(t.assigned_to || '')}" placeholder="Developer Name">
+                            </div>
+
+                            <!-- Issue Description & Fix Notes -->
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-danger mb-1"><i class="bi bi-bug-fill me-1"></i>Issue Description / Bug Report</label>
+                                <textarea class="form-control form-control-sm border-danger-subtle ${hasIssue ? 'bg-white' : ''}" name="issue_notes" rows="2" placeholder="Record bugs, exceptions, or blockers here...">${escapeHtml(t.issue_notes || '')}</textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-success mb-1"><i class="bi bi-check-circle-fill me-1"></i>Developer Fix / Solution Response</label>
+                                <textarea class="form-control form-control-sm border-success-subtle" name="dev_response" rows="2" placeholder="Record resolution or fix notes here...">${escapeHtml(t.dev_response || '')}</textarea>
+                            </div>
+
+                            <div class="col-12 text-end pt-1">
+                                <button type="submit" class="btn btn-sm btn-primary px-3" id="btn_update_task_${t.id}">
+                                    <i class="bi bi-check2 me-1"></i> Save Changes
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>`;
         });
+
         container.innerHTML = html;
     }
 
-    function showNewTaskForm() { document.getElementById('pw_new_task_box').style.display = 'block'; }
-    function hideNewTaskForm() { document.getElementById('pw_new_task_box').style.display = 'none'; }
-
-    function submitNewTask(e) { e.preventDefault(); fetch('feature-tracker.php', { method: 'POST', body: new FormData(document.getElementById('pwNewTaskForm')) }).then(() => { hideNewTaskForm(); loadPlatformTasks(); }); }
-
-    function submitUpdateTask(e, id) { e.preventDefault(); fetch('feature-tracker.php', { method: 'POST', body: new FormData(e.target) }).then(() => loadPlatformTasks()); }
-
-    function deletePlatformTask(id) { if(confirm('Delete?')) { const fd = new FormData(); fd.append('action', 'delete_platform_task'); fd.append('task_id', id); fetch('feature-tracker.php', { method: 'POST', body: fd }).then(() => loadPlatformTasks()); } }
-
-    function seedDemoData() {
-        const fd = new FormData(); fd.append('action', 'seed_default_data');
-        fetch('feature-tracker.php', { method: 'POST', body: fd }).then(() => location.reload());
+    function toggleNewTaskForm() {
+        const box = document.getElementById('pw_new_task_box');
+        if (box.style.display === 'none' || box.style.display === '') {
+            showNewTaskForm();
+        } else {
+            hideNewTaskForm();
+        }
     }
 
-    document.getElementById('platformWorkspaceModal').addEventListener('hidden.bs.modal', () => location.reload());
+    function showNewTaskForm() {
+        const box = document.getElementById('pw_new_task_box');
+        box.style.display = 'block';
+        document.getElementById('nt_task_title').focus();
+    }
 
-    function escapeHtml(str) { return String(str).replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'}[m])); }
+    function hideNewTaskForm() {
+        const box = document.getElementById('pw_new_task_box');
+        box.style.display = 'none';
+    }
+
+    function onNewTaskStatusChange(val) {
+        if (val === 'Completed') {
+            document.getElementById('nt_progress_percent').value = 100;
+            document.getElementById('nt_progress_range').value = 100;
+            document.getElementById('nt_prog_label').innerText = 100;
+        } else if (val === 'Issue') {
+            document.getElementById('nt_priority').value = 'Critical';
+        }
+    }
+
+    function submitNewTask(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btnSaveNewTask');
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status"></span> Saving...`;
+
+        const form = document.getElementById('pwNewTaskForm');
+        const fd = new FormData(form);
+
+        fetch('feature-tracker.php', { method: 'POST', body: fd })
+            .then(r => r.json())
+            .then(res => {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="bi bi-save me-1"></i>Save Task`;
+                if (res.status === 'success') {
+                    showToast(res.message);
+                    form.reset();
+                    document.getElementById('nt_feature_id').value = currentWorkspaceFeatureId;
+                    document.getElementById('nt_platform').value = currentWorkspacePlatform;
+                    document.getElementById('nt_prog_label').innerText = 0;
+                    hideNewTaskForm();
+                    loadPlatformTasks();
+                    applyFiltersAjax(); // Background update matrix & KPIs
+                } else {
+                    alert(res.message || 'Failed to add task.');
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="bi bi-save me-1"></i>Save Task`;
+                alert('Network error while saving task.');
+            });
+    }
+
+    function submitUpdateTask(e, id) {
+        e.preventDefault();
+        const btn = document.getElementById(`btn_update_task_${id}`);
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status"></span> Saving...`;
+        }
+
+        const fd = new FormData(e.target);
+
+        fetch('feature-tracker.php', { method: 'POST', body: fd })
+            .then(r => r.json())
+            .then(res => {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = `<i class="bi bi-check2 me-1"></i> Save Changes`;
+                }
+                if (res.status === 'success') {
+                    showToast(res.message);
+                    loadPlatformTasks();
+                    applyFiltersAjax(); // Background update matrix & KPIs
+                } else {
+                    alert(res.message || 'Failed to update task.');
+                }
+            })
+            .catch(err => {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = `<i class="bi bi-check2 me-1"></i> Save Changes`;
+                }
+                alert('Network error while updating task.');
+            });
+    }
+
+    function deletePlatformTask(id) {
+        if (!confirm('Are you sure you want to delete this task?')) return;
+        const fd = new FormData();
+        fd.append('action', 'delete_platform_task');
+        fd.append('task_id', id);
+
+        fetch('feature-tracker.php', { method: 'POST', body: fd })
+            .then(r => r.json())
+            .then(res => {
+                if (res.status === 'success') {
+                    showToast(res.message);
+                    loadPlatformTasks();
+                    applyFiltersAjax(); // Background update matrix & KPIs
+                } else {
+                    alert(res.message || 'Failed to delete task.');
+                }
+            })
+            .catch(err => alert('Network error while deleting task.'));
+    }
 </script>
-
-<?php require_once 'footer.php'; ?>
