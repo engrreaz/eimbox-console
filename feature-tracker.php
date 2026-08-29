@@ -1,18 +1,21 @@
 <?php
 /**
- * EIMBox Multi-Platform Feature & Issue Matrix Tracker
+ * EIMBox Multi-Platform Feature & Issue Tracker
  * File: feature-tracker.php
- * Author: EIMBox Team
- * Purpose: Track features, scripts, pending tasks, issues, developer responses,
- *          and progress across 5 distinct platforms:
- *          1. Dashboard (Web Old Version)
- *          2. Console (Web New Version)
- *          3. Android Lite (Android Lite Version)
- *          4. Premium (Offline Version)
- *          5. Desktop (Windows 10/11 Desktop Version)
+ * Platforms:
+ *   1. Dashboard (Web Old Version)
+ *   2. Console (Web New Version)
+ *   3. Android Lite (Android Lite Version)
+ *   4. Premium (Offline Version)
+ *   5. Desktop (Windows 10/11 Desktop Version)
  */
 
-// Platform Definitions & Metadata (Bootstrap 5 & Bootstrap Icons)
+require_once 'core/init.php';
+
+// ==============================================================
+// 1. DEFINITIONS & METADATA
+// ==============================================================
+
 $platforms_meta = [
     'dashboard' => [
         'key' => 'dashboard',
@@ -61,7 +64,6 @@ $platforms_meta = [
     ]
 ];
 
-// Status Definitions & Styling (Bootstrap 5 & Bootstrap Icons)
 $status_meta = [
     'Completed' => [
         'title' => 'Completed',
@@ -137,7 +139,6 @@ $status_meta = [
     ]
 ];
 
-// Priority Styling (Bootstrap 5 & Bootstrap Icons)
 $priority_meta = [
     'Critical' => ['badge' => 'badge bg-danger text-white', 'icon' => 'bi bi-shield-fill-exclamation'],
     'High' => ['badge' => 'badge bg-warning text-dark', 'icon' => 'bi bi-arrow-up-circle-fill'],
@@ -145,9 +146,10 @@ $priority_meta = [
     'Low' => ['badge' => 'badge bg-secondary-subtle text-secondary border', 'icon' => 'bi bi-arrow-down-circle']
 ];
 
-/**
- * Ensure Schema helper
- */
+// ==============================================================
+// 2. DATABASE SCHEMA HELPER
+// ==============================================================
+
 function ensure_tracker_schema($conn) {
     // 1. Master Features Table
     $conn->query("
@@ -161,19 +163,20 @@ function ensure_tracker_schema($conn) {
           `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
           `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
           PRIMARY KEY (`id`),
-          KEY `idx_module` (`module`)
+          KEY `idx_module` (`module`),
+          KEY `idx_category` (`category`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     ");
 
-    // 2. Platform Status & Tracker Table
+    // 2. Child Platform Tracker Table
     $conn->query("
         CREATE TABLE IF NOT EXISTS `eimbox_platform_tracker` (
           `id` INT(11) NOT NULL AUTO_INCREMENT,
           `feature_id` INT(11) NOT NULL,
-          `platform` ENUM('dashboard', 'console', 'android_lite', 'premium', 'desktop') NOT NULL,
-          `script_path` VARCHAR(255) DEFAULT NULL,
-          `status` ENUM('Not Implemented', 'Planned', 'Ongoing', 'Testing', 'Completed', 'Issue', 'Need Update', 'Customization', 'On Hold') NOT NULL DEFAULT 'Planned',
-          `priority` ENUM('Critical', 'High', 'Medium', 'Low') NOT NULL DEFAULT 'Medium',
+          `platform` ENUM('dashboard','console','android_lite','premium','desktop') NOT NULL,
+          `script_path` VARCHAR(255) DEFAULT '',
+          `status` VARCHAR(50) NOT NULL DEFAULT 'Planned',
+          `priority` VARCHAR(20) NOT NULL DEFAULT 'Medium',
           `progress_percent` TINYINT(3) UNSIGNED NOT NULL DEFAULT 0,
           `issue_notes` TEXT DEFAULT NULL,
           `dev_response` TEXT DEFAULT NULL,
@@ -182,21 +185,21 @@ function ensure_tracker_schema($conn) {
           `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
           `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
           PRIMARY KEY (`id`),
-          UNIQUE KEY `idx_feature_platform` (`feature_id`, `platform`),
-          KEY `idx_status` (`status`),
-          KEY `idx_platform` (`platform`)
+          UNIQUE KEY `idx_feature_platform` (`feature_id`,`platform`),
+          KEY `idx_platform` (`platform`),
+          KEY `idx_status` (`status`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     ");
 
-    // 3. Auto-sync existing entries from `features` table if missing
-    $f_check = $conn->query("SHOW TABLES LIKE 'features'");
-    if ($f_check && $f_check->num_rows > 0) {
-        $f_res = $conn->query("SELECT * FROM features");
-        if ($f_res) {
-            while ($f = $f_res->fetch_assoc()) {
+    // 3. Auto-sync legacy features table if present
+    $check_legacy = $conn->query("SHOW TABLES LIKE 'features'");
+    if ($check_legacy && $check_legacy->num_rows > 0) {
+        $legacy_features = $conn->query("SELECT * FROM `features`");
+        if ($legacy_features && $legacy_features->num_rows > 0) {
+            while ($f = $legacy_features->fetch_assoc()) {
                 $fname = trim($f['feature_name'] ?? '');
                 if (empty($fname)) continue;
-                $chk = $conn->query("SELECT id FROM eimbox_features_master WHERE feature_name = '" . $conn->real_escape_string($fname) . "'");
+                $chk = $conn->query("SELECT id FROM eimbox_features_master WHERE feature_name = '" . $conn->real_escape_string($fname) . "' LIMIT 1");
                 if ($chk && $chk->num_rows == 0) {
                     $mname = !empty($f['module_name']) ? $f['module_name'] : 'General';
                     $desc = $f['description'] ?? '';
@@ -221,9 +224,127 @@ function ensure_tracker_schema($conn) {
     }
 }
 
-/**
- * Render Table Rows for Matrix View (Bootstrap 5 & Bootstrap Icons)
- */
+// ==============================================================
+// 3. MATRIX DATA BUILDER & HTML RENDERER
+// ==============================================================
+
+function fetch_tracker_data_and_stats($conn, $params = []) {
+    $f_module   = $params['module'] ?? 'all';
+    $f_status   = $params['status'] ?? 'all';
+    $f_platform = $params['platform'] ?? 'all';
+    $f_priority = $params['priority'] ?? 'all';
+    $f_search   = trim($params['search'] ?? '');
+    $f_issues_only = intval($params['issues_only'] ?? 0);
+
+    $master_where = [];
+    if ($f_module !== 'all' && !empty($f_module)) {
+        $master_where[] = "m.module = '" . $conn->real_escape_string($f_module) . "'";
+    }
+
+    if (!empty($f_search)) {
+        $clean_s = $conn->real_escape_string($f_search);
+        $master_where[] = "(m.module LIKE '%$clean_s%' OR m.feature_name LIKE '%$clean_s%' OR m.description LIKE '%$clean_s%' OR t.script_path LIKE '%$clean_s%' OR t.issue_notes LIKE '%$clean_s%' OR t.dev_response LIKE '%$clean_s%')";
+    }
+
+    if ($f_status !== 'all' && !empty($f_status)) {
+        $master_where[] = "t.status = '" . $conn->real_escape_string($f_status) . "'";
+    }
+
+    if ($f_platform !== 'all' && !empty($f_platform)) {
+        $master_where[] = "t.platform = '" . $conn->real_escape_string($f_platform) . "'";
+    }
+
+    if ($f_priority !== 'all' && !empty($f_priority)) {
+        $master_where[] = "t.priority = '" . $conn->real_escape_string($f_priority) . "'";
+    }
+
+    if ($f_issues_only == 1) {
+        $master_where[] = "(t.status = 'Issue' OR (t.issue_notes IS NOT NULL AND TRIM(t.issue_notes) != ''))";
+    }
+
+    $where_sql = count($master_where) > 0 ? "WHERE " . implode(" AND ", $master_where) : "";
+
+    $sql_features = "
+        SELECT DISTINCT m.id, m.module, m.display_order, m.feature_name, m.description, m.category, m.created_at, m.updated_at
+        FROM eimbox_features_master m
+        LEFT JOIN eimbox_platform_tracker t ON m.id = t.feature_id
+        $where_sql
+        ORDER BY m.module ASC, m.display_order ASC, m.feature_name ASC
+    ";
+
+    $master_res = $conn->query($sql_features);
+    $matrix_data = [];
+
+    if ($master_res && $master_res->num_rows > 0) {
+        $feature_ids = [];
+        $temp_masters = [];
+        while ($row = $master_res->fetch_assoc()) {
+            $feature_ids[] = $row['id'];
+            $temp_masters[$row['id']] = $row;
+            $matrix_data[$row['id']] = [
+                'master' => $row,
+                'platforms' => []
+            ];
+        }
+
+        if (count($feature_ids) > 0) {
+            $id_list = implode(',', $feature_ids);
+            $plat_sql = "SELECT * FROM eimbox_platform_tracker WHERE feature_id IN ($id_list)";
+            $plat_res = $conn->query($plat_sql);
+            if ($plat_res) {
+                while ($prow = $plat_res->fetch_assoc()) {
+                    $matrix_data[$prow['feature_id']]['platforms'][$prow['platform']] = $prow;
+                }
+            }
+        }
+    }
+
+    // Stats Calculation
+    $stats = [
+        'total_features' => 0,
+        'total_issues' => 0,
+        'p_dashboard_total' => 0,
+        'p_dashboard_completed' => 0,
+        'p_console_total' => 0,
+        'p_console_completed' => 0,
+        'p_android_total' => 0,
+        'p_android_completed' => 0,
+        'p_premium_total' => 0,
+        'p_premium_completed' => 0,
+        'p_desktop_total' => 0,
+        'p_desktop_completed' => 0,
+    ];
+
+    $stat_feat = $conn->query("SELECT COUNT(*) as c FROM eimbox_features_master");
+    if ($stat_feat) {
+        $stats['total_features'] = intval($stat_feat->fetch_assoc()['c'] ?? 0);
+    }
+
+    $stat_issues = $conn->query("SELECT COUNT(*) as c FROM eimbox_platform_tracker WHERE status = 'Issue' OR (issue_notes IS NOT NULL AND TRIM(issue_notes) != '')");
+    if ($stat_issues) {
+        $stats['total_issues'] = intval($stat_issues->fetch_assoc()['c'] ?? 0);
+    }
+
+    $stat_platforms = $conn->query("
+        SELECT platform, 
+               COUNT(*) as total_count,
+               SUM(CASE WHEN status = 'Completed' OR progress_percent = 100 THEN 1 ELSE 0 END) as completed_count
+        FROM eimbox_platform_tracker
+        GROUP BY platform
+    ");
+    if ($stat_platforms) {
+        while ($sp = $stat_platforms->fetch_assoc()) {
+            $pk = $sp['platform'];
+            if (isset($stats["p_{$pk}_total"])) {
+                $stats["p_{$pk}_total"] = intval($sp['total_count']);
+                $stats["p_{$pk}_completed"] = intval($sp['completed_count']);
+            }
+        }
+    }
+
+    return [$matrix_data, $stats];
+}
+
 function render_matrix_table_body($rows, $platforms_meta, $status_meta, $priority_meta) {
     if (empty($rows)) {
         ?>
@@ -285,18 +406,17 @@ function render_matrix_table_body($rows, $platforms_meta, $status_meta, $priorit
                 $st_info = $status_meta[$st] ?? $status_meta['Not Implemented'];
                 $has_issue = !empty(trim($pdata['issue_notes'] ?? ''));
                 $has_resp = !empty(trim($pdata['dev_response'] ?? ''));
-                $has_script = !empty(trim($pdata['script_path'] ?? ''));
                 $pct = intval($pdata['progress_percent'] ?? 0);
                 if ($pct >= 100) {
-                    $pct_color = '#198754'; // BS5 Green
+                    $pct_color = '#198754';
                 } elseif ($pct >= 60) {
-                    $pct_color = '#0dcaf0'; // BS5 Info
+                    $pct_color = '#0dcaf0';
                 } elseif ($pct >= 25) {
-                    $pct_color = '#0d6efd'; // BS5 Primary
+                    $pct_color = '#0d6efd';
                 } elseif ($pct > 0) {
-                    $pct_color = '#ffc107'; // BS5 Warning
+                    $pct_color = '#ffc107';
                 } else {
-                    $pct_color = '#ced4da'; // BS5 Gray
+                    $pct_color = '#ced4da';
                 }
                 $p_json = htmlspecialchars(json_encode($pdata), ENT_QUOTES, 'UTF-8');
             ?>
@@ -484,157 +604,43 @@ function render_matrix_table_body($rows, $platforms_meta, $status_meta, $priorit
     <?php endforeach;
 }
 
-// -------------------------------------------------------------
-// 1. AJAX Backend Handlers (Executed before headers if POST/AJAX)
-// -------------------------------------------------------------
-if (($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) || (isset($_GET['ajax']) && $_GET['ajax'] == 1)) {
-    // Include core DB if not already initialized
-    if (!isset($conn)) {
-        require_once 'core/init.php';
-    }
+// ==============================================================
+// 4. AJAX / POST BACKEND HANDLER (CLEAN JSON EXECUTION)
+// ==============================================================
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' || (isset($_GET['ajax']) && $_GET['ajax'] == 1)) {
+    while (ob_get_level()) {
+        ob_end_clean();
+    }
     header('Content-Type: application/json; charset=utf-8');
+
     ensure_tracker_schema($conn);
     $action = $_POST['action'] ?? $_GET['action'] ?? '';
-    $user_name = $_SESSION['user'] ?? $_SESSION['user_name'] ?? 'Admin';
 
-    // 1.0 FETCH MATRIX DATA
+    // 4.1 FETCH MATRIX DATA
     if ($action === 'fetch_matrix_data' || (isset($_GET['ajax']) && $_GET['ajax'] == 1)) {
-        $f_module   = $_POST['module'] ?? $_GET['module'] ?? 'all';
-        $f_status   = $_POST['status'] ?? $_GET['status'] ?? 'all';
-        $f_platform = $_POST['platform'] ?? $_GET['platform'] ?? 'all';
-        $f_priority = $_POST['priority'] ?? $_GET['priority'] ?? 'all';
-        $f_search   = trim($_POST['search'] ?? $_GET['search'] ?? '');
-        $f_issues_only = intval($_POST['issues_only'] ?? $_GET['issues_only'] ?? 0);
+        list($matrix_data, $stats) = fetch_tracker_data_and_stats($conn, [
+            'module' => $_POST['module'] ?? $_GET['module'] ?? 'all',
+            'status' => $_POST['status'] ?? $_GET['status'] ?? 'all',
+            'platform' => $_POST['platform'] ?? $_GET['platform'] ?? 'all',
+            'priority' => $_POST['priority'] ?? $_GET['priority'] ?? 'all',
+            'search' => trim($_POST['search'] ?? $_GET['search'] ?? ''),
+            'issues_only' => intval($_POST['issues_only'] ?? $_GET['issues_only'] ?? 0)
+        ]);
 
-        // Build search & filter clauses for master table
-        $master_where = [];
-        if ($f_module !== 'all' && !empty($f_module)) {
-            $clean_m = $conn->real_escape_string($f_module);
-            $master_where[] = "m.module = '$clean_m'";
-        }
-
-        if (!empty($f_search)) {
-            $clean_s = $conn->real_escape_string($f_search);
-            $master_where[] = "(m.module LIKE '%$clean_s%' OR m.feature_name LIKE '%$clean_s%' OR m.description LIKE '%$clean_s%' OR t.script_path LIKE '%$clean_s%' OR t.issue_notes LIKE '%$clean_s%' OR t.dev_response LIKE '%$clean_s%')";
-        }
-
-        if ($f_status !== 'all' && !empty($f_status)) {
-            $clean_st = $conn->real_escape_string($f_status);
-            $master_where[] = "t.status = '$clean_st'";
-        }
-
-        if ($f_platform !== 'all' && !empty($f_platform)) {
-            $clean_p = $conn->real_escape_string($f_platform);
-            $master_where[] = "t.platform = '$clean_p'";
-        }
-
-        if ($f_priority !== 'all' && !empty($f_priority)) {
-            $clean_pr = $conn->real_escape_string($f_priority);
-            $master_where[] = "t.priority = '$clean_pr'";
-        }
-
-        if ($f_issues_only == 1) {
-            $master_where[] = "(t.status = 'Issue' OR (t.issue_notes IS NOT NULL AND TRIM(t.issue_notes) != ''))";
-        }
-
-        $where_sql = count($master_where) > 0 ? "WHERE " . implode(" AND ", $master_where) : "";
-
-        // Query distinct master feature IDs that match filter
-        $query_ids = "SELECT DISTINCT m.id, m.module, m.display_order, m.feature_name 
-                      FROM eimbox_features_master m 
-                      LEFT JOIN eimbox_platform_tracker t ON m.id = t.feature_id 
-                      $where_sql 
-                      ORDER BY m.module ASC, m.display_order ASC, m.feature_name ASC";
-        $res_ids = $conn->query($query_ids);
-        $master_ids = [];
-        if ($res_ids) {
-            while ($r = $res_ids->fetch_assoc()) {
-                $master_ids[] = intval($r['id']);
-            }
-        }
-
-        $matrix_data = [];
-        if (!empty($master_ids)) {
-            $ids_str = implode(',', $master_ids);
-            // Fetch masters
-            $masters_res = $conn->query("SELECT * FROM eimbox_features_master WHERE id IN ($ids_str) ORDER BY module ASC, display_order ASC, feature_name ASC");
-            $masters_map = [];
-            while ($m = $masters_res->fetch_assoc()) {
-                $masters_map[$m['id']] = $m;
-            }
-
-            // Fetch platforms data for these masters
-            $platforms_res = $conn->query("SELECT * FROM eimbox_platform_tracker WHERE feature_id IN ($ids_str)");
-            $platforms_by_feature = [];
-            while ($pt = $platforms_res->fetch_assoc()) {
-                $platforms_by_feature[$pt['feature_id']][$pt['platform']] = $pt;
-            }
-
-            foreach ($master_ids as $mid) {
-                if (isset($masters_map[$mid])) {
-                    $matrix_data[] = [
-                        'master' => $masters_map[$mid],
-                        'platforms' => $platforms_by_feature[$mid] ?? []
-                    ];
-                }
-            }
-        }
-
-        // Global Statistics
-        $stats_q = $conn->query("
-            SELECT 
-                (SELECT COUNT(*) FROM eimbox_features_master) as total_features,
-                (SELECT COUNT(*) FROM eimbox_platform_tracker WHERE status = 'Completed') as total_completed,
-                (SELECT COUNT(*) FROM eimbox_platform_tracker WHERE status = 'Issue' OR (issue_notes IS NOT NULL AND TRIM(issue_notes) != '')) as total_issues,
-                (SELECT COUNT(*) FROM eimbox_platform_tracker WHERE status = 'Ongoing') as total_ongoing,
-                (SELECT COUNT(*) FROM eimbox_platform_tracker WHERE status = 'Customization') as total_customization,
-                (SELECT COUNT(*) FROM eimbox_platform_tracker WHERE platform = 'dashboard' AND status = 'Completed') as p_dashboard_completed,
-                (SELECT COUNT(*) FROM eimbox_platform_tracker WHERE platform = 'dashboard') as p_dashboard_total,
-                (SELECT COUNT(*) FROM eimbox_platform_tracker WHERE platform = 'console' AND status = 'Completed') as p_console_completed,
-                (SELECT COUNT(*) FROM eimbox_platform_tracker WHERE platform = 'console') as p_console_total,
-                (SELECT COUNT(*) FROM eimbox_platform_tracker WHERE platform = 'android_lite' AND status = 'Completed') as p_android_completed,
-                (SELECT COUNT(*) FROM eimbox_platform_tracker WHERE platform = 'android_lite') as p_android_total,
-                (SELECT COUNT(*) FROM eimbox_platform_tracker WHERE platform = 'premium' AND status = 'Completed') as p_premium_completed,
-                (SELECT COUNT(*) FROM eimbox_platform_tracker WHERE platform = 'premium') as p_premium_total,
-                (SELECT COUNT(*) FROM eimbox_platform_tracker WHERE platform = 'desktop' AND status = 'Completed') as p_desktop_completed,
-                (SELECT COUNT(*) FROM eimbox_platform_tracker WHERE platform = 'desktop') as p_desktop_total
-        ");
-        $stats_data = $stats_q ? $stats_q->fetch_assoc() : [];
-
-        // Dynamic modules list from modulelist table
-        $mod_list = [];
-        $m_res = $conn->query("SELECT module_name, is_public, core FROM modulelist WHERE module_name IS NOT NULL AND TRIM(module_name) != '' ORDER BY slno ASC, module_name ASC");
-        if ($m_res && $m_res->num_rows > 0) {
-            while ($mrow = $m_res->fetch_assoc()) {
-                $mod_list[] = $mrow['module_name'];
-            }
-        } else {
-            $m_res2 = $conn->query("SELECT DISTINCT module FROM eimbox_features_master ORDER BY module ASC");
-            if ($m_res2) {
-                while ($mrow = $m_res2->fetch_assoc()) {
-                    if (!empty($mrow['module'])) $mod_list[] = $mrow['module'];
-                }
-            }
-        }
-
-        // Render HTML for matrix table
         ob_start();
         render_matrix_table_body($matrix_data, $platforms_meta, $status_meta, $priority_meta);
-        $html_output = ob_get_clean();
+        $tbody_html = ob_get_clean();
 
         echo json_encode([
             'status' => 'success',
-            'count' => count($matrix_data),
-            'html' => $html_output,
-            'modules_list' => $mod_list,
-            'selected_module' => $f_module,
-            'stats' => $stats_data
+            'html' => $tbody_html,
+            'stats' => $stats
         ]);
         exit;
     }
 
-    // 1.1 ADD MASTER FEATURE (and optionally init platforms)
+    // 4.2 ADD MASTER FEATURE
     if ($action === 'add_master_feature') {
         $module = trim($_POST['module'] ?? '');
         $feature_name = trim($_POST['feature_name'] ?? '');
@@ -642,21 +648,29 @@ if (($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) || (isset
         $category = trim($_POST['category'] ?? 'Core');
 
         if (empty($module) || empty($feature_name)) {
-            echo json_encode(['status' => 'error', 'message' => 'Module এবং Feature Name উভয় ফিল্ডই আবশ্যক!']);
+            echo json_encode(['status' => 'error', 'message' => 'মডিউল এবং ফিচার নাম অবশ্যই পূরণ করতে হবে!']);
             exit;
         }
 
         $stmt = $conn->prepare("INSERT INTO eimbox_features_master (module, feature_name, description, category) VALUES (?, ?, ?, ?)");
+        if (!$stmt) {
+            echo json_encode(['status' => 'error', 'message' => 'ডাটাবেজ প্রস্তুত করতে ব্যর্থ: ' . $conn->error]);
+            exit;
+        }
         $stmt->bind_param("ssss", $module, $feature_name, $description, $category);
-        
+
         if ($stmt->execute()) {
             $new_feature_id = $stmt->insert_id;
             $stmt->close();
 
-            // Auto-initialize 5 platforms for this master feature with Planned status
-            $init_stmt = $conn->prepare("INSERT INTO eimbox_platform_tracker (feature_id, platform, status, progress_percent, priority) VALUES (?, ?, 'Planned', 0, 'Medium') ON DUPLICATE KEY UPDATE updated_at = NOW()");
-            foreach (array_keys($platforms_meta) as $pkey) {
-                $init_stmt->bind_param("is", $new_feature_id, $pkey);
+            // Initialize all 5 platforms
+            $init_stmt = $conn->prepare("
+                INSERT INTO eimbox_platform_tracker (feature_id, platform, status, progress_percent, priority, script_path)
+                VALUES (?, ?, 'Planned', 0, 'Medium', '')
+                ON DUPLICATE KEY UPDATE updated_at = NOW()
+            ");
+            foreach (['dashboard', 'console', 'android_lite', 'premium', 'desktop'] as $pk) {
+                $init_stmt->bind_param("is", $new_feature_id, $pk);
                 $init_stmt->execute();
             }
             $init_stmt->close();
@@ -668,22 +682,25 @@ if (($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) || (isset
         exit;
     }
 
-    // 1.2 EDIT MASTER FEATURE
+    // 4.3 EDIT MASTER FEATURE
     if ($action === 'edit_master_feature') {
         $id = intval($_POST['id'] ?? 0);
         $module = trim($_POST['module'] ?? '');
         $feature_name = trim($_POST['feature_name'] ?? '');
         $description = trim($_POST['description'] ?? '');
-        $category = trim($_POST['category'] ?? 'Core');
 
         if ($id <= 0 || empty($module) || empty($feature_name)) {
             echo json_encode(['status' => 'error', 'message' => 'অবৈধ আইডি বা ফিল্ড খালি আছে!']);
             exit;
         }
 
-        $stmt = $conn->prepare("UPDATE eimbox_features_master SET module=?, feature_name=?, description=?, category=? WHERE id=?");
-        $stmt->bind_param("ssssi", $module, $feature_name, $description, $category, $id);
-        
+        $stmt = $conn->prepare("UPDATE eimbox_features_master SET module=?, feature_name=?, description=? WHERE id=?");
+        if (!$stmt) {
+            echo json_encode(['status' => 'error', 'message' => 'কোয়েরি প্রস্তুত ব্যর্থ: ' . $conn->error]);
+            exit;
+        }
+        $stmt->bind_param("sssi", $module, $feature_name, $description, $id);
+
         if ($stmt->execute()) {
             echo json_encode(['status' => 'success', 'message' => 'মূল ফিচার তথ্য সফলভাবে আপডেট হয়েছে!']);
         } else {
@@ -693,7 +710,54 @@ if (($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) || (isset
         exit;
     }
 
-    // 1.3 UPDATE SPECIFIC PLATFORM STATUS / SCRIPT / ISSUE / RESPONSE
+    // 4.4 DELETE MASTER FEATURE
+    if ($action === 'delete_master_feature') {
+        $id = intval($_POST['id'] ?? 0);
+        if ($id <= 0) {
+            echo json_encode(['status' => 'error', 'message' => 'অবৈধ ফিচার আইডি!']);
+            exit;
+        }
+
+        $conn->query("DELETE FROM eimbox_platform_tracker WHERE feature_id = $id");
+        $conn->query("DELETE FROM eimbox_features_master WHERE id = $id");
+
+        echo json_encode(['status' => 'success', 'message' => 'ফিচারটি সফলভাবে মুছে ফেলা হয়েছে!']);
+        exit;
+    }
+
+    // 4.5 GET SINGLE PLATFORM DETAILS
+    if ($action === 'get_platform_details') {
+        $feature_id = intval($_POST['feature_id'] ?? $_GET['feature_id'] ?? 0);
+        $platform = trim($_POST['platform'] ?? $_GET['platform'] ?? '');
+
+        if ($feature_id <= 0 || empty($platform)) {
+            echo json_encode(['status' => 'error', 'message' => 'অবৈধ রিকোয়েস্ট!']);
+            exit;
+        }
+
+        $pt_res = $conn->query("SELECT * FROM eimbox_platform_tracker WHERE feature_id = $feature_id AND platform = '" . $conn->real_escape_string($platform) . "' LIMIT 1");
+        $pt = $pt_res ? $pt_res->fetch_assoc() : null;
+
+        if (!$pt) {
+            $pt = [
+                'feature_id' => $feature_id,
+                'platform' => $platform,
+                'status' => 'Planned',
+                'progress_percent' => 0,
+                'script_path' => '',
+                'issue_notes' => '',
+                'dev_response' => '',
+                'priority' => 'Medium',
+                'assigned_to' => '',
+                'estimated_deadline' => ''
+            ];
+        }
+
+        echo json_encode(['status' => 'success', 'platform_data' => $pt]);
+        exit;
+    }
+
+    // 4.6 UPDATE SPECIFIC PLATFORM STATUS
     if ($action === 'update_platform_status') {
         $feature_id = intval($_POST['feature_id'] ?? 0);
         $platform = trim($_POST['platform'] ?? '');
@@ -729,10 +793,14 @@ if (($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) || (isset
                 estimated_deadline = VALUES(estimated_deadline),
                 updated_at = NOW()
         ");
+        if (!$stmt) {
+            echo json_encode(['status' => 'error', 'message' => 'কোয়েরি প্রস্তুত ব্যর্থ: ' . $conn->error]);
+            exit;
+        }
         $stmt->bind_param("issssissss", $feature_id, $platform, $script_path, $status, $priority, $progress, $issue_notes, $dev_response, $assigned_to, $deadline);
-        
+
         if ($stmt->execute()) {
-            echo json_encode(['status' => 'success', 'message' => "প্ল্যাটফর্ম '$platform'-এর স্ট্যাটাস ও ইস্যু নোট আপডেট সম্পন্ন হয়েছে!"]);
+            echo json_encode(['status' => 'success', 'message' => "প্ল্যাটফর্ম '$platform'-এর তথ্য ও স্ট্যাটাস সফলভাবে সংরক্ষিত হয়েছে!"]);
         } else {
             echo json_encode(['status' => 'error', 'message' => 'আপডেট করতে ব্যর্থ হয়েছে: ' . $conn->error]);
         }
@@ -740,55 +808,19 @@ if (($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) || (isset
         exit;
     }
 
-    // 1.4 GET PLATFORM DATA FOR MODAL
-    if ($action === 'get_platform_details') {
-        $feature_id = intval($_GET['feature_id'] ?? $_POST['feature_id'] ?? 0);
-        $platform = trim($_GET['platform'] ?? $_POST['platform'] ?? '');
-
-        if ($feature_id <= 0 || empty($platform)) {
-            echo json_encode(['status' => 'error', 'message' => 'অবৈধ রিকোয়েস্ট!']);
-            exit;
-        }
-
-        $m = $conn->query("SELECT * FROM eimbox_features_master WHERE id = $feature_id")->fetch_assoc();
-        $pt = $conn->query("SELECT * FROM eimbox_platform_tracker WHERE feature_id = $feature_id AND platform = '$platform'")->fetch_assoc();
-
-        if (!$pt) {
-            $pt = [
-                'feature_id' => $feature_id,
-                'platform' => $platform,
-                'status' => 'Planned',
-                'progress_percent' => 0,
-                'script_path' => '',
-                'issue_notes' => '',
-                'dev_response' => '',
-                'priority' => 'Medium',
-                'assigned_to' => '',
-                'estimated_deadline' => ''
-            ];
-        }
-
-        echo json_encode([
-            'status' => 'success',
-            'master' => $m,
-            'platform_data' => $pt
-        ]);
-        exit;
-    }
-
-    // 1.5 BULK UPDATE ALL 5 PLATFORMS AT ONCE
+    // 4.7 BULK UPDATE ALL 5 PLATFORMS
     if ($action === 'bulk_update_platforms') {
         $feature_id = intval($_POST['feature_id'] ?? 0);
-        $platforms_input = $_POST['platforms'] ?? [];
+        $platforms = $_POST['platforms'] ?? [];
 
-        if ($feature_id <= 0 || !is_array($platforms_input)) {
-            echo json_encode(['status' => 'error', 'message' => 'অবৈধ ডাটা প্রেরিত হয়েছে!']);
+        if ($feature_id <= 0 || empty($platforms) || !is_array($platforms)) {
+            echo json_encode(['status' => 'error', 'message' => 'কোনো প্ল্যাটফর্ম ডাটা পাওয়া যায়নি!']);
             exit;
         }
 
         $stmt = $conn->prepare("
-            INSERT INTO eimbox_platform_tracker (feature_id, platform, script_path, status, priority, progress_percent, issue_notes, dev_response, assigned_to)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO eimbox_platform_tracker (feature_id, platform, script_path, status, priority, progress_percent, issue_notes, dev_response)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
                 script_path = VALUES(script_path),
                 status = VALUES(status),
@@ -796,263 +828,131 @@ if (($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) || (isset
                 progress_percent = VALUES(progress_percent),
                 issue_notes = VALUES(issue_notes),
                 dev_response = VALUES(dev_response),
-                assigned_to = VALUES(assigned_to),
                 updated_at = NOW()
         ");
 
-        foreach ($platforms_input as $pkey => $pdata) {
-            if (!isset($platforms_meta[$pkey])) continue;
-            $script = trim($pdata['script_path'] ?? '');
-            $st = trim($pdata['status'] ?? 'Planned');
-            $prio = trim($pdata['priority'] ?? 'Medium');
-            $prog = intval($pdata['progress_percent'] ?? 0);
-            $iss = trim($pdata['issue_notes'] ?? '');
-            $resp = trim($pdata['dev_response'] ?? '');
-            $assign = trim($pdata['assigned_to'] ?? '');
+        if ($stmt) {
+            foreach ($platforms as $pk => $pdata) {
+                if (!isset($platforms_meta[$pk])) continue;
+                $s_path = trim($pdata['script_path'] ?? '');
+                $st = trim($pdata['status'] ?? 'Planned');
+                $prio = trim($pdata['priority'] ?? 'Medium');
+                $pct = intval($pdata['progress_percent'] ?? 0);
+                if ($st === 'Completed' && $pct < 100) $pct = 100;
+                $inotes = trim($pdata['issue_notes'] ?? '');
+                $dresp = trim($pdata['dev_response'] ?? '');
 
-            if ($st === 'Completed' && $prog < 100) $prog = 100;
-
-            $stmt->bind_param("issssisss", $feature_id, $pkey, $script, $st, $prio, $prog, $iss, $resp, $assign);
-            $stmt->execute();
-        }
-        $stmt->close();
-
-        echo json_encode(['status' => 'success', 'message' => '৫টি প্ল্যাটফর্মের তথ্য একসাথে সফলভাবে আপডেট হয়েছে!']);
-        exit;
-    }
-
-    // 1.6 DELETE MASTER FEATURE
-    if ($action === 'delete_master_feature') {
-        $id = intval($_POST['id'] ?? 0);
-        if ($id <= 0) {
-            echo json_encode(['status' => 'error', 'message' => 'অবৈধ আইডি!']);
-            exit;
-        }
-
-        $stmt = $conn->prepare("DELETE FROM eimbox_features_master WHERE id = ?");
-        $stmt->bind_param("i", $id);
-        if ($stmt->execute()) {
-            echo json_encode(['status' => 'success', 'message' => 'ফিচার ও এর সাথে যুক্ত সকল প্ল্যাটফর্ম রেকর্ড মুছে ফেলা হয়েছে!']);
-        } else {
-            echo json_encode(['status' => 'error', 'message' => 'মুছে ফেলতে ব্যর্থ: ' . $conn->error]);
-        }
-        $stmt->close();
-        exit;
-    }
-
-    // 1.7 SEED DEFAULT DEMO DATA (If tables are empty)
-    if ($action === 'seed_default_data') {
-        $cnt = $conn->query("SELECT COUNT(*) as c FROM eimbox_features_master")->fetch_assoc()['c'];
-        if ($cnt == 0) {
-            $demo_features = [
-                [
-                    'module' => 'Attendance',
-                    'feature' => 'Daily Student Attendance',
-                    'desc' => 'শ্রেণি ও শাখা ভিত্তিক শিক্ষার্থীদের দৈনিক উপস্থিতি গ্রহণ ও SMS নোটিফিকেশন',
-                    'platforms' => [
-                        'dashboard' => ['script' => 'attendance-register.php', 'status' => 'Completed', 'progress' => 100, 'issue' => '', 'resp' => 'Bulk attendance with fast ajax save implemented.', 'prio' => 'High', 'assign' => 'Reaz'],
-                        'console' => ['script' => 'views/attendance/live-stream.php', 'status' => 'Testing', 'progress' => 90, 'issue' => 'Needs real-time socket sync with biometric punch.', 'resp' => 'Webhook listener ready.', 'prio' => 'High', 'assign' => 'Dev Team'],
-                        'android_lite' => ['script' => 'lib/screens/attendance_quick.dart', 'status' => 'Issue', 'progress' => 65, 'issue' => 'SQLite offline sync conflict when back online.', 'resp' => 'Queue sync retry added.', 'prio' => 'Critical', 'assign' => 'Reaz'],
-                        'premium' => ['script' => 'lib/offline/attendance_offline_engine.dart', 'status' => 'Ongoing', 'progress' => 50, 'issue' => 'Fingerprint USB OTG driver support for Morpho.', 'resp' => 'Testing Java JNI wrapper.', 'prio' => 'Medium', 'assign' => 'Dev Team'],
-                        'desktop' => ['script' => 'AttendanceDesktopSync.exe / C# App', 'status' => 'Completed', 'progress' => 100, 'issue' => '', 'resp' => 'ZKTeco Push SDK integrated smoothly.', 'prio' => 'High', 'assign' => 'Dev Team']
-                    ]
-                ],
-                [
-                    'module' => 'Accounts & POS',
-                    'feature' => 'Student Fee Collection & Receipt',
-                    'desc' => 'ফি আদায়, বকেয়া হিসাব, রসিদ প্রিন্ট এবং অনলাইন পেমেন্ট গেটওয়ে (bKash/PGW)',
-                    'platforms' => [
-                        'dashboard' => ['script' => 'payments-collection.php', 'status' => 'Completed', 'progress' => 100, 'issue' => '', 'resp' => '80mm POS Thermal receipt print format verified.', 'prio' => 'High', 'assign' => 'Dev Team'],
-                        'console' => ['script' => 'controllers/accounts/pos-engine.php', 'status' => 'Testing', 'progress' => 85, 'issue' => 'Customization request: Discount voucher code system.', 'resp' => 'UI model added.', 'prio' => 'Medium', 'assign' => 'Reaz'],
-                        'android_lite' => ['script' => 'lib/screens/fee_collection_mobile.dart', 'status' => 'Need Update', 'progress' => 80, 'issue' => 'Bluetooth POS printer font layout truncation in Bangla.', 'resp' => 'Switched to raster bitmap mode.', 'prio' => 'High', 'assign' => 'Dev Team'],
-                        'premium' => ['script' => 'lib/screens/finance_offline_pos.dart', 'status' => 'Ongoing', 'progress' => 45, 'issue' => 'Encrypted local SQLite audit database required.', 'resp' => 'SQLCipher integrated.', 'prio' => 'High', 'assign' => 'Dev Team'],
-                        'desktop' => ['script' => 'AccountsPOSModule.exe', 'status' => 'Completed', 'progress' => 100, 'issue' => '', 'resp' => 'Multi-counter cash drawer kick pulse working.', 'prio' => 'Medium', 'assign' => 'Reaz']
-                    ]
-                ],
-                [
-                    'module' => 'Exam & Result',
-                    'feature' => 'OMR Sheet Scanner & Processing',
-                    'desc' => 'মডেল টেস্ট ও চূড়ান্ত পরীক্ষার OMR শিট অটোম্যাটিক স্ক্যান ও রেজাল্ট প্রসেসিং',
-                    'platforms' => [
-                        'dashboard' => ['script' => 'omr-mapping.php', 'status' => 'Completed', 'progress' => 100, 'issue' => '', 'resp' => 'Web upload & batch verification complete.', 'prio' => 'High', 'assign' => 'Reaz'],
-                        'console' => ['script' => 'api/v1/omr_processor_api.php', 'status' => 'Completed', 'progress' => 100, 'issue' => '', 'resp' => 'Fast parallel batch processing endpoint.', 'prio' => 'High', 'assign' => 'Dev Team'],
-                        'android_lite' => ['script' => 'lib/camera/omr_camera_scanner.dart', 'status' => 'Issue', 'progress' => 70, 'issue' => 'Low-light mobile camera edge detection skewed.', 'resp' => 'OpenCV perspective transform algorithm updated.', 'prio' => 'Critical', 'assign' => 'Reaz'],
-                        'premium' => ['script' => 'lib/screens/omr_bulk_importer.dart', 'status' => 'Planned', 'progress' => 10, 'issue' => 'Bulk folder watcher implementation pending.', 'resp' => '', 'prio' => 'Low', 'assign' => 'Dev Team'],
-                        'desktop' => ['script' => 'EIMBoxOMREngine.exe (C++ OpenCV)', 'status' => 'Completed', 'progress' => 100, 'issue' => '', 'resp' => 'High-speed flatbed ADF scanner support verified.', 'prio' => 'Critical', 'assign' => 'Reaz']
-                    ]
-                ],
-                [
-                    'module' => 'Analytics',
-                    'feature' => 'Executive Performance Matrix',
-                    'desc' => 'শিক্ষক, বিষয় ও শ্রেণিভিত্তিক TPI, TIA, SPI ও At-Risk শিক্ষার্থী সনাক্তকরণ',
-                    'platforms' => [
-                        'dashboard' => ['script' => 'analytics/teacher_subject_matrix.php', 'status' => 'Completed', 'progress' => 100, 'issue' => '', 'resp' => 'Calculation engines 1-12 fully tuned.', 'prio' => 'High', 'assign' => 'Reaz'],
-                        'console' => ['script' => 'views/analytics/executive_dashboard.php', 'status' => 'Completed', 'progress' => 100, 'issue' => '', 'resp' => 'ApexCharts live dynamic rendering.', 'prio' => 'Medium', 'assign' => 'Dev Team'],
-                        'android_lite' => ['script' => 'lib/screens/principal_kpi_cards.dart', 'status' => 'Testing', 'progress' => 90, 'issue' => 'Need push notification on daily attendance dip.', 'resp' => 'FCM trigger logic connected.', 'prio' => 'Medium', 'assign' => 'Dev Team'],
-                        'premium' => ['script' => 'lib/screens/offline_analytics_reports.dart', 'status' => 'Ongoing', 'progress' => 40, 'issue' => 'Local caching of 3-year historical comparative datasets.', 'resp' => 'Schema indexing ongoing.', 'prio' => 'Low', 'assign' => 'Dev Team'],
-                        'desktop' => ['script' => 'ReportsViewer.exe', 'status' => 'Completed', 'progress' => 100, 'issue' => '', 'resp' => 'Fast crystal report PDF export.', 'prio' => 'Medium', 'assign' => 'Dev Team']
-                    ]
-                ],
-                [
-                    'module' => 'Communication',
-                    'feature' => 'SMS Gateway & Push Alerts',
-                    'desc' => 'বাল্ক মাস্কিং SMS, অটোমেটেড ফি নোটিশ, এবং গার্ডিয়ান অ্যাপ নোটিফিকেশন',
-                    'platforms' => [
-                        'dashboard' => ['script' => 'sms-gateway.php', 'status' => 'Completed', 'progress' => 100, 'issue' => '', 'resp' => 'Multi-operator gateway fallbacks added.', 'prio' => 'High', 'assign' => 'Reaz'],
-                        'console' => ['script' => 'cron/sms_queue_worker.php', 'status' => 'Completed', 'progress' => 100, 'issue' => '', 'resp' => 'Auto-retry mechanism with exponential backoff.', 'prio' => 'High', 'assign' => 'Dev Team'],
-                        'android_lite' => ['script' => 'lib/services/fcm_push_handler.dart', 'status' => 'Completed', 'progress' => 100, 'issue' => '', 'resp' => 'Background message channel active.', 'prio' => 'Medium', 'assign' => 'Dev Team'],
-                        'premium' => ['script' => 'lib/services/offline_sms_modem.dart', 'status' => 'Need Update', 'progress' => 60, 'issue' => 'GSM SIM800C modem AT command timeout on USB hub.', 'resp' => 'Baud rate auto-negotiation added.', 'prio' => 'Medium', 'assign' => 'Dev Team'],
-                        'desktop' => ['script' => 'SMSBroadcastTool.exe', 'status' => 'Completed', 'progress' => 100, 'issue' => '', 'resp' => 'Direct COM port modem support active.', 'prio' => 'Medium', 'assign' => 'Dev Team']
-                    ]
-                ]
-            ];
-
-            foreach ($demo_features as $df) {
-                $stmt = $conn->prepare("INSERT INTO eimbox_features_master (module, feature_name, description) VALUES (?, ?, ?)");
-                $stmt->bind_param("sss", $df['module'], $df['feature'], $df['desc']);
+                $stmt->bind_param("isssisss", $feature_id, $pk, $s_path, $st, $prio, $pct, $inotes, $dresp);
                 $stmt->execute();
-                $fid = $stmt->insert_id;
-                $stmt->close();
-
-                $pt_stmt = $conn->prepare("INSERT INTO eimbox_platform_tracker (feature_id, platform, script_path, status, progress_percent, issue_notes, dev_response, priority, assigned_to) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                foreach ($df['platforms'] as $pkey => $pdata) {
-                    $pt_stmt->bind_param("isssissss", $fid, $pkey, $pdata['script'], $pdata['status'], $pdata['progress'], $pdata['issue'], $pdata['resp'], $pdata['prio'], $pdata['assign']);
-                    $pt_stmt->execute();
-                }
-                $pt_stmt->close();
             }
-
-            echo json_encode(['status' => 'success', 'message' => 'ডেমো ডাটা সফলভাবে সেটআপ করা হয়েছে!']);
+            $stmt->close();
+            echo json_encode(['status' => 'success', 'message' => '৫টি প্ল্যাটফর্মের তথ্য একসাথে সফলভাবে আপডেট হয়েছে!']);
         } else {
-            echo json_encode(['status' => 'info', 'message' => 'টেবিলে ইতিমধ্যে ডাটা বিদ্যমান আছে।']);
+            echo json_encode(['status' => 'error', 'message' => 'বাল্ক আপডেট ব্যর্থ: ' . $conn->error]);
         }
         exit;
     }
 
-    echo json_encode(['status' => 'error', 'message' => 'Invalid action request!']);
+    // 4.8 SEED DEFAULT DEMO DATA
+    if ($action === 'seed_default_data') {
+        $sample_features = [
+            ['Student', 'Daily Student Attendance', 'Student daily biometric and manual attendance system'],
+            ['Student', 'Student Admission & Registration', 'New student online and offline application process'],
+            ['Exam', 'OMR Sheet Scanner & Evaluator', 'Automated exam paper grading with high-speed camera'],
+            ['Accounts', 'Student Fee Collection & Receipt', 'Monthly tuition fees collection with instant SMS alert'],
+            ['HR/Payroll', 'Staff Leave & Attendance Management', 'Teacher and staff check-in, leave approval hierarchy']
+        ];
+
+        foreach ($sample_features as $item) {
+            $m = $item[0]; $f = $item[1]; $d = $item[2];
+            $chk = $conn->query("SELECT id FROM eimbox_features_master WHERE feature_name = '$f'");
+            if ($chk && $chk->num_rows == 0) {
+                $conn->query("INSERT INTO eimbox_features_master (module, feature_name, description) VALUES ('$m', '$f', '$d')");
+                $nid = $conn->insert_id;
+                foreach (['dashboard', 'console', 'android_lite', 'premium', 'desktop'] as $pk) {
+                    $conn->query("INSERT INTO eimbox_platform_tracker (feature_id, platform, status, progress_percent, priority) VALUES ($nid, '$pk', 'Planned', 0, 'Medium')");
+                }
+            }
+        }
+
+        echo json_encode(['status' => 'success', 'message' => 'ডেমো ডাটা সফলভাবে যুক্ত হয়েছে!']);
+        exit;
+    }
+
+    echo json_encode(['status' => 'error', 'message' => 'অবৈধ অ্যাকশন!']);
     exit;
 }
 
-// -------------------------------------------------------------
-// 2. Main Page Render (HTML / PHP UI)
-// -------------------------------------------------------------
-require_once 'header.php';
+// ==============================================================
+// 5. NORMAL PAGE LOAD (HTML RENDER)
+// ==============================================================
+
 ensure_tracker_schema($conn);
 
-// Fetch Initial Statistics
-$stats_q = $conn->query("
-    SELECT 
-        (SELECT COUNT(*) FROM eimbox_features_master) as total_features,
-        (SELECT COUNT(*) FROM eimbox_platform_tracker WHERE status = 'Completed') as total_completed,
-        (SELECT COUNT(*) FROM eimbox_platform_tracker WHERE status = 'Issue' OR (issue_notes IS NOT NULL AND TRIM(issue_notes) != '')) as total_issues,
-        (SELECT COUNT(*) FROM eimbox_platform_tracker WHERE status = 'Ongoing') as total_ongoing,
-        (SELECT COUNT(*) FROM eimbox_platform_tracker WHERE status = 'Customization') as total_customization,
-        (SELECT COUNT(*) FROM eimbox_platform_tracker WHERE platform = 'dashboard' AND status = 'Completed') as p_dashboard_completed,
-        (SELECT COUNT(*) FROM eimbox_platform_tracker WHERE platform = 'dashboard') as p_dashboard_total,
-        (SELECT COUNT(*) FROM eimbox_platform_tracker WHERE platform = 'console' AND status = 'Completed') as p_console_completed,
-        (SELECT COUNT(*) FROM eimbox_platform_tracker WHERE platform = 'console') as p_console_total,
-        (SELECT COUNT(*) FROM eimbox_platform_tracker WHERE platform = 'android_lite' AND status = 'Completed') as p_android_completed,
-        (SELECT COUNT(*) FROM eimbox_platform_tracker WHERE platform = 'android_lite') as p_android_total,
-        (SELECT COUNT(*) FROM eimbox_platform_tracker WHERE platform = 'premium' AND status = 'Completed') as p_premium_completed,
-        (SELECT COUNT(*) FROM eimbox_platform_tracker WHERE platform = 'premium') as p_premium_total,
-        (SELECT COUNT(*) FROM eimbox_platform_tracker WHERE platform = 'desktop' AND status = 'Completed') as p_desktop_completed,
-        (SELECT COUNT(*) FROM eimbox_platform_tracker WHERE platform = 'desktop') as p_desktop_total
-");
-$stats = $stats_q ? $stats_q->fetch_assoc() : [
-    'total_features' => 0, 'total_completed' => 0, 'total_issues' => 0, 'total_ongoing' => 0, 'total_customization' => 0,
-    'p_dashboard_completed' => 0, 'p_dashboard_total' => 0,
-    'p_console_completed' => 0, 'p_console_total' => 0,
-    'p_android_completed' => 0, 'p_android_total' => 0,
-    'p_premium_completed' => 0, 'p_premium_total' => 0,
-    'p_desktop_completed' => 0, 'p_desktop_total' => 0
-];
-
-// Fetch System Modules from `modulelist` table
+// Load module list for dropdowns
 $modules_list = [];
-$mod_res = $conn->query("SELECT id, slno, module_name, module_icon, descrip, is_public, core FROM modulelist WHERE module_name IS NOT NULL AND TRIM(module_name) != '' ORDER BY slno ASC, module_name ASC");
-if ($mod_res && $mod_res->num_rows > 0) {
-    while ($m = $mod_res->fetch_assoc()) {
+$mod_query = $conn->query("SELECT id, module_name, descrip, is_public, core FROM modulelist WHERE is_public >= 0 ORDER BY is_public DESC, slno ASC, module_name ASC");
+if ($mod_query && $mod_query->num_rows > 0) {
+    while ($m = $mod_query->fetch_assoc()) {
         $modules_list[] = $m;
     }
-} else {
-    $mod_res2 = $conn->query("SELECT DISTINCT module as module_name FROM eimbox_features_master ORDER BY module ASC");
-    if ($mod_res2) {
-        while ($m = $mod_res2->fetch_assoc()) {
-            $modules_list[] = [
-                'id' => 0, 'slno' => 99, 'module_name' => $m['module_name'], 'module_icon' => 'circle-square', 'descrip' => '', 'is_public' => 1, 'core' => 0
-            ];
-        }
-    }
 }
 
-// Fetch Initial Matrix Data on Server-Side Load (Immediate render on page load)
-$init_master_ids = [];
-$res_init = $conn->query("SELECT id FROM eimbox_features_master ORDER BY module ASC, display_order ASC, feature_name ASC");
-if ($res_init) {
-    while ($r = $res_init->fetch_assoc()) {
-        $init_master_ids[] = intval($r['id']);
-    }
-}
-$initial_matrix_data = [];
-if (!empty($init_master_ids)) {
-    $ids_str = implode(',', $init_master_ids);
-    $masters_res = $conn->query("SELECT * FROM eimbox_features_master WHERE id IN ($ids_str) ORDER BY module ASC, display_order ASC, feature_name ASC");
-    $masters_map = [];
-    while ($m = $masters_res->fetch_assoc()) {
-        $masters_map[$m['id']] = $m;
-    }
-    $platforms_res = $conn->query("SELECT * FROM eimbox_platform_tracker WHERE feature_id IN ($ids_str)");
-    $platforms_by_feature = [];
-    while ($pt = $platforms_res->fetch_assoc()) {
-        $platforms_by_feature[$pt['feature_id']][$pt['platform']] = $pt;
-    }
-    foreach ($init_master_ids as $mid) {
-        if (isset($masters_map[$mid])) {
-            $initial_matrix_data[] = [
-                'master' => $masters_map[$mid],
-                'platforms' => $platforms_by_feature[$mid] ?? []
-            ];
-        }
-    }
-}
+// Initial Data Load
+list($initial_matrix_data, $stats) = fetch_tracker_data_and_stats($conn);
+
+require_once 'header.php';
 ?>
 
-<!-- Optimized Modern CSS for Multi-Platform Matrix Tracker -->
+<!-- Custom CSS for Multi-Platform Matrix Tracker -->
 <style>
     .matrix-tracker-container {
-        /* width: 100%; */
-        /* max-width: 1220px; */
         margin: 0 auto;
     }
 
     /* KPI Summary Cards */
     .kpi-card {
-        border-radius: 8px;
-        transition: transform 0.2s, box-shadow 0.2s;
         cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        border: 1px solid #e7e7e8;
     }
     .kpi-card:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
-    .platform-kpi-chip {
-        font-size: 0.75rem;
-        padding: 4px 8px;
-        border-radius: 6px;
-        background: #fff;
-        border: 1px solid #e7e7e8;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
 
     /* Table Architecture */
-   
+    .matrix-table-wrapper {
+        border-radius: 8px;
+        border: 1px solid #e7e7e8;
+        background: #fff;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+    .matrix-table {
+        table-layout: fixed;
+        width: 100% !important;
+    }
+    .matrix-table thead th {
+        background-color: #f8f9fa;
+        font-weight: 700;
+        font-size: 0.78rem;
+        letter-spacing: 0.3px;
+        padding: 0.5rem 0.3rem;
+        border-bottom: 2px solid #e7e7e8;
+        vertical-align: middle;
+    }
+    .matrix-table td {
+        vertical-align: middle;
+        word-wrap: break-word;
+        padding: 0.35rem 0.25rem;
+        border-bottom: 1px solid #edf0f2;
+    }
+
     /* Column Widths */
-    .col-id {  }
-    .col-feature-info { }
+    .col-id { width: 34px; }
+    .col-feature-info { width: 23%; }
     .col-platform { width: 13.8%; }
-    .col-actions { }
+    .col-actions { width: 6.5%; }
 
     /* Interactive Row Hover */
     .matrix-main-row {
@@ -1060,11 +960,13 @@ if (!empty($init_master_ids)) {
         transition: background-color 0.15s ease;
     }
     .matrix-main-row:hover {
-        background-color: rgba(105, 108, 255, 0.04) !important;
+        background-color: #f8f9fc !important;
     }
 
     /* Platform Cell Card inside Table */
     .platform-cell-card {
+        background: #fafafa;
+        border: 1px solid #e4e6eb;
         border-radius: 6px;
         padding: 4px 2px;
         min-height: 58px;
@@ -1073,118 +975,98 @@ if (!empty($init_master_ids)) {
         align-items: center;
         justify-content: center;
         gap: 2px;
-        transition: all 0.2s;
+        transition: all 0.15s ease-in-out;
         cursor: pointer;
     }
     .platform-cell-card:hover {
-   
-        box-shadow: 0 2px 6px rgba(105, 108, 255, 0.15);
+        background: #ffffff;
+        border-color: #0d6efd;
+        box-shadow: 0 2px 6px rgba(13, 110, 253, 0.15);
         transform: translateY(-1px);
-    }
-    .platform-status-badge {
-        font-size: 0.62rem;
-        padding: 1px 5px;
-        border-radius: 3px;
-        font-weight: 600;
-        white-space: nowrap;
-        line-height: 1.15;
     }
 
     /* Circular Progress Meter */
     .circle-progress {
+        --pct: 0;
+        --pcolor: #6c757d;
         width: 26px;
         height: 26px;
         border-radius: 50%;
-        background: conic-gradient(var(--pcolor, #696cff) calc(var(--pct, 0) * 1%), #e7e7e8 0);
-        display: inline-flex;
+        background: conic-gradient(var(--pcolor) calc(var(--pct) * 1%), #e7e7e8 0);
+        display: flex;
         align-items: center;
         justify-content: center;
         position: relative;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         flex-shrink: 0;
     }
     .circle-progress::before {
-        content: "";
+        content: '';
         position: absolute;
         width: 18px;
         height: 18px;
-        border-radius: 50%;
         background: #ffffff;
+        border-radius: 50%;
     }
     .circle-progress-val {
         position: relative;
         font-size: 0.55rem;
         font-weight: 700;
+        color: #212529;
         line-height: 1;
-        color: #384551;
-        letter-spacing: -0.4px;
     }
 
-    /* Mini Progress Bar (for Drawer) */
-    .progress-mini {
-        height: 5px;
-        border-radius: 3px;
-    }
-    .progress-num {
-        font-size: 0.68rem;
-        color: #8592a3;
+    /* Micro Status Badge */
+    .platform-status-badge {
+        font-size: 0.62rem !important;
+        padding: 0.15rem 0.35rem !important;
         font-weight: 600;
+        letter-spacing: 0.2px;
+        max-width: 95%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
-    /* Expandable Drawer Row */
+    /* Expandable Detail Drawer */
     .matrix-detail-row {
-        background-color: #f8f9fa;
         display: none;
+        background-color: #fafbfd;
     }
     .matrix-detail-row.show {
         display: table-row;
     }
     .detail-drawer-card {
         background: #ffffff;
-        border: 1px solid #d9dee3;
-        border-left: 4px solid #696cff;
+        border: 1px solid #dfe3e8;
         border-radius: 8px;
-        padding: 16px;
-        box-shadow: 0 4px 14px rgba(0,0,0,0.05);
-    }
-    .platform-drawer-box {
-        border-radius: 6px;
-        transition: box-shadow 0.2s;
-    }
-    .platform-drawer-box:hover {
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        padding: 1rem;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
     }
 
     /* Action Buttons */
-    .act-btn {
-        width: 30px;
-        height: 30px;
-        padding: 0;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 6px;
-        font-size: 0.95rem;
-    }
     .action-btn-group {
-        display: inline-flex;
+        display: flex;
+        justify-content: center;
+        align-items: center;
         gap: 3px;
+    }
+    .act-btn {
+        width: 24px;
+        height: 24px;
+        padding: 0 !important;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
-    }
-    .btn-xs {
-        padding: 0.2rem 0.4rem;
-        font-size: 0.75rem;
         border-radius: 4px;
+        font-size: 0.75rem;
     }
 
     .code-script {
-        background: #f1f2f4;
-        padding: 2px 6px;
+        font-size: 0.72rem;
+        padding: 2px 5px;
         border-radius: 4px;
-        font-family: SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-        font-size: 0.75rem;
-        color: #566a7f;
+        background: #f1f3f5;
+        color: #495057;
         border: 1px solid #e0e2e6;
     }
     .text-truncate-2 {
@@ -1197,7 +1079,7 @@ if (!empty($init_master_ids)) {
 
 <div class="container-xxl flex-grow-1 container-p-y matrix-tracker-container">
 
-    <!-- Page Header & Action Bar (Bootstrap 5) -->
+    <!-- Page Header & Action Bar -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
         <div>
             <h4 class="fw-bold mb-1 d-flex align-items-center">
@@ -1223,7 +1105,7 @@ if (!empty($init_master_ids)) {
     <div class="row g-2 mb-3">
         <!-- Dashboard (Old) -->
         <div class="col-md-4 col-lg-2">
-            <div class="card p-2 text-center kpi-card shadow-sm border-0" onclick="filterByPlatform('dashboard')">
+            <div class="card p-2 text-center kpi-card shadow-sm" onclick="filterByPlatform('dashboard')">
                 <div class="d-flex align-items-center justify-content-center gap-1 text-primary fw-semibold small">
                     <i class="bi bi-speedometer2"></i> Dashboard
                 </div>
@@ -1236,7 +1118,7 @@ if (!empty($init_master_ids)) {
 
         <!-- Console (New) -->
         <div class="col-md-4 col-lg-2">
-            <div class="card p-2 text-center kpi-card shadow-sm border-0" onclick="filterByPlatform('console')">
+            <div class="card p-2 text-center kpi-card shadow-sm" onclick="filterByPlatform('console')">
                 <div class="d-flex align-items-center justify-content-center gap-1 text-info fw-semibold small">
                     <i class="bi bi-terminal"></i> Console
                 </div>
@@ -1249,7 +1131,7 @@ if (!empty($init_master_ids)) {
 
         <!-- Android Lite -->
         <div class="col-md-4 col-lg-2">
-            <div class="card p-2 text-center kpi-card shadow-sm border-0" onclick="filterByPlatform('android_lite')">
+            <div class="card p-2 text-center kpi-card shadow-sm" onclick="filterByPlatform('android_lite')">
                 <div class="d-flex align-items-center justify-content-center gap-1 text-success fw-semibold small">
                     <i class="bi bi-android2"></i> Android Lite
                 </div>
@@ -1262,7 +1144,7 @@ if (!empty($init_master_ids)) {
 
         <!-- Premium (Offline) -->
         <div class="col-md-4 col-lg-2">
-            <div class="card p-2 text-center kpi-card shadow-sm border-0" onclick="filterByPlatform('premium')">
+            <div class="card p-2 text-center kpi-card shadow-sm" onclick="filterByPlatform('premium')">
                 <div class="d-flex align-items-center justify-content-center gap-1 text-warning fw-semibold small">
                     <i class="bi bi-phone"></i> Premium
                 </div>
@@ -1275,7 +1157,7 @@ if (!empty($init_master_ids)) {
 
         <!-- Desktop (Win) -->
         <div class="col-md-4 col-lg-2">
-            <div class="card p-2 text-center kpi-card shadow-sm border-0" onclick="filterByPlatform('desktop')">
+            <div class="card p-2 text-center kpi-card shadow-sm" onclick="filterByPlatform('desktop')">
                 <div class="d-flex align-items-center justify-content-center gap-1 text-secondary fw-semibold small">
                     <i class="bi bi-display"></i> Desktop
                 </div>
@@ -1288,7 +1170,7 @@ if (!empty($init_master_ids)) {
 
         <!-- Total Features & Quick Reset -->
         <div class="col-md-4 col-lg-2">
-            <div class="card p-2 text-center kpi-card bg-primary text-white shadow-sm border-0" onclick="resetFilters()">
+            <div class="card p-2 text-center kpi-card bg-primary text-white shadow-sm" onclick="resetFilters()">
                 <div class="fw-semibold small"><i class="bi bi-list-task"></i> All Features</div>
                 <div class="fs-5 fw-bold mt-1" id="stat-total-features"><?= $stats['total_features'] ?></div>
                 <small style="font-size: 0.7rem;" class="text-white-50">ক্লিক করে রিসেট করুন</small>
@@ -1362,48 +1244,50 @@ if (!empty($init_master_ids)) {
 
     <!-- 3. Multi-Platform Matrix Table -->
     <div class="matrix-table-wrapper">
-        <table class="table table-responsive table-hover align-middle mb-0">
-            <thead>
-                <tr>
-                    <th class="col-id text-center">#</th>
-                    <th class="col-feature-info">মডিউল ও ফিচার নাম</th>
-                    <th class="col-platform text-center">
-                        <span class="d-inline-flex align-items-center gap-1 text-primary">
-                            <i class="bi bi-speedometer2"></i> Dashboard
-                        </span>
-                        <div class="text-muted font-normal" style="font-size: 0.65rem;">Web Old</div>
-                    </th>
-                    <th class="col-platform text-center">
-                        <span class="d-inline-flex align-items-center gap-1 text-info">
-                            <i class="bi bi-terminal"></i> Console
-                        </span>
-                        <div class="text-muted font-normal" style="font-size: 0.65rem;">Web New</div>
-                    </th>
-                    <th class="col-platform text-center">
-                        <span class="d-inline-flex align-items-center gap-1 text-success">
-                            <i class="bi bi-android2"></i> Android Lite
-                        </span>
-                        <div class="text-muted font-normal" style="font-size: 0.65rem;">Lite Mobile</div>
-                    </th>
-                    <th class="col-platform text-center">
-                        <span class="d-inline-flex align-items-center gap-1 text-warning">
-                            <i class="bi bi-phone"></i> Premium
-                        </span>
-                        <div class="text-muted font-normal" style="font-size: 0.65rem;">Offline App</div>
-                    </th>
-                    <th class="col-platform text-center">
-                        <span class="d-inline-flex align-items-center gap-1 text-secondary">
-                            <i class="bi bi-display"></i> Desktop
-                        </span>
-                        <div class="text-muted font-normal" style="font-size: 0.65rem;">Win 10/11</div>
-                    </th>
-                    <th class="col-actions text-center">অ্যাকশন</th>
-                </tr>
-            </thead>
-            <tbody id="matrix-tbody">
-                <?php render_matrix_table_body($initial_matrix_data, $platforms_meta, $status_meta, $priority_meta); ?>
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table matrix-table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="col-id text-center">#</th>
+                        <th class="col-feature-info">মডিউল ও ফিচার নাম</th>
+                        <th class="col-platform text-center">
+                            <span class="d-inline-flex align-items-center gap-1 text-primary">
+                                <i class="bi bi-speedometer2"></i> Dashboard
+                            </span>
+                            <div class="text-muted font-normal" style="font-size: 0.65rem;">Web Old</div>
+                        </th>
+                        <th class="col-platform text-center">
+                            <span class="d-inline-flex align-items-center gap-1 text-info">
+                                <i class="bi bi-terminal"></i> Console
+                            </span>
+                            <div class="text-muted font-normal" style="font-size: 0.65rem;">Web New</div>
+                        </th>
+                        <th class="col-platform text-center">
+                            <span class="d-inline-flex align-items-center gap-1 text-success">
+                                <i class="bi bi-android2"></i> Android Lite
+                            </span>
+                            <div class="text-muted font-normal" style="font-size: 0.65rem;">Lite Mobile</div>
+                        </th>
+                        <th class="col-platform text-center">
+                            <span class="d-inline-flex align-items-center gap-1 text-warning">
+                                <i class="bi bi-phone"></i> Premium
+                            </span>
+                            <div class="text-muted font-normal" style="font-size: 0.65rem;">Offline App</div>
+                        </th>
+                        <th class="col-platform text-center">
+                            <span class="d-inline-flex align-items-center gap-1 text-secondary">
+                                <i class="bi bi-display"></i> Desktop
+                            </span>
+                            <div class="text-muted font-normal" style="font-size: 0.65rem;">Win 10/11</div>
+                        </th>
+                        <th class="col-actions text-center">অ্যাকশন</th>
+                    </tr>
+                </thead>
+                <tbody id="matrix-tbody">
+                    <?php render_matrix_table_body($initial_matrix_data, $platforms_meta, $status_meta, $priority_meta); ?>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- Empty Database Banner with 1-click Demo Seeder -->
@@ -1428,10 +1312,10 @@ if (!empty($init_master_ids)) {
 </div>
 
 <!-- ============================================================== -->
-<!-- 4. MODALS & DIALOGS                                            -->
-<!-- ============================================================== -->
+<!-- 6. BOOTSTRAP 5 MODALS                                          -->
+// ============================================================== -->
 
-<!-- 4.1 ADD MASTER FEATURE MODAL -->
+<!-- 6.1 ADD MASTER FEATURE MODAL -->
 <div class="modal fade" id="modal-add-master" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -1447,14 +1331,14 @@ if (!empty($init_master_ids)) {
                             <option value="">-- মডিউল নির্বাচন করুন --</option>
                             <optgroup label="📋 Public / Academic Modules">
                                 <?php foreach ($modules_list as $mod): if ($mod['is_public'] == 1): ?>
-                                    <option value="<?= htmlspecialchars($mod['module_name']) ?>" data-desc="<?= htmlspecialchars($mod['descrip'] ?? '') ?>">
+                                    <option value="<?= htmlspecialchars($mod['module_name']) ?>">
                                         <?= htmlspecialchars($mod['module_name']) ?> <?= $mod['core'] == 1 ? '(Core)' : '' ?>
                                     </option>
                                 <?php endif; endforeach; ?>
                             </optgroup>
                             <optgroup label="⚙️ Backend / Administrative Modules">
                                 <?php foreach ($modules_list as $mod): if ($mod['is_public'] == 0): ?>
-                                    <option value="<?= htmlspecialchars($mod['module_name']) ?>" data-desc="<?= htmlspecialchars($mod['descrip'] ?? '') ?>">
+                                    <option value="<?= htmlspecialchars($mod['module_name']) ?>">
                                         <?= htmlspecialchars($mod['module_name']) ?>
                                     </option>
                                 <?php endif; endforeach; ?>
@@ -1484,7 +1368,7 @@ if (!empty($init_master_ids)) {
     </div>
 </div>
 
-<!-- 4.2 EDIT MASTER FEATURE MODAL -->
+<!-- 6.2 EDIT MASTER FEATURE MODAL -->
 <div class="modal fade" id="modal-edit-master" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -1534,7 +1418,7 @@ if (!empty($init_master_ids)) {
     </div>
 </div>
 
-<!-- 4.3 SPECIFIC PLATFORM EDIT & ISSUE MODAL -->
+<!-- 6.3 SPECIFIC PLATFORM EDIT & ISSUE MODAL -->
 <div class="modal fade" id="modal-edit-platform" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
@@ -1627,7 +1511,7 @@ if (!empty($init_master_ids)) {
     </div>
 </div>
 
-<!-- 4.4 BULK ALL 5 PLATFORMS MODAL -->
+<!-- 6.4 BULK ALL 5 PLATFORMS MODAL -->
 <div class="modal fade" id="modal-bulk-platforms" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content">
@@ -1670,22 +1554,48 @@ if (!empty($init_master_ids)) {
     </div>
 </div>
 
-
-
-<?php require_once 'footer.php'; ?> 
-
-
 <!-- ============================================================== -->
-<!-- 5. JAVASCRIPT LOGIC & LIVE AJAX ENGINE                         -->
+<!-- 7. JAVASCRIPT LOGIC & LIVE AJAX ENGINE                         -->
 <!-- ============================================================== -->
 <script>
-    // Platforms Definition for JS
     const platformsMeta = <?= json_encode($platforms_meta) ?>;
     const statusMeta = <?= json_encode($status_meta) ?>;
     let debounceTimer = null;
     let issuesOnlyMode = false;
 
-    // Live Fetch Matrix Data
+    // 7.1 MODAL HELPERS (Pure Bootstrap 5 + DOM Fallback)
+    function openModal(modalId) {
+        const el = document.getElementById(modalId);
+        if (!el) return;
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            const modal = bootstrap.Modal.getOrCreateInstance(el);
+            modal.show();
+        } else if (window.jQuery && typeof jQuery(el).modal === 'function') {
+            jQuery(el).modal('show');
+        } else {
+            el.classList.add('show');
+            el.style.display = 'block';
+        }
+    }
+
+    function closeModal(modalId) {
+        const el = document.getElementById(modalId);
+        if (!el) return;
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            const modal = bootstrap.Modal.getInstance(el);
+            if (modal) modal.hide();
+        } else if (window.jQuery && typeof jQuery(el).modal === 'function') {
+            jQuery(el).modal('hide');
+        }
+        el.classList.remove('show');
+        el.style.display = 'none';
+        document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }
+
+    // 7.2 LIVE AJAX FETCH
     function fetchMatrixData() {
         const searchVal = document.getElementById('filter-search').value.trim();
         const moduleVal = document.getElementById('filter-module').value;
@@ -1724,9 +1634,7 @@ if (!empty($init_master_ids)) {
 
     function debounceFetch() {
         clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-            fetchMatrixData();
-        }, 300);
+        debounceTimer = setTimeout(fetchMatrixData, 300);
     }
 
     function toggleIssuesOnly() {
@@ -1773,7 +1681,7 @@ if (!empty($init_master_ids)) {
         document.getElementById('stat-p-desktop').innerText = calcPercent(stats.p_desktop_completed, stats.p_desktop_total) + '%';
     }
 
-    // Toggle Matrix Drawer Row
+    // 7.3 DRAWER EXPAND
     function toggleMatrixDrawer(featureId, e) {
         if (e && e.target.closest('button, select, input, a, .platform-cell-card')) return;
         const drawer = document.getElementById(`drawer-${featureId}`);
@@ -1789,54 +1697,7 @@ if (!empty($init_master_ids)) {
         }
     }
 
-    // Robust Modal Helpers (Works with Bootstrap 5, jQuery, or Vanilla DOM)
-    function openModal(modalId) {
-        const el = document.getElementById(modalId);
-        if (!el) return;
-        try {
-            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-                const inst = bootstrap.Modal.getOrCreateInstance(el);
-                if (inst) {
-                    inst.show();
-                    return;
-                }
-            }
-        } catch (e) {
-            console.warn('Bootstrap modal open error:', e);
-        }
-        if (typeof $ !== 'undefined' && typeof $.fn.modal === 'function') {
-            $(el).modal('show');
-            return;
-        }
-        el.classList.add('show');
-        el.style.display = 'block';
-        document.body.classList.add('modal-open');
-    }
-
-    function closeModal(modalId) {
-        const el = document.getElementById(modalId);
-        if (!el) return;
-        try {
-            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-                const inst = bootstrap.Modal.getInstance(el) || bootstrap.Modal.getOrCreateInstance(el);
-                if (inst) inst.hide();
-            }
-        } catch (e) {
-            console.warn('Bootstrap modal hide error:', e);
-        }
-        if (typeof $ !== 'undefined' && typeof $.fn.modal === 'function') {
-            $(el).modal('hide');
-        }
-        setTimeout(() => {
-            el.classList.remove('show');
-            el.style.display = 'none';
-            document.body.classList.remove('modal-open');
-            document.body.style.removeProperty('padding-right');
-            document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
-        }, 150);
-    }
-
-    // 5.1 MASTER FEATURE MODAL HANDLERS
+    // 7.4 ADD MASTER FEATURE
     function openMasterAddModal() {
         document.getElementById('form-add-master').reset();
         openModal('modal-add-master');
@@ -1861,6 +1722,8 @@ if (!empty($init_master_ids)) {
             if (data.status === 'success') {
                 closeModal('modal-add-master');
                 showToast(data.message, 'bg-success');
+                const banner = document.getElementById('seed-banner');
+                if (banner) banner.style.display = 'none';
                 fetchMatrixData();
             } else {
                 showToast(data.message, 'bg-danger');
@@ -1872,6 +1735,7 @@ if (!empty($init_master_ids)) {
         });
     }
 
+    // 7.5 EDIT MASTER FEATURE
     function openMasterEditModal(masterData) {
         document.getElementById('edit-master-id').value = masterData.id;
         document.getElementById('edit-master-module').value = masterData.module || '';
@@ -1911,6 +1775,7 @@ if (!empty($init_master_ids)) {
         });
     }
 
+    // 7.6 DELETE MASTER FEATURE
     function deleteMasterFeature(id, name) {
         if (!confirm(`আপনি কি নিশ্চিতভাবে "${name}" ফিচারটি এবং এর সাথে যুক্ত ৫টি প্ল্যাটফর্মের সকল তথ্য মুছে ফেলতে চান?`)) return;
 
@@ -1936,12 +1801,12 @@ if (!empty($init_master_ids)) {
         });
     }
 
-    // 5.2 SPECIFIC PLATFORM EDIT MODAL
+    // 7.7 SPECIFIC PLATFORM EDIT MODAL
     function openPlatformEditModal(featureId, platformKey, featureName, platformData = null) {
-        const platInfo = platformsMeta[platformKey] || { title: platformKey, icon: 'ri-smartphone-line' };
+        const platInfo = platformsMeta[platformKey] || { title: platformKey, icon: 'bi bi-phone' };
         document.getElementById('pe-feature-id').value = featureId;
         document.getElementById('pe-platform').value = platformKey;
-        document.getElementById('platform-modal-title').innerHTML = `<i class="${platInfo.icon} me-2" style="color:${platInfo.color || '#696cff'}"></i> ${platInfo.title} প্ল্যাটফর্ম কনফিগারেশন`;
+        document.getElementById('platform-modal-title').innerHTML = `<i class="${platInfo.icon} me-2" style="color:${platInfo.color || '#0d6efd'}"></i> ${platInfo.title} প্ল্যাটফর্ম কনফিগারেশন`;
         document.getElementById('platform-modal-subtitle').innerText = `ফিচার: ${featureName}`;
 
         function populateForm(pt) {
@@ -1962,7 +1827,7 @@ if (!empty($init_master_ids)) {
             return;
         }
 
-        // Fallback via POST AJAX if data not already passed
+        // Fallback fetch via POST
         const formData = new FormData();
         formData.append('action', 'get_platform_details');
         formData.append('feature_id', featureId);
@@ -2030,7 +1895,7 @@ if (!empty($init_master_ids)) {
         });
     }
 
-    // 5.3 BULK ALL 5 PLATFORMS MODAL
+    // 7.8 BULK ALL 5 PLATFORMS MODAL
     function openBulkPlatformsModal(featureId, featureName, platformsData) {
         document.getElementById('bulk-feature-id').value = featureId;
         document.getElementById('bulk-modal-feature-title').innerText = `ফিচার: ${featureName}`;
@@ -2127,7 +1992,7 @@ if (!empty($init_master_ids)) {
         });
     }
 
-    // 5.4 DEMO SEED DATA
+    // 7.9 DEMO SEED DATA
     function seedDefaultData() {
         const formData = new FormData();
         formData.append('action', 'seed_default_data');
@@ -2148,14 +2013,20 @@ if (!empty($init_master_ids)) {
         });
     }
 
-    // Utility Helpers
+    // 7.10 UTILITY HELPERS
     function showToast(msg, bgClass = 'bg-primary') {
         const toastEl = document.getElementById('tracker-toast');
         const bodyEl = document.getElementById('tracker-toast-body');
+        if (!toastEl || !bodyEl) return;
         toastEl.className = `toast align-items-center text-white ${bgClass} border-0`;
         bodyEl.innerText = msg;
-        const toast = new bootstrap.Toast(toastEl, { delay: 3500 });
-        toast.show();
+        if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
+            const toast = new bootstrap.Toast(toastEl, { delay: 3500 });
+            toast.show();
+        } else {
+            toastEl.classList.add('show');
+            setTimeout(() => toastEl.classList.remove('show'), 3500);
+        }
     }
 
     function copyToClipboard(text) {
@@ -2178,4 +2049,4 @@ if (!empty($init_master_ids)) {
     }
 </script>
 
-
+<?php require_once 'footer.php'; ?>
