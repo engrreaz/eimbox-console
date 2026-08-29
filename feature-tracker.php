@@ -1607,11 +1607,6 @@ require_once 'header.php';
         `;
         document.getElementById('pw_modal_sub').innerText = fallbackFeatureName ? `Feature: ${fallbackFeatureName}` : `Feature ID #${featureId}`;
         document.getElementById('pw_modal_module').innerText = `Loading...`;
-
-        document.getElementById('nt_feature_id').value = featureId;
-        document.getElementById('nt_platform').value = platformKey;
-
-        hideNewTaskForm();
         loadPlatformTasks();
         showModal('platformWorkspaceModal');
     }
