@@ -540,7 +540,7 @@ if (($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) || (isset
         $where_sql = count($master_where) > 0 ? "WHERE " . implode(" AND ", $master_where) : "";
 
         // Query distinct master feature IDs that match filter
-        $query_ids = "SELECT DISTINCT m.id 
+        $query_ids = "SELECT DISTINCT m.id, m.module, m.display_order, m.feature_name 
                       FROM eimbox_features_master m 
                       LEFT JOIN eimbox_platform_tracker t ON m.id = t.feature_id 
                       $where_sql 
