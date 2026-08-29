@@ -1,157 +1,15 @@
 <?php
 /**
  * EIMBox Multi-Platform Feature & Issue Tracker
- * File: feature-tracker.php
- * Platforms:
- *   1. Dashboard (Web Old Version)
- *   2. Console (Web New Version)
- *   3. Android Lite (Android Lite Version)
- *   4. Premium (Offline Version)
- *   5. Desktop (Windows 10/11 Desktop Version)
+ * Pure Bootstrap 5 Implementation
  */
 
 require_once 'core/init.php';
 
 // ==============================================================
-// 1. DEFINITIONS & METADATA
+// 1. DATABASE SCHEMA SETUP
 // ==============================================================
-
-$platforms_meta = [
-    'dashboard' => [
-        'key' => 'dashboard',
-        'title' => 'Dashboard',
-        'sub' => 'Web Old Version',
-        'icon' => 'bi bi-speedometer2',
-        'badge' => 'bg-primary-subtle text-primary border border-primary-subtle',
-        'badge_solid' => 'bg-primary text-white',
-        'color' => '#0d6efd'
-    ],
-    'console' => [
-        'key' => 'console',
-        'title' => 'Console',
-        'sub' => 'Web New Version',
-        'icon' => 'bi bi-terminal',
-        'badge' => 'bg-info-subtle text-info-emphasis border border-info-subtle',
-        'badge_solid' => 'bg-info text-dark',
-        'color' => '#0dcaf0'
-    ],
-    'android_lite' => [
-        'key' => 'android_lite',
-        'title' => 'Android Lite',
-        'sub' => 'Android Lite Version',
-        'icon' => 'bi bi-android2',
-        'badge' => 'bg-success-subtle text-success border border-success-subtle',
-        'badge_solid' => 'bg-success text-white',
-        'color' => '#198754'
-    ],
-    'premium' => [
-        'key' => 'premium',
-        'title' => 'Premium',
-        'sub' => 'Offline Version',
-        'icon' => 'bi bi-phone',
-        'badge' => 'bg-warning-subtle text-warning-emphasis border border-warning-subtle',
-        'badge_solid' => 'bg-warning text-dark',
-        'color' => '#ffc107'
-    ],
-    'desktop' => [
-        'key' => 'desktop',
-        'title' => 'Desktop',
-        'sub' => 'Win 10/11 Desktop Version',
-        'icon' => 'bi bi-display',
-        'badge' => 'bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle',
-        'badge_solid' => 'bg-secondary text-white',
-        'color' => '#6c757d'
-    ]
-];
-
-$status_meta = [
-    'Completed' => [
-        'title' => 'Completed',
-        'badge' => 'bg-success text-white',
-        'badge_soft' => 'bg-success-subtle text-success border border-success-subtle',
-        'icon' => 'bi bi-check-circle-fill',
-        'color' => '#198754',
-        'desc' => 'সম্পূর্ণ ও আপডেটেড'
-    ],
-    'Testing' => [
-        'title' => 'Testing',
-        'badge' => 'bg-primary text-white',
-        'badge_soft' => 'bg-primary-subtle text-primary border border-primary-subtle',
-        'icon' => 'bi bi-eyedropper',
-        'color' => '#0d6efd',
-        'desc' => 'পরীক্ষামূলক চলছে'
-    ],
-    'Ongoing' => [
-        'title' => 'Ongoing',
-        'badge' => 'bg-info text-dark',
-        'badge_soft' => 'bg-info-subtle text-info-emphasis border border-info-subtle',
-        'icon' => 'bi bi-play-circle-fill',
-        'color' => '#0dcaf0',
-        'desc' => 'কাজ চলমান'
-    ],
-    'Need Update' => [
-        'title' => 'Need Update',
-        'badge' => 'bg-warning text-dark',
-        'badge_soft' => 'bg-warning-subtle text-warning-emphasis border border-warning-subtle',
-        'icon' => 'bi bi-arrow-repeat',
-        'color' => '#ffc107',
-        'desc' => 'আপডেট প্রয়োজন'
-    ],
-    'Issue' => [
-        'title' => 'Issue / Bug',
-        'badge' => 'bg-danger text-white',
-        'badge_soft' => 'bg-danger-subtle text-danger border border-danger-subtle',
-        'icon' => 'bi bi-exclamation-triangle-fill',
-        'color' => '#dc3545',
-        'desc' => 'ইস্যু / বাগ আছে'
-    ],
-    'Customization' => [
-        'title' => 'Customization',
-        'badge' => 'bg-dark text-white',
-        'badge_soft' => 'bg-dark-subtle text-dark border border-dark-subtle',
-        'icon' => 'bi bi-gear-wide-connected',
-        'color' => '#212529',
-        'desc' => 'ইউজার কাস্টমাইজেশন'
-    ],
-    'Planned' => [
-        'title' => 'Planned',
-        'badge' => 'bg-secondary text-white',
-        'badge_soft' => 'bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle',
-        'icon' => 'bi bi-hourglass-split',
-        'color' => '#6c757d',
-        'desc' => 'পরিকল্পনাধীন'
-    ],
-    'Not Implemented' => [
-        'title' => 'Not Implemented',
-        'badge' => 'bg-light text-muted border',
-        'badge_soft' => 'bg-light text-muted border',
-        'icon' => 'bi bi-dash-circle',
-        'color' => '#adb5bd',
-        'desc' => 'এখনো তৈরি হয়নি'
-    ],
-    'On Hold' => [
-        'title' => 'On Hold',
-        'badge' => 'bg-secondary text-white',
-        'badge_soft' => 'bg-secondary-subtle text-secondary border',
-        'icon' => 'bi bi-pause-circle-fill',
-        'color' => '#6c757d',
-        'desc' => 'স্থগিত'
-    ]
-];
-
-$priority_meta = [
-    'Critical' => ['badge' => 'badge bg-danger text-white', 'icon' => 'bi bi-shield-fill-exclamation'],
-    'High' => ['badge' => 'badge bg-warning text-dark', 'icon' => 'bi bi-arrow-up-circle-fill'],
-    'Medium' => ['badge' => 'badge bg-info text-dark', 'icon' => 'bi bi-dash-circle-fill'],
-    'Low' => ['badge' => 'badge bg-secondary-subtle text-secondary border', 'icon' => 'bi bi-arrow-down-circle']
-];
-
-// ==============================================================
-// 2. DATABASE SCHEMA HELPER
-// ==============================================================
-
 function ensure_tracker_schema($conn) {
-    // 1. Master Features Table
     $conn->query("
         CREATE TABLE IF NOT EXISTS `eimbox_features_master` (
           `id` INT(11) NOT NULL AUTO_INCREMENT,
@@ -163,12 +21,10 @@ function ensure_tracker_schema($conn) {
           `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
           `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
           PRIMARY KEY (`id`),
-          KEY `idx_module` (`module`),
-          KEY `idx_category` (`category`)
+          KEY `idx_module` (`module`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     ");
 
-    // 2. Child Platform Tracker Table
     $conn->query("
         CREATE TABLE IF NOT EXISTS `eimbox_platform_tracker` (
           `id` INT(11) NOT NULL AUTO_INCREMENT,
@@ -190,499 +46,52 @@ function ensure_tracker_schema($conn) {
           KEY `idx_status` (`status`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     ");
-
-    // 3. Auto-sync legacy features table if present
-    $check_legacy = $conn->query("SHOW TABLES LIKE 'features'");
-    if ($check_legacy && $check_legacy->num_rows > 0) {
-        $legacy_features = $conn->query("SELECT * FROM `features`");
-        if ($legacy_features && $legacy_features->num_rows > 0) {
-            while ($f = $legacy_features->fetch_assoc()) {
-                $fname = trim($f['feature_name'] ?? '');
-                if (empty($fname)) continue;
-                $chk = $conn->query("SELECT id FROM eimbox_features_master WHERE feature_name = '" . $conn->real_escape_string($fname) . "' LIMIT 1");
-                if ($chk && $chk->num_rows == 0) {
-                    $mname = !empty($f['module_name']) ? $f['module_name'] : 'General';
-                    $desc = $f['description'] ?? '';
-                    $s = $conn->prepare("INSERT INTO eimbox_features_master (module, feature_name, description) VALUES (?, ?, ?)");
-                    if ($s) {
-                        $s->bind_param("sss", $mname, $fname, $desc);
-                        $s->execute();
-                        $nid = $s->insert_id;
-                        $s->close();
-                        $ps = $conn->prepare("INSERT INTO eimbox_platform_tracker (feature_id, platform, status, progress_percent, priority) VALUES (?, ?, 'Planned', 0, 'Medium') ON DUPLICATE KEY UPDATE updated_at = NOW()");
-                        if ($ps) {
-                            foreach (['dashboard', 'console', 'android_lite', 'premium', 'desktop'] as $pk) {
-                                $ps->bind_param("is", $nid, $pk);
-                                $ps->execute();
-                            }
-                            $ps->close();
-                        }
-                    }
-                }
-            }
-        }
-    }
 }
 
-// ==============================================================
-// 3. MATRIX DATA BUILDER & HTML RENDERER
-// ==============================================================
-
-function fetch_tracker_data_and_stats($conn, $params = []) {
-    $f_module   = $params['module'] ?? 'all';
-    $f_status   = $params['status'] ?? 'all';
-    $f_platform = $params['platform'] ?? 'all';
-    $f_priority = $params['priority'] ?? 'all';
-    $f_search   = trim($params['search'] ?? '');
-    $f_issues_only = intval($params['issues_only'] ?? 0);
-
-    $master_where = [];
-    if ($f_module !== 'all' && !empty($f_module)) {
-        $master_where[] = "m.module = '" . $conn->real_escape_string($f_module) . "'";
-    }
-
-    if (!empty($f_search)) {
-        $clean_s = $conn->real_escape_string($f_search);
-        $master_where[] = "(m.module LIKE '%$clean_s%' OR m.feature_name LIKE '%$clean_s%' OR m.description LIKE '%$clean_s%' OR t.script_path LIKE '%$clean_s%' OR t.issue_notes LIKE '%$clean_s%' OR t.dev_response LIKE '%$clean_s%')";
-    }
-
-    if ($f_status !== 'all' && !empty($f_status)) {
-        $master_where[] = "t.status = '" . $conn->real_escape_string($f_status) . "'";
-    }
-
-    if ($f_platform !== 'all' && !empty($f_platform)) {
-        $master_where[] = "t.platform = '" . $conn->real_escape_string($f_platform) . "'";
-    }
-
-    if ($f_priority !== 'all' && !empty($f_priority)) {
-        $master_where[] = "t.priority = '" . $conn->real_escape_string($f_priority) . "'";
-    }
-
-    if ($f_issues_only == 1) {
-        $master_where[] = "(t.status = 'Issue' OR (t.issue_notes IS NOT NULL AND TRIM(t.issue_notes) != ''))";
-    }
-
-    $where_sql = count($master_where) > 0 ? "WHERE " . implode(" AND ", $master_where) : "";
-
-    $sql_features = "
-        SELECT DISTINCT m.id, m.module, m.display_order, m.feature_name, m.description, m.category, m.created_at, m.updated_at
-        FROM eimbox_features_master m
-        LEFT JOIN eimbox_platform_tracker t ON m.id = t.feature_id
-        $where_sql
-        ORDER BY m.module ASC, m.display_order ASC, m.feature_name ASC
-    ";
-
-    $master_res = $conn->query($sql_features);
-    $matrix_data = [];
-
-    if ($master_res && $master_res->num_rows > 0) {
-        $feature_ids = [];
-        $temp_masters = [];
-        while ($row = $master_res->fetch_assoc()) {
-            $feature_ids[] = $row['id'];
-            $temp_masters[$row['id']] = $row;
-            $matrix_data[$row['id']] = [
-                'master' => $row,
-                'platforms' => []
-            ];
-        }
-
-        if (count($feature_ids) > 0) {
-            $id_list = implode(',', $feature_ids);
-            $plat_sql = "SELECT * FROM eimbox_platform_tracker WHERE feature_id IN ($id_list)";
-            $plat_res = $conn->query($plat_sql);
-            if ($plat_res) {
-                while ($prow = $plat_res->fetch_assoc()) {
-                    $matrix_data[$prow['feature_id']]['platforms'][$prow['platform']] = $prow;
-                }
-            }
-        }
-    }
-
-    // Stats Calculation
-    $stats = [
-        'total_features' => 0,
-        'total_issues' => 0,
-        'p_dashboard_total' => 0,
-        'p_dashboard_completed' => 0,
-        'p_console_total' => 0,
-        'p_console_completed' => 0,
-        'p_android_total' => 0,
-        'p_android_completed' => 0,
-        'p_premium_total' => 0,
-        'p_premium_completed' => 0,
-        'p_desktop_total' => 0,
-        'p_desktop_completed' => 0,
-    ];
-
-    $stat_feat = $conn->query("SELECT COUNT(*) as c FROM eimbox_features_master");
-    if ($stat_feat) {
-        $stats['total_features'] = intval($stat_feat->fetch_assoc()['c'] ?? 0);
-    }
-
-    $stat_issues = $conn->query("SELECT COUNT(*) as c FROM eimbox_platform_tracker WHERE status = 'Issue' OR (issue_notes IS NOT NULL AND TRIM(issue_notes) != '')");
-    if ($stat_issues) {
-        $stats['total_issues'] = intval($stat_issues->fetch_assoc()['c'] ?? 0);
-    }
-
-    $stat_platforms = $conn->query("
-        SELECT platform, 
-               COUNT(*) as total_count,
-               SUM(CASE WHEN status = 'Completed' OR progress_percent = 100 THEN 1 ELSE 0 END) as completed_count
-        FROM eimbox_platform_tracker
-        GROUP BY platform
-    ");
-    if ($stat_platforms) {
-        while ($sp = $stat_platforms->fetch_assoc()) {
-            $pk = $sp['platform'];
-            if (isset($stats["p_{$pk}_total"])) {
-                $stats["p_{$pk}_total"] = intval($sp['total_count']);
-                $stats["p_{$pk}_completed"] = intval($sp['completed_count']);
-            }
-        }
-    }
-
-    return [$matrix_data, $stats];
-}
-
-function render_matrix_table_body($rows, $platforms_meta, $status_meta, $priority_meta) {
-    if (empty($rows)) {
-        ?>
-        <tr>
-            <td colspan="7" class="text-center py-5 text-muted">
-                <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary"></i>
-                <div class="fw-semibold">কোনো ফিচার রেকর্ড পাওয়া যায়নি!</div>
-                <small class="text-muted">ফিল্টার পরিবর্তন করুন অথবা নতুন ফিচার যুক্ত করুন।</small>
-            </td>
-        </tr>
-        <?php
-        return;
-    }
-
-    foreach ($rows as $item):
-        $master = $item['master'];
-        $platforms_data = $item['platforms'];
-        $master_json = htmlspecialchars(json_encode($master), ENT_QUOTES, 'UTF-8');
-        $all_platforms_json = htmlspecialchars(json_encode($platforms_data), ENT_QUOTES, 'UTF-8');
-        ?>
-        <!-- Master Feature Main Row -->
-        <tr class="matrix-main-row" id="row-<?= $master['id'] ?>" onclick="toggleMatrixDrawer(<?= $master['id'] ?>, event)">
-            <!-- ID & Expand -->
-            <td class="col-id text-center" onclick="event.stopPropagation(); toggleMatrixDrawer(<?= $master['id'] ?>, event)">
-                <i class="bi bi-chevron-right expand-icon text-muted" id="icon-<?= $master['id'] ?>"></i>
-                <span class="d-block small text-muted">#<?= $master['id'] ?></span>
-            </td>
-
-            <!-- Module & Feature -->
-            <td class="col-feature-info">
-                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 mb-1 font-monospace" style="font-size: 0.72rem;">
-                    <?= htmlspecialchars($master['module']) ?>
-                </span>
-                <div class="fw-bold text-dark feature-title" style="font-size: 0.92rem;">
-                    <?= htmlspecialchars($master['feature_name']) ?>
-                </div>
-                <?php if (!empty($master['description'])): ?>
-                    <div class="text-muted small text-truncate-2 mt-1" title="<?= htmlspecialchars($master['description']) ?>">
-                        <?= htmlspecialchars($master['description']) ?>
-                    </div>
-                <?php endif; ?>
-            </td>
-
-            <!-- 5 Platform Columns -->
-            <?php foreach ($platforms_meta as $pkey => $pinfo): 
-                $pdata = $platforms_data[$pkey] ?? [
-                    'feature_id' => $master['id'],
-                    'platform' => $pkey,
-                    'status' => 'Not Implemented',
-                    'progress_percent' => 0,
-                    'script_path' => '',
-                    'issue_notes' => '',
-                    'dev_response' => '',
-                    'priority' => 'Medium',
-                    'assigned_to' => '',
-                    'estimated_deadline' => ''
-                ];
-                $st = $pdata['status'] ?? 'Not Implemented';
-                $st_info = $status_meta[$st] ?? $status_meta['Not Implemented'];
-                $has_issue = !empty(trim($pdata['issue_notes'] ?? ''));
-                $has_resp = !empty(trim($pdata['dev_response'] ?? ''));
-                $pct = intval($pdata['progress_percent'] ?? 0);
-                if ($pct >= 100) {
-                    $pct_color = '#198754';
-                } elseif ($pct >= 60) {
-                    $pct_color = '#0dcaf0';
-                } elseif ($pct >= 25) {
-                    $pct_color = '#0d6efd';
-                } elseif ($pct > 0) {
-                    $pct_color = '#ffc107';
-                } else {
-                    $pct_color = '#ced4da';
-                }
-                $p_json = htmlspecialchars(json_encode($pdata), ENT_QUOTES, 'UTF-8');
-            ?>
-                <td class="col-platform text-center platform-cell" onclick="event.stopPropagation(); openPlatformEditModal(<?= $master['id'] ?>, '<?= $pkey ?>', '<?= htmlspecialchars($master['feature_name'], ENT_QUOTES) ?>', <?= $p_json ?>)">
-                    <div class="platform-cell-card <?= $st === 'Issue' ? 'border-danger bg-danger-subtle' : ($st === 'Completed' ? 'border-success' : '') ?>" title="ক্লিক করে <?= htmlspecialchars($pinfo['title']) ?> প্ল্যাটফর্মের স্ট্যাটাস ও তথ্য পরিবর্তন করুন">
-                        <!-- 1. Circular Progress Meter with Centered Value -->
-                        <div class="circle-progress" style="--pct: <?= $pct ?>; --pcolor: <?= $pct_color ?>;" title="অগ্রগতি: <?= $pct ?>%">
-                            <span class="circle-progress-val"><?= $pct ?>%</span>
-                        </div>
-
-                        <!-- 2. Status Badge (Under Circular Progress) -->
-                        <span class="badge <?= $st_info['badge'] ?> platform-status-badge d-inline-flex align-items-center gap-1" title="স্ট্যাটাস: <?= htmlspecialchars($st) ?>">
-                            <i class="<?= $st_info['icon'] ?>" style="font-size: 0.65rem;"></i>
-                            <span><?= htmlspecialchars($st) ?></span>
-                        </span>
-
-                        <!-- 3. Micro Badges for Issue / Dev Response / Deadline (if any) -->
-                        <?php if ($has_issue || $has_resp || !empty($pdata['estimated_deadline'])): ?>
-                            <div class="d-flex justify-content-center align-items-center gap-1 mt-1">
-                                <?php if ($has_issue): ?>
-                                    <span class="badge bg-danger p-1 rounded-circle" title="ইস্যু: <?= htmlspecialchars($pdata['issue_notes']) ?>">
-                                        <i class="bi bi-bug-fill text-white" style="font-size: 0.65rem;"></i>
-                                    </span>
-                                <?php endif; ?>
-                                <?php if ($has_resp): ?>
-                                    <span class="badge bg-success p-1 rounded-circle" title="রেসপন্স: <?= htmlspecialchars($pdata['dev_response']) ?>">
-                                        <i class="bi bi-reply-fill text-white" style="font-size: 0.65rem;"></i>
-                                    </span>
-                                <?php endif; ?>
-                                <?php if (!empty($pdata['estimated_deadline'])): ?>
-                                    <span class="badge bg-secondary-subtle text-secondary-emphasis px-1 py-0 border" style="font-size: 0.6rem;" title="ডেডলাইন">
-                                        <?= date('d M', strtotime($pdata['estimated_deadline'])) ?>
-                                    </span>
-                                <?php endif; ?>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                </td>
-            <?php endforeach; ?>
-
-            <!-- Action Controls -->
-            <td class="col-actions text-center" onclick="event.stopPropagation()">
-                <div class="action-btn-group">
-                    <!-- Edit Master Feature -->
-                    <button type="button" class="btn btn-sm btn-outline-primary act-btn" 
-                            title="মূল ফিচার তথ্য এডিট করুন"
-                            onclick='openMasterEditModal(<?= $master_json ?>)'>
-                        <i class="bi bi-pencil-square"></i>
-                    </button>
-
-                    <!-- Quick Configure All Platforms for this Feature -->
-                    <button type="button" class="btn btn-sm btn-outline-info act-btn" 
-                            title="একসাথে ৫টি প্ল্যাটফর্ম কনফিগার করুন"
-                            onclick='openBulkPlatformsModal(<?= $master['id'] ?>, "<?= htmlspecialchars($master['feature_name'], ENT_QUOTES) ?>", <?= $all_platforms_json ?>)'>
-                        <i class="bi bi-sliders"></i>
-                    </button>
-
-                    <!-- Delete Master Feature -->
-                    <button type="button" class="btn btn-sm btn-outline-danger act-btn" 
-                            title="ফিচার ও এর সব প্ল্যাটফর্ম ডাটা মুছুন"
-                            onclick="deleteMasterFeature(<?= $master['id'] ?>, '<?= htmlspecialchars($master['feature_name'], ENT_QUOTES) ?>')">
-                        <i class="bi bi-trash3"></i>
-                    </button>
-                </div>
-            </td>
-        </tr>
-
-        <!-- Expandable Detail Drawer for Master Feature -->
-        <tr class="matrix-detail-row" id="drawer-<?= $master['id'] ?>">
-            <td colspan="7" class="p-3">
-                <div class="detail-drawer-card">
-                    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
-                        <div>
-                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace me-2"><?= htmlspecialchars($master['module']) ?></span>
-                            <strong class="text-primary fs-5"><?= htmlspecialchars($master['feature_name']) ?></strong>
-                            <?php if (!empty($master['description'])): ?>
-                                <p class="text-muted small mb-0 mt-1"><?= htmlspecialchars($master['description']) ?></p>
-                            <?php endif; ?>
-                        </div>
-                        <div>
-                            <button type="button" class="btn btn-sm btn-primary" onclick='openBulkPlatformsModal(<?= $master['id'] ?>, "<?= htmlspecialchars($master['feature_name'], ENT_QUOTES) ?>", <?= $all_platforms_json ?>)'>
-                                <i class="bi bi-sliders me-1"></i> ৫টি প্ল্যাটফর্ম একসাথে এডিট
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- 5 Platform Cards Grid -->
-                    <div class="row g-3">
-                        <?php foreach ($platforms_meta as $pkey => $pinfo): 
-                            $pdata = $platforms_data[$pkey] ?? [
-                                'feature_id' => $master['id'],
-                                'platform' => $pkey,
-                                'status' => 'Not Implemented',
-                                'progress_percent' => 0,
-                                'script_path' => '',
-                                'issue_notes' => '',
-                                'dev_response' => '',
-                                'priority' => 'Medium',
-                                'assigned_to' => '',
-                                'estimated_deadline' => ''
-                            ];
-                            $st = $pdata['status'] ?? 'Not Implemented';
-                            $st_info = $status_meta[$st] ?? $status_meta['Not Implemented'];
-                            $prio_info = $priority_meta[$pdata['priority'] ?? 'Medium'] ?? $priority_meta['Medium'];
-                        ?>
-                            <div class="col-lg-4 col-md-6">
-                                <div class="card h-100 border platform-drawer-box <?= $st === 'Issue' ? 'border-danger' : '' ?>">
-                                    <div class="card-header py-2 px-3 d-flex justify-content-between align-items-center bg-light border-bottom">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="<?= $pinfo['icon'] ?> fs-5" style="color: <?= $pinfo['color'] ?>"></i>
-                                            <div>
-                                                <strong class="text-dark small d-block"><?= htmlspecialchars($pinfo['title']) ?></strong>
-                                                <span class="text-muted" style="font-size: 0.7rem;"><?= htmlspecialchars($pinfo['sub']) ?></span>
-                                            </div>
-                                        </div>
-                                        <span class="badge <?= $st_info['badge'] ?>"><?= htmlspecialchars($st) ?></span>
-                                    </div>
-                                    <div class="card-body p-3">
-                                        <!-- Script info -->
-                                        <div class="mb-2">
-                                            <span class="text-muted small d-block">স্ক্রিপ্ট / ফাইল:</span>
-                                            <div class="d-flex align-items-center gap-1 mt-1">
-                                                <code class="code-script text-truncate flex-grow-1" title="<?= htmlspecialchars($pdata['script_path'] ?: 'None') ?>">
-                                                    <?= htmlspecialchars($pdata['script_path'] ?: 'কোনো স্ক্রিপ্ট নেই') ?>
-                                                </code>
-                                                <?php if (!empty($pdata['script_path'])): ?>
-                                                    <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-1" title="কপি করুন" onclick="copyToClipboard('<?= htmlspecialchars($pdata['script_path'], ENT_QUOTES) ?>')">
-                                                        <i class="bi bi-clipboard"></i>
-                                                    </button>
-                                                <?php endif; ?>
-                                            </div>
-                                        </div>
-
-                                        <!-- Progress -->
-                                        <div class="mb-2">
-                                            <div class="d-flex justify-content-between small text-muted mb-1">
-                                                <span>অগ্রগতি:</span>
-                                                <span class="fw-bold text-dark"><?= intval($pdata['progress_percent']) ?>%</span>
-                                            </div>
-                                            <div class="progress progress-mini bg-light">
-                                                <div class="progress-bar <?= $pdata['progress_percent'] == 100 ? 'bg-success' : 'bg-primary' ?>" style="width: <?= intval($pdata['progress_percent']) ?>%"></div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Issue Notes -->
-                                        <div class="mb-2 p-2 rounded bg-light border">
-                                            <strong class="text-danger small d-block mb-1">
-                                                <i class="bi bi-bug-fill me-1"></i>ইস্যু / পেন্ডিং কাজ:
-                                            </strong>
-                                            <div class="text-dark small" style="white-space: pre-wrap; font-size: 0.82rem;">
-                                                <?= !empty($pdata['issue_notes']) ? htmlspecialchars($pdata['issue_notes']) : '<span class="text-muted fst-italic">কোনো সমস্যা নেই</span>' ?>
-                                            </div>
-                                        </div>
-
-                                        <!-- Developer Response -->
-                                        <div class="mb-2 p-2 rounded bg-light border">
-                                            <strong class="text-success small d-block mb-1">
-                                                <i class="bi bi-reply-fill me-1"></i>ডেভেলপার রেসপন্স:
-                                            </strong>
-                                            <div class="text-dark small" style="white-space: pre-wrap; font-size: 0.82rem;">
-                                                <?= !empty($pdata['dev_response']) ? htmlspecialchars($pdata['dev_response']) : '<span class="text-muted fst-italic">এখনও রেসপন্স যুক্ত হয়নি</span>' ?>
-                                            </div>
-                                        </div>
-
-                                        <!-- Meta tags -->
-                                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-1 small text-muted pt-2 border-top">
-                                            <div>
-                                                <span class="<?= $prio_info['badge'] ?> me-1"><?= htmlspecialchars($pdata['priority'] ?? 'Medium') ?></span>
-                                                <?php if (!empty($pdata['assigned_to'])): ?>
-                                                    <span><i class="bi bi-person"></i> <?= htmlspecialchars($pdata['assigned_to']) ?></span>
-                                                <?php endif; ?>
-                                            </div>
-                                            <button type="button" class="btn btn-xs btn-outline-primary" onclick="openPlatformEditModal(<?= $master['id'] ?>, '<?= $pkey ?>', '<?= htmlspecialchars($master['feature_name'], ENT_QUOTES) ?>', <?= $p_json ?>)">
-                                                <i class="bi bi-pencil-square me-1"></i> এডিট
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            </td>
-        </tr>
-    <?php endforeach;
-}
+ensure_tracker_schema($conn);
 
 // ==============================================================
-// 4. AJAX / POST BACKEND HANDLER (CLEAN JSON EXECUTION)
+// 2. BACKEND CRUD HANDLERS (AJAX POST)
 // ==============================================================
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' || (isset($_GET['ajax']) && $_GET['ajax'] == 1)) {
-    while (ob_get_level()) {
-        ob_end_clean();
-    }
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    while (ob_get_level()) { ob_end_clean(); }
     header('Content-Type: application/json; charset=utf-8');
 
-    ensure_tracker_schema($conn);
-    $action = $_POST['action'] ?? $_GET['action'] ?? '';
+    $action = $_POST['action'];
 
-    // 4.1 FETCH MATRIX DATA
-    if ($action === 'fetch_matrix_data' || (isset($_GET['ajax']) && $_GET['ajax'] == 1)) {
-        list($matrix_data, $stats) = fetch_tracker_data_and_stats($conn, [
-            'module' => $_POST['module'] ?? $_GET['module'] ?? 'all',
-            'status' => $_POST['status'] ?? $_GET['status'] ?? 'all',
-            'platform' => $_POST['platform'] ?? $_GET['platform'] ?? 'all',
-            'priority' => $_POST['priority'] ?? $_GET['priority'] ?? 'all',
-            'search' => trim($_POST['search'] ?? $_GET['search'] ?? ''),
-            'issues_only' => intval($_POST['issues_only'] ?? $_GET['issues_only'] ?? 0)
-        ]);
-
-        ob_start();
-        render_matrix_table_body($matrix_data, $platforms_meta, $status_meta, $priority_meta);
-        $tbody_html = ob_get_clean();
-
-        echo json_encode([
-            'status' => 'success',
-            'html' => $tbody_html,
-            'stats' => $stats
-        ]);
-        exit;
-    }
-
-    // 4.2 ADD MASTER FEATURE
-    if ($action === 'add_master_feature') {
+    // 2.1 Add Feature
+    if ($action === 'add_feature') {
         $module = trim($_POST['module'] ?? '');
         $feature_name = trim($_POST['feature_name'] ?? '');
         $description = trim($_POST['description'] ?? '');
-        $category = trim($_POST['category'] ?? 'Core');
 
         if (empty($module) || empty($feature_name)) {
             echo json_encode(['status' => 'error', 'message' => 'মডিউল এবং ফিচার নাম অবশ্যই পূরণ করতে হবে!']);
             exit;
         }
 
-        $stmt = $conn->prepare("INSERT INTO eimbox_features_master (module, feature_name, description, category) VALUES (?, ?, ?, ?)");
-        if (!$stmt) {
-            echo json_encode(['status' => 'error', 'message' => 'ডাটাবেজ প্রস্তুত করতে ব্যর্থ: ' . $conn->error]);
-            exit;
-        }
-        $stmt->bind_param("ssss", $module, $feature_name, $description, $category);
+        $stmt = $conn->prepare("INSERT INTO eimbox_features_master (module, feature_name, description) VALUES (?, ?, ?)");
+        $stmt->bind_param("sss", $module, $feature_name, $description);
 
         if ($stmt->execute()) {
-            $new_feature_id = $stmt->insert_id;
+            $new_id = $stmt->insert_id;
             $stmt->close();
 
-            // Initialize all 5 platforms
-            $init_stmt = $conn->prepare("
-                INSERT INTO eimbox_platform_tracker (feature_id, platform, status, progress_percent, priority, script_path)
-                VALUES (?, ?, 'Planned', 0, 'Medium', '')
-                ON DUPLICATE KEY UPDATE updated_at = NOW()
-            ");
+            $p_stmt = $conn->prepare("INSERT INTO eimbox_platform_tracker (feature_id, platform, status, progress_percent, priority, script_path) VALUES (?, ?, 'Planned', 0, 'Medium', '') ON DUPLICATE KEY UPDATE updated_at = NOW()");
             foreach (['dashboard', 'console', 'android_lite', 'premium', 'desktop'] as $pk) {
-                $init_stmt->bind_param("is", $new_feature_id, $pk);
-                $init_stmt->execute();
+                $p_stmt->bind_param("is", $new_id, $pk);
+                $p_stmt->execute();
             }
-            $init_stmt->close();
+            $p_stmt->close();
 
-            echo json_encode(['status' => 'success', 'message' => 'নতুন ফিচার সফলভাবে তৈরি হয়েছে এবং ৫টি প্ল্যাটফর্ম ইনিশিয়ালাইজ করা হয়েছে!', 'id' => $new_feature_id]);
+            echo json_encode(['status' => 'success', 'message' => 'নতুন ফিচার সফলভাবে তৈরি হয়েছে!']);
         } else {
-            echo json_encode(['status' => 'error', 'message' => 'ডাটাবেজে সেভ করতে সমস্যা হয়েছে: ' . $conn->error]);
+            echo json_encode(['status' => 'error', 'message' => 'সংরক্ষণ ব্যর্থ: ' . $conn->error]);
         }
         exit;
     }
 
-    // 4.3 EDIT MASTER FEATURE
+    // 2.2 Edit Master Feature
     if ($action === 'edit_master_feature') {
         $id = intval($_POST['id'] ?? 0);
         $module = trim($_POST['module'] ?? '');
@@ -690,74 +99,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || (isset($_GET['ajax']) && $_GET['aja
         $description = trim($_POST['description'] ?? '');
 
         if ($id <= 0 || empty($module) || empty($feature_name)) {
-            echo json_encode(['status' => 'error', 'message' => 'অবৈধ আইডি বা ফিল্ড খালি আছে!']);
+            echo json_encode(['status' => 'error', 'message' => 'অবৈধ তথ্য বা খালি ফিল্ড!']);
             exit;
         }
 
         $stmt = $conn->prepare("UPDATE eimbox_features_master SET module=?, feature_name=?, description=? WHERE id=?");
-        if (!$stmt) {
-            echo json_encode(['status' => 'error', 'message' => 'কোয়েরি প্রস্তুত ব্যর্থ: ' . $conn->error]);
-            exit;
-        }
         $stmt->bind_param("sssi", $module, $feature_name, $description, $id);
 
         if ($stmt->execute()) {
             echo json_encode(['status' => 'success', 'message' => 'মূল ফিচার তথ্য সফলভাবে আপডেট হয়েছে!']);
         } else {
-            echo json_encode(['status' => 'error', 'message' => 'আপডেট করতে ব্যর্থ: ' . $conn->error]);
+            echo json_encode(['status' => 'error', 'message' => 'আপডেট ব্যর্থ: ' . $conn->error]);
         }
         $stmt->close();
         exit;
     }
 
-    // 4.4 DELETE MASTER FEATURE
-    if ($action === 'delete_master_feature') {
+    // 2.3 Delete Feature
+    if ($action === 'delete_feature') {
         $id = intval($_POST['id'] ?? 0);
-        if ($id <= 0) {
-            echo json_encode(['status' => 'error', 'message' => 'অবৈধ ফিচার আইডি!']);
-            exit;
+        if ($id > 0) {
+            $conn->query("DELETE FROM eimbox_platform_tracker WHERE feature_id = $id");
+            $conn->query("DELETE FROM eimbox_features_master WHERE id = $id");
+            echo json_encode(['status' => 'success', 'message' => 'ফিচারটি সফলভাবে মুছে ফেলা হয়েছে!']);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'অবৈধ আইডি!']);
         }
-
-        $conn->query("DELETE FROM eimbox_platform_tracker WHERE feature_id = $id");
-        $conn->query("DELETE FROM eimbox_features_master WHERE id = $id");
-
-        echo json_encode(['status' => 'success', 'message' => 'ফিচারটি সফলভাবে মুছে ফেলা হয়েছে!']);
         exit;
     }
 
-    // 4.5 GET SINGLE PLATFORM DETAILS
+    // 2.4 Get Platform Details for Modal
     if ($action === 'get_platform_details') {
-        $feature_id = intval($_POST['feature_id'] ?? $_GET['feature_id'] ?? 0);
-        $platform = trim($_POST['platform'] ?? $_GET['platform'] ?? '');
+        $feature_id = intval($_POST['feature_id'] ?? 0);
+        $platform = trim($_POST['platform'] ?? '');
 
-        if ($feature_id <= 0 || empty($platform)) {
-            echo json_encode(['status' => 'error', 'message' => 'অবৈধ রিকোয়েস্ট!']);
-            exit;
-        }
+        $res = $conn->query("SELECT * FROM eimbox_platform_tracker WHERE feature_id = $feature_id AND platform = '" . $conn->real_escape_string($platform) . "' LIMIT 1");
+        $row = $res ? $res->fetch_assoc() : null;
 
-        $pt_res = $conn->query("SELECT * FROM eimbox_platform_tracker WHERE feature_id = $feature_id AND platform = '" . $conn->real_escape_string($platform) . "' LIMIT 1");
-        $pt = $pt_res ? $pt_res->fetch_assoc() : null;
-
-        if (!$pt) {
-            $pt = [
+        if (!$row) {
+            $row = [
                 'feature_id' => $feature_id,
                 'platform' => $platform,
                 'status' => 'Planned',
                 'progress_percent' => 0,
                 'script_path' => '',
+                'priority' => 'Medium',
                 'issue_notes' => '',
                 'dev_response' => '',
-                'priority' => 'Medium',
                 'assigned_to' => '',
                 'estimated_deadline' => ''
             ];
         }
 
-        echo json_encode(['status' => 'success', 'platform_data' => $pt]);
+        echo json_encode(['status' => 'success', 'data' => $row]);
         exit;
     }
 
-    // 4.6 UPDATE SPECIFIC PLATFORM STATUS
+    // 2.5 Update Single Platform
     if ($action === 'update_platform_status') {
         $feature_id = intval($_POST['feature_id'] ?? 0);
         $platform = trim($_POST['platform'] ?? '');
@@ -769,11 +167,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || (isset($_GET['ajax']) && $_GET['aja
         $dev_response = trim($_POST['dev_response'] ?? '');
         $assigned_to = trim($_POST['assigned_to'] ?? '');
         $deadline = !empty($_POST['estimated_deadline']) ? $_POST['estimated_deadline'] : null;
-
-        if ($feature_id <= 0 || !isset($platforms_meta[$platform])) {
-            echo json_encode(['status' => 'error', 'message' => 'অবৈধ ফিচার আইডি অথবা প্ল্যাটফর্ম!']);
-            exit;
-        }
 
         if ($status === 'Completed' && $progress < 100) {
             $progress = 100;
@@ -793,47 +186,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || (isset($_GET['ajax']) && $_GET['aja
                 estimated_deadline = VALUES(estimated_deadline),
                 updated_at = NOW()
         ");
-        if (!$stmt) {
-            echo json_encode(['status' => 'error', 'message' => 'কোয়েরি প্রস্তুত ব্যর্থ: ' . $conn->error]);
-            exit;
-        }
         $stmt->bind_param("issssissss", $feature_id, $platform, $script_path, $status, $priority, $progress, $issue_notes, $dev_response, $assigned_to, $deadline);
 
         if ($stmt->execute()) {
-            echo json_encode(['status' => 'success', 'message' => "প্ল্যাটফর্ম '$platform'-এর তথ্য ও স্ট্যাটাস সফলভাবে সংরক্ষিত হয়েছে!"]);
+            echo json_encode(['status' => 'success', 'message' => "প্ল্যাটফর্ম '$platform'-এর তথ্য সফলভাবে আপডেট হয়েছে!"]);
         } else {
-            echo json_encode(['status' => 'error', 'message' => 'আপডেট করতে ব্যর্থ হয়েছে: ' . $conn->error]);
+            echo json_encode(['status' => 'error', 'message' => 'আপডেট ব্যর্থ: ' . $conn->error]);
         }
         $stmt->close();
         exit;
     }
 
-    // 4.7 BULK UPDATE ALL 5 PLATFORMS
+    // 2.6 Bulk Update All 5 Platforms
     if ($action === 'bulk_update_platforms') {
         $feature_id = intval($_POST['feature_id'] ?? 0);
         $platforms = $_POST['platforms'] ?? [];
 
-        if ($feature_id <= 0 || empty($platforms) || !is_array($platforms)) {
-            echo json_encode(['status' => 'error', 'message' => 'কোনো প্ল্যাটফর্ম ডাটা পাওয়া যায়নি!']);
-            exit;
-        }
-
-        $stmt = $conn->prepare("
-            INSERT INTO eimbox_platform_tracker (feature_id, platform, script_path, status, priority, progress_percent, issue_notes, dev_response)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE
-                script_path = VALUES(script_path),
-                status = VALUES(status),
-                priority = VALUES(priority),
-                progress_percent = VALUES(progress_percent),
-                issue_notes = VALUES(issue_notes),
-                dev_response = VALUES(dev_response),
-                updated_at = NOW()
-        ");
-
-        if ($stmt) {
+        if ($feature_id > 0 && is_array($platforms)) {
+            $stmt = $conn->prepare("
+                INSERT INTO eimbox_platform_tracker (feature_id, platform, script_path, status, priority, progress_percent, issue_notes, dev_response)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE
+                    script_path = VALUES(script_path),
+                    status = VALUES(status),
+                    priority = VALUES(priority),
+                    progress_percent = VALUES(progress_percent),
+                    issue_notes = VALUES(issue_notes),
+                    dev_response = VALUES(dev_response),
+                    updated_at = NOW()
+            ");
             foreach ($platforms as $pk => $pdata) {
-                if (!isset($platforms_meta[$pk])) continue;
                 $s_path = trim($pdata['script_path'] ?? '');
                 $st = trim($pdata['status'] ?? 'Planned');
                 $prio = trim($pdata['priority'] ?? 'Medium');
@@ -846,18 +228,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || (isset($_GET['ajax']) && $_GET['aja
                 $stmt->execute();
             }
             $stmt->close();
-            echo json_encode(['status' => 'success', 'message' => '৫টি প্ল্যাটফর্মের তথ্য একসাথে সফলভাবে আপডেট হয়েছে!']);
+            echo json_encode(['status' => 'success', 'message' => '৫টি প্ল্যাটফর্মের তথ্য একসাথে সংরক্ষিত হয়েছে!']);
         } else {
-            echo json_encode(['status' => 'error', 'message' => 'বাল্ক আপডেট ব্যর্থ: ' . $conn->error]);
+            echo json_encode(['status' => 'error', 'message' => 'কোনো প্ল্যাটফর্ম ডাটা পাওয়া যায়নি!']);
         }
         exit;
     }
 
-    // 4.8 SEED DEFAULT DEMO DATA
+    // 2.7 Seed Default Data
     if ($action === 'seed_default_data') {
         $sample_features = [
-            ['Student', 'Daily Student Attendance', 'Student daily biometric and manual attendance system'],
-            ['Student', 'Student Admission & Registration', 'New student online and offline application process'],
+            ['Student', 'Daily Student Attendance', 'Student daily attendance taking via web & mobile app'],
+            ['Student', 'Student Admission & Registration', 'New student online/offline application process'],
             ['Exam', 'OMR Sheet Scanner & Evaluator', 'Automated exam paper grading with high-speed camera'],
             ['Accounts', 'Student Fee Collection & Receipt', 'Monthly tuition fees collection with instant SMS alert'],
             ['HR/Payroll', 'Staff Leave & Attendance Management', 'Teacher and staff check-in, leave approval hierarchy']
@@ -874,8 +256,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || (isset($_GET['ajax']) && $_GET['aja
                 }
             }
         }
-
-        echo json_encode(['status' => 'success', 'message' => 'ডেমো ডাটা সফলভাবে যুক্ত হয়েছে!']);
+        echo json_encode(['status' => 'success', 'message' => 'ডেমো ডাটা সফলভাবে তৈরি হয়েছে!']);
         exit;
     }
 
@@ -884,570 +265,472 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || (isset($_GET['ajax']) && $_GET['aja
 }
 
 // ==============================================================
-// 5. NORMAL PAGE LOAD (HTML RENDER)
+// 3. FRONTEND DATA LOADING & METADATA
 // ==============================================================
 
-ensure_tracker_schema($conn);
+// Platform Constants
+$platforms = [
+    'dashboard' => ['title' => 'Dashboard', 'sub' => 'Web Old', 'icon' => 'bi bi-speedometer2', 'color' => 'primary'],
+    'console' => ['title' => 'Console', 'sub' => 'Web New', 'icon' => 'bi bi-terminal', 'color' => 'info'],
+    'android_lite' => ['title' => 'Android Lite', 'sub' => 'Lite App', 'icon' => 'bi bi-android2', 'color' => 'success'],
+    'premium' => ['title' => 'Premium', 'sub' => 'Offline', 'icon' => 'bi bi-phone', 'color' => 'warning'],
+    'desktop' => ['title' => 'Desktop', 'sub' => 'Windows', 'icon' => 'bi bi-display', 'color' => 'secondary']
+];
 
-// Load module list for dropdowns
+$status_badges = [
+    'Completed' => 'bg-success',
+    'Testing' => 'bg-primary',
+    'Ongoing' => 'bg-info text-dark',
+    'Need Update' => 'bg-warning text-dark',
+    'Issue' => 'bg-danger',
+    'Customization' => 'bg-dark',
+    'Planned' => 'bg-secondary',
+    'Not Implemented' => 'bg-light text-muted border',
+    'On Hold' => 'bg-secondary'
+];
+
+// Load modules from modulelist
 $modules_list = [];
-$mod_query = $conn->query("SELECT id, module_name, descrip, is_public, core FROM modulelist WHERE is_public >= 0 ORDER BY is_public DESC, slno ASC, module_name ASC");
-if ($mod_query && $mod_query->num_rows > 0) {
-    while ($m = $mod_query->fetch_assoc()) {
+$mq = $conn->query("SELECT id, module_name, descrip, is_public, core FROM modulelist WHERE is_public >= 0 ORDER BY is_public DESC, slno ASC, module_name ASC");
+if ($mq && $mq->num_rows > 0) {
+    while ($m = $mq->fetch_assoc()) {
         $modules_list[] = $m;
     }
 }
 
-// Initial Data Load
-list($initial_matrix_data, $stats) = fetch_tracker_data_and_stats($conn);
+// Filter params for GET requests
+$f_module = $_GET['module'] ?? 'all';
+$f_status = $_GET['status'] ?? 'all';
+$f_platform = $_GET['platform'] ?? 'all';
+$f_search = trim($_GET['search'] ?? '');
+$f_issues = isset($_GET['issues_only']) && $_GET['issues_only'] == '1';
+
+$where_clauses = [];
+if ($f_module !== 'all' && !empty($f_module)) {
+    $where_clauses[] = "m.module = '" . $conn->real_escape_string($f_module) . "'";
+}
+if (!empty($f_search)) {
+    $clean_s = $conn->real_escape_string($f_search);
+    $where_clauses[] = "(m.module LIKE '%$clean_s%' OR m.feature_name LIKE '%$clean_s%' OR m.description LIKE '%$clean_s%' OR t.script_path LIKE '%$clean_s%' OR t.issue_notes LIKE '%$clean_s%')";
+}
+if ($f_status !== 'all' && !empty($f_status)) {
+    $where_clauses[] = "t.status = '" . $conn->real_escape_string($f_status) . "'";
+}
+if ($f_platform !== 'all' && !empty($f_platform)) {
+    $where_clauses[] = "t.platform = '" . $conn->real_escape_string($f_platform) . "'";
+}
+if ($f_issues) {
+    $where_clauses[] = "(t.status = 'Issue' OR (t.issue_notes IS NOT NULL AND TRIM(t.issue_notes) != ''))";
+}
+
+$where_sql = count($where_clauses) > 0 ? "WHERE " . implode(" AND ", $where_clauses) : "";
+
+// Fetch Features & Platform Records
+$sql = "
+    SELECT DISTINCT m.id, m.module, m.display_order, m.feature_name, m.description, m.created_at, m.updated_at
+    FROM eimbox_features_master m
+    LEFT JOIN eimbox_platform_tracker t ON m.id = t.feature_id
+    $where_sql
+    ORDER BY m.module ASC, m.display_order ASC, m.feature_name ASC
+";
+$feat_res = $conn->query($sql);
+$features = [];
+$feature_ids = [];
+
+if ($feat_res && $feat_res->num_rows > 0) {
+    while ($row = $feat_res->fetch_assoc()) {
+        $feature_ids[] = $row['id'];
+        $features[$row['id']] = [
+            'master' => $row,
+            'platforms' => []
+        ];
+    }
+
+    if (count($feature_ids) > 0) {
+        $id_str = implode(',', $feature_ids);
+        $plat_res = $conn->query("SELECT * FROM eimbox_platform_tracker WHERE feature_id IN ($id_str)");
+        if ($plat_res) {
+            while ($prow = $plat_res->fetch_assoc()) {
+                $features[$prow['feature_id']]['platforms'][$prow['platform']] = $prow;
+            }
+        }
+    }
+}
+
+// Summary Statistics
+$total_features_count = 0;
+$c_res = $conn->query("SELECT COUNT(*) as c FROM eimbox_features_master");
+if ($c_res) $total_features_count = intval($c_res->fetch_assoc()['c'] ?? 0);
+
+$total_issues_count = 0;
+$i_res = $conn->query("SELECT COUNT(*) as c FROM eimbox_platform_tracker WHERE status = 'Issue' OR (issue_notes IS NOT NULL AND TRIM(issue_notes) != '')");
+if ($i_res) $total_issues_count = intval($i_res->fetch_assoc()['c'] ?? 0);
+
+$plat_stats = [];
+$ps_res = $conn->query("
+    SELECT platform, 
+           COUNT(*) as total_count,
+           SUM(CASE WHEN status = 'Completed' OR progress_percent = 100 THEN 1 ELSE 0 END) as completed_count
+    FROM eimbox_platform_tracker
+    GROUP BY platform
+");
+if ($ps_res) {
+    while ($sp = $ps_res->fetch_assoc()) {
+        $plat_stats[$sp['platform']] = [
+            'total' => intval($sp['total_count']),
+            'completed' => intval($sp['completed_count']),
+            'percent' => $sp['total_count'] > 0 ? round(($sp['completed_count'] / $sp['total_count']) * 100) : 0
+        ];
+    }
+}
 
 require_once 'header.php';
 ?>
 
-<!-- Custom CSS for Multi-Platform Matrix Tracker -->
-<style>
-    .matrix-tracker-container {
-        margin: 0 auto;
-    }
+<div class="container-fluid container-p-y">
 
-    /* KPI Summary Cards */
-    .kpi-card {
-        cursor: pointer;
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
-        border: 1px solid #e7e7e8;
-    }
-    .kpi-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    }
-
-    /* Table Architecture */
-    .matrix-table-wrapper {
-        border-radius: 8px;
-        border: 1px solid #e7e7e8;
-        background: #fff;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
-    }
-    .matrix-table {
-        table-layout: fixed;
-        width: 100% !important;
-    }
-    .matrix-table thead th {
-        background-color: #f8f9fa;
-        font-weight: 700;
-        font-size: 0.78rem;
-        letter-spacing: 0.3px;
-        padding: 0.5rem 0.3rem;
-        border-bottom: 2px solid #e7e7e8;
-        vertical-align: middle;
-    }
-    .matrix-table td {
-        vertical-align: middle;
-        word-wrap: break-word;
-        padding: 0.35rem 0.25rem;
-        border-bottom: 1px solid #edf0f2;
-    }
-
-    /* Column Widths */
-    .col-id { width: 34px; }
-    .col-feature-info { width: 23%; }
-    .col-platform { width: 13.8%; }
-    .col-actions { width: 6.5%; }
-
-    /* Interactive Row Hover */
-    .matrix-main-row {
-        cursor: pointer;
-        transition: background-color 0.15s ease;
-    }
-    .matrix-main-row:hover {
-        background-color: #f8f9fc !important;
-    }
-
-    /* Platform Cell Card inside Table */
-    .platform-cell-card {
-        background: #fafafa;
-        border: 1px solid #e4e6eb;
-        border-radius: 6px;
-        padding: 4px 2px;
-        min-height: 58px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 2px;
-        transition: all 0.15s ease-in-out;
-        cursor: pointer;
-    }
-    .platform-cell-card:hover {
-        background: #ffffff;
-        border-color: #0d6efd;
-        box-shadow: 0 2px 6px rgba(13, 110, 253, 0.15);
-        transform: translateY(-1px);
-    }
-
-    /* Circular Progress Meter */
-    .circle-progress {
-        --pct: 0;
-        --pcolor: #6c757d;
-        width: 26px;
-        height: 26px;
-        border-radius: 50%;
-        background: conic-gradient(var(--pcolor) calc(var(--pct) * 1%), #e7e7e8 0);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-        flex-shrink: 0;
-    }
-    .circle-progress::before {
-        content: '';
-        position: absolute;
-        width: 18px;
-        height: 18px;
-        background: #ffffff;
-        border-radius: 50%;
-    }
-    .circle-progress-val {
-        position: relative;
-        font-size: 0.55rem;
-        font-weight: 700;
-        color: #212529;
-        line-height: 1;
-    }
-
-    /* Micro Status Badge */
-    .platform-status-badge {
-        font-size: 0.62rem !important;
-        padding: 0.15rem 0.35rem !important;
-        font-weight: 600;
-        letter-spacing: 0.2px;
-        max-width: 95%;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    /* Expandable Detail Drawer */
-    .matrix-detail-row {
-        display: none;
-        background-color: #fafbfd;
-    }
-    .matrix-detail-row.show {
-        display: table-row;
-    }
-    .detail-drawer-card {
-        background: #ffffff;
-        border: 1px solid #dfe3e8;
-        border-radius: 8px;
-        padding: 1rem;
-        box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
-    }
-
-    /* Action Buttons */
-    .action-btn-group {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 3px;
-    }
-    .act-btn {
-        width: 24px;
-        height: 24px;
-        padding: 0 !important;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 4px;
-        font-size: 0.75rem;
-    }
-
-    .code-script {
-        font-size: 0.72rem;
-        padding: 2px 5px;
-        border-radius: 4px;
-        background: #f1f3f5;
-        color: #495057;
-        border: 1px solid #e0e2e6;
-    }
-    .text-truncate-2 {
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-</style>
-
-<div class="container-xxl flex-grow-1 container-p-y matrix-tracker-container">
-
-    <!-- Page Header & Action Bar -->
+    <!-- Header & Action Toolbar -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
         <div>
-            <h4 class="fw-bold mb-1 d-flex align-items-center">
-                <i class="bi bi-diagram-3-fill text-primary me-2"></i>EIMBox Multi-Platform Feature & Issue Tracker
-            </h4>
-            <p class="text-muted mb-0 small">
-                Dashboard, Console, Android Lite, Offline Premium এবং Desktop ভার্সনের ফিচার, ইস্যু ও অগ্রগতির সেন্ট্রালাইজড প্যানেল
-            </p>
+            <h4 class="fw-bold mb-1"><i class="bi bi-diagram-3-fill text-primary me-2"></i>EIMBox Multi-Platform Feature Tracker</h4>
+            <p class="text-muted small mb-0">Dashboard, Console, Android Lite, Offline Premium এবং Desktop প্ল্যাটফর্মের সেন্ট্রাল ট্র্যাকার</p>
         </div>
         <div class="d-flex gap-2">
-            <!-- Show only issues toggle -->
-            <button type="button" class="btn btn-outline-danger btn-sm" id="btn-toggle-issues" onclick="toggleIssuesOnly()">
-                <i class="bi bi-bug-fill me-1"></i> শুধু ইস্যু ও সমস্যাসমূহ (<span id="stat-issues-count"><?= $stats['total_issues'] ?></span>)
-            </button>
-            <!-- Add New Master Feature -->
-            <button type="button" class="btn btn-primary btn-sm" onclick="openMasterAddModal()">
-                <i class="bi bi-plus-lg me-1"></i> নতুন ফিচার যুক্ত করুন
+            <a href="feature-tracker.php?issues_only=<?= $f_issues ? '0' : '1' ?>" class="btn btn-sm <?= $f_issues ? 'btn-danger' : 'btn-outline-danger' ?>">
+                <i class="bi bi-bug-fill me-1"></i> শুধু সমস্যাসমূহ (<?= $total_issues_count ?>)
+            </a>
+            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addFeatureModal">
+                <i class="bi bi-plus-lg me-1"></i> নতুন ফিচার যোগ করুন
             </button>
         </div>
     </div>
 
-    <!-- 1. Platform Health & Summary Counters -->
+    <!-- Platform KPI Cards (Pure Bootstrap 5 Grid & Cards) -->
     <div class="row g-2 mb-3">
-        <!-- Dashboard (Old) -->
-        <div class="col-md-4 col-lg-2">
-            <div class="card p-2 text-center kpi-card shadow-sm" onclick="filterByPlatform('dashboard')">
-                <div class="d-flex align-items-center justify-content-center gap-1 text-primary fw-semibold small">
-                    <i class="bi bi-speedometer2"></i> Dashboard
+        <?php foreach ($platforms as $pk => $pinfo): 
+            $st_total = $plat_stats[$pk]['total'] ?? 0;
+            $st_comp = $plat_stats[$pk]['completed'] ?? 0;
+            $st_pct = $plat_stats[$pk]['percent'] ?? 0;
+        ?>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="card text-center h-100 shadow-sm border-0">
+                    <div class="card-body p-2">
+                        <div class="text-<?= $pinfo['color'] ?> fw-semibold small">
+                            <i class="<?= $pinfo['icon'] ?> me-1"></i> <?= $pinfo['title'] ?>
+                        </div>
+                        <div class="fs-5 fw-bold text-dark mt-1"><?= $st_pct ?>%</div>
+                        <div class="progress mt-1 mb-1" style="height: 4px;">
+                            <div class="progress-bar bg-<?= $pinfo['color'] ?>" style="width: <?= $st_pct ?>%;"></div>
+                        </div>
+                        <small class="text-muted" style="font-size: 0.7rem;"><?= $st_comp ?>/<?= $st_total ?> Complete</small>
+                    </div>
                 </div>
-                <div class="fs-5 fw-bold text-dark mt-1" id="stat-p-dashboard">
-                    <?= $stats['p_dashboard_total'] > 0 ? round(($stats['p_dashboard_completed'] / $stats['p_dashboard_total']) * 100) : 0 ?>%
-                </div>
-                <small class="text-muted" style="font-size: 0.7rem;"><?= $stats['p_dashboard_completed'] ?>/<?= $stats['p_dashboard_total'] ?> Complete</small>
             </div>
-        </div>
+        <?php endforeach; ?>
 
-        <!-- Console (New) -->
-        <div class="col-md-4 col-lg-2">
-            <div class="card p-2 text-center kpi-card shadow-sm" onclick="filterByPlatform('console')">
-                <div class="d-flex align-items-center justify-content-center gap-1 text-info fw-semibold small">
-                    <i class="bi bi-terminal"></i> Console
+        <!-- Total Master Features Counter -->
+        <div class="col-12 col-md-4 col-lg-2">
+            <div class="card text-center h-100 bg-primary text-white shadow-sm border-0">
+                <div class="card-body p-2">
+                    <div class="small fw-semibold"><i class="bi bi-list-task me-1"></i> All Features</div>
+                    <div class="fs-5 fw-bold mt-1"><?= $total_features_count ?></div>
+                    <a href="feature-tracker.php" class="text-white-50 text-decoration-none d-block small" style="font-size: 0.7rem;">সকল ফিল্টার রিসেট</a>
                 </div>
-                <div class="fs-5 fw-bold text-dark mt-1" id="stat-p-console">
-                    <?= $stats['p_console_total'] > 0 ? round(($stats['p_console_completed'] / $stats['p_console_total']) * 100) : 0 ?>%
-                </div>
-                <small class="text-muted" style="font-size: 0.7rem;"><?= $stats['p_console_completed'] ?>/<?= $stats['p_console_total'] ?> Complete</small>
-            </div>
-        </div>
-
-        <!-- Android Lite -->
-        <div class="col-md-4 col-lg-2">
-            <div class="card p-2 text-center kpi-card shadow-sm" onclick="filterByPlatform('android_lite')">
-                <div class="d-flex align-items-center justify-content-center gap-1 text-success fw-semibold small">
-                    <i class="bi bi-android2"></i> Android Lite
-                </div>
-                <div class="fs-5 fw-bold text-dark mt-1" id="stat-p-android">
-                    <?= $stats['p_android_total'] > 0 ? round(($stats['p_android_completed'] / $stats['p_android_total']) * 100) : 0 ?>%
-                </div>
-                <small class="text-muted" style="font-size: 0.7rem;"><?= $stats['p_android_completed'] ?>/<?= $stats['p_android_total'] ?> Complete</small>
-            </div>
-        </div>
-
-        <!-- Premium (Offline) -->
-        <div class="col-md-4 col-lg-2">
-            <div class="card p-2 text-center kpi-card shadow-sm" onclick="filterByPlatform('premium')">
-                <div class="d-flex align-items-center justify-content-center gap-1 text-warning fw-semibold small">
-                    <i class="bi bi-phone"></i> Premium
-                </div>
-                <div class="fs-5 fw-bold text-dark mt-1" id="stat-p-premium">
-                    <?= $stats['p_premium_total'] > 0 ? round(($stats['p_premium_completed'] / $stats['p_premium_total']) * 100) : 0 ?>%
-                </div>
-                <small class="text-muted" style="font-size: 0.7rem;"><?= $stats['p_premium_completed'] ?>/<?= $stats['p_premium_total'] ?> Complete</small>
-            </div>
-        </div>
-
-        <!-- Desktop (Win) -->
-        <div class="col-md-4 col-lg-2">
-            <div class="card p-2 text-center kpi-card shadow-sm" onclick="filterByPlatform('desktop')">
-                <div class="d-flex align-items-center justify-content-center gap-1 text-secondary fw-semibold small">
-                    <i class="bi bi-display"></i> Desktop
-                </div>
-                <div class="fs-5 fw-bold text-dark mt-1" id="stat-p-desktop">
-                    <?= $stats['p_desktop_total'] > 0 ? round(($stats['p_desktop_completed'] / $stats['p_desktop_total']) * 100) : 0 ?>%
-                </div>
-                <small class="text-muted" style="font-size: 0.7rem;"><?= $stats['p_desktop_completed'] ?>/<?= $stats['p_desktop_total'] ?> Complete</small>
-            </div>
-        </div>
-
-        <!-- Total Features & Quick Reset -->
-        <div class="col-md-4 col-lg-2">
-            <div class="card p-2 text-center kpi-card bg-primary text-white shadow-sm" onclick="resetFilters()">
-                <div class="fw-semibold small"><i class="bi bi-list-task"></i> All Features</div>
-                <div class="fs-5 fw-bold mt-1" id="stat-total-features"><?= $stats['total_features'] ?></div>
-                <small style="font-size: 0.7rem;" class="text-white-50">ক্লিক করে রিসেট করুন</small>
             </div>
         </div>
     </div>
 
-    <!-- 2. Interactive Filter & Live Search Toolbar -->
-    <div class="card mb-3 shadow-none border">
-        <div class="card-body p-2">
-            <div class="row g-2 align-items-center">
-                <!-- Search -->
+    <!-- Filter & Live Search Toolbar -->
+    <div class="card mb-3 shadow-sm border-0">
+        <div class="card-body p-3">
+            <form method="get" action="feature-tracker.php" class="row g-2 align-items-center">
+                <!-- Search Input -->
                 <div class="col-lg-3 col-md-6">
                     <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
-                        <input type="text" class="form-control border-start-0" id="filter-search" placeholder="ফিচার, স্ক্রিপ্ট বা সমস্যা খুঁজুন..." oninput="debounceFetch()">
+                        <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" name="search" value="<?= htmlspecialchars($f_search) ?>" placeholder="ফিচার বা স্ক্রিপ্ট খুঁজুন...">
                     </div>
                 </div>
 
-                <!-- Module Dropdown -->
+                <!-- Module Select -->
                 <div class="col-lg-2 col-md-3 col-6">
-                    <select class="form-select form-select-sm" id="filter-module" onchange="fetchMatrixData()">
+                    <select class="form-select form-select-sm" name="module" onchange="this.form.submit()">
                         <option value="all">📁 সকল মডিউল</option>
                         <?php foreach ($modules_list as $mod): ?>
-                            <option value="<?= htmlspecialchars($mod['module_name']) ?>">
+                            <option value="<?= htmlspecialchars($mod['module_name']) ?>" <?= $f_module === $mod['module_name'] ? 'selected' : '' ?>>
                                 <?= htmlspecialchars($mod['module_name']) ?> <?= $mod['core'] == 1 ? '★' : '' ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
 
-                <!-- Platform Filter -->
+                <!-- Platform Select -->
                 <div class="col-lg-2 col-md-3 col-6">
-                    <select class="form-select form-select-sm" id="filter-platform" onchange="fetchMatrixData()">
+                    <select class="form-select form-select-sm" name="platform" onchange="this.form.submit()">
                         <option value="all">🌐 সকল প্ল্যাটফর্ম</option>
-                        <?php foreach ($platforms_meta as $pkey => $pinfo): ?>
-                            <option value="<?= $pkey ?>"><?= $pinfo['title'] ?></option>
+                        <?php foreach ($platforms as $pk => $pinfo): ?>
+                            <option value="<?= $pk ?>" <?= $f_platform === $pk ? 'selected' : '' ?>><?= $pinfo['title'] ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
 
-                <!-- Status Filter -->
+                <!-- Status Select -->
                 <div class="col-lg-2 col-md-3 col-6">
-                    <select class="form-select form-select-sm" id="filter-status" onchange="fetchMatrixData()">
+                    <select class="form-select form-select-sm" name="status" onchange="this.form.submit()">
                         <option value="all">⚡ সকল স্ট্যাটাস</option>
-                        <?php foreach ($status_meta as $skey => $sinfo): ?>
-                            <option value="<?= $skey ?>"><?= $sinfo['title'] ?></option>
+                        <?php foreach ($status_badges as $st_key => $st_badge): ?>
+                            <option value="<?= $st_key ?>" <?= $f_status === $st_key ? 'selected' : '' ?>><?= $st_key ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
 
-                <!-- Priority Filter -->
-                <div class="col-lg-2 col-md-3 col-6">
-                    <select class="form-select form-select-sm" id="filter-priority" onchange="fetchMatrixData()">
-                        <option value="all">🎯 সকল প্রায়োরিটি</option>
-                        <?php foreach ($priority_meta as $prkey => $prinfo): ?>
-                            <option value="<?= $prkey ?>"><?= $prkey ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                <!-- Action buttons -->
+                <div class="col-lg-3 col-md-9 col-6 text-end">
+                    <button type="submit" class="btn btn-sm btn-primary me-1"><i class="bi bi-funnel-fill me-1"></i> ফিল্টার</button>
+                    <a href="feature-tracker.php" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-clockwise"></i> রিসেট</a>
                 </div>
-
-                <!-- Reset Button -->
-                <div class="col-lg-1 col-md-12 text-end">
-                    <button type="button" class="btn btn-sm btn-outline-secondary w-100" onclick="resetFilters()" title="ফিল্টার রিসেট করুন">
-                        <i class="bi bi-arrow-clockwise"></i>
-                    </button>
-                </div>
-            </div>
+            </form>
         </div>
     </div>
 
-    <!-- 3. Multi-Platform Matrix Table -->
-    <div class="matrix-table-wrapper">
+    <!-- Main Features Matrix Table (Pure Bootstrap 5 Table) -->
+    <div class="card shadow-sm border-0">
         <div class="table-responsive">
-            <table class="table matrix-table table-hover align-middle mb-0">
-                <thead>
+            <table class="table table-bordered table-striped table-hover align-middle mb-0">
+                <thead class="table-light">
                     <tr>
-                        <th class="col-id text-center">#</th>
-                        <th class="col-feature-info">মডিউল ও ফিচার নাম</th>
-                        <th class="col-platform text-center">
-                            <span class="d-inline-flex align-items-center gap-1 text-primary">
-                                <i class="bi bi-speedometer2"></i> Dashboard
-                            </span>
-                            <div class="text-muted font-normal" style="font-size: 0.65rem;">Web Old</div>
-                        </th>
-                        <th class="col-platform text-center">
-                            <span class="d-inline-flex align-items-center gap-1 text-info">
-                                <i class="bi bi-terminal"></i> Console
-                            </span>
-                            <div class="text-muted font-normal" style="font-size: 0.65rem;">Web New</div>
-                        </th>
-                        <th class="col-platform text-center">
-                            <span class="d-inline-flex align-items-center gap-1 text-success">
-                                <i class="bi bi-android2"></i> Android Lite
-                            </span>
-                            <div class="text-muted font-normal" style="font-size: 0.65rem;">Lite Mobile</div>
-                        </th>
-                        <th class="col-platform text-center">
-                            <span class="d-inline-flex align-items-center gap-1 text-warning">
-                                <i class="bi bi-phone"></i> Premium
-                            </span>
-                            <div class="text-muted font-normal" style="font-size: 0.65rem;">Offline App</div>
-                        </th>
-                        <th class="col-platform text-center">
-                            <span class="d-inline-flex align-items-center gap-1 text-secondary">
-                                <i class="bi bi-display"></i> Desktop
-                            </span>
-                            <div class="text-muted font-normal" style="font-size: 0.65rem;">Win 10/11</div>
-                        </th>
-                        <th class="col-actions text-center">অ্যাকশন</th>
+                        <th class="text-center" style="width: 40px;">#</th>
+                        <th style="min-width: 200px;">মডিউল ও ফিচার নাম</th>
+                        <?php foreach ($platforms as $pk => $pinfo): ?>
+                            <th class="text-center" style="width: 14%;">
+                                <div class="text-<?= $pinfo['color'] ?> fw-bold">
+                                    <i class="<?= $pinfo['icon'] ?>"></i> <?= $pinfo['title'] ?>
+                                </div>
+                                <span class="text-muted font-monospace" style="font-size: 0.65rem;"><?= $pinfo['sub'] ?></span>
+                            </th>
+                        <?php endforeach; ?>
+                        <th class="text-center" style="width: 100px;">অ্যাকশন</th>
                     </tr>
                 </thead>
-                <tbody id="matrix-tbody">
-                    <?php render_matrix_table_body($initial_matrix_data, $platforms_meta, $status_meta, $priority_meta); ?>
+                <tbody>
+                    <?php if (empty($features)): ?>
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary"></i>
+                                <h5>কোনো ফিচার রেকর্ড পাওয়া যায়নি!</h5>
+                                <p class="small text-muted mb-3">নতুন ফিচার যোগ করতে উপরের বাটনে ক্লিক করুন অথবা ডেমো ডাটা লোড করুন।</p>
+                                <button type="button" class="btn btn-sm btn-outline-success" onclick="seedDemoData()">
+                                    <i class="bi bi-stars me-1"></i> ডেমো ডাটা লোড করুন
+                                </button>
+                            </td>
+                        </tr>
+                    <?php else: ?>
+                        <?php foreach ($features as $f_item): 
+                            $m = $f_item['master'];
+                            $p_data = $f_item['platforms'];
+                            $m_json = htmlspecialchars(json_encode($m), ENT_QUOTES, 'UTF-8');
+                            $all_p_json = htmlspecialchars(json_encode($p_data), ENT_QUOTES, 'UTF-8');
+                        ?>
+                            <tr>
+                                <!-- ID -->
+                                <td class="text-center text-muted fw-bold"><?= $m['id'] ?></td>
+
+                                <!-- Feature Info -->
+                                <td>
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle mb-1 font-monospace">
+                                        <?= htmlspecialchars($m['module']) ?>
+                                    </span>
+                                    <div class="fw-bold text-dark"><?= htmlspecialchars($m['feature_name']) ?></div>
+                                    <?php if (!empty($m['description'])): ?>
+                                        <div class="text-muted small text-truncate" style="max-width: 280px;" title="<?= htmlspecialchars($m['description']) ?>">
+                                            <?= htmlspecialchars($m['description']) ?>
+                                        </div>
+                                    <?php endif; ?>
+                                </td>
+
+                                <!-- 5 Platform Columns -->
+                                <?php foreach ($platforms as $pk => $pinfo): 
+                                    $pt = $p_data[$pk] ?? [
+                                        'feature_id' => $m['id'],
+                                        'platform' => $pk,
+                                        'status' => 'Planned',
+                                        'progress_percent' => 0,
+                                        'script_path' => '',
+                                        'issue_notes' => '',
+                                        'dev_response' => '',
+                                        'priority' => 'Medium'
+                                    ];
+                                    $st = $pt['status'] ?? 'Planned';
+                                    $pct = intval($pt['progress_percent'] ?? 0);
+                                    $badge_class = $status_badges[$st] ?? 'bg-secondary';
+                                    $bar_class = $pct >= 100 ? 'bg-success' : ($pct >= 60 ? 'bg-info' : ($pct >= 25 ? 'bg-primary' : 'bg-warning'));
+                                    $pt_json = htmlspecialchars(json_encode($pt), ENT_QUOTES, 'UTF-8');
+                                ?>
+                                    <td class="text-center p-2" style="cursor: pointer;" onclick='openPlatformEditModal(<?= $m['id'] ?>, "<?= $pk ?>", "<?= htmlspecialchars($m['feature_name'], ENT_QUOTES) ?>", <?= $pt_json ?>)' title="ক্লিক করে এডিট করুন">
+                                        <!-- Progress Bar & Text -->
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="badge <?= $badge_class ?> p-1" style="font-size: 0.65rem;"><?= htmlspecialchars($st) ?></span>
+                                            <span class="fw-bold small"><?= $pct ?>%</span>
+                                        </div>
+                                        <div class="progress" style="height: 5px;">
+                                            <div class="progress-bar <?= $bar_class ?>" style="width: <?= $pct ?>%;"></div>
+                                        </div>
+
+                                        <!-- Script or Issue Preview -->
+                                        <?php if (!empty($pt['issue_notes'])): ?>
+                                            <div class="text-danger small mt-1 text-truncate" style="font-size: 0.68rem;" title="ইস্যু: <?= htmlspecialchars($pt['issue_notes']) ?>">
+                                                <i class="bi bi-bug-fill"></i> <?= htmlspecialchars($pt['issue_notes']) ?>
+                                            </div>
+                                        <?php elseif (!empty($pt['script_path'])): ?>
+                                            <div class="text-muted font-monospace mt-1 text-truncate" style="font-size: 0.65rem;" title="<?= htmlspecialchars($pt['script_path']) ?>">
+                                                <?= htmlspecialchars($pt['script_path']) ?>
+                                            </div>
+                                        <?php endif; ?>
+                                    </td>
+                                <?php endforeach; ?>
+
+                                <!-- Actions -->
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm">
+                                        <!-- Edit Master -->
+                                        <button type="button" class="btn btn-outline-primary" title="মূল ফিচার এডিট" onclick='openMasterEditModal(<?= $m_json ?>)'>
+                                            <i class="bi bi-pencil-square"></i>
+                                        </button>
+                                        <!-- Bulk 5 Platforms -->
+                                        <button type="button" class="btn btn-outline-info" title="৫টি প্ল্যাটফর্ম একসাথে এডিট" onclick='openBulkModal(<?= $m['id'] ?>, "<?= htmlspecialchars($m['feature_name'], ENT_QUOTES) ?>", <?= $all_p_json ?>)'>
+                                            <i class="bi bi-sliders"></i>
+                                        </button>
+                                        <!-- Delete -->
+                                        <button type="button" class="btn btn-outline-danger" title="ফিচার মুছুন" onclick='deleteFeature(<?= $m['id'] ?>, "<?= htmlspecialchars($m['feature_name'], ENT_QUOTES) ?>")'>
+                                            <i class="bi bi-trash3"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
     </div>
 
-    <!-- Empty Database Banner with 1-click Demo Seeder -->
-    <?php if ($stats['total_features'] == 0): ?>
-        <div class="card mt-3 border-dashed text-center p-4 bg-light" id="seed-banner">
-            <i class="bi bi-database fs-1 text-primary mb-2"></i>
-            <h5 class="fw-bold">ডাটাবেজে বর্তমানে কোনো ফিচার এন্ট্রি নেই!</h5>
-            <p class="text-muted small max-w-500 mx-auto">
-                আপনি সরাসরি নতুন ফিচার যোগ করতে পারেন অথবা সিস্টেম টেস্ট করার জন্য ৫টি প্ল্যাটফর্মের ডেমো ডাটা ইনিশিয়ালাইজ করতে পারেন।
-            </p>
-            <div>
-                <button type="button" class="btn btn-success btn-sm me-2" onclick="seedDefaultData()">
-                    <i class="bi bi-stars me-1"></i> ডেমো ডাটা লোড করুন (Seed Sample Data)
-                </button>
-                <button type="button" class="btn btn-primary btn-sm" onclick="openMasterAddModal()">
-                    <i class="bi bi-plus-lg me-1"></i> ম্যানুয়ালি ফিচার যোগ করুন
-                </button>
-            </div>
-        </div>
-    <?php endif; ?>
-
 </div>
 
 <!-- ============================================================== -->
-<!-- 6. BOOTSTRAP 5 MODALS                                          -->
-// ============================================================== -->
+<!-- 4. BOOTSTRAP 5 MODALS                                          -->
+<!-- ============================================================== -->
 
-<!-- 6.1 ADD MASTER FEATURE MODAL -->
-<div class="modal fade" id="modal-add-master" tabindex="-1" aria-hidden="true">
+<!-- 4.1 Add Master Feature Modal -->
+<div class="modal fade" id="addFeatureModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header bg-light">
+            <div class="modal-header">
                 <h5 class="modal-title fw-bold"><i class="bi bi-plus-circle text-primary me-2"></i>নতুন মাস্টার ফিচার যোগ করুন</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="form-add-master" onsubmit="submitMasterAdd(event)">
+            <form id="addFeatureForm" onsubmit="submitAddFeature(event)">
+                <input type="hidden" name="action" value="add_feature">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">মডিউল নির্বাচন করুন (Module) <span class="text-danger">*</span></label>
-                        <select class="form-select" name="module" id="add-module" required>
+                        <label class="form-label fw-semibold">মডিউল <span class="text-danger">*</span></label>
+                        <select class="form-select" name="module" required>
                             <option value="">-- মডিউল নির্বাচন করুন --</option>
-                            <optgroup label="📋 Public / Academic Modules">
-                                <?php foreach ($modules_list as $mod): if ($mod['is_public'] == 1): ?>
-                                    <option value="<?= htmlspecialchars($mod['module_name']) ?>">
-                                        <?= htmlspecialchars($mod['module_name']) ?> <?= $mod['core'] == 1 ? '(Core)' : '' ?>
-                                    </option>
-                                <?php endif; endforeach; ?>
-                            </optgroup>
-                            <optgroup label="⚙️ Backend / Administrative Modules">
-                                <?php foreach ($modules_list as $mod): if ($mod['is_public'] == 0): ?>
-                                    <option value="<?= htmlspecialchars($mod['module_name']) ?>">
-                                        <?= htmlspecialchars($mod['module_name']) ?>
-                                    </option>
-                                <?php endif; endforeach; ?>
-                            </optgroup>
+                            <?php foreach ($modules_list as $mod): ?>
+                                <option value="<?= htmlspecialchars($mod['module_name']) ?>">
+                                    <?= htmlspecialchars($mod['module_name']) ?> <?= $mod['core'] == 1 ? '(Core)' : '' ?>
+                                </option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">ফিচার নাম (Feature Name) <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="feature_name" id="add-feature-name" placeholder="যেমন: Daily Student Attendance, OMR Scanner..." required>
+                        <label class="form-label fw-semibold">ফিচার নাম <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="feature_name" placeholder="ফিচারের নাম লিখুন..." required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">সংক্ষিপ্ত বিবরণ (Description)</label>
-                        <textarea class="form-control" name="description" id="add-feature-desc" rows="3" placeholder="ফিচারের মূল কার্যপ্রণালী বা বর্ণনা..."></textarea>
-                    </div>
-                    <div class="alert alert-info py-2 px-3 small mb-0">
-                        <i class="bi bi-info-circle me-1"></i> ফিচারটি যোগ করার সাথে সাথে ৫টি প্ল্যাটফর্ম (Dashboard, Console, Android Lite, Premium, Desktop)-এ স্বয়ংক্রিয়ভাবে এটি ইনিশিয়ালাইজ হয়ে যাবে।
+                        <label class="form-label fw-semibold">সংক্ষিপ্ত বিবরণ</label>
+                        <textarea class="form-control" name="description" rows="3" placeholder="ফিচারের কাজের বিবরণ..."></textarea>
                     </div>
                 </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">বাতিল</button>
-                    <button type="submit" class="btn btn-primary btn-sm" id="btn-save-master">
-                        <i class="bi bi-check-lg me-1"></i> ফিচার সংরক্ষণ করুন
-                    </button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">বাতিল</button>
+                    <button type="submit" class="btn btn-primary" id="btnAddSubmit">সংরক্ষণ করুন</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<!-- 6.2 EDIT MASTER FEATURE MODAL -->
-<div class="modal fade" id="modal-edit-master" tabindex="-1" aria-hidden="true">
+<!-- 4.2 Edit Master Feature Modal -->
+<div class="modal fade" id="editMasterModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header bg-light">
+            <div class="modal-header">
                 <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square text-primary me-2"></i>মাস্টার ফিচার এডিট</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="form-edit-master" onsubmit="submitMasterEdit(event)">
-                <input type="hidden" name="id" id="edit-master-id">
+            <form id="editMasterForm" onsubmit="submitEditMaster(event)">
+                <input type="hidden" name="action" value="edit_master_feature">
+                <input type="hidden" name="id" id="edit_m_id">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">মডিউল নাম (Module) <span class="text-danger">*</span></label>
-                        <select class="form-select" name="module" id="edit-master-module" required>
-                            <optgroup label="📋 Public / Academic Modules">
-                                <?php foreach ($modules_list as $mod): if ($mod['is_public'] == 1): ?>
-                                    <option value="<?= htmlspecialchars($mod['module_name']) ?>">
-                                        <?= htmlspecialchars($mod['module_name']) ?> <?= $mod['core'] == 1 ? '(Core)' : '' ?>
-                                    </option>
-                                <?php endif; endforeach; ?>
-                            </optgroup>
-                            <optgroup label="⚙️ Backend / Administrative Modules">
-                                <?php foreach ($modules_list as $mod): if ($mod['is_public'] == 0): ?>
-                                    <option value="<?= htmlspecialchars($mod['module_name']) ?>">
-                                        <?= htmlspecialchars($mod['module_name']) ?>
-                                    </option>
-                                <?php endif; endforeach; ?>
-                            </optgroup>
+                        <label class="form-label fw-semibold">মডিউল <span class="text-danger">*</span></label>
+                        <select class="form-select" name="module" id="edit_m_module" required>
+                            <?php foreach ($modules_list as $mod): ?>
+                                <option value="<?= htmlspecialchars($mod['module_name']) ?>">
+                                    <?= htmlspecialchars($mod['module_name']) ?>
+                                </option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">ফিচার নাম (Feature Name) <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="feature_name" id="edit-master-feature" required>
+                        <label class="form-label fw-semibold">ফিচার নাম <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="feature_name" id="edit_m_name" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">সংক্ষিপ্ত বিবরণ (Description)</label>
-                        <textarea class="form-control" name="description" id="edit-master-desc" rows="3"></textarea>
+                        <label class="form-label fw-semibold">সংক্ষিপ্ত বিবরণ</label>
+                        <textarea class="form-control" name="description" id="edit_m_desc" rows="3"></textarea>
                     </div>
                 </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">বাতিল</button>
-                    <button type="submit" class="btn btn-primary btn-sm" id="btn-update-master">
-                        <i class="bi bi-check-lg me-1"></i> পরিবর্তন সংরক্ষণ করুন
-                    </button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">বাতিল</button>
+                    <button type="submit" class="btn btn-primary" id="btnEditSubmit">আপডেট করুন</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<!-- 6.3 SPECIFIC PLATFORM EDIT & ISSUE MODAL -->
-<div class="modal fade" id="modal-edit-platform" tabindex="-1" aria-hidden="true">
+<!-- 4.3 Edit Single Platform Modal -->
+<div class="modal fade" id="editPlatformModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
-            <div class="modal-header bg-light">
+            <div class="modal-header">
                 <div>
-                    <h5 class="modal-title fw-bold mb-0" id="platform-modal-title">
-                        <i class="bi bi-phone text-primary me-2"></i>প্ল্যাটফর্ম স্ট্যাটাস ও ইস্যু আপডেট
+                    <h5 class="modal-title fw-bold mb-0" id="plat_modal_title">
+                        <i class="bi bi-phone text-primary me-2"></i>প্ল্যাটফর্ম কনফিগারেশন
                     </h5>
-                    <span class="text-muted small" id="platform-modal-subtitle">Feature: Attendance</span>
+                    <span class="text-muted small" id="plat_modal_sub">Feature: ...</span>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="form-edit-platform" onsubmit="submitPlatformEdit(event)">
-                <input type="hidden" name="feature_id" id="pe-feature-id">
-                <input type="hidden" name="platform" id="pe-platform">
+            <form id="editPlatformForm" onsubmit="submitEditPlatform(event)">
+                <input type="hidden" name="action" value="update_platform_status">
+                <input type="hidden" name="feature_id" id="pe_feature_id">
+                <input type="hidden" name="platform" id="pe_platform">
                 <div class="modal-body">
                     <div class="row g-3">
                         <!-- Script Path -->
                         <div class="col-md-8">
-                            <label class="form-label fw-semibold">স্ক্রিপ্ট / ফাইল পাথ (Script / File Path)</label>
-                            <input type="text" class="form-control font-monospace" name="script_path" id="pe-script-path" placeholder="যেমন: attendance.php বা lib/screens/attnd.dart">
+                            <label class="form-label fw-semibold">স্ক্রিপ্ট / ফাইল পাথ</label>
+                            <input type="text" class="form-control font-monospace" name="script_path" id="pe_script_path" placeholder="যেমন: attendance.php বা lib/screens/attnd.dart">
                         </div>
 
                         <!-- Status -->
                         <div class="col-md-4">
-                            <label class="form-label fw-semibold">বর্তমান স্ট্যাটাস (Status) <span class="text-danger">*</span></label>
-                            <select class="form-select" name="status" id="pe-status" onchange="onPlatformStatusChange(this.value)">
-                                <?php foreach ($status_meta as $skey => $sinfo): ?>
-                                    <option value="<?= $skey ?>"><?= $sinfo['title'] ?> (<?= $sinfo['desc'] ?>)</option>
+                            <label class="form-label fw-semibold">বর্তমান স্ট্যাটাস <span class="text-danger">*</span></label>
+                            <select class="form-select" name="status" id="pe_status" onchange="onStatusChange(this.value)">
+                                <?php foreach ($status_badges as $st_name => $st_bg): ?>
+                                    <option value="<?= $st_name ?>"><?= $st_name ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -1455,502 +738,345 @@ require_once 'header.php';
                         <!-- Progress Slider -->
                         <div class="col-md-6">
                             <label class="form-label fw-semibold d-flex justify-content-between">
-                                <span>কাজের অগ্রগতি (Progress %)</span>
-                                <span class="text-primary fw-bold" id="pe-progress-val">0%</span>
+                                <span>কাজের অগ্রগতি (%)</span>
+                                <span class="text-primary fw-bold" id="pe_progress_display">0%</span>
                             </label>
-                            <input type="range" class="form-range" name="progress_percent" id="pe-progress" min="0" max="100" step="5" oninput="updateProgressDisplay(this.value)">
+                            <input type="range" class="form-range" name="progress_percent" id="pe_progress" min="0" max="100" step="5" oninput="document.getElementById('pe_progress_display').innerText = this.value + '%'">
                         </div>
 
                         <!-- Priority -->
                         <div class="col-md-3 col-6">
-                            <label class="form-label fw-semibold">অগ্রাধিকার (Priority)</label>
-                            <select class="form-select" name="priority" id="pe-priority">
-                                <?php foreach ($priority_meta as $prkey => $prinfo): ?>
-                                    <option value="<?= $prkey ?>"><?= $prkey ?></option>
-                                <?php endforeach; ?>
+                            <label class="form-label fw-semibold">অগ্রাধিকার</label>
+                            <select class="form-select" name="priority" id="pe_priority">
+                                <option value="Critical">Critical</option>
+                                <option value="High">High</option>
+                                <option value="Medium" selected>Medium</option>
+                                <option value="Low">Low</option>
                             </select>
                         </div>
 
                         <!-- Deadline -->
                         <div class="col-md-3 col-6">
-                            <label class="form-label fw-semibold">টার্গেট ডেট (Deadline)</label>
-                            <input type="date" class="form-control" name="estimated_deadline" id="pe-deadline">
+                            <label class="form-label fw-semibold">টার্গেট ডেট</label>
+                            <input type="date" class="form-control" name="estimated_deadline" id="pe_deadline">
                         </div>
 
-                        <!-- Issue / Pending Description -->
+                        <!-- Issue Notes -->
                         <div class="col-md-6">
                             <label class="form-label fw-semibold text-danger">
-                                <i class="bi bi-bug-fill me-1"></i>শনাক্তকৃত সমস্যা বা পেন্ডিং কাজ (Issue / Customization)
+                                <i class="bi bi-bug-fill me-1"></i>শনাক্তকৃত সমস্যা বা পেন্ডিং কাজ
                             </label>
-                            <textarea class="form-control border-danger-subtle" name="issue_notes" id="pe-issue-notes" rows="4" placeholder="কোনো বাগ আছে? ইউজার কি পরিবর্তন চায়? কি বাকি আছে?"></textarea>
+                            <textarea class="form-control" name="issue_notes" id="pe_issue_notes" rows="4" placeholder="সমস্যার বিবরণ বা পেন্ডিং কাজ..."></textarea>
                         </div>
 
-                        <!-- Developer Response / Solution -->
+                        <!-- Developer Response -->
                         <div class="col-md-6">
                             <label class="form-label fw-semibold text-success">
-                                <i class="bi bi-reply-fill me-1"></i>ডেভেলপার রেসপন্স বা সমাধান (Dev Response)
+                                <i class="bi bi-reply-fill me-1"></i>ডেভেলপার রেসপন্স বা সমাধান
                             </label>
-                            <textarea class="form-control border-success-subtle" name="dev_response" id="pe-dev-response" rows="4" placeholder="সমস্যা সমাধানে কি কাজ হয়েছে বা ডেভেলপারের নোট..."></textarea>
+                            <textarea class="form-control" name="dev_response" id="pe_dev_response" rows="4" placeholder="ডেভেলপার নোট বা সমাধান..."></textarea>
                         </div>
 
                         <!-- Assigned To -->
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">দায়িত্বপ্রাপ্ত ডেভেলপার (Assigned To)</label>
-                            <input type="text" class="form-control" name="assigned_to" id="pe-assigned-to" placeholder="নাম / টিম">
+                            <label class="form-label fw-semibold">দায়িত্বপ্রাপ্ত ডেভেলপার</label>
+                            <input type="text" class="form-control" name="assigned_to" id="pe_assigned_to" placeholder="নাম / টিম">
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">বাতিল</button>
-                    <button type="submit" class="btn btn-primary btn-sm" id="btn-save-platform">
-                        <i class="bi bi-check-lg me-1"></i> প্ল্যাটফর্ম তথ্য সংরক্ষণ
-                    </button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">বাতিল</button>
+                    <button type="submit" class="btn btn-primary" id="btnPlatformSubmit">সংরক্ষণ করুন</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<!-- 6.4 BULK ALL 5 PLATFORMS MODAL -->
-<div class="modal fade" id="modal-bulk-platforms" tabindex="-1" aria-hidden="true">
+<!-- 4.4 Bulk Edit All 5 Platforms Modal -->
+<div class="modal fade" id="bulkPlatformsModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content">
-            <div class="modal-header bg-light">
+            <div class="modal-header">
                 <div>
-                    <h5 class="modal-title fw-bold mb-0">
-                        <i class="bi bi-sliders text-primary me-2"></i>একসাথে ৫টি প্ল্যাটফর্ম কনফিগারেশন
-                    </h5>
-                    <span class="text-muted small" id="bulk-modal-feature-title">Feature: Attendance</span>
+                    <h5 class="modal-title fw-bold mb-0"><i class="bi bi-sliders text-primary me-2"></i>একসাথে ৫টি প্ল্যাটফর্ম কনফিগারেশন</h5>
+                    <span class="text-muted small" id="bulk_modal_title">Feature: ...</span>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="form-bulk-platforms" onsubmit="submitBulkPlatforms(event)">
-                <input type="hidden" name="feature_id" id="bulk-feature-id">
+            <form id="bulkPlatformsForm" onsubmit="submitBulkPlatforms(event)">
+                <input type="hidden" name="action" value="bulk_update_platforms">
+                <input type="hidden" name="feature_id" id="bulk_feature_id">
                 <div class="modal-body p-3">
-                    <div class="row g-3" id="bulk-platforms-container">
+                    <div class="row g-3" id="bulk_container">
                         <!-- Injected dynamically via JS -->
                     </div>
                 </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">বাতিল</button>
-                    <button type="submit" class="btn btn-primary btn-sm" id="btn-save-bulk">
-                        <i class="bi bi-check2-circle me-1"></i> সব প্ল্যাটফর্ম একসাথে সংরক্ষণ করুন
-                    </button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">বাতিল</button>
+                    <button type="submit" class="btn btn-primary" id="btnBulkSubmit">সব সংরক্ষণ করুন</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<!-- Toast Container for Notifications -->
-<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
-    <div id="tracker-toast" class="toast align-items-center text-white bg-primary border-0" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="d-flex">
-            <div class="toast-body" id="tracker-toast-body">
-                অ্যাকশন সম্পন্ন হয়েছে।
-            </div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-        </div>
-    </div>
-</div>
-
 <!-- ============================================================== -->
-<!-- 7. JAVASCRIPT LOGIC & LIVE AJAX ENGINE                         -->
+<!-- 5. JAVASCRIPT & AJAX (PURE BOOTSTRAP 5 DOM)                   -->
 <!-- ============================================================== -->
 <script>
-    const platformsMeta = <?= json_encode($platforms_meta) ?>;
-    const statusMeta = <?= json_encode($status_meta) ?>;
-    let debounceTimer = null;
-    let issuesOnlyMode = false;
+    const platformsInfo = <?= json_encode($platforms) ?>;
+    const statusBadgesList = <?= json_encode($status_badges) ?>;
 
-    // 7.1 MODAL HELPERS (Pure Bootstrap 5 + DOM Fallback)
-    function openModal(modalId) {
-        const el = document.getElementById(modalId);
-        if (!el) return;
-        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+    // Helper: Open Modal via Bootstrap 5
+    function showModal(id) {
+        const el = document.getElementById(id);
+        if (el) {
             const modal = bootstrap.Modal.getOrCreateInstance(el);
             modal.show();
-        } else if (window.jQuery && typeof jQuery(el).modal === 'function') {
-            jQuery(el).modal('show');
-        } else {
-            el.classList.add('show');
-            el.style.display = 'block';
         }
     }
 
-    function closeModal(modalId) {
-        const el = document.getElementById(modalId);
-        if (!el) return;
-        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+    function hideModal(id) {
+        const el = document.getElementById(id);
+        if (el) {
             const modal = bootstrap.Modal.getInstance(el);
             if (modal) modal.hide();
-        } else if (window.jQuery && typeof jQuery(el).modal === 'function') {
-            jQuery(el).modal('hide');
-        }
-        el.classList.remove('show');
-        el.style.display = 'none';
-        document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
-        document.body.classList.remove('modal-open');
-        document.body.style.overflow = '';
-        document.body.style.paddingRight = '';
-    }
-
-    // 7.2 LIVE AJAX FETCH
-    function fetchMatrixData() {
-        const searchVal = document.getElementById('filter-search').value.trim();
-        const moduleVal = document.getElementById('filter-module').value;
-        const platformVal = document.getElementById('filter-platform').value;
-        const statusVal = document.getElementById('filter-status').value;
-        const priorityVal = document.getElementById('filter-priority').value;
-
-        const formData = new FormData();
-        formData.append('action', 'fetch_matrix_data');
-        formData.append('search', searchVal);
-        formData.append('module', moduleVal);
-        formData.append('platform', platformVal);
-        formData.append('status', statusVal);
-        formData.append('priority', priorityVal);
-        formData.append('issues_only', issuesOnlyMode ? 1 : 0);
-
-        const tbody = document.getElementById('matrix-tbody');
-
-        fetch('feature-tracker.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.status === 'success') {
-                tbody.innerHTML = data.html;
-                updateStatsUI(data.stats);
-            } else {
-                showToast('ডাটা লোড করতে সমস্যা হয়েছে: ' + (data.message || ''), 'bg-danger');
-            }
-        })
-        .catch(err => {
-            console.error('Fetch error:', err);
-        });
-    }
-
-    function debounceFetch() {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(fetchMatrixData, 300);
-    }
-
-    function toggleIssuesOnly() {
-        issuesOnlyMode = !issuesOnlyMode;
-        const btn = document.getElementById('btn-toggle-issues');
-        if (issuesOnlyMode) {
-            btn.classList.remove('btn-outline-danger');
-            btn.classList.add('btn-danger');
-        } else {
-            btn.classList.remove('btn-danger');
-            btn.classList.add('btn-outline-danger');
-        }
-        fetchMatrixData();
-    }
-
-    function filterByPlatform(platKey) {
-        document.getElementById('filter-platform').value = platKey;
-        fetchMatrixData();
-    }
-
-    function resetFilters() {
-        document.getElementById('filter-search').value = '';
-        document.getElementById('filter-module').value = 'all';
-        document.getElementById('filter-platform').value = 'all';
-        document.getElementById('filter-status').value = 'all';
-        document.getElementById('filter-priority').value = 'all';
-        issuesOnlyMode = false;
-        const btn = document.getElementById('btn-toggle-issues');
-        btn.classList.remove('btn-danger');
-        btn.classList.add('btn-outline-danger');
-        fetchMatrixData();
-    }
-
-    function updateStatsUI(stats) {
-        if (!stats) return;
-        document.getElementById('stat-total-features').innerText = stats.total_features || 0;
-        document.getElementById('stat-issues-count').innerText = stats.total_issues || 0;
-
-        const calcPercent = (comp, tot) => tot > 0 ? Math.round((comp / tot) * 100) : 0;
-        document.getElementById('stat-p-dashboard').innerText = calcPercent(stats.p_dashboard_completed, stats.p_dashboard_total) + '%';
-        document.getElementById('stat-p-console').innerText = calcPercent(stats.p_console_completed, stats.p_console_total) + '%';
-        document.getElementById('stat-p-android').innerText = calcPercent(stats.p_android_completed, stats.p_android_total) + '%';
-        document.getElementById('stat-p-premium').innerText = calcPercent(stats.p_premium_completed, stats.p_premium_total) + '%';
-        document.getElementById('stat-p-desktop').innerText = calcPercent(stats.p_desktop_completed, stats.p_desktop_total) + '%';
-    }
-
-    // 7.3 DRAWER EXPAND
-    function toggleMatrixDrawer(featureId, e) {
-        if (e && e.target.closest('button, select, input, a, .platform-cell-card')) return;
-        const drawer = document.getElementById(`drawer-${featureId}`);
-        const icon = document.getElementById(`icon-${featureId}`);
-        if (!drawer) return;
-
-        if (drawer.classList.contains('show')) {
-            drawer.classList.remove('show');
-            if (icon) icon.className = 'bi bi-chevron-right expand-icon text-muted';
-        } else {
-            drawer.classList.add('show');
-            if (icon) icon.className = 'bi bi-chevron-down expand-icon text-primary';
         }
     }
 
-    // 7.4 ADD MASTER FEATURE
-    function openMasterAddModal() {
-        document.getElementById('form-add-master').reset();
-        openModal('modal-add-master');
-    }
-
-    function submitMasterAdd(e) {
+    // Add Feature
+    function submitAddFeature(e) {
         e.preventDefault();
-        const form = document.getElementById('form-add-master');
+        const form = document.getElementById('addFeatureForm');
         const formData = new FormData(form);
-        formData.append('action', 'add_master_feature');
-
-        const btn = document.getElementById('btn-save-master');
+        const btn = document.getElementById('btnAddSubmit');
         btn.disabled = true;
 
-        fetch('feature-tracker.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
+        fetch('feature-tracker.php', { method: 'POST', body: formData })
+        .then(r => r.json())
+        .then(res => {
             btn.disabled = false;
-            if (data.status === 'success') {
-                closeModal('modal-add-master');
-                showToast(data.message, 'bg-success');
-                const banner = document.getElementById('seed-banner');
-                if (banner) banner.style.display = 'none';
-                fetchMatrixData();
+            if (res.status === 'success') {
+                hideModal('addFeatureModal');
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('সফল!', res.message, 'success').then(() => location.reload());
+                } else {
+                    alert(res.message);
+                    location.reload();
+                }
             } else {
-                showToast(data.message, 'bg-danger');
+                alert(res.message || 'ত্রুটি হয়েছে!');
             }
         })
         .catch(err => {
             btn.disabled = false;
-            showToast('সংরক্ষণ ব্যর্থ হয়েছে!', 'bg-danger');
+            alert('সার্ভার রিকোয়েস্ট ব্যর্থ হয়েছে!');
         });
     }
 
-    // 7.5 EDIT MASTER FEATURE
+    // Master Feature Edit Modal
     function openMasterEditModal(masterData) {
-        document.getElementById('edit-master-id').value = masterData.id;
-        document.getElementById('edit-master-module').value = masterData.module || '';
-        document.getElementById('edit-master-feature').value = masterData.feature_name || '';
-        document.getElementById('edit-master-desc').value = masterData.description || '';
-
-        openModal('modal-edit-master');
+        document.getElementById('edit_m_id').value = masterData.id;
+        document.getElementById('edit_m_module').value = masterData.module || '';
+        document.getElementById('edit_m_name').value = masterData.feature_name || '';
+        document.getElementById('edit_m_desc').value = masterData.description || '';
+        showModal('editMasterModal');
     }
 
-    function submitMasterEdit(e) {
+    function submitEditMaster(e) {
         e.preventDefault();
-        const form = document.getElementById('form-edit-master');
+        const form = document.getElementById('editMasterForm');
         const formData = new FormData(form);
-        formData.append('action', 'edit_master_feature');
-
-        const btn = document.getElementById('btn-update-master');
+        const btn = document.getElementById('btnEditSubmit');
         btn.disabled = true;
 
-        fetch('feature-tracker.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
+        fetch('feature-tracker.php', { method: 'POST', body: formData })
+        .then(r => r.json())
+        .then(res => {
             btn.disabled = false;
-            if (data.status === 'success') {
-                closeModal('modal-edit-master');
-                showToast(data.message, 'bg-success');
-                fetchMatrixData();
+            if (res.status === 'success') {
+                hideModal('editMasterModal');
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('আপডেট হয়েছে!', res.message, 'success').then(() => location.reload());
+                } else {
+                    alert(res.message);
+                    location.reload();
+                }
             } else {
-                showToast(data.message, 'bg-danger');
+                alert(res.message || 'আপডেট ব্যর্থ!');
             }
         })
         .catch(err => {
             btn.disabled = false;
-            showToast('আপডেট ব্যর্থ হয়েছে!', 'bg-danger');
+            alert('সার্ভার রিকোয়েস্ট ব্যর্থ!');
         });
     }
 
-    // 7.6 DELETE MASTER FEATURE
-    function deleteMasterFeature(id, name) {
-        if (!confirm(`আপনি কি নিশ্চিতভাবে "${name}" ফিচারটি এবং এর সাথে যুক্ত ৫টি প্ল্যাটফর্মের সকল তথ্য মুছে ফেলতে চান?`)) return;
+    // Delete Feature
+    function deleteFeature(id, name) {
+        const doDelete = () => {
+            const formData = new FormData();
+            formData.append('action', 'delete_feature');
+            formData.append('id', id);
 
-        const formData = new FormData();
-        formData.append('action', 'delete_master_feature');
-        formData.append('id', id);
+            fetch('feature-tracker.php', { method: 'POST', body: formData })
+            .then(r => r.json())
+            .then(res => {
+                if (res.status === 'success') {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire('মুছে ফেলা হয়েছে!', res.message, 'success').then(() => location.reload());
+                    } else {
+                        alert(res.message);
+                        location.reload();
+                    }
+                } else {
+                    alert(res.message || 'মুছে ফেলতে ব্যর্থ!');
+                }
+            });
+        };
 
-        fetch('feature-tracker.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.status === 'success') {
-                showToast(data.message, 'bg-success');
-                fetchMatrixData();
-            } else {
-                showToast(data.message, 'bg-danger');
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: `"${name}" মুছে ফেলবেন?`,
+                text: "এই ফিচারের ৫টি প্ল্যাটফর্মের সকল তথ্য মুছে যাবে!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "হ্যাঁ, মুছুন",
+                cancelButtonText: "বাতিল"
+            }).then(r => {
+                if (r.isConfirmed) doDelete();
+            });
+        } else {
+            if (confirm(`আপনি কি "${name}" মুছে ফেলতে চান?`)) {
+                doDelete();
             }
-        })
-        .catch(err => {
-            showToast('মুছে ফেলতে ব্যর্থ হয়েছে!', 'bg-danger');
-        });
+        }
     }
 
-    // 7.7 SPECIFIC PLATFORM EDIT MODAL
+    // Platform Single Edit Modal
     function openPlatformEditModal(featureId, platformKey, featureName, platformData = null) {
-        const platInfo = platformsMeta[platformKey] || { title: platformKey, icon: 'bi bi-phone' };
-        document.getElementById('pe-feature-id').value = featureId;
-        document.getElementById('pe-platform').value = platformKey;
-        document.getElementById('platform-modal-title').innerHTML = `<i class="${platInfo.icon} me-2" style="color:${platInfo.color || '#0d6efd'}"></i> ${platInfo.title} প্ল্যাটফর্ম কনফিগারেশন`;
-        document.getElementById('platform-modal-subtitle').innerText = `ফিচার: ${featureName}`;
+        const pinfo = platformsInfo[platformKey] || { title: platformKey };
+        document.getElementById('pe_feature_id').value = featureId;
+        document.getElementById('pe_platform').value = platformKey;
+        document.getElementById('plat_modal_title').innerHTML = `<i class="${pinfo.icon} text-${pinfo.color} me-2"></i> ${pinfo.title} (${pinfo.sub}) প্ল্যাটফর্ম`;
+        document.getElementById('plat_modal_sub').innerText = `ফিচার: ${featureName}`;
 
-        function populateForm(pt) {
-            document.getElementById('pe-script-path').value = pt.script_path || '';
-            document.getElementById('pe-status').value = pt.status || 'Planned';
-            document.getElementById('pe-progress').value = pt.progress_percent || 0;
-            document.getElementById('pe-progress-val').innerText = (pt.progress_percent || 0) + '%';
-            document.getElementById('pe-priority').value = pt.priority || 'Medium';
-            document.getElementById('pe-deadline').value = pt.estimated_deadline || '';
-            document.getElementById('pe-issue-notes').value = pt.issue_notes || '';
-            document.getElementById('pe-dev-response').value = pt.dev_response || '';
-            document.getElementById('pe-assigned-to').value = pt.assigned_to || '';
-            openModal('modal-edit-platform');
+        function populate(pt) {
+            document.getElementById('pe_script_path').value = pt.script_path || '';
+            document.getElementById('pe_status').value = pt.status || 'Planned';
+            document.getElementById('pe_progress').value = pt.progress_percent || 0;
+            document.getElementById('pe_progress_display').innerText = (pt.progress_percent || 0) + '%';
+            document.getElementById('pe_priority').value = pt.priority || 'Medium';
+            document.getElementById('pe_deadline').value = pt.estimated_deadline || '';
+            document.getElementById('pe_issue_notes').value = pt.issue_notes || '';
+            document.getElementById('pe_dev_response').value = pt.dev_response || '';
+            document.getElementById('pe_assigned_to').value = pt.assigned_to || '';
+            showModal('editPlatformModal');
         }
 
-        if (platformData && typeof platformData === 'object') {
-            populateForm(platformData);
-            return;
-        }
+        if (platformData) {
+            populate(platformData);
+        } else {
+            const fd = new FormData();
+            fd.append('action', 'get_platform_details');
+            fd.append('feature_id', featureId);
+            fd.append('platform', platformKey);
 
-        // Fallback fetch via POST
-        const formData = new FormData();
-        formData.append('action', 'get_platform_details');
-        formData.append('feature_id', featureId);
-        formData.append('platform', platformKey);
-
-        fetch('feature-tracker.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.status === 'success') {
-                populateForm(data.platform_data);
-            } else {
-                populateForm({ feature_id: featureId, platform: platformKey });
-            }
-        })
-        .catch(err => {
-            console.error('Platform fetch error:', err);
-            populateForm({ feature_id: featureId, platform: platformKey });
-        });
-    }
-
-    function updateProgressDisplay(val) {
-        document.getElementById('pe-progress-val').innerText = val + '%';
-        if (val == 100) {
-            document.getElementById('pe-status').value = 'Completed';
+            fetch('feature-tracker.php', { method: 'POST', body: fd })
+            .then(r => r.json())
+            .then(res => {
+                populate(res.data || {});
+            })
+            .catch(() => {
+                populate({ feature_id: featureId, platform: platformKey });
+            });
         }
     }
 
-    function onPlatformStatusChange(st) {
+    function onStatusChange(st) {
         if (st === 'Completed') {
-            document.getElementById('pe-progress').value = 100;
-            document.getElementById('pe-progress-val').innerText = '100%';
+            document.getElementById('pe_progress').value = 100;
+            document.getElementById('pe_progress_display').innerText = '100%';
         }
     }
 
-    function submitPlatformEdit(e) {
+    function submitEditPlatform(e) {
         e.preventDefault();
-        const form = document.getElementById('form-edit-platform');
+        const form = document.getElementById('editPlatformForm');
         const formData = new FormData(form);
-        formData.append('action', 'update_platform_status');
-
-        const btn = document.getElementById('btn-save-platform');
+        const btn = document.getElementById('btnPlatformSubmit');
         btn.disabled = true;
 
-        fetch('feature-tracker.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
+        fetch('feature-tracker.php', { method: 'POST', body: formData })
+        .then(r => r.json())
+        .then(res => {
             btn.disabled = false;
-            if (data.status === 'success') {
-                closeModal('modal-edit-platform');
-                showToast(data.message, 'bg-success');
-                fetchMatrixData();
+            if (res.status === 'success') {
+                hideModal('editPlatformModal');
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('সংরক্ষিত!', res.message, 'success').then(() => location.reload());
+                } else {
+                    alert(res.message);
+                    location.reload();
+                }
             } else {
-                showToast(data.message, 'bg-danger');
+                alert(res.message || 'সংরক্ষণ ব্যর্থ!');
             }
         })
         .catch(err => {
             btn.disabled = false;
-            showToast('আপডেট ব্যর্থ হয়েছে!', 'bg-danger');
+            alert('সার্ভার রিকোয়েস্ট ব্যর্থ!');
         });
     }
 
-    // 7.8 BULK ALL 5 PLATFORMS MODAL
-    function openBulkPlatformsModal(featureId, featureName, platformsData) {
-        document.getElementById('bulk-feature-id').value = featureId;
-        document.getElementById('bulk-modal-feature-title').innerText = `ফিচার: ${featureName}`;
+    // Bulk All 5 Platforms Edit Modal
+    function openBulkModal(featureId, featureName, platformsData) {
+        document.getElementById('bulk_feature_id').value = featureId;
+        document.getElementById('bulk_modal_title').innerText = `ফিচার: ${featureName}`;
 
-        const container = document.getElementById('bulk-platforms-container');
+        const container = document.getElementById('bulk_container');
         let html = '';
 
-        for (const [pkey, pinfo] of Object.entries(platformsMeta)) {
-            const pdata = platformsData[pkey] || {
-                script_path: '',
-                status: 'Planned',
-                progress_percent: 0,
-                priority: 'Medium',
-                issue_notes: '',
-                dev_response: '',
-                assigned_to: ''
-            };
-
+        for (const [pk, pinfo] of Object.entries(platformsInfo)) {
+            const pt = platformsData[pk] || {};
             html += `
                 <div class="col-lg-6">
                     <div class="card border h-100 p-3 bg-light">
-                        <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
-                            <strong class="text-dark"><i class="${pinfo.icon} me-1" style="color:${pinfo.color}"></i> ${pinfo.title} (${pinfo.sub})</strong>
-                        </div>
+                        <strong class="text-${pinfo.color} mb-2 d-block">
+                            <i class="${pinfo.icon} me-1"></i> ${pinfo.title} (${pinfo.sub})
+                        </strong>
                         <div class="row g-2">
-                            <div class="col-md-7">
+                            <div class="col-8">
                                 <label class="small text-muted mb-1">স্ক্রিপ্ট পাথ</label>
-                                <input type="text" class="form-control form-control-sm font-monospace" name="platforms[${pkey}][script_path]" value="${escapeHtml(pdata.script_path || '')}" placeholder="script file...">
+                                <input type="text" class="form-control form-control-sm font-monospace" name="platforms[${pk}][script_path]" value="${escapeHtml(pt.script_path || '')}" placeholder="file.php">
                             </div>
-                            <div class="col-md-5">
+                            <div class="col-4">
                                 <label class="small text-muted mb-1">স্ট্যাটাস</label>
-                                <select class="form-select form-select-sm" name="platforms[${pkey}][status]">
-                                    ${Object.keys(statusMeta).map(st => `<option value="${st}" ${pdata.status === st ? 'selected' : ''}>${st}</option>`).join('')}
+                                <select class="form-select form-select-sm" name="platforms[${pk}][status]">
+                                    ${Object.keys(statusBadgesList).map(st => `<option value="${st}" ${pt.status === st ? 'selected' : ''}>${st}</option>`).join('')}
                                 </select>
                             </div>
                             <div class="col-6">
                                 <label class="small text-muted mb-1">অগ্রগতি (%)</label>
-                                <input type="number" class="form-control form-control-sm" name="platforms[${pkey}][progress_percent]" min="0" max="100" value="${pdata.progress_percent || 0}">
+                                <input type="number" class="form-control form-control-sm" name="platforms[${pk}][progress_percent]" min="0" max="100" value="${pt.progress_percent || 0}">
                             </div>
                             <div class="col-6">
                                 <label class="small text-muted mb-1">অগ্রাধিকার</label>
-                                <select class="form-select form-select-sm" name="platforms[${pkey}][priority]">
-                                    <option value="Critical" ${pdata.priority === 'Critical' ? 'selected' : ''}>Critical</option>
-                                    <option value="High" ${pdata.priority === 'High' ? 'selected' : ''}>High</option>
-                                    <option value="Medium" ${pdata.priority === 'Medium' || !pdata.priority ? 'selected' : ''}>Medium</option>
-                                    <option value="Low" ${pdata.priority === 'Low' ? 'selected' : ''}>Low</option>
+                                <select class="form-select form-select-sm" name="platforms[${pk}][priority]">
+                                    <option value="Critical" ${pt.priority === 'Critical' ? 'selected' : ''}>Critical</option>
+                                    <option value="High" ${pt.priority === 'High' ? 'selected' : ''}>High</option>
+                                    <option value="Medium" ${!pt.priority || pt.priority === 'Medium' ? 'selected' : ''}>Medium</option>
+                                    <option value="Low" ${pt.priority === 'Low' ? 'selected' : ''}>Low</option>
                                 </select>
                             </div>
                             <div class="col-12">
-                                <label class="small text-danger mb-1"><i class="bi bi-bug-fill"></i> সমস্যা / কাস্টমাইজেশন নোট</label>
-                                <textarea class="form-control form-control-sm" name="platforms[${pkey}][issue_notes]" rows="2" placeholder="সমস্যা বর্ণনা...">${escapeHtml(pdata.issue_notes || '')}</textarea>
+                                <label class="small text-danger mb-1">ইস্যু / পেন্ডিং কাজ</label>
+                                <textarea class="form-control form-control-sm" name="platforms[${pk}][issue_notes]" rows="2" placeholder="সমস্যার বিবরণ...">${escapeHtml(pt.issue_notes || '')}</textarea>
                             </div>
                             <div class="col-12">
-                                <label class="small text-success mb-1"><i class="bi bi-reply-fill"></i> সমাধান / রেসপন্স</label>
-                                <textarea class="form-control form-control-sm" name="platforms[${pkey}][dev_response]" rows="2" placeholder="ডেভেলপার নোট...">${escapeHtml(pdata.dev_response || '')}</textarea>
+                                <label class="small text-success mb-1">সমাধান / রেসপন্স</label>
+                                <textarea class="form-control form-control-sm" name="platforms[${pk}][dev_response]" rows="2" placeholder="ডেভেলপারের নোট...">${escapeHtml(pt.dev_response || '')}</textarea>
                             </div>
                         </div>
                     </div>
@@ -1959,93 +1085,60 @@ require_once 'header.php';
         }
 
         container.innerHTML = html;
-        openModal('modal-bulk-platforms');
+        showModal('bulkPlatformsModal');
     }
 
     function submitBulkPlatforms(e) {
         e.preventDefault();
-        const form = document.getElementById('form-bulk-platforms');
+        const form = document.getElementById('bulkPlatformsForm');
         const formData = new FormData(form);
-        formData.append('action', 'bulk_update_platforms');
-
-        const btn = document.getElementById('btn-save-bulk');
+        const btn = document.getElementById('btnBulkSubmit');
         btn.disabled = true;
 
-        fetch('feature-tracker.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
+        fetch('feature-tracker.php', { method: 'POST', body: formData })
+        .then(r => r.json())
+        .then(res => {
             btn.disabled = false;
-            if (data.status === 'success') {
-                closeModal('modal-bulk-platforms');
-                showToast(data.message, 'bg-success');
-                fetchMatrixData();
+            if (res.status === 'success') {
+                hideModal('bulkPlatformsModal');
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('সংরক্ষিত!', res.message, 'success').then(() => location.reload());
+                } else {
+                    alert(res.message);
+                    location.reload();
+                }
             } else {
-                showToast(data.message, 'bg-danger');
+                alert(res.message || 'সংরক্ষণ ব্যর্থ!');
             }
         })
         .catch(err => {
             btn.disabled = false;
-            showToast('বাল্ক আপডেট ব্যর্থ হয়েছে!', 'bg-danger');
+            alert('সার্ভার রিকোয়েস্ট ব্যর্থ!');
         });
     }
 
-    // 7.9 DEMO SEED DATA
-    function seedDefaultData() {
-        const formData = new FormData();
-        formData.append('action', 'seed_default_data');
+    // Seed Demo Data
+    function seedDemoData() {
+        const fd = new FormData();
+        fd.append('action', 'seed_default_data');
 
-        fetch('feature-tracker.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
-            showToast(data.message, 'bg-success');
-            const banner = document.getElementById('seed-banner');
-            if (banner) banner.style.display = 'none';
-            fetchMatrixData();
-        })
-        .catch(err => {
-            showToast('সিড করতে সমস্যা হয়েছে!', 'bg-danger');
+        fetch('feature-tracker.php', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(res => {
+            if (res.status === 'success') {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('সফল!', res.message, 'success').then(() => location.reload());
+                } else {
+                    alert(res.message);
+                    location.reload();
+                }
+            }
         });
     }
 
-    // 7.10 UTILITY HELPERS
-    function showToast(msg, bgClass = 'bg-primary') {
-        const toastEl = document.getElementById('tracker-toast');
-        const bodyEl = document.getElementById('tracker-toast-body');
-        if (!toastEl || !bodyEl) return;
-        toastEl.className = `toast align-items-center text-white ${bgClass} border-0`;
-        bodyEl.innerText = msg;
-        if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
-            const toast = new bootstrap.Toast(toastEl, { delay: 3500 });
-            toast.show();
-        } else {
-            toastEl.classList.add('show');
-            setTimeout(() => toastEl.classList.remove('show'), 3500);
-        }
-    }
-
-    function copyToClipboard(text) {
-        if (!text) return;
-        navigator.clipboard.writeText(text).then(() => {
-            showToast(`কপি করা হয়েছে: ${text}`, 'bg-dark');
-        }).catch(() => {
-            showToast('কপিতে ব্যর্থ!', 'bg-danger');
-        });
-    }
-
-    function escapeHtml(text) {
-        if (!text) return '';
-        return String(text)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
     }
 </script>
 
