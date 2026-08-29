@@ -1020,8 +1020,8 @@ if (!empty($init_master_ids)) {
 <!-- Optimized Modern CSS for Multi-Platform Matrix Tracker -->
 <style>
     .matrix-tracker-container {
-        width: 100%;
-        max-width: 1220px;
+        /* width: 100%; */
+        /* max-width: 1220px; */
         margin: 0 auto;
     }
 
@@ -1047,42 +1047,12 @@ if (!empty($init_master_ids)) {
     }
 
     /* Table Architecture */
-    .matrix-table-wrapper {
-        width: 100%;
-        position: relative;
-        overflow-x: auto;
-        border-radius: 8px;
-        border: 1px solid #e7e7e8;
-        background: #fff;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
-    }
-    .matrix-table {
-        width: 100% !important;
-        table-layout: fixed;
-        border-collapse: collapse;
-        margin-bottom: 0;
-    }
-    .matrix-table thead th {
-        background-color: #f8f9fa;
-        font-weight: 700;
-        font-size: 0.78rem;
-        letter-spacing: 0.3px;
-        padding: 0.5rem 0.3rem;
-        border-bottom: 2px solid #e7e7e8;
-        vertical-align: middle;
-    }
-    .matrix-table td {
-        vertical-align: middle;
-        word-wrap: break-word;
-        padding: 0.35rem 0.25rem;
-        border-bottom: 1px solid #edf0f2;
-    }
-
+   
     /* Column Widths */
-    .col-id { width: 34px; }
-    .col-feature-info { width: 23%; }
+    .col-id {  }
+    .col-feature-info { }
     .col-platform { width: 13.8%; }
-    .col-actions { width: 6%; }
+    .col-actions { }
 
     /* Interactive Row Hover */
     .matrix-main-row {
