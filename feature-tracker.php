@@ -570,12 +570,19 @@ if (($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) || (isset
         ");
         $stats_data = $stats_q ? $stats_q->fetch_assoc() : [];
 
-        // Dynamic modules list for filter dropdown
+        // Dynamic modules list from modulelist table
         $mod_list = [];
-        $m_res = $conn->query("SELECT DISTINCT module FROM eimbox_features_master ORDER BY module ASC");
-        if ($m_res) {
+        $m_res = $conn->query("SELECT module_name, is_public, core FROM modulelist WHERE module_name IS NOT NULL AND TRIM(module_name) != '' ORDER BY slno ASC, module_name ASC");
+        if ($m_res && $m_res->num_rows > 0) {
             while ($mrow = $m_res->fetch_assoc()) {
-                if (!empty($mrow['module'])) $mod_list[] = $mrow['module'];
+                $mod_list[] = $mrow['module_name'];
+            }
+        } else {
+            $m_res2 = $conn->query("SELECT DISTINCT module FROM eimbox_features_master ORDER BY module ASC");
+            if ($m_res2) {
+                while ($mrow = $m_res2->fetch_assoc()) {
+                    if (!empty($mrow['module'])) $mod_list[] = $mrow['module'];
+                }
             }
         }
 
@@ -928,12 +935,21 @@ $stats = $stats_q ? $stats_q->fetch_assoc() : [
     'p_desktop_completed' => 0, 'p_desktop_total' => 0
 ];
 
-// Fetch Distinct Modules for Dropdown
+// Fetch System Modules from `modulelist` table
 $modules_list = [];
-$mod_res = $conn->query("SELECT DISTINCT module FROM eimbox_features_master ORDER BY module ASC");
-if ($mod_res) {
+$mod_res = $conn->query("SELECT id, slno, module_name, module_icon, descrip, is_public, core FROM modulelist WHERE module_name IS NOT NULL AND TRIM(module_name) != '' ORDER BY slno ASC, module_name ASC");
+if ($mod_res && $mod_res->num_rows > 0) {
     while ($m = $mod_res->fetch_assoc()) {
-        if (!empty($m['module'])) $modules_list[] = $m['module'];
+        $modules_list[] = $m;
+    }
+} else {
+    $mod_res2 = $conn->query("SELECT DISTINCT module as module_name FROM eimbox_features_master ORDER BY module ASC");
+    if ($mod_res2) {
+        while ($m = $mod_res2->fetch_assoc()) {
+            $modules_list[] = [
+                'id' => 0, 'slno' => 99, 'module_name' => $m['module_name'], 'module_icon' => 'circle-square', 'descrip' => '', 'is_public' => 1, 'core' => 0
+            ];
+        }
     }
 }
 ?>
@@ -1243,7 +1259,9 @@ if ($mod_res) {
                     <select class="form-select form-select-sm" id="filter-module" onchange="fetchMatrixData()">
                         <option value="all">📁 সকল মডিউল</option>
                         <?php foreach ($modules_list as $mod): ?>
-                            <option value="<?= htmlspecialchars($mod) ?>"><?= htmlspecialchars($mod) ?></option>
+                            <option value="<?= htmlspecialchars($mod['module_name']) ?>">
+                                <?= htmlspecialchars($mod['module_name']) ?> <?= $mod['core'] == 1 ? '★' : '' ?>
+                            </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -1376,21 +1394,32 @@ if ($mod_res) {
             <form id="form-add-master" onsubmit="submitMasterAdd(event)">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">মডিউল নাম (Module) <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="module" id="add-module" list="module-datalist" placeholder="যেমন: Attendance, Accounts, Exam" required>
-                        <datalist id="module-datalist">
-                            <?php foreach ($modules_list as $mod): ?>
-                                <option value="<?= htmlspecialchars($mod) ?>">
-                            <?php endforeach; ?>
-                        </datalist>
+                        <label class="form-label fw-semibold">মডিউল নির্বাচন করুন (Module) <span class="text-danger">*</span></label>
+                        <select class="form-select" name="module" id="add-module" required>
+                            <option value="">-- মডিউল নির্বাচন করুন --</option>
+                            <optgroup label="📋 Public / Academic Modules">
+                                <?php foreach ($modules_list as $mod): if ($mod['is_public'] == 1): ?>
+                                    <option value="<?= htmlspecialchars($mod['module_name']) ?>" data-desc="<?= htmlspecialchars($mod['descrip'] ?? '') ?>">
+                                        <?= htmlspecialchars($mod['module_name']) ?> <?= $mod['core'] == 1 ? '(Core)' : '' ?>
+                                    </option>
+                                <?php endif; endforeach; ?>
+                            </optgroup>
+                            <optgroup label="⚙️ Backend / Administrative Modules">
+                                <?php foreach ($modules_list as $mod): if ($mod['is_public'] == 0): ?>
+                                    <option value="<?= htmlspecialchars($mod['module_name']) ?>" data-desc="<?= htmlspecialchars($mod['descrip'] ?? '') ?>">
+                                        <?= htmlspecialchars($mod['module_name']) ?>
+                                    </option>
+                                <?php endif; endforeach; ?>
+                            </optgroup>
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold">ফিচার নাম (Feature Name) <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="feature_name" id="add-feature-name" placeholder="যেমন: Daily Student Attendance" required>
+                        <input type="text" class="form-control" name="feature_name" id="add-feature-name" placeholder="যেমন: Daily Student Attendance, OMR Scanner..." required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold">সংক্ষিপ্ত বিবরণ (Description)</label>
-                        <textarea class="form-control" name="description" rows="3" placeholder="ফিচারের মূল কার্যপ্রণালী বা বর্ণনা..."></textarea>
+                        <textarea class="form-control" name="description" id="add-feature-desc" rows="3" placeholder="ফিচারের মূল কার্যপ্রণালী বা বর্ণনা..."></textarea>
                     </div>
                     <div class="alert alert-info py-2 px-3 small mb-0">
                         <i class="ri-information-line me-1"></i> ফিচারটি যোগ করার সাথে সাথে ৫টি প্ল্যাটফর্ম (Dashboard, Console, Android Lite, Premium, Desktop)-এ স্বয়ংক্রিয়ভাবে এটি ইনিশিয়ালাইজ হয়ে যাবে।
@@ -1420,7 +1449,13 @@ if ($mod_res) {
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label fw-semibold">মডিউল নাম (Module) <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="module" id="edit-master-module" required>
+                        <select class="form-select" name="module" id="edit-master-module" required>
+                            <?php foreach ($modules_list as $mod): ?>
+                                <option value="<?= htmlspecialchars($mod['module_name']) ?>">
+                                    <?= htmlspecialchars($mod['module_name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold">ফিচার নাম (Feature Name) <span class="text-danger">*</span></label>
