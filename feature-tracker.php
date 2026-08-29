@@ -817,7 +817,6 @@ require_once 'header.php';
                     </tr>
                 </thead>
                 <tbody id="matrixTableBody">
-                    <!-- Dynamic rendering via JavaScript & initial PHP hydration -->
                     <?php if (empty($features)): ?>
                         <tr id="emptyMatrixRow">
                             <td colspan="8" class="text-center py-5 text-muted">
@@ -1180,18 +1179,24 @@ require_once 'header.php';
     // Utility & Modal Helpers
     // -------------------------------------------------------------
     function showModal(id) { 
-        bootstrap.Modal.getOrCreateInstance(document.getElementById(id)).show(); 
+        const modalEl = document.getElementById(id);
+        if (modalEl && typeof bootstrap !== 'undefined') {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show(); 
+        }
     }
     
     function hideModal(id) { 
-        const m = bootstrap.Modal.getInstance(document.getElementById(id)); 
-        if (m) m.hide(); 
+        const modalEl = document.getElementById(id);
+        if (modalEl && typeof bootstrap !== 'undefined') {
+            const m = bootstrap.Modal.getInstance(modalEl); 
+            if (m) m.hide(); 
+        }
     }
 
     function showToast(message, isError = false) {
         const toastEl = document.getElementById('toastNotification');
         const toastMsg = document.getElementById('toastMessage');
-        if (toastEl && toastMsg) {
+        if (toastEl && toastMsg && typeof bootstrap !== 'undefined') {
             toastEl.className = `toast align-items-center text-white ${isError ? 'bg-danger' : 'bg-success'} border-0 tracker-toast`;
             toastMsg.innerHTML = `<i class="bi ${isError ? 'bi-exclamation-triangle-fill' : 'bi-check-circle-fill'} me-2 fs-5"></i> ${escapeHtml(message)}`;
             const toast = bootstrap.Toast.getOrCreateInstance(toastEl, { delay: 3000 });
@@ -1343,7 +1348,6 @@ require_once 'header.php';
         features.forEach(fItem => {
             const m = fItem.master;
             const pData = fItem.platforms || {};
-            const mJson = escapeHtml(JSON.stringify(m));
 
             html += `
             <tr id="feature_row_${m.id}">
@@ -1419,11 +1423,12 @@ require_once 'header.php';
                 }
             }
 
+            const masterJsonStr = JSON.stringify(m).replace(/"/g, '&quot;');
             html += `
                 <td class="text-center">
                     <div class="btn-group btn-group-sm">
-                        <button type="button" class="btn btn-outline-primary" title="Edit Feature" onclick='openMasterEditModal(${JSON.stringify(m)})'><i class="bi bi-pencil-square"></i></button>
-                        <button type="button" class="btn btn-outline-danger" title="Delete Feature" onclick='deleteFeature(${m.id}, "${escapeHtml(m.feature_name)}")'><i class="bi bi-trash3"></i></button>
+                        <button type="button" class="btn btn-outline-primary" title="Edit Feature" onclick="openMasterEditModal(${masterJsonStr})"><i class="bi bi-pencil-square"></i></button>
+                        <button type="button" class="btn btn-outline-danger" title="Delete Feature" onclick="deleteFeature(${m.id}, '${escapeHtml(m.feature_name)}')"><i class="bi bi-trash3"></i></button>
                     </div>
                 </td>
             </tr>`;
@@ -1466,6 +1471,7 @@ require_once 'header.php';
     }
 
     function openMasterEditModal(masterData) {
+        if (!masterData) return;
         document.getElementById('edit_feature_id').value = masterData.id || 0;
         document.getElementById('edit_feature_module').value = masterData.module || '';
         document.getElementById('edit_feature_name').value = masterData.feature_name || '';
@@ -1690,7 +1696,7 @@ require_once 'header.php';
                                 <label class="form-label small fw-semibold text-muted mb-1">Progress (<span id="task_prog_lbl_${t.id}">${t.progress_percent}</span>%)</label>
                                 <div class="d-flex align-items-center gap-2">
                                     <input type="range" class="form-range" min="0" max="100" value="${t.progress_percent}" oninput="document.getElementById('task_prog_val_${t.id}').value = this.value; document.getElementById('task_prog_lbl_${t.id}').innerText = this.value;">
-                                    <input type="number" class="form-control form-control-sm text-center" style="width: 60px;" name="progress_percent" id="task_prog_val_${t.id}" min="0" max="100" value="${t.progress_percent}" oninput="document.getElementById('task_prog_lbl_${t.id}').innerText = this.value;">
+                                    <input type="number" class="form-control form-control-sm text-center" style="width: 60px;" name="progress_percent" id="task_prog_val_${t.id}" min="0" max="100" value="${t.progress_percent}" oninput="document.getElementById('task_prog_range_${t.id}').value = this.value; document.getElementById('task_prog_lbl_${t.id}').innerText = this.value;">
                                 </div>
                             </div>
                             <div class="col-md-3">
@@ -1787,7 +1793,7 @@ require_once 'header.php';
                     document.getElementById('nt_prog_label').innerText = 0;
                     hideNewTaskForm();
                     loadPlatformTasks();
-                    applyFiltersAjax(); // Background update matrix & KPIs
+                    applyFiltersAjax();
                 } else {
                     alert(res.message || 'Failed to add task.');
                 }
@@ -1819,7 +1825,7 @@ require_once 'header.php';
                 if (res.status === 'success') {
                     showToast(res.message);
                     loadPlatformTasks();
-                    applyFiltersAjax(); // Background update matrix & KPIs
+                    applyFiltersAjax();
                 } else {
                     alert(res.message || 'Failed to update task.');
                 }
@@ -1845,7 +1851,7 @@ require_once 'header.php';
                 if (res.status === 'success') {
                     showToast(res.message);
                     loadPlatformTasks();
-                    applyFiltersAjax(); // Background update matrix & KPIs
+                    applyFiltersAjax();
                 } else {
                     alert(res.message || 'Failed to delete task.');
                 }
