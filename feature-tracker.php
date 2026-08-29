@@ -502,7 +502,7 @@ require_once 'header.php';
                         <th class="text-center" style="width: 40px;">#</th>
                         <th style="min-width: 200px;">মডিউল ও ফিচার নাম</th>
                         <?php foreach ($platforms as $pk => $pinfo): ?>
-                            <th class="text-center" style="width: 14%;">
+                            <th class="text-center" >
                                 <div class="text-<?= $pinfo['color'] ?> fw-bold">
                                     <i class="<?= $pinfo['icon'] ?>"></i> <?= $pinfo['title'] ?>
                                 </div>
