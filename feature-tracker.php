@@ -300,7 +300,7 @@ function render_matrix_table_body($rows, $platforms_meta, $status_meta, $priorit
                 }
                 $p_json = htmlspecialchars(json_encode($pdata), ENT_QUOTES, 'UTF-8');
             ?>
-                <td class="col-platform text-center platform-cell" onclick="event.stopPropagation(); openPlatformEditModal(<?= $master['id'] ?>, '<?= $pkey ?>', '<?= htmlspecialchars($master['feature_name'], ENT_QUOTES) ?>')">
+                <td class="col-platform text-center platform-cell" onclick="event.stopPropagation(); openPlatformEditModal(<?= $master['id'] ?>, '<?= $pkey ?>', '<?= htmlspecialchars($master['feature_name'], ENT_QUOTES) ?>', <?= $p_json ?>)">
                     <div class="platform-cell-card <?= $st === 'Issue' ? 'border-danger bg-danger-subtle' : ($st === 'Completed' ? 'border-success' : '') ?>" title="ক্লিক করে <?= htmlspecialchars($pinfo['title']) ?> প্ল্যাটফর্মের স্ট্যাটাস ও তথ্য পরিবর্তন করুন">
                         <!-- 1. Circular Progress Meter with Centered Value -->
                         <div class="circle-progress" style="--pct: <?= $pct ?>; --pcolor: <?= $pct_color ?>;" title="অগ্রগতি: <?= $pct ?>%">
@@ -469,7 +469,7 @@ function render_matrix_table_body($rows, $platforms_meta, $status_meta, $priorit
                                                     <span><i class="ri-user-line"></i> <?= htmlspecialchars($pdata['assigned_to']) ?></span>
                                                 <?php endif; ?>
                                             </div>
-                                            <button type="button" class="btn btn-xs btn-outline-primary" onclick="openPlatformEditModal(<?= $master['id'] ?>, '<?= $pkey ?>', '<?= htmlspecialchars($master['feature_name'], ENT_QUOTES) ?>')">
+                                            <button type="button" class="btn btn-xs btn-outline-primary" onclick="openPlatformEditModal(<?= $master['id'] ?>, '<?= $pkey ?>', '<?= htmlspecialchars($master['feature_name'], ENT_QUOTES) ?>', <?= $p_json ?>)">
                                                 <i class="ri-pencil-line me-1"></i> এডিট
                                             </button>
                                         </div>
@@ -1021,12 +1021,13 @@ if (!empty($init_master_ids)) {
 <style>
     .matrix-tracker-container {
         width: 100%;
-        max-width: 100%;
+        max-width: 1220px;
+        margin: 0 auto;
     }
 
     /* KPI Summary Cards */
     .kpi-card {
-        border-radius: 10px;
+        border-radius: 8px;
         transition: transform 0.2s, box-shadow 0.2s;
         cursor: pointer;
     }
@@ -1035,14 +1036,14 @@ if (!empty($init_master_ids)) {
         box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
     .platform-kpi-chip {
-        font-size: 0.8rem;
-        padding: 6px 10px;
-        border-radius: 8px;
+        font-size: 0.75rem;
+        padding: 4px 8px;
+        border-radius: 6px;
         background: #fff;
         border: 1px solid #e7e7e8;
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 5px;
     }
 
     /* Table Architecture */
@@ -1053,6 +1054,7 @@ if (!empty($init_master_ids)) {
         border-radius: 8px;
         border: 1px solid #e7e7e8;
         background: #fff;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
     }
     .matrix-table {
         width: 100% !important;
@@ -1061,27 +1063,26 @@ if (!empty($init_master_ids)) {
         margin-bottom: 0;
     }
     .matrix-table thead th {
-        background-color: #f5f5f9;
+        background-color: #f8f9fa;
         font-weight: 700;
-        font-size: 0.82rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        padding: 0.75rem 0.5rem;
+        font-size: 0.78rem;
+        letter-spacing: 0.3px;
+        padding: 0.5rem 0.3rem;
         border-bottom: 2px solid #e7e7e8;
         vertical-align: middle;
     }
     .matrix-table td {
         vertical-align: middle;
         word-wrap: break-word;
-        padding: 0.65rem 0.5rem;
-        border-bottom: 1px solid #e7e7e8;
+        padding: 0.35rem 0.25rem;
+        border-bottom: 1px solid #edf0f2;
     }
 
     /* Column Widths */
-    .col-id { width: 45px; }
-    .col-feature-info { width: 22%; }
-    .col-platform { width: 14%; }
-    .col-actions { width: 8%; }
+    .col-id { width: 34px; }
+    .col-feature-info { width: 23%; }
+    .col-platform { width: 13.8%; }
+    .col-actions { width: 6%; }
 
     /* Interactive Row Hover */
     .matrix-main-row {
@@ -1095,28 +1096,28 @@ if (!empty($init_master_ids)) {
     /* Platform Cell Card inside Table */
     .platform-cell-card {
         background: #fafafa;
-        border: 1px solid #e2e4e8;
+        border: 1px solid #e4e6eb;
         border-radius: 6px;
-        padding: 6px 3px;
-        min-height: 68px;
+        padding: 4px 2px;
+        min-height: 58px;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 3px;
+        gap: 2px;
         transition: all 0.2s;
         cursor: pointer;
     }
     .platform-cell-card:hover {
         background: #ffffff;
         border-color: #696cff;
-        box-shadow: 0 2px 8px rgba(105, 108, 255, 0.15);
+        box-shadow: 0 2px 6px rgba(105, 108, 255, 0.15);
         transform: translateY(-1px);
     }
     .platform-status-badge {
-        font-size: 0.65rem;
-        padding: 2px 5px;
-        border-radius: 4px;
+        font-size: 0.62rem;
+        padding: 1px 5px;
+        border-radius: 3px;
         font-weight: 600;
         white-space: nowrap;
         line-height: 1.15;
@@ -1124,32 +1125,32 @@ if (!empty($init_master_ids)) {
 
     /* Circular Progress Meter */
     .circle-progress {
-        width: 32px;
-        height: 32px;
+        width: 26px;
+        height: 26px;
         border-radius: 50%;
         background: conic-gradient(var(--pcolor, #696cff) calc(var(--pct, 0) * 1%), #e7e7e8 0);
         display: inline-flex;
         align-items: center;
         justify-content: center;
         position: relative;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         flex-shrink: 0;
     }
     .circle-progress::before {
         content: "";
         position: absolute;
-        width: 22px;
-        height: 22px;
+        width: 18px;
+        height: 18px;
         border-radius: 50%;
         background: #ffffff;
     }
     .circle-progress-val {
         position: relative;
-        font-size: 0.62rem;
+        font-size: 0.55rem;
         font-weight: 700;
         line-height: 1;
         color: #384551;
-        letter-spacing: -0.3px;
+        letter-spacing: -0.4px;
     }
 
     /* Mini Progress Bar (for Drawer) */
@@ -1530,11 +1531,20 @@ if (!empty($init_master_ids)) {
                     <div class="mb-3">
                         <label class="form-label fw-semibold">মডিউল নাম (Module) <span class="text-danger">*</span></label>
                         <select class="form-select" name="module" id="edit-master-module" required>
-                            <?php foreach ($modules_list as $mod): ?>
-                                <option value="<?= htmlspecialchars($mod['module_name']) ?>">
-                                    <?= htmlspecialchars($mod['module_name']) ?>
-                                </option>
-                            <?php endforeach; ?>
+                            <optgroup label="📋 Public / Academic Modules">
+                                <?php foreach ($modules_list as $mod): if ($mod['is_public'] == 1): ?>
+                                    <option value="<?= htmlspecialchars($mod['module_name']) ?>">
+                                        <?= htmlspecialchars($mod['module_name']) ?> <?= $mod['core'] == 1 ? '(Core)' : '' ?>
+                                    </option>
+                                <?php endif; endforeach; ?>
+                            </optgroup>
+                            <optgroup label="⚙️ Backend / Administrative Modules">
+                                <?php foreach ($modules_list as $mod): if ($mod['is_public'] == 0): ?>
+                                    <option value="<?= htmlspecialchars($mod['module_name']) ?>">
+                                        <?= htmlspecialchars($mod['module_name']) ?>
+                                    </option>
+                                <?php endif; endforeach; ?>
+                            </optgroup>
                         </select>
                     </div>
                     <div class="mb-3">
@@ -1955,31 +1965,52 @@ if (!empty($init_master_ids)) {
     }
 
     // 5.2 SPECIFIC PLATFORM EDIT MODAL
-    function openPlatformEditModal(featureId, platformKey, featureName) {
+    function openPlatformEditModal(featureId, platformKey, featureName, platformData = null) {
         const platInfo = platformsMeta[platformKey] || { title: platformKey, icon: 'ri-smartphone-line' };
         document.getElementById('pe-feature-id').value = featureId;
         document.getElementById('pe-platform').value = platformKey;
         document.getElementById('platform-modal-title').innerHTML = `<i class="${platInfo.icon} me-2" style="color:${platInfo.color || '#696cff'}"></i> ${platInfo.title} প্ল্যাটফর্ম কনফিগারেশন`;
         document.getElementById('platform-modal-subtitle').innerText = `ফিচার: ${featureName}`;
 
-        // Fetch current platform data from server
-        fetch(`feature-tracker.php?action=get_platform_details&feature_id=${featureId}&platform=${platformKey}`)
+        function populateForm(pt) {
+            document.getElementById('pe-script-path').value = pt.script_path || '';
+            document.getElementById('pe-status').value = pt.status || 'Planned';
+            document.getElementById('pe-progress').value = pt.progress_percent || 0;
+            document.getElementById('pe-progress-val').innerText = (pt.progress_percent || 0) + '%';
+            document.getElementById('pe-priority').value = pt.priority || 'Medium';
+            document.getElementById('pe-deadline').value = pt.estimated_deadline || '';
+            document.getElementById('pe-issue-notes').value = pt.issue_notes || '';
+            document.getElementById('pe-dev-response').value = pt.dev_response || '';
+            document.getElementById('pe-assigned-to').value = pt.assigned_to || '';
+            openModal('modal-edit-platform');
+        }
+
+        if (platformData && typeof platformData === 'object') {
+            populateForm(platformData);
+            return;
+        }
+
+        // Fallback via POST AJAX if data not already passed
+        const formData = new FormData();
+        formData.append('action', 'get_platform_details');
+        formData.append('feature_id', featureId);
+        formData.append('platform', platformKey);
+
+        fetch('feature-tracker.php', {
+            method: 'POST',
+            body: formData
+        })
         .then(res => res.json())
         .then(data => {
             if (data.status === 'success') {
-                const pt = data.platform_data;
-                document.getElementById('pe-script-path').value = pt.script_path || '';
-                document.getElementById('pe-status').value = pt.status || 'Planned';
-                document.getElementById('pe-progress').value = pt.progress_percent || 0;
-                document.getElementById('pe-progress-val').innerText = (pt.progress_percent || 0) + '%';
-                document.getElementById('pe-priority').value = pt.priority || 'Medium';
-                document.getElementById('pe-deadline').value = pt.estimated_deadline || '';
-                document.getElementById('pe-issue-notes').value = pt.issue_notes || '';
-                document.getElementById('pe-dev-response').value = pt.dev_response || '';
-                document.getElementById('pe-assigned-to').value = pt.assigned_to || '';
-
-                openModal('modal-edit-platform');
+                populateForm(data.platform_data);
+            } else {
+                populateForm({ feature_id: featureId, platform: platformKey });
             }
+        })
+        .catch(err => {
+            console.error('Platform fetch error:', err);
+            populateForm({ feature_id: featureId, platform: platformKey });
         });
     }
 
