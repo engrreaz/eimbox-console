@@ -184,10 +184,41 @@ function ensure_tracker_schema($conn) {
           PRIMARY KEY (`id`),
           UNIQUE KEY `idx_feature_platform` (`feature_id`, `platform`),
           KEY `idx_status` (`status`),
-          KEY `idx_platform` (`platform`),
-          CONSTRAINT `fk_tracker_feature` FOREIGN KEY (`feature_id`) REFERENCES `eimbox_features_master` (`id`) ON DELETE CASCADE
+          KEY `idx_platform` (`platform`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     ");
+
+    // 3. Auto-sync existing entries from `features` table if missing
+    $f_check = $conn->query("SHOW TABLES LIKE 'features'");
+    if ($f_check && $f_check->num_rows > 0) {
+        $f_res = $conn->query("SELECT * FROM features");
+        if ($f_res) {
+            while ($f = $f_res->fetch_assoc()) {
+                $fname = trim($f['feature_name'] ?? '');
+                if (empty($fname)) continue;
+                $chk = $conn->query("SELECT id FROM eimbox_features_master WHERE feature_name = '" . $conn->real_escape_string($fname) . "'");
+                if ($chk && $chk->num_rows == 0) {
+                    $mname = !empty($f['module_name']) ? $f['module_name'] : 'General';
+                    $desc = $f['description'] ?? '';
+                    $s = $conn->prepare("INSERT INTO eimbox_features_master (module, feature_name, description) VALUES (?, ?, ?)");
+                    if ($s) {
+                        $s->bind_param("sss", $mname, $fname, $desc);
+                        $s->execute();
+                        $nid = $s->insert_id;
+                        $s->close();
+                        $ps = $conn->prepare("INSERT INTO eimbox_platform_tracker (feature_id, platform, status, progress_percent, priority) VALUES (?, ?, 'Planned', 0, 'Medium') ON DUPLICATE KEY UPDATE updated_at = NOW()");
+                        if ($ps) {
+                            foreach (['dashboard', 'console', 'android_lite', 'premium', 'desktop'] as $pk) {
+                                $ps->bind_param("is", $nid, $pk);
+                                $ps->execute();
+                            }
+                            $ps->close();
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 /**
@@ -952,6 +983,37 @@ if ($mod_res && $mod_res->num_rows > 0) {
         }
     }
 }
+
+// Fetch Initial Matrix Data on Server-Side Load (Immediate render on page load)
+$init_master_ids = [];
+$res_init = $conn->query("SELECT id FROM eimbox_features_master ORDER BY module ASC, display_order ASC, feature_name ASC");
+if ($res_init) {
+    while ($r = $res_init->fetch_assoc()) {
+        $init_master_ids[] = intval($r['id']);
+    }
+}
+$initial_matrix_data = [];
+if (!empty($init_master_ids)) {
+    $ids_str = implode(',', $init_master_ids);
+    $masters_res = $conn->query("SELECT * FROM eimbox_features_master WHERE id IN ($ids_str) ORDER BY module ASC, display_order ASC, feature_name ASC");
+    $masters_map = [];
+    while ($m = $masters_res->fetch_assoc()) {
+        $masters_map[$m['id']] = $m;
+    }
+    $platforms_res = $conn->query("SELECT * FROM eimbox_platform_tracker WHERE feature_id IN ($ids_str)");
+    $platforms_by_feature = [];
+    while ($pt = $platforms_res->fetch_assoc()) {
+        $platforms_by_feature[$pt['feature_id']][$pt['platform']] = $pt;
+    }
+    foreach ($init_master_ids as $mid) {
+        if (isset($masters_map[$mid])) {
+            $initial_matrix_data[] = [
+                'master' => $masters_map[$mid],
+                'platforms' => $platforms_by_feature[$mid] ?? []
+            ];
+        }
+    }
+}
 ?>
 
 <!-- Optimized Modern CSS for Multi-Platform Matrix Tracker -->
@@ -1347,13 +1409,7 @@ if ($mod_res && $mod_res->num_rows > 0) {
                 </tr>
             </thead>
             <tbody id="matrix-tbody">
-                <!-- Initial loader -->
-                <tr>
-                    <td colspan="7" class="text-center py-5">
-                        <div class="spinner-border text-primary" role="status"></div>
-                        <div class="text-muted small mt-2">ডাটা লোড হচ্ছে...</div>
-                    </td>
-                </tr>
+                <?php render_matrix_table_body($initial_matrix_data, $platforms_meta, $status_meta, $priority_meta); ?>
             </tbody>
         </table>
     </div>
@@ -1733,11 +1789,57 @@ if ($mod_res && $mod_res->num_rows > 0) {
         }
     }
 
+    // Robust Modal Helpers (Works with Bootstrap 5, jQuery, or Vanilla DOM)
+    function openModal(modalId) {
+        const el = document.getElementById(modalId);
+        if (!el) return;
+        try {
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                const inst = bootstrap.Modal.getOrCreateInstance(el);
+                if (inst) {
+                    inst.show();
+                    return;
+                }
+            }
+        } catch (e) {
+            console.warn('Bootstrap modal open error:', e);
+        }
+        if (typeof $ !== 'undefined' && typeof $.fn.modal === 'function') {
+            $(el).modal('show');
+            return;
+        }
+        el.classList.add('show');
+        el.style.display = 'block';
+        document.body.classList.add('modal-open');
+    }
+
+    function closeModal(modalId) {
+        const el = document.getElementById(modalId);
+        if (!el) return;
+        try {
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                const inst = bootstrap.Modal.getInstance(el) || bootstrap.Modal.getOrCreateInstance(el);
+                if (inst) inst.hide();
+            }
+        } catch (e) {
+            console.warn('Bootstrap modal hide error:', e);
+        }
+        if (typeof $ !== 'undefined' && typeof $.fn.modal === 'function') {
+            $(el).modal('hide');
+        }
+        setTimeout(() => {
+            el.classList.remove('show');
+            el.style.display = 'none';
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('padding-right');
+            document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+        }, 150);
+    }
+
     // 5.1 MASTER FEATURE MODAL HANDLERS
     function openMasterAddModal() {
         document.getElementById('form-add-master').reset();
-        const modal = new bootstrap.Modal(document.getElementById('modal-add-master'));
-        modal.show();
+        openModal('modal-add-master');
     }
 
     function submitMasterAdd(e) {
@@ -1757,7 +1859,7 @@ if ($mod_res && $mod_res->num_rows > 0) {
         .then(data => {
             btn.disabled = false;
             if (data.status === 'success') {
-                bootstrap.Modal.getInstance(document.getElementById('modal-add-master')).hide();
+                closeModal('modal-add-master');
                 showToast(data.message, 'bg-success');
                 fetchMatrixData();
             } else {
@@ -1776,8 +1878,7 @@ if ($mod_res && $mod_res->num_rows > 0) {
         document.getElementById('edit-master-feature').value = masterData.feature_name || '';
         document.getElementById('edit-master-desc').value = masterData.description || '';
 
-        const modal = new bootstrap.Modal(document.getElementById('modal-edit-master'));
-        modal.show();
+        openModal('modal-edit-master');
     }
 
     function submitMasterEdit(e) {
@@ -1797,7 +1898,7 @@ if ($mod_res && $mod_res->num_rows > 0) {
         .then(data => {
             btn.disabled = false;
             if (data.status === 'success') {
-                bootstrap.Modal.getInstance(document.getElementById('modal-edit-master')).hide();
+                closeModal('modal-edit-master');
                 showToast(data.message, 'bg-success');
                 fetchMatrixData();
             } else {
@@ -1859,8 +1960,7 @@ if ($mod_res && $mod_res->num_rows > 0) {
                 document.getElementById('pe-dev-response').value = pt.dev_response || '';
                 document.getElementById('pe-assigned-to').value = pt.assigned_to || '';
 
-                const modal = new bootstrap.Modal(document.getElementById('modal-edit-platform'));
-                modal.show();
+                openModal('modal-edit-platform');
             }
         });
     }
@@ -1896,7 +1996,7 @@ if ($mod_res && $mod_res->num_rows > 0) {
         .then(data => {
             btn.disabled = false;
             if (data.status === 'success') {
-                bootstrap.Modal.getInstance(document.getElementById('modal-edit-platform')).hide();
+                closeModal('modal-edit-platform');
                 showToast(data.message, 'bg-success');
                 fetchMatrixData();
             } else {
@@ -1973,8 +2073,7 @@ if ($mod_res && $mod_res->num_rows > 0) {
         }
 
         container.innerHTML = html;
-        const modal = new bootstrap.Modal(document.getElementById('modal-bulk-platforms'));
-        modal.show();
+        openModal('modal-bulk-platforms');
     }
 
     function submitBulkPlatforms(e) {
@@ -1994,7 +2093,7 @@ if ($mod_res && $mod_res->num_rows > 0) {
         .then(data => {
             btn.disabled = false;
             if (data.status === 'success') {
-                bootstrap.Modal.getInstance(document.getElementById('modal-bulk-platforms')).hide();
+                closeModal('modal-bulk-platforms');
                 showToast(data.message, 'bg-success');
                 fetchMatrixData();
             } else {
