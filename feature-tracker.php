@@ -496,7 +496,7 @@ require_once 'header.php';
     <!-- Main Features Matrix Table (Pure Bootstrap 5 Table) -->
     <div class="card shadow-sm border-0">
         <div class="table-responsive">
-            <table class="table table-bordered table-striped table-hover align-middle mb-0">
+            <table class="table table-responsive table-bordered table-striped table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
                         <th class="text-center" style="width: 40px;">#</th>
