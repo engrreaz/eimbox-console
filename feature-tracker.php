@@ -1395,7 +1395,7 @@ if (!empty($init_master_ids)) {
 
     <!-- 3. Multi-Platform Matrix Table -->
     <div class="matrix-table-wrapper">
-        <table class="table matrix-table table-hover align-middle mb-0">
+        <table class="table table-responsive table-hover align-middle mb-0">
             <thead>
                 <tr>
                     <th class="col-id text-center">#</th>
