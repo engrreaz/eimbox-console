@@ -1670,6 +1670,11 @@ if (!empty($init_master_ids)) {
     </div>
 </div>
 
+
+
+<?php require_once 'footer.php'; ?> 
+
+
 <!-- ============================================================== -->
 <!-- 5. JAVASCRIPT LOGIC & LIVE AJAX ENGINE                         -->
 <!-- ============================================================== -->
@@ -2173,4 +2178,4 @@ if (!empty($init_master_ids)) {
     }
 </script>
 
-<?php require_once 'footer.php'; ?>
+
