@@ -720,17 +720,17 @@ require_once 'header.php';
             <table class="table table-bordered table-striped table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th class="text-center" style="width: 45px;">#</th>
-                        <th style="min-width: 220px;">Module & Feature Name</th>
+                        <th class="text-center" >#</th>
+                        <th >Module & Feature Name</th>
                         <?php foreach ($platforms as $pk => $pinfo): ?>
-                            <th class="text-center" style="min-width: 150px;">
+                            <th class="text-center" >
                                 <div class="text-<?= $pinfo['color'] ?> fw-bold">
                                     <i class="<?= $pinfo['icon'] ?> me-1"></i> <?= $pinfo['title'] ?>
                                 </div>
                                 <span class="text-muted font-monospace" style="font-size: 0.65rem;"><?= $pinfo['sub'] ?></span>
                             </th>
                         <?php endforeach; ?>
-                        <th class="text-center" style="width: 80px;">Actions</th>
+                        <th class="text-center" >Actions</th>
                     </tr>
                 </thead>
                 <tbody>
