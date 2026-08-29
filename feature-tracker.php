@@ -103,7 +103,6 @@ function fetch_matrix_data_array($conn, $f_module = 'all', $f_platform = 'all', 
 
         $where_sql = implode(' AND ', $where_clauses);
         $sql = "SELECT m.* FROM eimbox_features_master m WHERE $where_sql ORDER BY m.id DESC";
-echo $sql;
         $features_res = $conn->query($sql);
         $features = [];
         $feature_ids = [];
@@ -870,7 +869,7 @@ require_once 'header.php';
                                     $task_count = count($tasks);
                                     
                                     if ($task_count === 0): ?>
-                                        <td class="text-center p-2" style="cursor: pointer;" onclick='openPlatformWorkspace(<?= $m['id'] ?>, "<?= $pk ?>", <?= json_encode($m['feature_name']) ?>)' title="Click to configure tasks for <?= $pinfo['title'] ?>">
+                                        <td class="text-center p-2" style="cursor: pointer;" onclick="openPlatformWorkspace(<?= (int)$m['id'] ?>, '<?= $pk ?>')" title="Click to configure tasks for <?= $pinfo['title'] ?>">
                                             <div class="platform-cell-box d-flex flex-column align-items-center justify-content-center p-1">
                                                 <span class="badge na-badge px-2 py-1 mb-1">
                                                     <i class="bi bi-slash-circle me-1"></i>N/A
@@ -909,7 +908,7 @@ require_once 'header.php';
                                         $badge_class = $status_badges[$composite_status] ?? 'bg-secondary';
                                         $prog_color = get_progress_color($avg_progress, $composite_status);
                                     ?>
-                                        <td class="text-center p-2" style="cursor: pointer;" onclick='openPlatformWorkspace(<?= $m['id'] ?>, "<?= $pk ?>", <?= json_encode($m['feature_name']) ?>)' title="Click to view & manage <?= $task_count ?> task(s)">
+                                        <td class="text-center p-2" style="cursor: pointer;" onclick="openPlatformWorkspace(<?= (int)$m['id'] ?>, '<?= $pk ?>')" title="Click to view & manage <?= $task_count ?> task(s)">
                                             <div class="platform-cell-box <?= $issue_count > 0 ? 'has-issue' : '' ?> d-flex flex-column align-items-center justify-content-center p-1">
                                                 <div class="mb-1">
                                                     <?= render_circular_progress($avg_progress, $prog_color, 36, 3.2, '0.65rem') ?>
@@ -1387,7 +1386,7 @@ require_once 'header.php';
 
                 if (taskCount === 0) {
                     html += `
-                    <td class="text-center p-2" style="cursor: pointer;" onclick="openPlatformWorkspace(${m.id}, '${pk}', '${escapeHtml(m.feature_name)}')" title="Click to configure tasks for ${pinfo.title}">
+                    <td class="text-center p-2" style="cursor: pointer;" onclick="openPlatformWorkspace(${m.id}, '${pk}')" title="Click to configure tasks for ${pinfo.title}">
                         <div class="platform-cell-box d-flex flex-column align-items-center justify-content-center p-1">
                             <span class="badge na-badge px-2 py-1 mb-1">
                                 <i class="bi bi-slash-circle me-1"></i>N/A
@@ -1423,7 +1422,7 @@ require_once 'header.php';
                     const progColor = getProgressColorJs(avgProgress, compositeStatus);
 
                     html += `
-                    <td class="text-center p-2" style="cursor: pointer;" onclick="openPlatformWorkspace(${m.id}, '${pk}', '${escapeHtml(m.feature_name)}')" title="Click to view & manage ${taskCount} task(s)">
+                    <td class="text-center p-2" style="cursor: pointer;" onclick="openPlatformWorkspace(${m.id}, '${pk}')" title="Click to view & manage ${taskCount} task(s)">
                         <div class="platform-cell-box ${issueCount > 0 ? 'has-issue' : ''} d-flex flex-column align-items-center justify-content-center p-1">
                             <div class="mb-1">
                                 ${renderCircularProgressSvg(avgProgress, progColor, 36, 3.2, '0.65rem')}
@@ -1567,7 +1566,7 @@ require_once 'header.php';
     // -------------------------------------------------------------
     // Platform Workspace Modal & Task/Issue Management
     // -------------------------------------------------------------
-    function openPlatformWorkspace(featureId, platformKey, featureName) {
+    function openPlatformWorkspace(featureId, platformKey, fallbackFeatureName = '') {
         currentWorkspaceFeatureId = featureId;
         currentWorkspacePlatform = platformKey;
 
@@ -1575,7 +1574,7 @@ require_once 'header.php';
         document.getElementById('pw_modal_title').innerHTML = `
             <i class="${pinfo.icon} text-${pinfo.color} me-2"></i> ${pinfo.title} Platform Workspace
         `;
-        document.getElementById('pw_modal_sub').innerText = `Feature: ${featureName}`;
+        document.getElementById('pw_modal_sub').innerText = fallbackFeatureName ? `Feature: ${fallbackFeatureName}` : `Feature ID #${featureId}`;
         document.getElementById('pw_modal_module').innerText = `Loading...`;
 
         document.getElementById('nt_feature_id').value = featureId;
@@ -1676,7 +1675,7 @@ require_once 'header.php';
                     <div class="d-flex align-items-center gap-2">
                         <span class="badge bg-secondary-subtle text-secondary border font-monospace" style="font-size: 0.68rem;">#${idx + 1}</span>
                         <span class="fw-bold text-dark" style="font-size: 0.92rem;">${escapeHtml(t.task_title)}</span>
-                        ${hasIssue ? `<span class="badge bg-danger text-white"><i class="bi bi-bug-fill me-1"></i>Issue</span>` : ''}
+                        ${hasIssue ? `<span class="badge bg-danger text-white"><i class="bi bi-bug-fill me-1"></i>Bug / Issue</span>` : ''}
                         ${t.priority ? `<span class="badge ${priorityBadgesList[t.priority] || 'bg-secondary'}" style="font-size: 0.65rem;">${escapeHtml(t.priority)}</span>` : ''}
                     </div>
                     <div class="d-flex align-items-center gap-2">
@@ -1687,6 +1686,26 @@ require_once 'header.php';
                 </div>
 
                 <div class="card-body p-3">
+                    ${hasIssue && t.issue_notes && t.issue_notes.trim() ? `
+                        <div class="alert alert-danger d-flex align-items-start gap-2 p-2 mb-3 border-danger-subtle bg-danger-subtle text-danger-emphasis rounded">
+                            <i class="bi bi-exclamation-triangle-fill fs-5 mt-1"></i>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold small"><i class="bi bi-bug-fill me-1"></i>Recorded Bug / Issue:</div>
+                                <div class="small mt-1 text-break">${escapeHtml(t.issue_notes)}</div>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    ${t.dev_response && t.dev_response.trim() ? `
+                        <div class="alert alert-success d-flex align-items-start gap-2 p-2 mb-3 border-success-subtle bg-success-subtle text-success-emphasis rounded">
+                            <i class="bi bi-check-circle-fill fs-5 mt-1"></i>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold small"><i class="bi bi-wrench-adjustable-circle me-1"></i>Developer Resolution / Response:</div>
+                                <div class="small mt-1 text-break">${escapeHtml(t.dev_response)}</div>
+                            </div>
+                        </div>
+                    ` : ''}
+
                     <form onsubmit="submitUpdateTask(event, ${t.id})" id="form_task_${t.id}">
                         <input type="hidden" name="action" value="save_platform_task">
                         <input type="hidden" name="task_id" value="${t.id}">
@@ -1714,7 +1733,7 @@ require_once 'header.php';
                             <div class="col-md-3">
                                 <label class="form-label small fw-semibold text-muted mb-1">Progress (<span id="task_prog_lbl_${t.id}">${t.progress_percent}</span>%)</label>
                                 <div class="d-flex align-items-center gap-2">
-                                    <input type="range" class="form-range" min="0" max="100" value="${t.progress_percent}" oninput="document.getElementById('task_prog_val_${t.id}').value = this.value; document.getElementById('task_prog_lbl_${t.id}').innerText = this.value;">
+                                    <input type="range" class="form-range" id="task_prog_range_${t.id}" min="0" max="100" value="${t.progress_percent}" oninput="document.getElementById('task_prog_val_${t.id}').value = this.value; document.getElementById('task_prog_lbl_${t.id}').innerText = this.value;">
                                     <input type="number" class="form-control form-control-sm text-center" style="width: 60px;" name="progress_percent" id="task_prog_val_${t.id}" min="0" max="100" value="${t.progress_percent}" oninput="document.getElementById('task_prog_range_${t.id}').value = this.value; document.getElementById('task_prog_lbl_${t.id}').innerText = this.value;">
                                 </div>
                             </div>
@@ -1738,11 +1757,11 @@ require_once 'header.php';
 
                             <!-- Issue Description & Fix Notes -->
                             <div class="col-md-6">
-                                <label class="form-label small fw-semibold text-danger mb-1"><i class="bi bi-bug-fill me-1"></i>Issue Description / Bug Report</label>
+                                <label class="form-label small fw-semibold text-danger mb-1"><i class="bi bi-bug-fill me-1"></i>Edit Issue / Bug Description</label>
                                 <textarea class="form-control form-control-sm border-danger-subtle ${hasIssue ? 'bg-white' : ''}" name="issue_notes" rows="2" placeholder="Record bugs, exceptions, or blockers here...">${escapeHtml(t.issue_notes || '')}</textarea>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small fw-semibold text-success mb-1"><i class="bi bi-check-circle-fill me-1"></i>Developer Fix / Solution Response</label>
+                                <label class="form-label small fw-semibold text-success mb-1"><i class="bi bi-check-circle-fill me-1"></i>Edit Solution / Developer Response</label>
                                 <textarea class="form-control form-control-sm border-success-subtle" name="dev_response" rows="2" placeholder="Record resolution or fix notes here...">${escapeHtml(t.dev_response || '')}</textarea>
                             </div>
 
