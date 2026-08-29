@@ -1626,6 +1626,7 @@ require_once 'header.php';
                     if (f.feature_name) {
                         document.getElementById('pw_modal_sub').innerText = `Feature: ${f.feature_name}`;
                     }
+                    alert(json_encode(res.tasks));
                     renderPlatformTasks(res.tasks || []);
                 } else {
                     container.innerHTML = `<div class="alert alert-danger py-2 small">${escapeHtml(res.message || 'Failed to load tasks.')}</div>`;
@@ -1638,6 +1639,7 @@ require_once 'header.php';
     }
 
     function renderPlatformTasks(tasks) {
+
         const container = document.getElementById('pw_tasks_container');
         let completed = 0;
         let totalSum = 0;
