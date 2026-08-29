@@ -1626,7 +1626,7 @@ require_once 'header.php';
                     if (f.feature_name) {
                         document.getElementById('pw_modal_sub').innerText = `Feature: ${f.feature_name}`;
                     }
-                    alert(json_encode(res.tasks));
+                  
                     renderPlatformTasks(res.tasks || []);
                 } else {
                     container.innerHTML = `<div class="alert alert-danger py-2 small">${escapeHtml(res.message || 'Failed to load tasks.')}</div>`;
