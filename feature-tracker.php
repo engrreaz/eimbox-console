@@ -1162,9 +1162,6 @@ require_once 'header.php';
     </div>
 </div>
 
-
-<?php require_once 'footer.php'; ?>
-
 <!-- ============================================================== -->
 <!-- 6. JAVASCRIPT REACTIVE AJAX ENGINE                             -->
 <!-- ============================================================== -->
@@ -1856,3 +1853,5 @@ require_once 'header.php';
             .catch(err => alert('Network error while deleting task.'));
     }
 </script>
+
+<?php require_once 'footer.php'; ?>
