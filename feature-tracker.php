@@ -11,52 +11,62 @@ require_once 'core/init.php';
 // 1. DATABASE SCHEMA SETUP & AUTO-MIGRATION
 // ==============================================================
 function ensure_tracker_schema($conn) {
-    $conn->query("
-        CREATE TABLE IF NOT EXISTS `eimbox_features_master` (
-          `id` INT(11) NOT NULL AUTO_INCREMENT,
-          `module` VARCHAR(100) NOT NULL,
-          `feature_name` VARCHAR(150) NOT NULL,
-          `description` TEXT DEFAULT NULL,
-          `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          PRIMARY KEY (`id`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-    ");
+    try {
+        $conn->query("
+            CREATE TABLE IF NOT EXISTS `eimbox_features_master` (
+              `id` INT(11) NOT NULL AUTO_INCREMENT,
+              `module` VARCHAR(100) NOT NULL,
+              `feature_name` VARCHAR(150) NOT NULL,
+              `description` TEXT DEFAULT NULL,
+              `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+              PRIMARY KEY (`id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+        ");
 
-    $conn->query("
-        CREATE TABLE IF NOT EXISTS `eimbox_platform_tracker` (
-          `id` INT(11) NOT NULL AUTO_INCREMENT,
-          `feature_id` INT(11) NOT NULL,
-          `platform` ENUM('dashboard','console','android_lite','premium','desktop') NOT NULL,
-          `task_title` VARCHAR(255) NOT NULL DEFAULT 'Main Implementation',
-          `script_path` VARCHAR(255) DEFAULT '',
-          `status` VARCHAR(50) NOT NULL DEFAULT 'Planned',
-          `priority` VARCHAR(20) NOT NULL DEFAULT 'Medium',
-          `progress_percent` TINYINT(3) UNSIGNED NOT NULL DEFAULT 0,
-          `issue_notes` TEXT DEFAULT NULL,
-          `dev_response` TEXT DEFAULT NULL,
-          `estimated_deadline` DATE DEFAULT NULL,
-          `assigned_to` VARCHAR(100) DEFAULT NULL,
-          `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          PRIMARY KEY (`id`),
-          KEY `idx_feature_platform` (`feature_id`,`platform`),
-          KEY `idx_platform` (`platform`),
-          KEY `idx_status` (`status`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-    ");
+        $conn->query("
+            CREATE TABLE IF NOT EXISTS `eimbox_platform_tracker` (
+              `id` INT(11) NOT NULL AUTO_INCREMENT,
+              `feature_id` INT(11) NOT NULL,
+              `platform` ENUM('dashboard','console','android_lite','premium','desktop') NOT NULL,
+              `task_title` VARCHAR(255) NOT NULL DEFAULT 'Main Implementation',
+              `script_path` VARCHAR(255) DEFAULT '',
+              `status` VARCHAR(50) NOT NULL DEFAULT 'Planned',
+              `priority` VARCHAR(20) NOT NULL DEFAULT 'Medium',
+              `progress_percent` TINYINT(3) UNSIGNED NOT NULL DEFAULT 0,
+              `issue_notes` TEXT DEFAULT NULL,
+              `dev_response` TEXT DEFAULT NULL,
+              `estimated_deadline` DATE DEFAULT NULL,
+              `assigned_to` VARCHAR(100) DEFAULT NULL,
+              `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+              PRIMARY KEY (`id`),
+              KEY `idx_feature_platform` (`feature_id`,`platform`),
+              KEY `idx_platform` (`platform`),
+              KEY `idx_status` (`status`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+        ");
 
-    // Migration 1: Add task_title if missing
-    $chk_col = $conn->query("SHOW COLUMNS FROM `eimbox_platform_tracker` LIKE 'task_title'");
-    if ($chk_col && $chk_col->num_rows == 0) {
-        $conn->query("ALTER TABLE `eimbox_platform_tracker` ADD COLUMN `task_title` VARCHAR(255) NOT NULL DEFAULT 'Main Implementation' AFTER `platform`");
-    }
+        // Migration 1: Add task_title if missing
+        $chk_col = $conn->query("SHOW COLUMNS FROM `eimbox_platform_tracker` LIKE 'task_title'");
+        if ($chk_col && $chk_col->num_rows == 0) {
+            $conn->query("ALTER TABLE `eimbox_platform_tracker` ADD COLUMN `task_title` VARCHAR(255) NOT NULL DEFAULT 'Main Implementation' AFTER `platform`");
+        }
 
-    // Migration 2: Drop UNIQUE index if present so multiple tasks per platform are allowed
-    $chk_idx = $conn->query("SHOW INDEX FROM `eimbox_platform_tracker` WHERE Key_name = 'idx_feature_platform' AND Non_unique = 0");
-    if ($chk_idx && $chk_idx->num_rows > 0) {
-        $conn->query("ALTER TABLE `eimbox_platform_tracker` DROP INDEX `idx_feature_platform`");
-        $conn->query("ALTER TABLE `eimbox_platform_tracker` ADD INDEX `idx_feature_platform` (`feature_id`, `platform`)");
+        // Migration 2: Drop UNIQUE index safely without violating foreign key constraints
+        $chk_idx = $conn->query("SHOW INDEX FROM `eimbox_platform_tracker` WHERE Key_name = 'idx_feature_platform' AND Non_unique = 0");
+        if ($chk_idx && $chk_idx->num_rows > 0) {
+            // Add a new non-unique index first to satisfy any foreign key dependencies
+            $conn->query("ALTER TABLE `eimbox_platform_tracker` ADD INDEX `idx_feat_plat_temp` (`feature_id`, `platform`)");
+            // Drop the old unique index
+            $conn->query("ALTER TABLE `eimbox_platform_tracker` DROP INDEX `idx_feature_platform`");
+            // Rename the new index back to standard name
+            $conn->query("ALTER TABLE `eimbox_platform_tracker` ADD INDEX `idx_feature_platform` (`feature_id`, `platform`)");
+            $conn->query("ALTER TABLE `eimbox_platform_tracker` DROP INDEX `idx_feat_plat_temp`");
+        }
+    } catch (Throwable $e) {
+        // Log schema setup notice if any without crashing the application
+        error_log("Schema ensure notice: " . $e->getMessage());
     }
 }
 
