@@ -152,7 +152,9 @@ api_response('success', 'Login successful.', [
         'mobile' => $user['mobile'],
         'sccode' => $user['sccode'],
         'userlevel' => $user['userlevel'],
-        'admin_level' => intval($user['admin']),
+        'is_admin' => intval($user['is_admin'] ?? $user['admin'] ?? 0),
+        'admin' => intval($user['is_admin'] ?? $user['admin'] ?? 0),
+        'admin_level' => intval($user['is_admin'] ?? $user['admin'] ?? 0),
         'is_chief' => intval($user['is_chief'] ?? 0),
         'photourl' => $user['photourl'] ?? ''
     ],
