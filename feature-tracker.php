@@ -808,19 +808,17 @@ require_once 'header.php';
                                     ?>
                                         <td class="text-center p-2" style="cursor: pointer;" onclick='openPlatformWorkspace(<?= $m['id'] ?>, "<?= $pk ?>", "<?= htmlspecialchars($m['feature_name'], ENT_QUOTES) ?>")' title="Click to view & manage <?= $task_count ?> task(s)">
                                             <div class="platform-cell-box d-flex flex-column align-items-center justify-content-center p-1">
-                                                <div class="d-flex align-items-center justify-content-center gap-2 mb-1">
+                                                <div class="mb-1">
                                                     <?= render_circular_progress($avg_progress, $prog_color, 36, 3.2, '0.65rem') ?>
-                                                    <div class="text-start">
-                                                        <span class="badge <?= $badge_class ?> p-1 d-block" style="font-size: 0.62rem;"><?= htmlspecialchars($composite_status) ?></span>
-                                                        <span class="text-muted" style="font-size: 0.65rem; font-weight: 600;"><?= $completed_tasks ?>/<?= $task_count ?> Tasks</span>
-                                                    </div>
                                                 </div>
+                                                <span class="badge <?= $badge_class ?> px-2 py-1 mb-1" style="font-size: 0.62rem;"><?= htmlspecialchars($composite_status) ?></span>
+                                                <span class="text-muted" style="font-size: 0.65rem; font-weight: 600; line-height: 1.1;"><?= $completed_tasks ?>/<?= $task_count ?> Tasks</span>
                                                 <?php if ($issue_count > 0): ?>
-                                                    <span class="badge bg-danger-subtle text-danger border px-1" style="font-size: 0.62rem;" title="<?= $issue_count ?> task(s) have pending issues">
+                                                    <span class="badge bg-danger-subtle text-danger border px-1 mt-1" style="font-size: 0.60rem;" title="<?= $issue_count ?> task(s) have pending issues">
                                                         <i class="bi bi-bug-fill me-1"></i><?= $issue_count ?> Issue<?= $issue_count > 1 ? 's' : '' ?>
                                                     </span>
                                                 <?php elseif ($latest_deadline): ?>
-                                                    <span class="text-muted font-monospace" style="font-size: 0.63rem;" title="Target Deadline: <?= htmlspecialchars($latest_deadline) ?>">
+                                                    <span class="text-muted font-monospace mt-1" style="font-size: 0.62rem;" title="Target Deadline: <?= htmlspecialchars($latest_deadline) ?>">
                                                         <i class="bi bi-calendar-event me-1 text-primary"></i><?= date('M d, y', strtotime($latest_deadline)) ?>
                                                     </span>
                                                 <?php endif; ?>
