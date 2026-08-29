@@ -1,4 +1,5 @@
 <?php
+ob_start();
 /**
  * EIMBox Multi-Platform Feature & Issue Tracker
  * Advanced Multi-Task & Multi-Issue Architecture
@@ -1194,6 +1195,31 @@ require_once 'header.php';
     let isIssuesOnlyActive = <?= $f_issues ? 'true' : 'false' ?>;
     let searchDebounceTimer = null;
 
+    // Guaranteed dynamic endpoint matching the current script path
+    const TRACKER_API_ENDPOINT = window.location.href.split('?')[0];
+
+    async function postTrackerApi(fd) {
+        try {
+            const resp = await fetch(TRACKER_API_ENDPOINT, {
+                method: 'POST',
+                body: fd
+            });
+            if (!resp.ok) {
+                throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
+            }
+            const text = await resp.text();
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                console.error("Tracker API Non-JSON response:", text);
+                throw new Error("Invalid server response. See browser console for details.");
+            }
+        } catch (netErr) {
+            console.error("Network / API Error:", netErr);
+            throw netErr;
+        }
+    }
+
     // -------------------------------------------------------------
     // Utility & Modal Helpers
     // -------------------------------------------------------------
@@ -1308,28 +1334,26 @@ require_once 'header.php';
         fd.append('status', stVal);
         fd.append('issues_only', isIssuesOnlyActive ? '1' : '0');
 
-        fetch('feature-tracker.php', {
-            method: 'POST',
-            body: fd
-        })
-        .then(r => r.json())
-        .then(res => {
-            if (spinner && icon) {
-                spinner.classList.remove('active');
-                icon.style.display = 'inline-block';
-            }
-            if (res.status === 'success' && res.data) {
-                renderMatrixTable(res.data.features || []);
-                updateKpiStats(res.data.plat_stats || {}, res.data.total_features_count || 0, res.data.total_issues_count || 0);
-            }
-        })
-        .catch(err => {
-            if (spinner && icon) {
-                spinner.classList.remove('active');
-                icon.style.display = 'inline-block';
-            }
-            console.error('Filter error:', err);
-        });
+        postTrackerApi(fd)
+            .then(res => {
+                if (spinner && icon) {
+                    spinner.classList.remove('active');
+                    icon.style.display = 'inline-block';
+                }
+                if (res.status === 'success' && res.data) {
+                    renderMatrixTable(res.data.features || []);
+                    updateKpiStats(res.data.plat_stats || {}, res.data.total_features_count || 0, res.data.total_issues_count || 0);
+                } else {
+                    showToast(res.message || 'Failed to apply filters.', true);
+                }
+            })
+            .catch(err => {
+                if (spinner && icon) {
+                    spinner.classList.remove('active');
+                    icon.style.display = 'inline-block';
+                }
+                console.error('Filter error:', err);
+            });
     }
 
     function updateKpiStats(platStats, totalFeatures, totalIssues) {
@@ -1467,8 +1491,7 @@ require_once 'header.php';
         const form = document.getElementById('addFeatureForm');
         const fd = new FormData(form);
 
-        fetch('feature-tracker.php', { method: 'POST', body: fd })
-            .then(r => r.json())
+        postTrackerApi(fd)
             .then(res => {
                 btn.disabled = false;
                 btn.innerHTML = `<i class="bi bi-check-lg me-1"></i>Save Feature`;
@@ -1484,7 +1507,7 @@ require_once 'header.php';
             .catch(err => {
                 btn.disabled = false;
                 btn.innerHTML = `<i class="bi bi-check-lg me-1"></i>Save Feature`;
-                alert('Network error while saving feature.');
+                alert(err.message || 'Network error while saving feature.');
             });
     }
 
@@ -1506,8 +1529,7 @@ require_once 'header.php';
         const form = document.getElementById('editFeatureForm');
         const fd = new FormData(form);
 
-        fetch('feature-tracker.php', { method: 'POST', body: fd })
-            .then(r => r.json())
+        postTrackerApi(fd)
             .then(res => {
                 btn.disabled = false;
                 btn.innerHTML = `<i class="bi bi-check-lg me-1"></i>Update Feature`;
@@ -1522,7 +1544,7 @@ require_once 'header.php';
             .catch(err => {
                 btn.disabled = false;
                 btn.innerHTML = `<i class="bi bi-check-lg me-1"></i>Update Feature`;
-                alert('Network error while updating feature.');
+                alert(err.message || 'Network error while updating feature.');
             });
     }
 
@@ -1532,8 +1554,7 @@ require_once 'header.php';
         fd.append('action', 'delete_feature');
         fd.append('id', id);
 
-        fetch('feature-tracker.php', { method: 'POST', body: fd })
-            .then(r => r.json())
+        postTrackerApi(fd)
             .then(res => {
                 if (res.status === 'success') {
                     showToast(res.message);
@@ -1542,7 +1563,7 @@ require_once 'header.php';
                     alert(res.message || 'Failed to delete feature.');
                 }
             })
-            .catch(err => alert('Network error while deleting feature.'));
+            .catch(err => alert(err.message || 'Network error while deleting feature.'));
     }
 
     function seedDemoData() {
@@ -1550,8 +1571,7 @@ require_once 'header.php';
         const fd = new FormData();
         fd.append('action', 'seed_default_data');
 
-        fetch('feature-tracker.php', { method: 'POST', body: fd })
-            .then(r => r.json())
+        postTrackerApi(fd)
             .then(res => {
                 if (res.status === 'success') {
                     showToast(res.message);
@@ -1560,7 +1580,7 @@ require_once 'header.php';
                     alert(res.message || 'Failed to load demo data.');
                 }
             })
-            .catch(err => alert('Network error loading demo data.'));
+            .catch(err => alert(err.message || 'Network error loading demo data.'));
     }
 
     // -------------------------------------------------------------
@@ -1598,8 +1618,7 @@ require_once 'header.php';
         fd.append('feature_id', currentWorkspaceFeatureId);
         fd.append('platform', currentWorkspacePlatform);
 
-        fetch('feature-tracker.php', { method: 'POST', body: fd })
-            .then(r => r.json())
+        postTrackerApi(fd)
             .then(res => {
                 if (res.status === 'success') {
                     const f = res.feature || {};
@@ -1609,11 +1628,12 @@ require_once 'header.php';
                     }
                     renderPlatformTasks(res.tasks || []);
                 } else {
-                    container.innerHTML = `<div class="alert alert-danger py-2 small">${escapeHtml(res.message)}</div>`;
+                    container.innerHTML = `<div class="alert alert-danger py-2 small">${escapeHtml(res.message || 'Failed to load tasks.')}</div>`;
                 }
             })
             .catch(err => {
-                container.innerHTML = `<div class="alert alert-danger py-2 small">Error loading tasks from server.</div>`;
+                console.error('Error loading tasks:', err);
+                container.innerHTML = `<div class="alert alert-danger py-2 small"><i class="bi bi-exclamation-triangle-fill me-1"></i> ${escapeHtml(err.message || 'Error loading tasks from server.')}</div>`;
             });
     }
 
@@ -1818,8 +1838,7 @@ require_once 'header.php';
         const form = document.getElementById('pwNewTaskForm');
         const fd = new FormData(form);
 
-        fetch('feature-tracker.php', { method: 'POST', body: fd })
-            .then(r => r.json())
+        postTrackerApi(fd)
             .then(res => {
                 btn.disabled = false;
                 btn.innerHTML = `<i class="bi bi-save me-1"></i>Save Task`;
@@ -1839,7 +1858,7 @@ require_once 'header.php';
             .catch(err => {
                 btn.disabled = false;
                 btn.innerHTML = `<i class="bi bi-save me-1"></i>Save Task`;
-                alert('Network error while saving task.');
+                alert(err.message || 'Network error while saving task.');
             });
     }
 
@@ -1853,8 +1872,7 @@ require_once 'header.php';
 
         const fd = new FormData(e.target);
 
-        fetch('feature-tracker.php', { method: 'POST', body: fd })
-            .then(r => r.json())
+        postTrackerApi(fd)
             .then(res => {
                 if (btn) {
                     btn.disabled = false;
@@ -1873,7 +1891,7 @@ require_once 'header.php';
                     btn.disabled = false;
                     btn.innerHTML = `<i class="bi bi-check2 me-1"></i> Save Changes`;
                 }
-                alert('Network error while updating task.');
+                alert(err.message || 'Network error while updating task.');
             });
     }
 
@@ -1883,8 +1901,7 @@ require_once 'header.php';
         fd.append('action', 'delete_platform_task');
         fd.append('task_id', id);
 
-        fetch('feature-tracker.php', { method: 'POST', body: fd })
-            .then(r => r.json())
+        postTrackerApi(fd)
             .then(res => {
                 if (res.status === 'success') {
                     showToast(res.message);
@@ -1894,7 +1911,7 @@ require_once 'header.php';
                     alert(res.message || 'Failed to delete task.');
                 }
             })
-            .catch(err => alert('Network error while deleting task.'));
+            .catch(err => alert(err.message || 'Network error while deleting task.'));
     }
 </script>
 
