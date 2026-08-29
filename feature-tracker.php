@@ -1679,12 +1679,7 @@ if (!empty($init_master_ids)) {
     let debounceTimer = null;
     let issuesOnlyMode = false;
 
-    // Document Ready - Initial Fetch
-    document.addEventListener("DOMContentLoaded", function() {
-        fetchMatrixData();
-    });
-
-    // 5.0 LIVE FETCH MATRIX DATA
+    // Live Fetch Matrix Data
     function fetchMatrixData() {
         const searchVal = document.getElementById('filter-search').value.trim();
         const moduleVal = document.getElementById('filter-module').value;
@@ -1718,7 +1713,6 @@ if (!empty($init_master_ids)) {
         })
         .catch(err => {
             console.error('Fetch error:', err);
-            tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-danger"><i class="ri-error-warning-line me-1"></i>ডাটা লোড করতে ব্যর্থ হয়েছে।</td></tr>`;
         });
     }
 
