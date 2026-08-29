@@ -103,7 +103,7 @@ function fetch_matrix_data_array($conn, $f_module = 'all', $f_platform = 'all', 
 
         $where_sql = implode(' AND ', $where_clauses);
         $sql = "SELECT m.* FROM eimbox_features_master m WHERE $where_sql ORDER BY m.id DESC";
-
+echo $sql;
         $features_res = $conn->query($sql);
         $features = [];
         $feature_ids = [];
