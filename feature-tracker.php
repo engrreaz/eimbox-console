@@ -301,52 +301,38 @@ function render_matrix_table_body($rows, $platforms_meta, $status_meta, $priorit
                 $p_json = htmlspecialchars(json_encode($pdata), ENT_QUOTES, 'UTF-8');
             ?>
                 <td class="col-platform text-center platform-cell" onclick="event.stopPropagation(); openPlatformEditModal(<?= $master['id'] ?>, '<?= $pkey ?>', '<?= htmlspecialchars($master['feature_name'], ENT_QUOTES) ?>')">
-                    <div class="platform-cell-card <?= $st === 'Issue' ? 'border-danger bg-danger-subtle' : ($st === 'Completed' ? 'border-success' : '') ?>" title="ক্লিক করে এই প্ল্যাটফর্মের স্ট্যাটাস ও ইস্যু আপডেট করুন">
-                        <!-- Top Row: Status Badge + Circular Progress Meter -->
-                        <div class="d-flex align-items-center justify-content-between gap-1 mb-1">
-                            <span class="badge <?= $st_info['badge'] ?> platform-status-badge d-inline-flex align-items-center gap-1 text-truncate" style="max-width: calc(100% - 36px);" title="<?= htmlspecialchars($st) ?>">
-                                <i class="<?= $st_info['icon'] ?>" style="font-size: 0.75rem;"></i>
-                                <span class="text-truncate"><?= htmlspecialchars($st) ?></span>
-                            </span>
-
-                            <!-- Circular Progress with centered value -->
-                            <div class="circle-progress flex-shrink-0" style="--pct: <?= $pct ?>; --pcolor: <?= $pct_color ?>;" title="অগ্রগতি: <?= $pct ?>%">
-                                <span class="circle-progress-val"><?= $pct ?>%</span>
-                            </div>
+                    <div class="platform-cell-card <?= $st === 'Issue' ? 'border-danger bg-danger-subtle' : ($st === 'Completed' ? 'border-success' : '') ?>" title="ক্লিক করে <?= htmlspecialchars($pinfo['title']) ?> প্ল্যাটফর্মের স্ট্যাটাস ও তথ্য পরিবর্তন করুন">
+                        <!-- 1. Circular Progress Meter with Centered Value -->
+                        <div class="circle-progress" style="--pct: <?= $pct ?>; --pcolor: <?= $pct_color ?>;" title="অগ্রগতি: <?= $pct ?>%">
+                            <span class="circle-progress-val"><?= $pct ?>%</span>
                         </div>
 
-                        <!-- Script Pill -->
-                        <?php if ($has_script): ?>
-                            <div class="script-tag text-truncate" title="<?= htmlspecialchars($pdata['script_path']) ?>">
-                                <i class="ri-file-code-line me-1"></i><?= htmlspecialchars($pdata['script_path']) ?>
-                            </div>
-                        <?php else: ?>
-                            <div class="script-tag text-muted fst-italic">No script</div>
-                        <?php endif; ?>
+                        <!-- 2. Status Badge (Under Circular Progress) -->
+                        <span class="badge <?= $st_info['badge'] ?> platform-status-badge d-inline-flex align-items-center gap-1" title="স্ট্যাটাস: <?= htmlspecialchars($st) ?>">
+                            <i class="<?= $st_info['icon'] ?>" style="font-size: 0.65rem;"></i>
+                            <span><?= htmlspecialchars($st) ?></span>
+                        </span>
 
-                        <!-- Bottom Row: Issue / Response / Deadline -->
-                        <div class="d-flex justify-content-between align-items-center gap-1 mt-1 pt-1 border-top" style="border-color: #f0f0f2 !important;">
-                            <div class="d-flex gap-1">
+                        <!-- 3. Micro Badges for Issue / Dev Response / Deadline (if any) -->
+                        <?php if ($has_issue || $has_resp || !empty($pdata['estimated_deadline'])): ?>
+                            <div class="d-flex justify-content-center align-items-center gap-1 mt-1">
                                 <?php if ($has_issue): ?>
                                     <span class="badge bg-danger p-1 rounded-circle" title="ইস্যু: <?= htmlspecialchars($pdata['issue_notes']) ?>">
-                                        <i class="ri-bug-line text-white" style="font-size: 0.7rem;"></i>
+                                        <i class="ri-bug-line text-white" style="font-size: 0.65rem;"></i>
                                     </span>
                                 <?php endif; ?>
                                 <?php if ($has_resp): ?>
                                     <span class="badge bg-success p-1 rounded-circle" title="রেসপন্স: <?= htmlspecialchars($pdata['dev_response']) ?>">
-                                        <i class="ri-reply-line text-white" style="font-size: 0.7rem;"></i>
+                                        <i class="ri-reply-line text-white" style="font-size: 0.65rem;"></i>
                                     </span>
                                 <?php endif; ?>
-                                <?php if (!$has_issue && !$has_resp): ?>
-                                    <span class="text-muted" style="font-size: 0.65rem;">-</span>
+                                <?php if (!empty($pdata['estimated_deadline'])): ?>
+                                    <span class="badge bg-label-secondary text-dark px-1 py-0" style="font-size: 0.6rem;" title="ডেডলাইন">
+                                        <?= date('d M', strtotime($pdata['estimated_deadline'])) ?>
+                                    </span>
                                 <?php endif; ?>
                             </div>
-                            <?php if (!empty($pdata['estimated_deadline'])): ?>
-                                <span class="badge bg-label-secondary text-dark px-1 py-0" style="font-size: 0.65rem;" title="Deadline">
-                                    <i class="ri-calendar-line"></i> <?= date('d M', strtotime($pdata['estimated_deadline'])) ?>
-                                </span>
-                            <?php endif; ?>
-                        </div>
+                        <?php endif; ?>
                     </div>
                 </td>
             <?php endforeach; ?>
@@ -1111,36 +1097,29 @@ if (!empty($init_master_ids)) {
         background: #fafafa;
         border: 1px solid #e2e4e8;
         border-radius: 6px;
-        padding: 6px 4px;
-        min-height: 84px;
+        padding: 6px 3px;
+        min-height: 68px;
         display: flex;
         flex-direction: column;
-        justify-content: space-between;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
         transition: all 0.2s;
         cursor: pointer;
     }
     .platform-cell-card:hover {
         background: #ffffff;
         border-color: #696cff;
-        box-shadow: 0 2px 6px rgba(105, 108, 255, 0.15);
+        box-shadow: 0 2px 8px rgba(105, 108, 255, 0.15);
         transform: translateY(-1px);
     }
     .platform-status-badge {
-        font-size: 0.72rem;
-        padding: 3px 6px;
+        font-size: 0.65rem;
+        padding: 2px 5px;
         border-radius: 4px;
         font-weight: 600;
         white-space: nowrap;
-    }
-    .script-tag {
-        font-size: 0.7rem;
-        background: #eceef1;
-        padding: 2px 4px;
-        border-radius: 4px;
-        font-family: SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-        color: #566a7f;
-        max-width: 100%;
-        display: block;
+        line-height: 1.15;
     }
 
     /* Circular Progress Meter */
