@@ -72,115 +72,131 @@ ensure_tracker_schema($conn);
 // 2. HELPER FUNCTIONS & DATA RETRIEVAL LOGIC
 // ==============================================================
 function fetch_matrix_data_array($conn, $f_module = 'all', $f_platform = 'all', $f_status = 'all', $f_search = '', $f_issues = false) {
-    $where_clauses = ["1=1"];
-    if ($f_module !== 'all' && !empty($f_module)) {
-        $where_clauses[] = "m.module = '" . $conn->real_escape_string($f_module) . "'";
-    }
-    if (!empty($f_search)) {
-        $s_term = $conn->real_escape_string($f_search);
-        $where_clauses[] = "(m.feature_name LIKE '%$s_term%' OR m.module LIKE '%$s_term%' OR m.description LIKE '%$s_term%' OR EXISTS (
-            SELECT 1 FROM eimbox_platform_tracker pt WHERE pt.feature_id = m.id AND (pt.script_path LIKE '%$s_term%' OR pt.task_title LIKE '%$s_term%' OR pt.issue_notes LIKE '%$s_term%' OR pt.dev_response LIKE '%$s_term%')
-        ))";
-    }
-    if ($f_issues) {
-        $where_clauses[] = "EXISTS (
-            SELECT 1 FROM eimbox_platform_tracker pt WHERE pt.feature_id = m.id AND (pt.status = 'Issue' OR (pt.issue_notes IS NOT NULL AND TRIM(pt.issue_notes) != ''))
-        )";
-    }
-    if ($f_status !== 'all' && !empty($f_status)) {
-        $st_term = $conn->real_escape_string($f_status);
-        $where_clauses[] = "EXISTS (
-            SELECT 1 FROM eimbox_platform_tracker pt WHERE pt.feature_id = m.id AND pt.status = '$st_term'
-        )";
-    }
-    if ($f_platform !== 'all' && !empty($f_platform)) {
-        $pl_term = $conn->real_escape_string($f_platform);
-        $where_clauses[] = "EXISTS (
-            SELECT 1 FROM eimbox_platform_tracker pt WHERE pt.feature_id = m.id AND pt.platform = '$pl_term'
-        )";
-    }
-
-    $where_sql = implode(' AND ', $where_clauses);
-    $sql = "SELECT m.* FROM eimbox_features_master m WHERE $where_sql ORDER BY m.id DESC";
-
-    $features_res = $conn->query($sql);
-    $features = [];
-    $feature_ids = [];
-
-    if ($features_res && $features_res->num_rows > 0) {
-        while ($row = $features_res->fetch_assoc()) {
-            $features[$row['id']] = [
-                'master' => $row,
-                'platforms' => [
-                    'dashboard' => [],
-                    'console' => [],
-                    'android_lite' => [],
-                    'premium' => [],
-                    'desktop' => []
-                ]
-            ];
-            $feature_ids[] = intval($row['id']);
+    try {
+        $where_clauses = ["1=1"];
+        if ($f_module !== 'all' && !empty($f_module)) {
+            $where_clauses[] = "m.module = '" . $conn->real_escape_string($f_module) . "'";
         }
-    }
+        if (!empty($f_search)) {
+            $s_term = $conn->real_escape_string($f_search);
+            $where_clauses[] = "(m.feature_name LIKE '%$s_term%' OR m.module LIKE '%$s_term%' OR m.description LIKE '%$s_term%' OR EXISTS (
+                SELECT 1 FROM eimbox_platform_tracker pt WHERE pt.feature_id = m.id AND (pt.script_path LIKE '%$s_term%' OR pt.task_title LIKE '%$s_term%' OR pt.issue_notes LIKE '%$s_term%' OR pt.dev_response LIKE '%$s_term%')
+            ))";
+        }
+        if ($f_issues) {
+            $where_clauses[] = "EXISTS (
+                SELECT 1 FROM eimbox_platform_tracker pt WHERE pt.feature_id = m.id AND (pt.status = 'Issue' OR (pt.issue_notes IS NOT NULL AND TRIM(pt.issue_notes) != ''))
+            )";
+        }
+        if ($f_status !== 'all' && !empty($f_status)) {
+            $st_term = $conn->real_escape_string($f_status);
+            $where_clauses[] = "EXISTS (
+                SELECT 1 FROM eimbox_platform_tracker pt WHERE pt.feature_id = m.id AND pt.status = '$st_term'
+            )";
+        }
+        if ($f_platform !== 'all' && !empty($f_platform)) {
+            $pl_term = $conn->real_escape_string($f_platform);
+            $where_clauses[] = "EXISTS (
+                SELECT 1 FROM eimbox_platform_tracker pt WHERE pt.feature_id = m.id AND pt.platform = '$pl_term'
+            )";
+        }
 
-    if (!empty($feature_ids)) {
-        $f_ids_str = implode(',', $feature_ids);
-        $plat_res = $conn->query("SELECT * FROM eimbox_platform_tracker WHERE feature_id IN ($f_ids_str) ORDER BY id ASC");
-        if ($plat_res) {
-            while ($prow = $plat_res->fetch_assoc()) {
-                $fid = intval($prow['feature_id']);
-                $plat = $prow['platform'];
-                if (isset($features[$fid]['platforms'][$plat])) {
-                    $features[$fid]['platforms'][$plat][] = $prow;
+        $where_sql = implode(' AND ', $where_clauses);
+        $sql = "SELECT m.* FROM eimbox_features_master m WHERE $where_sql ORDER BY m.id DESC";
+
+        $features_res = $conn->query($sql);
+        $features = [];
+        $feature_ids = [];
+
+        if ($features_res && $features_res->num_rows > 0) {
+            while ($row = $features_res->fetch_assoc()) {
+                $features[$row['id']] = [
+                    'master' => $row,
+                    'platforms' => [
+                        'dashboard' => [],
+                        'console' => [],
+                        'android_lite' => [],
+                        'premium' => [],
+                        'desktop' => []
+                    ]
+                ];
+                $feature_ids[] = intval($row['id']);
+            }
+        }
+
+        if (!empty($feature_ids)) {
+            $f_ids_str = implode(',', $feature_ids);
+            $plat_res = $conn->query("SELECT * FROM eimbox_platform_tracker WHERE feature_id IN ($f_ids_str) ORDER BY id ASC");
+            if ($plat_res) {
+                while ($prow = $plat_res->fetch_assoc()) {
+                    $fid = intval($prow['feature_id']);
+                    $plat = $prow['platform'];
+                    if (isset($features[$fid]['platforms'][$plat])) {
+                        $features[$fid]['platforms'][$plat][] = $prow;
+                    }
                 }
             }
         }
-    }
 
-    // Global counts
-    $total_features_count = 0;
-    $c_res = $conn->query("SELECT COUNT(*) as c FROM eimbox_features_master");
-    if ($c_res) $total_features_count = intval($c_res->fetch_assoc()['c'] ?? 0);
+        // Global counts
+        $total_features_count = 0;
+        $c_res = $conn->query("SELECT COUNT(*) as c FROM eimbox_features_master");
+        if ($c_res) $total_features_count = intval($c_res->fetch_assoc()['c'] ?? 0);
 
-    $total_issues_count = 0;
-    $i_res = $conn->query("SELECT COUNT(*) as c FROM eimbox_platform_tracker WHERE status = 'Issue' OR (issue_notes IS NOT NULL AND TRIM(issue_notes) != '')");
-    if ($i_res) $total_issues_count = intval($i_res->fetch_assoc()['c'] ?? 0);
+        $total_issues_count = 0;
+        $i_res = $conn->query("SELECT COUNT(*) as c FROM eimbox_platform_tracker WHERE status = 'Issue' OR (issue_notes IS NOT NULL AND TRIM(issue_notes) != '')");
+        if ($i_res) $total_issues_count = intval($i_res->fetch_assoc()['c'] ?? 0);
 
-    $plat_stats = [
-        'dashboard'    => ['total' => 0, 'completed' => 0, 'percent' => 0],
-        'console'      => ['total' => 0, 'completed' => 0, 'percent' => 0],
-        'android_lite' => ['total' => 0, 'completed' => 0, 'percent' => 0],
-        'premium'      => ['total' => 0, 'completed' => 0, 'percent' => 0],
-        'desktop'      => ['total' => 0, 'completed' => 0, 'percent' => 0]
-    ];
+        $plat_stats = [
+            'dashboard'    => ['total' => 0, 'completed' => 0, 'percent' => 0],
+            'console'      => ['total' => 0, 'completed' => 0, 'percent' => 0],
+            'android_lite' => ['total' => 0, 'completed' => 0, 'percent' => 0],
+            'premium'      => ['total' => 0, 'completed' => 0, 'percent' => 0],
+            'desktop'      => ['total' => 0, 'completed' => 0, 'percent' => 0]
+        ];
 
-    $ps_res = $conn->query("
-        SELECT platform, 
-               COUNT(*) as total_tasks,
-               SUM(CASE WHEN status = 'Completed' OR progress_percent = 100 THEN 1 ELSE 0 END) as completed_tasks,
-               AVG(progress_percent) as avg_progress
-        FROM eimbox_platform_tracker
-        GROUP BY platform
-    ");
-    if ($ps_res) {
-        while ($sp = $ps_res->fetch_assoc()) {
-            $pk = $sp['platform'];
-            if (isset($plat_stats[$pk])) {
-                $plat_stats[$pk] = [
-                    'total' => intval($sp['total_tasks']),
-                    'completed' => intval($sp['completed_tasks']),
-                    'percent' => round(floatval($sp['avg_progress'] ?? 0))
-                ];
+        $ps_res = $conn->query("
+            SELECT platform, 
+                   COUNT(*) as total_tasks,
+                   SUM(CASE WHEN status = 'Completed' OR progress_percent = 100 THEN 1 ELSE 0 END) as completed_tasks,
+                   AVG(progress_percent) as avg_progress
+            FROM eimbox_platform_tracker
+            GROUP BY platform
+        ");
+        if ($ps_res) {
+            while ($sp = $ps_res->fetch_assoc()) {
+                $pk = $sp['platform'];
+                if (isset($plat_stats[$pk])) {
+                    $plat_stats[$pk] = [
+                        'total' => intval($sp['total_tasks']),
+                        'completed' => intval($sp['completed_tasks']),
+                        'percent' => round(floatval($sp['avg_progress'] ?? 0))
+                    ];
+                }
             }
         }
-    }
 
-    return [
-        'features' => array_values($features),
-        'plat_stats' => $plat_stats,
-        'total_features_count' => $total_features_count,
-        'total_issues_count' => $total_issues_count
-    ];
+        return [
+            'features' => array_values($features),
+            'plat_stats' => $plat_stats,
+            'total_features_count' => $total_features_count,
+            'total_issues_count' => $total_issues_count
+        ];
+    } catch (Throwable $e) {
+        error_log("fetch_matrix_data_array error: " . $e->getMessage());
+        return [
+            'features' => [],
+            'plat_stats' => [
+                'dashboard'    => ['total' => 0, 'completed' => 0, 'percent' => 0],
+                'console'      => ['total' => 0, 'completed' => 0, 'percent' => 0],
+                'android_lite' => ['total' => 0, 'completed' => 0, 'percent' => 0],
+                'premium'      => ['total' => 0, 'completed' => 0, 'percent' => 0],
+                'desktop'      => ['total' => 0, 'completed' => 0, 'percent' => 0]
+            ],
+            'total_features_count' => 0,
+            'total_issues_count' => 0
+        ];
+    }
 }
 
 // ==============================================================
@@ -560,14 +576,19 @@ $priority_badges = [
     'Low'      => 'bg-secondary text-white'
 ];
 
-// Fetch Master Modules for Filter Dropdown
+// Fetch Master Modules for Filter Dropdown (Safe fallback query)
 $modules_list = [];
-$mod_query = $conn->query("SELECT DISTINCT module_name, core FROM modulelist ORDER BY slno ASC, module_name ASC");
-if ($mod_query && $mod_query->num_rows > 0) {
-    while ($m_row = $mod_query->fetch_assoc()) {
-        $modules_list[] = $m_row;
+try {
+    $mod_query = $conn->query("SELECT module_name, core FROM modulelist GROUP BY module_name, core ORDER BY MIN(slno) ASC, module_name ASC");
+    if ($mod_query && $mod_query->num_rows > 0) {
+        while ($m_row = $mod_query->fetch_assoc()) {
+            $modules_list[] = $m_row;
+        }
     }
+} catch (Throwable $e) {
+    error_log("Modulelist fetch notice: " . $e->getMessage());
 }
+
 if (empty($modules_list)) {
     $modules_list = [
         ['module_name' => 'Student', 'core' => 1],
@@ -829,7 +850,6 @@ require_once 'header.php';
                         <?php foreach ($features as $f_item): 
                             $m = $f_item['master'];
                             $p_data = $f_item['platforms'];
-                            $m_json = htmlspecialchars(json_encode($m), ENT_QUOTES, 'UTF-8');
                         ?>
                             <tr id="feature_row_<?= $m['id'] ?>">
                                 <td class="text-center text-muted fw-bold"><?= $m['id'] ?></td>
@@ -911,7 +931,7 @@ require_once 'header.php';
                                 <?php endforeach; ?>
                                 <td class="text-center">
                                     <div class="btn-group btn-group-sm">
-                                        <button type="button" class="btn btn-outline-primary" title="Edit Feature" onclick='openMasterEditModal(<?= $m_json ?>)'><i class="bi bi-pencil-square"></i></button>
+                                        <button type="button" class="btn btn-outline-primary" title="Edit Feature" onclick='openMasterEditModal(<?= htmlspecialchars(json_encode($m), ENT_QUOTES, 'UTF-8') ?>)'><i class="bi bi-pencil-square"></i></button>
                                         <button type="button" class="btn btn-outline-danger" title="Delete Feature" onclick='deleteFeature(<?= $m['id'] ?>, <?= json_encode($m['feature_name']) ?>)'><i class="bi bi-trash3"></i></button>
                                     </div>
                                 </td>
@@ -1423,12 +1443,11 @@ require_once 'header.php';
                 }
             }
 
-            const masterJsonStr = JSON.stringify(m).replace(/"/g, '&quot;');
             html += `
                 <td class="text-center">
                     <div class="btn-group btn-group-sm">
-                        <button type="button" class="btn btn-outline-primary" title="Edit Feature" onclick="openMasterEditModal(${masterJsonStr})"><i class="bi bi-pencil-square"></i></button>
-                        <button type="button" class="btn btn-outline-danger" title="Delete Feature" onclick="deleteFeature(${m.id}, '${escapeHtml(m.feature_name)}')"><i class="bi bi-trash3"></i></button>
+                        <button type="button" class="btn btn-outline-primary" title="Edit Feature" onclick='openMasterEditModal(${JSON.stringify(m)})'><i class="bi bi-pencil-square"></i></button>
+                        <button type="button" class="btn btn-outline-danger" title="Delete Feature" onclick='deleteFeature(${m.id}, "${escapeHtml(m.feature_name)}")'><i class="bi bi-trash3"></i></button>
                     </div>
                 </td>
             </tr>`;
