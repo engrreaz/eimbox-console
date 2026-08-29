@@ -1082,90 +1082,14 @@ require_once 'header.php';
                     </div>
                 </div>
                 <div>
-                    <button type="button" class="btn btn-primary btn-sm" onclick="toggleNewTaskForm()">
+                    <button type="button" class="btn btn-primary btn-sm" onclick="openTaskEditModal(0)">
                         <i class="bi bi-plus-lg me-1"></i> Add Task / Issue
                     </button>
                 </div>
             </div>
 
-            <!-- Modal Body -->
+            <!-- Modal Body: Clean Task & Issue List -->
             <div class="modal-body p-3" style="max-height: 75vh; overflow-y: auto;">
-                
-                <!-- Add New Task / Issue Form (Collapsible) -->
-                <div id="pw_new_task_box" class="card mb-3 border-primary shadow-sm" style="display: none;">
-                    <div class="card-header bg-primary text-white py-2 d-flex justify-content-between align-items-center">
-                        <span class="fw-bold small"><i class="bi bi-plus-circle-fill me-1"></i> Add New Task or Issue Item</span>
-                        <button type="button" class="btn-close btn-close-white btn-sm" onclick="hideNewTaskForm()"></button>
-                    </div>
-                    <div class="card-body p-3 bg-light">
-                        <form id="pwNewTaskForm" onsubmit="submitNewTask(event)">
-                            <input type="hidden" name="action" value="save_platform_task">
-                            <input type="hidden" name="task_id" value="0">
-                            <input type="hidden" name="feature_id" id="nt_feature_id">
-                            <input type="hidden" name="platform" id="nt_platform">
-
-                            <div class="row g-2">
-                                <div class="col-md-5">
-                                    <label class="form-label small fw-semibold text-muted mb-1">Task / Issue Title <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control form-control-sm" name="task_title" id="nt_task_title" placeholder="e.g. Implement camera scanner / Fix sync bug" required>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label small fw-semibold text-muted mb-1">Script / File Path</label>
-                                    <input type="text" class="form-control form-control-sm font-monospace" name="script_path" id="nt_script_path" placeholder="e.g. attendance-daily.php or lib/scanner.dart">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label small fw-semibold text-muted mb-1">Status</label>
-                                    <select class="form-select form-select-sm" name="status" id="nt_status" onchange="onNewTaskStatusChange(this.value)">
-                                        <?php foreach ($status_badges as $sn => $sb): ?>
-                                            <option value="<?= $sn ?>"><?= $sn ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-
-                                <div class="col-md-3">
-                                    <label class="form-label small fw-semibold text-muted mb-1">Progress (<span id="nt_prog_label">0</span>%)</label>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <input type="range" class="form-range" min="0" max="100" value="0" id="nt_progress_range" oninput="document.getElementById('nt_progress_percent').value = this.value; document.getElementById('nt_prog_label').innerText = this.value;">
-                                        <input type="number" class="form-control form-control-sm text-center" style="width: 65px;" name="progress_percent" id="nt_progress_percent" min="0" max="100" value="0" oninput="document.getElementById('nt_progress_range').value = this.value; document.getElementById('nt_prog_label').innerText = this.value;">
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label small fw-semibold text-muted mb-1">Priority</label>
-                                    <select class="form-select form-select-sm" name="priority" id="nt_priority">
-                                        <option value="Critical">Critical</option>
-                                        <option value="High">High</option>
-                                        <option value="Medium" selected>Medium</option>
-                                        <option value="Low">Low</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label small fw-semibold text-muted mb-1">Target Deadline</label>
-                                    <input type="date" class="form-control form-control-sm" name="estimated_deadline" id="nt_deadline">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label small fw-semibold text-muted mb-1">Assigned To</label>
-                                    <input type="text" class="form-control form-control-sm" name="assigned_to" id="nt_assigned" placeholder="Developer / Lead">
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-semibold text-danger mb-1"><i class="bi bi-bug-fill me-1"></i>Issue Description / Bug Notes</label>
-                                    <textarea class="form-control form-control-sm border-danger-subtle" name="issue_notes" id="nt_issue_notes" rows="2" placeholder="Describe any bug, blocker or issue encountered..."></textarea>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-semibold text-success mb-1"><i class="bi bi-check-circle-fill me-1"></i>Developer Fix / Resolution Notes</label>
-                                    <textarea class="form-control form-control-sm border-success-subtle" name="dev_response" id="nt_dev_response" rows="2" placeholder="Describe developer response or solution implemented..."></textarea>
-                                </div>
-
-                                <div class="col-12 text-end pt-2">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary me-1" onclick="hideNewTaskForm()">Cancel</button>
-                                    <button type="submit" class="btn btn-sm btn-primary" id="btnSaveNewTask"><i class="bi bi-save me-1"></i>Save Task</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Tasks & Issues Container -->
                 <div id="pw_tasks_container">
                     <div class="text-center py-4 text-muted">
                         <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
@@ -1177,6 +1101,93 @@ require_once 'header.php';
             <div class="modal-footer bg-light py-2">
                 <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- 5.4 Dedicated Add / Edit Task & Issue Modal -->
+<div class="modal fade" id="taskEditModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white py-3">
+                <h5 class="modal-title fw-bold" id="taskEditModalTitle">
+                    <i class="bi bi-pencil-square me-2"></i>Edit Task / Issue
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="taskEditForm" onsubmit="submitSaveTask(event)">
+                <input type="hidden" name="action" value="save_platform_task">
+                <input type="hidden" name="task_id" id="te_task_id" value="0">
+                <input type="hidden" name="feature_id" id="te_feature_id" value="0">
+                <input type="hidden" name="platform" id="te_platform" value="">
+
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-7">
+                            <label class="form-label small fw-bold text-dark mb-1">Task / Issue Title <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="task_title" id="te_task_title" placeholder="e.g. Implement camera scanner / Fix sync timeout" required>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label small fw-bold text-dark mb-1">Script / File Path</label>
+                            <input type="text" class="form-control font-monospace" name="script_path" id="te_script_path" placeholder="e.g. attendance-daily.php or lib/scanner.dart">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-dark mb-1">Status</label>
+                            <select class="form-select" name="status" id="te_status" onchange="onTaskEditStatusChange(this.value)">
+                                <?php foreach ($status_badges as $sn => $sb): ?>
+                                    <option value="<?= $sn ?>"><?= $sn ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-dark mb-1">Priority</label>
+                            <select class="form-select" name="priority" id="te_priority">
+                                <option value="Critical">Critical</option>
+                                <option value="High">High</option>
+                                <option value="Medium" selected>Medium</option>
+                                <option value="Low">Low</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-dark mb-1">Progress (<span id="te_prog_lbl">0</span>%)</label>
+                            <div class="d-flex align-items-center gap-2">
+                                <input type="range" class="form-range" id="te_prog_range" min="0" max="100" value="0" oninput="document.getElementById('te_prog_val').value = this.value; document.getElementById('te_prog_lbl').innerText = this.value;">
+                                <input type="number" class="form-control text-center" style="width: 70px;" name="progress_percent" id="te_prog_val" min="0" max="100" value="0" oninput="document.getElementById('te_prog_range').value = this.value; document.getElementById('te_prog_lbl').innerText = this.value;">
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-dark mb-1">Target Deadline</label>
+                            <input type="date" class="form-control" name="estimated_deadline" id="te_deadline">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-dark mb-1">Assigned To</label>
+                            <input type="text" class="form-control" name="assigned_to" id="te_assigned" placeholder="Developer / Lead Name">
+                        </div>
+
+                        <!-- Issue Details Box -->
+                        <div class="col-12">
+                            <div class="p-3 bg-danger-subtle rounded border border-danger-subtle">
+                                <label class="form-label small fw-bold text-danger mb-1"><i class="bi bi-bug-fill me-1"></i>Issue Description / Bug Details</label>
+                                <textarea class="form-control" name="issue_notes" id="te_issue_notes" rows="2" placeholder="Record any bugs, errors, exceptions, or custom requirements..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Solution Notes Box -->
+                        <div class="col-12">
+                            <div class="p-3 bg-success-subtle rounded border border-success-subtle">
+                                <label class="form-label small fw-bold text-success mb-1"><i class="bi bi-check-circle-fill me-1"></i>Developer Solution / Resolution Notes</label>
+                                <textarea class="form-control" name="dev_response" id="te_dev_response" rows="2" placeholder="Record technical resolution, fix details, or response..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light py-2">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary px-4" id="btnSaveTaskModal"><i class="bi bi-check-lg me-1"></i>Save Task / Issue</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -1627,7 +1638,8 @@ require_once 'header.php';
                         document.getElementById('pw_modal_sub').innerText = `Feature: ${f.feature_name}`;
                     }
                   
-                    renderPlatformTasks(res.tasks || []);
+                    window.currentWorkspaceTasks = res.tasks || [];
+                    renderPlatformTasks(window.currentWorkspaceTasks);
                 } else {
                     container.innerHTML = `<div class="alert alert-danger py-2 small">${escapeHtml(res.message || 'Failed to load tasks.')}</div>`;
                 }
@@ -1639,7 +1651,6 @@ require_once 'header.php';
     }
 
     function renderPlatformTasks(tasks) {
-
         const container = document.getElementById('pw_tasks_container');
         let completed = 0;
         let totalSum = 0;
@@ -1678,222 +1689,160 @@ require_once 'header.php';
             container.innerHTML = `
                 <div class="text-center py-5 bg-light rounded border border-dashed">
                     <i class="bi bi-list-check fs-1 d-block mb-2 text-secondary"></i>
-                    <h6 class="fw-bold text-dark">No tasks or issues configured for this platform yet!</h6>
+                    <h6 class="fw-bold text-dark">No tasks or issues recorded for this platform yet!</h6>
                     <p class="text-muted small mb-3">Add implementation tasks, script paths, or bug reports to track platform progress.</p>
-                    <button type="button" class="btn btn-sm btn-primary" onclick="showNewTaskForm()"><i class="bi bi-plus-lg me-1"></i>Add First Task / Issue</button>
+                    <button type="button" class="btn btn-sm btn-primary" onclick="openTaskEditModal(0)"><i class="bi bi-plus-lg me-1"></i>Add First Task / Issue</button>
                 </div>`;
             return;
         }
 
-        let html = '';
+        let html = '<div class="d-flex flex-column gap-3">';
         tasks.forEach((t, idx) => {
             const hasIssue = (t.status === 'Issue' || (t.issue_notes && t.issue_notes.trim()));
             const isCompleted = (t.status === 'Completed' || parseInt(t.progress_percent) >= 100);
-            const cardClass = hasIssue ? 'task-has-issue' : (isCompleted ? 'task-completed' : (t.status === 'Testing' ? 'task-testing' : ''));
+            const cardBorder = hasIssue ? 'border-danger' : (isCompleted ? 'border-success' : 'border-light-subtle');
+            const pct = parseInt(t.progress_percent || 0);
 
             html += `
-            <div class="card task-card ${cardClass} shadow-sm mb-3" id="task_card_${t.id}">
-                <div class="card-header bg-white py-2 px-3 d-flex flex-wrap align-items-center justify-content-between gap-2 border-bottom">
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="badge bg-secondary-subtle text-secondary border font-monospace" style="font-size: 0.68rem;">#${idx + 1}</span>
-                        <span class="fw-bold text-dark" style="font-size: 0.92rem;">${escapeHtml(t.task_title)}</span>
-                        ${hasIssue ? `<span class="badge bg-danger text-white"><i class="bi bi-bug-fill me-1"></i>Bug / Issue</span>` : ''}
-                        ${t.priority ? `<span class="badge ${priorityBadgesList[t.priority] || 'bg-secondary'}" style="font-size: 0.65rem;">${escapeHtml(t.priority)}</span>` : ''}
-                    </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="badge ${statusBadgesList[t.status] || 'bg-secondary'} px-2 py-1">${escapeHtml(t.status)}</span>
-                        <span class="fw-bold text-primary small">${t.progress_percent}%</span>
-                        <button type="button" class="btn btn-outline-danger btn-sm py-0 px-2" title="Delete Task" onclick="deletePlatformTask(${t.id})"><i class="bi bi-trash3"></i></button>
-                    </div>
-                </div>
-
+            <div class="card shadow-sm border ${cardBorder}" id="task_card_${t.id}">
                 <div class="card-body p-3">
+                    <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-2">
+                        <div class="d-flex align-items-center flex-wrap gap-2">
+                            <span class="badge bg-secondary-subtle text-secondary border font-monospace" style="font-size: 0.72rem;">#${idx + 1}</span>
+                            <h6 class="fw-bold text-dark mb-0">${escapeHtml(t.task_title)}</h6>
+                            <span class="badge ${statusBadgesList[t.status] || 'bg-secondary'} px-2 py-1">${escapeHtml(t.status)}</span>
+                            ${hasIssue ? `<span class="badge bg-danger text-white"><i class="bi bi-bug-fill me-1"></i>Issue</span>` : ''}
+                            ${t.priority ? `<span class="badge ${priorityBadgesList[t.priority] || 'bg-secondary'}" style="font-size: 0.68rem;">${escapeHtml(t.priority)}</span>` : ''}
+                        </div>
+                        <div class="d-flex align-items-center gap-1">
+                            <button type="button" class="btn btn-sm btn-primary py-1 px-2" title="Edit Task" onclick="openTaskEditModal(${t.id})">
+                                <i class="bi bi-pencil-square me-1"></i>Edit
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2" title="Delete Task" onclick="deletePlatformTask(${t.id})">
+                                <i class="bi bi-trash3"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap align-items-center gap-3 text-muted small mb-2">
+                        ${t.script_path ? `<span><i class="bi bi-file-earmark-code me-1 text-primary"></i><code class="text-primary">${escapeHtml(t.script_path)}</code></span>` : ''}
+                        ${t.assigned_to ? `<span><i class="bi bi-person me-1 text-secondary"></i>${escapeHtml(t.assigned_to)}</span>` : ''}
+                        ${t.estimated_deadline ? `<span><i class="bi bi-calendar-event me-1 text-secondary"></i>${escapeHtml(t.estimated_deadline)}</span>` : ''}
+                        <div class="d-flex align-items-center gap-1 ms-auto" style="min-width: 130px;">
+                            <div class="progress flex-grow-1" style="height: 6px;">
+                                <div class="progress-bar ${hasIssue ? 'bg-danger' : (isCompleted ? 'bg-success' : 'bg-primary')}" role="progressbar" style="width: ${pct}%;"></div>
+                            </div>
+                            <span class="fw-bold small text-dark">${pct}%</span>
+                        </div>
+                    </div>
+
                     ${hasIssue && t.issue_notes && t.issue_notes.trim() ? `
-                        <div class="alert alert-danger d-flex align-items-start gap-2 p-2 mb-3 border-danger-subtle bg-danger-subtle text-danger-emphasis rounded">
-                            <i class="bi bi-exclamation-triangle-fill fs-5 mt-1"></i>
+                        <div class="alert alert-danger d-flex align-items-start gap-2 p-2 mb-2 border-danger-subtle bg-danger-subtle text-danger-emphasis rounded">
+                            <i class="bi bi-exclamation-triangle-fill fs-6 mt-1 flex-shrink-0"></i>
                             <div class="flex-grow-1">
-                                <div class="fw-bold small"><i class="bi bi-bug-fill me-1"></i>Recorded Bug / Issue:</div>
+                                <div class="fw-bold small"><i class="bi bi-bug-fill me-1"></i>Bug / Issue Details:</div>
                                 <div class="small mt-1 text-break">${escapeHtml(t.issue_notes)}</div>
                             </div>
                         </div>
                     ` : ''}
 
                     ${t.dev_response && t.dev_response.trim() ? `
-                        <div class="alert alert-success d-flex align-items-start gap-2 p-2 mb-3 border-success-subtle bg-success-subtle text-success-emphasis rounded">
-                            <i class="bi bi-check-circle-fill fs-5 mt-1"></i>
+                        <div class="alert alert-success d-flex align-items-start gap-2 p-2 mb-0 border-success-subtle bg-success-subtle text-success-emphasis rounded">
+                            <i class="bi bi-check-circle-fill fs-6 mt-1 flex-shrink-0"></i>
                             <div class="flex-grow-1">
-                                <div class="fw-bold small"><i class="bi bi-wrench-adjustable-circle me-1"></i>Developer Resolution / Response:</div>
+                                <div class="fw-bold small"><i class="bi bi-wrench-adjustable-circle me-1"></i>Developer Resolution / Notes:</div>
                                 <div class="small mt-1 text-break">${escapeHtml(t.dev_response)}</div>
                             </div>
                         </div>
                     ` : ''}
-
-                    <form onsubmit="submitUpdateTask(event, ${t.id})" id="form_task_${t.id}">
-                        <input type="hidden" name="action" value="save_platform_task">
-                        <input type="hidden" name="task_id" value="${t.id}">
-                        <input type="hidden" name="feature_id" value="${t.feature_id}">
-                        <input type="hidden" name="platform" value="${t.platform}">
-
-                        <div class="row g-2">
-                            <!-- Title & Path -->
-                            <div class="col-md-5">
-                                <label class="form-label small fw-semibold text-muted mb-1">Task Title <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control form-control-sm" name="task_title" value="${escapeHtml(t.task_title)}" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label small fw-semibold text-muted mb-1">Script / File Path</label>
-                                <input type="text" class="form-control form-control-sm font-monospace" name="script_path" value="${escapeHtml(t.script_path || '')}" placeholder="path/to/file.php">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-semibold text-muted mb-1">Status</label>
-                                <select class="form-select form-select-sm" name="status">
-                                    ${Object.keys(statusBadgesList).map(st => `<option value="${st}" ${t.status === st ? 'selected' : ''}>${st}</option>`).join('')}
-                                </select>
-                            </div>
-
-                            <!-- Progress & Range Slider -->
-                            <div class="col-md-3">
-                                <label class="form-label small fw-semibold text-muted mb-1">Progress (<span id="task_prog_lbl_${t.id}">${t.progress_percent}</span>%)</label>
-                                <div class="d-flex align-items-center gap-2">
-                                    <input type="range" class="form-range" id="task_prog_range_${t.id}" min="0" max="100" value="${t.progress_percent}" oninput="document.getElementById('task_prog_val_${t.id}').value = this.value; document.getElementById('task_prog_lbl_${t.id}').innerText = this.value;">
-                                    <input type="number" class="form-control form-control-sm text-center" style="width: 60px;" name="progress_percent" id="task_prog_val_${t.id}" min="0" max="100" value="${t.progress_percent}" oninput="document.getElementById('task_prog_range_${t.id}').value = this.value; document.getElementById('task_prog_lbl_${t.id}').innerText = this.value;">
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-semibold text-muted mb-1">Priority</label>
-                                <select class="form-select form-select-sm" name="priority">
-                                    <option value="Critical" ${t.priority === 'Critical' ? 'selected' : ''}>Critical</option>
-                                    <option value="High" ${t.priority === 'High' ? 'selected' : ''}>High</option>
-                                    <option value="Medium" ${t.priority === 'Medium' ? 'selected' : ''}>Medium</option>
-                                    <option value="Low" ${t.priority === 'Low' ? 'selected' : ''}>Low</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-semibold text-muted mb-1">Target Deadline</label>
-                                <input type="date" class="form-control form-control-sm" name="estimated_deadline" value="${escapeHtml(t.estimated_deadline || '')}">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-semibold text-muted mb-1">Assigned To</label>
-                                <input type="text" class="form-control form-control-sm" name="assigned_to" value="${escapeHtml(t.assigned_to || '')}" placeholder="Developer Name">
-                            </div>
-
-                            <!-- Issue Description & Fix Notes -->
-                            <div class="col-md-6">
-                                <label class="form-label small fw-semibold text-danger mb-1"><i class="bi bi-bug-fill me-1"></i>Edit Issue / Bug Description</label>
-                                <textarea class="form-control form-control-sm border-danger-subtle ${hasIssue ? 'bg-white' : ''}" name="issue_notes" rows="2" placeholder="Record bugs, exceptions, or blockers here...">${escapeHtml(t.issue_notes || '')}</textarea>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-semibold text-success mb-1"><i class="bi bi-check-circle-fill me-1"></i>Edit Solution / Developer Response</label>
-                                <textarea class="form-control form-control-sm border-success-subtle" name="dev_response" rows="2" placeholder="Record resolution or fix notes here...">${escapeHtml(t.dev_response || '')}</textarea>
-                            </div>
-
-                            <div class="col-12 text-end pt-1">
-                                <button type="submit" class="btn btn-sm btn-primary px-3" id="btn_update_task_${t.id}">
-                                    <i class="bi bi-check2 me-1"></i> Save Changes
-                                </button>
-                            </div>
-                        </div>
-                    </form>
                 </div>
             </div>`;
         });
+        html += '</div>';
 
         container.innerHTML = html;
     }
 
-    function toggleNewTaskForm() {
-        const box = document.getElementById('pw_new_task_box');
-        if (box.style.display === 'none' || box.style.display === '') {
-            showNewTaskForm();
+    function openTaskEditModal(taskId) {
+        const form = document.getElementById('taskEditForm');
+        form.reset();
+
+        if (!taskId || taskId === 0) {
+            document.getElementById('taskEditModalTitle').innerHTML = '<i class="bi bi-plus-circle-fill me-2"></i>Add New Task / Issue';
+            document.getElementById('te_task_id').value = '0';
+            document.getElementById('te_feature_id').value = currentWorkspaceFeatureId;
+            document.getElementById('te_platform').value = currentWorkspacePlatform;
+            document.getElementById('te_task_title').value = '';
+            document.getElementById('te_script_path').value = '';
+            document.getElementById('te_status').value = 'Planned';
+            document.getElementById('te_priority').value = 'Medium';
+            document.getElementById('te_prog_val').value = 0;
+            document.getElementById('te_prog_range').value = 0;
+            document.getElementById('te_prog_lbl').innerText = 0;
+            document.getElementById('te_deadline').value = '';
+            document.getElementById('te_assigned').value = '';
+            document.getElementById('te_issue_notes').value = '';
+            document.getElementById('te_dev_response').value = '';
         } else {
-            hideNewTaskForm();
+            const t = (window.currentWorkspaceTasks || []).find(x => parseInt(x.id) === parseInt(taskId));
+            if (!t) return;
+            document.getElementById('taskEditModalTitle').innerHTML = `<i class="bi bi-pencil-square me-2"></i>Edit Task / Issue #${t.id}`;
+            document.getElementById('te_task_id').value = t.id || 0;
+            document.getElementById('te_feature_id').value = t.feature_id || currentWorkspaceFeatureId;
+            document.getElementById('te_platform').value = t.platform || currentWorkspacePlatform;
+            document.getElementById('te_task_title').value = t.task_title || '';
+            document.getElementById('te_script_path').value = t.script_path || '';
+            document.getElementById('te_status').value = t.status || 'Planned';
+            document.getElementById('te_priority').value = t.priority || 'Medium';
+            const pct = parseInt(t.progress_percent || 0);
+            document.getElementById('te_prog_val').value = pct;
+            document.getElementById('te_prog_range').value = pct;
+            document.getElementById('te_prog_lbl').innerText = pct;
+            document.getElementById('te_deadline').value = t.estimated_deadline || '';
+            document.getElementById('te_assigned').value = t.assigned_to || '';
+            document.getElementById('te_issue_notes').value = t.issue_notes || '';
+            document.getElementById('te_dev_response').value = t.dev_response || '';
         }
+
+        showModal('taskEditModal');
     }
 
-    function showNewTaskForm() {
-        const box = document.getElementById('pw_new_task_box');
-        box.style.display = 'block';
-        document.getElementById('nt_task_title').focus();
-    }
-
-    function hideNewTaskForm() {
-        const box = document.getElementById('pw_new_task_box');
-        box.style.display = 'none';
-    }
-
-    function onNewTaskStatusChange(val) {
+    function onTaskEditStatusChange(val) {
         if (val === 'Completed') {
-            document.getElementById('nt_progress_percent').value = 100;
-            document.getElementById('nt_progress_range').value = 100;
-            document.getElementById('nt_prog_label').innerText = 100;
+            document.getElementById('te_prog_val').value = 100;
+            document.getElementById('te_prog_range').value = 100;
+            document.getElementById('te_prog_lbl').innerText = 100;
         } else if (val === 'Issue') {
-            document.getElementById('nt_priority').value = 'Critical';
+            document.getElementById('te_priority').value = 'Critical';
         }
     }
 
-    function submitNewTask(e) {
+    function submitSaveTask(e) {
         e.preventDefault();
-        const btn = document.getElementById('btnSaveNewTask');
+        const btn = document.getElementById('btnSaveTaskModal');
         btn.disabled = true;
         btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status"></span> Saving...`;
 
-        const form = document.getElementById('pwNewTaskForm');
+        const form = document.getElementById('taskEditForm');
         const fd = new FormData(form);
 
         postTrackerApi(fd)
             .then(res => {
                 btn.disabled = false;
-                btn.innerHTML = `<i class="bi bi-save me-1"></i>Save Task`;
+                btn.innerHTML = `<i class="bi bi-check-lg me-1"></i>Save Task / Issue`;
                 if (res.status === 'success') {
+                    hideModal('taskEditModal');
                     showToast(res.message);
-                    form.reset();
-                    document.getElementById('nt_feature_id').value = currentWorkspaceFeatureId;
-                    document.getElementById('nt_platform').value = currentWorkspacePlatform;
-                    document.getElementById('nt_prog_label').innerText = 0;
-                    hideNewTaskForm();
                     loadPlatformTasks();
                     applyFiltersAjax();
                 } else {
-                    alert(res.message || 'Failed to add task.');
+                    alert(res.message || 'Failed to save task.');
                 }
             })
             .catch(err => {
                 btn.disabled = false;
-                btn.innerHTML = `<i class="bi bi-save me-1"></i>Save Task`;
+                btn.innerHTML = `<i class="bi bi-check-lg me-1"></i>Save Task / Issue`;
                 alert(err.message || 'Network error while saving task.');
-            });
-    }
-
-    function submitUpdateTask(e, id) {
-        e.preventDefault();
-        const btn = document.getElementById(`btn_update_task_${id}`);
-        if (btn) {
-            btn.disabled = true;
-            btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status"></span> Saving...`;
-        }
-
-        const fd = new FormData(e.target);
-
-        postTrackerApi(fd)
-            .then(res => {
-                if (btn) {
-                    btn.disabled = false;
-                    btn.innerHTML = `<i class="bi bi-check2 me-1"></i> Save Changes`;
-                }
-                if (res.status === 'success') {
-                    showToast(res.message);
-                    loadPlatformTasks();
-                    applyFiltersAjax();
-                } else {
-                    alert(res.message || 'Failed to update task.');
-                }
-            })
-            .catch(err => {
-                if (btn) {
-                    btn.disabled = false;
-                    btn.innerHTML = `<i class="bi bi-check2 me-1"></i> Save Changes`;
-                }
-                alert(err.message || 'Network error while updating task.');
             });
     }
 
