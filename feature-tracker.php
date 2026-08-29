@@ -1065,8 +1065,6 @@ if (!empty($init_master_ids)) {
 
     /* Platform Cell Card inside Table */
     .platform-cell-card {
-        background: #fafafa;
-        border: 1px solid #e4e6eb;
         border-radius: 6px;
         padding: 4px 2px;
         min-height: 58px;
@@ -1079,8 +1077,7 @@ if (!empty($init_master_ids)) {
         cursor: pointer;
     }
     .platform-cell-card:hover {
-        background: #ffffff;
-        border-color: #696cff;
+   
         box-shadow: 0 2px 6px rgba(105, 108, 255, 0.15);
         transform: translateY(-1px);
     }
