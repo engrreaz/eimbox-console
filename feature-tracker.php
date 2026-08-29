@@ -86,7 +86,7 @@ function fetch_matrix_data_array($conn, $f_module = 'all', $f_platform = 'all', 
         }
         if ($f_issues) {
             $where_clauses[] = "EXISTS (
-                SELECT 1 FROM eimbox_platform_tracker pt WHERE pt.feature_id = m.id AND (pt.status = 'Issue' OR (pt.issue_notes IS NOT NULL AND TRIM(pt.issue_notes) != ''))
+                SELECT 1 FROM eimbox_platform_tracker pt WHERE pt.feature_id = m.id AND (pt.status = 'Issue' OR (pt.issue_notes IS NOT NULL AND TRIM(pt.issue_notes) != '')) AND pt.status != 'Completed' AND pt.progress_percent < 100
             )";
         }
         if ($f_status !== 'all' && !empty($f_status)) {
@@ -144,7 +144,7 @@ function fetch_matrix_data_array($conn, $f_module = 'all', $f_platform = 'all', 
         if ($c_res) $total_features_count = intval($c_res->fetch_assoc()['c'] ?? 0);
 
         $total_issues_count = 0;
-        $i_res = $conn->query("SELECT COUNT(*) as c FROM eimbox_platform_tracker WHERE status = 'Issue' OR (issue_notes IS NOT NULL AND TRIM(issue_notes) != '')");
+        $i_res = $conn->query("SELECT COUNT(*) as c FROM eimbox_platform_tracker WHERE (status = 'Issue' OR (issue_notes IS NOT NULL AND TRIM(issue_notes) != '')) AND status != 'Completed' AND progress_percent < 100");
         if ($i_res) $total_issues_count = intval($i_res->fetch_assoc()['c'] ?? 0);
 
         $plat_stats = [
@@ -562,6 +562,7 @@ $plat_color_hexes = [
 
 $status_badges = [
     'Completed'   => 'bg-success',
+    'Resolved'    => 'bg-success',
     'In Progress' => 'bg-primary',
     'Testing'     => 'bg-info',
     'Planned'     => 'bg-secondary',
@@ -616,12 +617,16 @@ $plat_stats = $initial_data['plat_stats'];
 $total_features_count = $initial_data['total_features_count'];
 $total_issues_count = $initial_data['total_issues_count'];
 
-// Helper: Circular Progress SVG Generator
+// Helper: Circular Progress SVG Generator with Smart Checkmark for 100%
 function render_circular_progress($pct, $color = '#696cff', $size = 40, $stroke = 3.5, $font_size = '0.7rem') {
     $pct = max(0, min(100, intval($pct)));
     $radius = ($size - $stroke) / 2;
     $circ = 2 * M_PI * $radius;
     $offset = $circ - ($pct / 100) * $circ;
+    
+    $inner_html = ($pct >= 100) 
+        ? "<i class='bi bi-check-lg fw-bold' style='font-size: 1.1rem; color: {$color}; line-height: 1;'></i>"
+        : "{$pct}%";
     
     return "
     <div class='circular-progress-box position-relative d-inline-flex align-items-center justify-content-center' style='width: {$size}px; height: {$size}px;'>
@@ -630,19 +635,20 @@ function render_circular_progress($pct, $color = '#696cff', $size = 40, $stroke 
             <circle cx='" . ($size/2) . "' cy='" . ($size/2) . "' r='{$radius}' fill='none' stroke='{$color}' stroke-width='{$stroke}' 
                     stroke-dasharray='{$circ}' stroke-dashoffset='{$offset}' stroke-linecap='round' />
         </svg>
-        <span class='position-absolute fw-bold' style='font-size: {$font_size}; color: {$color}; line-height: 1; user-select: none;'>
-            {$pct}%
+        <span class='position-absolute fw-bold d-flex align-items-center justify-content-center' style='font-size: {$font_size}; color: {$color}; line-height: 1; user-select: none;'>
+            {$inner_html}
         </span>
     </div>";
 }
 
-function get_progress_color($pct, $status = '') {
-    if ($status === 'Issue') return '#ff3e1d';
-    if ($status === 'Completed' || $pct >= 100) return '#71dd37';
-    if ($pct >= 70) return '#03c3ec';
-    if ($pct >= 30) return '#696cff';
-    if ($pct > 0) return '#ffab00';
-    return '#8592a3';
+function get_progress_color($pct, $status = '', $has_active_issue = false) {
+    $pct = intval($pct);
+    if ($status === 'Completed' || $status === 'Resolved' || $pct >= 100) return '#71dd37'; // 100% / Resolved = Success Green
+    if ($pct >= 75) return '#03c3ec'; // 75%+ = Info Cyan / Near Done
+    if ($pct >= 50) return '#696cff'; // 50%+ = Primary Indigo / Significant
+    if ($pct > 0) return '#ffab00';  // 1%-49% = Warning Amber / Early Progress
+    if ($has_active_issue || $status === 'Issue') return '#ff3e1d'; // 0% + Issue = Danger Red
+    return '#8592a3'; // 0% Planned = Muted Gray
 }
 
 require_once 'header.php';
@@ -665,8 +671,11 @@ require_once 'header.php';
         box-shadow: 0 2px 6px rgba(0,0,0,0.06);
     }
     .platform-cell-box.has-issue {
-        background-color: rgba(255, 62, 29, 0.04);
-        border: 1px dashed rgba(255, 62, 29, 0.3);
+        background-color: rgba(255, 62, 29, 0.05);
+        border: 1px dashed rgba(255, 62, 29, 0.4);
+    }
+    .platform-cell-box.is-completed {
+        background-color: rgba(113, 221, 55, 0.05);
     }
     .na-badge {
         font-size: 0.72rem;
@@ -859,7 +868,7 @@ require_once 'header.php';
                                     </span>
                                     <div class="fw-bold text-dark"><?= htmlspecialchars($m['feature_name']) ?></div>
                                     <?php if (!empty($m['description'])): ?>
-                                        <div class="text-muted small text-truncate" style="max-width: 280px;" title="<?= htmlspecialchars($m['description']) ?>">
+                                        <div class="text-muted small" title="<?= htmlspecialchars($m['description']) ?>">
                                             <?= htmlspecialchars($m['description']) ?>
                                         </div>
                                     <?php endif; ?>
@@ -881,17 +890,22 @@ require_once 'header.php';
                                     <?php else: 
                                         $completed_tasks = 0;
                                         $total_progress_sum = 0;
-                                        $issue_count = 0;
+                                        $active_issue_count = 0;
+                                        $resolved_issue_count = 0;
                                         $latest_deadline = null;
 
                                         foreach ($tasks as $t) {
                                             $t_pct = intval($t['progress_percent'] ?? 0);
                                             $total_progress_sum += $t_pct;
-                                            if ($t['status'] === 'Completed' || $t_pct >= 100) {
+                                            $is_done = ($t['status'] === 'Completed' || $t_pct >= 100);
+                                            if ($is_done) {
                                                 $completed_tasks++;
                                             }
-                                            if ($t['status'] === 'Issue' || (!empty($t['issue_notes']) && trim($t['issue_notes']) !== '')) {
-                                                $issue_count++;
+                                            $has_issue_note = ($t['status'] === 'Issue' || (!empty($t['issue_notes']) && trim($t['issue_notes']) !== ''));
+                                            if ($has_issue_note && !$is_done) {
+                                                $active_issue_count++;
+                                            } elseif ($has_issue_note && $is_done) {
+                                                $resolved_issue_count++;
                                             }
                                             if (!empty($t['estimated_deadline'])) {
                                                 if ($latest_deadline === null || $t['estimated_deadline'] > $latest_deadline) {
@@ -901,24 +915,45 @@ require_once 'header.php';
                                         }
 
                                         $avg_progress = round($total_progress_sum / $task_count);
-                                        if ($issue_count > 0) $composite_status = 'Issue';
-                                        elseif ($completed_tasks === $task_count) $composite_status = 'Completed';
-                                        elseif ($avg_progress > 0) $composite_status = 'In Progress';
-                                        else $composite_status = 'Planned';
+                                        if ($completed_tasks === $task_count || $avg_progress >= 100) {
+                                            $composite_status = ($resolved_issue_count > 0) ? 'Resolved' : 'Completed';
+                                            $badge_class = 'bg-success text-white';
+                                        } elseif ($active_issue_count > 0 && $avg_progress == 0) {
+                                            $composite_status = 'Issue';
+                                            $badge_class = 'bg-danger text-white';
+                                        } elseif ($avg_progress >= 75) {
+                                            $composite_status = 'Testing';
+                                            $badge_class = 'bg-info text-white';
+                                        } elseif ($avg_progress >= 50) {
+                                            $composite_status = 'In Progress';
+                                            $badge_class = 'bg-primary text-white';
+                                        } elseif ($avg_progress > 0) {
+                                            $composite_status = 'In Progress';
+                                            $badge_class = 'bg-warning text-dark';
+                                        } else {
+                                            $composite_status = 'Planned';
+                                            $badge_class = 'bg-secondary text-white';
+                                        }
 
-                                        $badge_class = $status_badges[$composite_status] ?? 'bg-secondary';
-                                        $prog_color = get_progress_color($avg_progress, $composite_status);
+                                        $prog_color = get_progress_color($avg_progress, $composite_status, ($active_issue_count > 0));
+                                        $cell_box_class = ($active_issue_count > 0 && $avg_progress == 0) ? 'has-issue' : (($completed_tasks === $task_count || $avg_progress >= 100) ? 'is-completed' : '');
                                     ?>
                                         <td class="text-center p-2" style="cursor: pointer;" onclick="openPlatformWorkspace(<?= (int)$m['id'] ?>, '<?= $pk ?>')" title="Click to view & manage <?= $task_count ?> task(s)">
-                                            <div class="platform-cell-box <?= $issue_count > 0 ? 'has-issue' : '' ?> d-flex flex-column align-items-center justify-content-center p-1">
+                                            <div class="platform-cell-box <?= $cell_box_class ?> d-flex flex-column align-items-center justify-content-center p-1">
                                                 <div class="mb-1">
                                                     <?= render_circular_progress($avg_progress, $prog_color, 36, 3.2, '0.65rem') ?>
                                                 </div>
-                                                <span class="badge <?= $badge_class ?> px-2 py-1 mb-1" style="font-size: 0.62rem;"><?= htmlspecialchars($composite_status) ?></span>
+                                                <span class="badge <?= $badge_class ?> px-2 py-1 mb-1" style="font-size: 0.62rem;">
+                                                    <?= ($completed_tasks === $task_count || $avg_progress >= 100) ? '<i class="bi bi-check-lg me-1"></i>' : '' ?><?= htmlspecialchars($composite_status) ?>
+                                                </span>
                                                 <span class="text-muted" style="font-size: 0.65rem; font-weight: 600; line-height: 1.1;"><?= $completed_tasks ?>/<?= $task_count ?> Tasks</span>
-                                                <?php if ($issue_count > 0): ?>
-                                                    <span class="badge bg-danger text-white px-1 mt-1 shadow-sm" style="font-size: 0.60rem;" title="<?= $issue_count ?> task(s) have pending issues">
-                                                        <i class="bi bi-bug-fill me-1"></i><?= $issue_count ?> Issue<?= $issue_count > 1 ? 's' : '' ?>
+                                                <?php if ($active_issue_count > 0): ?>
+                                                    <span class="badge bg-danger text-white px-1 mt-1 shadow-sm" style="font-size: 0.60rem;" title="<?= $active_issue_count ?> task(s) have pending issues">
+                                                        <i class="bi bi-bug-fill me-1"></i><?= $active_issue_count ?> Active Issue<?= $active_issue_count > 1 ? 's' : '' ?>
+                                                    </span>
+                                                <?php elseif ($resolved_issue_count > 0 && ($completed_tasks === $task_count || $avg_progress >= 100)): ?>
+                                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-1 mt-1" style="font-size: 0.60rem;" title="All previous issues resolved">
+                                                        <i class="bi bi-check2-circle me-1"></i>Fixed
                                                     </span>
                                                 <?php elseif ($latest_deadline): ?>
                                                     <span class="text-muted font-monospace mt-1" style="font-size: 0.62rem;" title="Target Deadline: <?= htmlspecialchars($latest_deadline) ?>">
@@ -1265,13 +1300,14 @@ require_once 'header.php';
         return String(str).replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'}[m])); 
     }
 
-    function getProgressColorJs(pct, status) {
-        if (status === 'Issue') return '#ff3e1d';
-        if (status === 'Completed' || pct >= 100) return '#71dd37';
-        if (pct >= 70) return '#03c3ec';
-        if (pct >= 30) return '#696cff';
-        if (pct > 0) return '#ffab00';
-        return '#8592a3';
+    function getProgressColorJs(pct, status, hasActiveIssue = false) {
+        pct = parseInt(pct || 0);
+        if (status === 'Completed' || status === 'Resolved' || pct >= 100) return '#71dd37'; // 100% / Resolved = Success Green
+        if (pct >= 75) return '#03c3ec'; // 75%+ = Info Cyan
+        if (pct >= 50) return '#696cff'; // 50%+ = Primary Indigo
+        if (pct > 0) return '#ffab00';  // 1%-49% = Warning Amber
+        if (hasActiveIssue || status === 'Issue') return '#ff3e1d'; // 0% + Issue = Danger Red
+        return '#8592a3'; // 0% Planned = Muted Gray
     }
 
     function renderCircularProgressSvg(pct, color = '#696cff', size = 40, stroke = 3.5, fontSize = '0.7rem') {
@@ -1279,6 +1315,10 @@ require_once 'header.php';
         const radius = (size - stroke) / 2;
         const circ = 2 * Math.PI * radius;
         const offset = circ - (pct / 100) * circ;
+        const innerContent = (pct >= 100) 
+            ? `<i class="bi bi-check-lg fw-bold" style="font-size: 1.1rem; color: ${color}; line-height: 1;"></i>`
+            : `${pct}%`;
+
         return `
         <div class="circular-progress-box position-relative d-inline-flex align-items-center justify-content-center" style="width: ${size}px; height: ${size}px;">
             <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" class="d-block" style="transform: rotate(-90deg);">
@@ -1286,8 +1326,8 @@ require_once 'header.php';
                 <circle cx="${size/2}" cy="${size/2}" r="${radius}" fill="none" stroke="${color}" stroke-width="${stroke}" 
                         stroke-dasharray="${circ}" stroke-dashoffset="${offset}" stroke-linecap="round" />
             </svg>
-            <span class="position-absolute fw-bold" style="font-size: ${fontSize}; color: ${color}; line-height: 1; user-select: none;">
-                ${pct}%
+            <span class="position-absolute fw-bold d-flex align-items-center justify-content-center" style="font-size: ${fontSize}; color: ${color}; line-height: 1; user-select: none;">
+                ${innerContent}
             </span>
         </div>`;
     }
@@ -1411,7 +1451,7 @@ require_once 'header.php';
                         <i class="bi bi-folder2-open me-1"></i>${escapeHtml(m.module)}
                     </span>
                     <div class="fw-bold text-dark">${escapeHtml(m.feature_name)}</div>
-                    ${m.description ? `<div class="text-muted small text-truncate" style="max-width: 280px;" title="${escapeHtml(m.description)}">${escapeHtml(m.description)}</div>` : ''}
+                    ${m.description ? `<div class="text-muted small" title="${escapeHtml(m.description)}">${escapeHtml(m.description)}</div>` : ''}
                 </td>`;
 
             for (const pk in platformsInfo) {
@@ -1432,14 +1472,23 @@ require_once 'header.php';
                 } else {
                     let completedTasks = 0;
                     let totalProgressSum = 0;
-                    let issueCount = 0;
+                    let activeIssueCount = 0;
+                    let resolvedIssueCount = 0;
                     let latestDeadline = null;
 
                     tasks.forEach(t => {
                         const pct = parseInt(t.progress_percent || 0);
                         totalProgressSum += pct;
-                        if (t.status === 'Completed' || pct >= 100) completedTasks++;
-                        if (t.status === 'Issue' || (t.issue_notes && t.issue_notes.trim())) issueCount++;
+                        const isDone = (t.status === 'Completed' || pct >= 100);
+                        if (isDone) completedTasks++;
+                        
+                        const hasIssue = (t.status === 'Issue' || (t.issue_notes && t.issue_notes.trim()));
+                        if (hasIssue && !isDone) {
+                            activeIssueCount++;
+                        } else if (hasIssue && isDone) {
+                            resolvedIssueCount++;
+                        }
+
                         if (t.estimated_deadline) {
                             if (!latestDeadline || t.estimated_deadline > latestDeadline) {
                                 latestDeadline = t.estimated_deadline;
@@ -1449,28 +1498,51 @@ require_once 'header.php';
 
                     const avgProgress = Math.round(totalProgressSum / taskCount);
                     let compositeStatus = 'Planned';
-                    if (issueCount > 0) compositeStatus = 'Issue';
-                    else if (completedTasks === taskCount) compositeStatus = 'Completed';
-                    else if (avgProgress > 0) compositeStatus = 'In Progress';
+                    let badgeClass = 'bg-secondary text-white';
 
-                    const badgeClass = statusBadgesList[compositeStatus] || 'bg-secondary';
-                    const progColor = getProgressColorJs(avgProgress, compositeStatus);
+                    if (completedTasks === taskCount || avgProgress >= 100) {
+                        compositeStatus = (resolvedIssueCount > 0) ? 'Resolved' : 'Completed';
+                        badgeClass = 'bg-success text-white';
+                    } else if (activeIssueCount > 0 && avgProgress === 0) {
+                        compositeStatus = 'Issue';
+                        badgeClass = 'bg-danger text-white';
+                    } else if (avgProgress >= 75) {
+                        compositeStatus = 'Testing';
+                        badgeClass = 'bg-info text-white';
+                    } else if (avgProgress >= 50) {
+                        compositeStatus = 'In Progress';
+                        badgeClass = 'bg-primary text-white';
+                    } else if (avgProgress > 0) {
+                        compositeStatus = 'In Progress';
+                        badgeClass = 'bg-warning text-dark';
+                    } else {
+                        compositeStatus = 'Planned';
+                        badgeClass = 'bg-secondary text-white';
+                    }
+
+                    const progColor = getProgressColorJs(avgProgress, compositeStatus, activeIssueCount > 0);
+                    const cellBoxClass = (activeIssueCount > 0 && avgProgress === 0) ? 'has-issue' : ((completedTasks === taskCount || avgProgress >= 100) ? 'is-completed' : '');
 
                     html += `
                     <td class="text-center p-2" style="cursor: pointer;" onclick="openPlatformWorkspace(${m.id}, '${pk}')" title="Click to view & manage ${taskCount} task(s)">
-                        <div class="platform-cell-box ${issueCount > 0 ? 'has-issue' : ''} d-flex flex-column align-items-center justify-content-center p-1">
+                        <div class="platform-cell-box ${cellBoxClass} d-flex flex-column align-items-center justify-content-center p-1">
                             <div class="mb-1">
                                 ${renderCircularProgressSvg(avgProgress, progColor, 36, 3.2, '0.65rem')}
                             </div>
-                            <span class="badge ${badgeClass} px-2 py-1 mb-1" style="font-size: 0.62rem;">${escapeHtml(compositeStatus)}</span>
+                            <span class="badge ${badgeClass} px-2 py-1 mb-1" style="font-size: 0.62rem;">
+                                ${(completedTasks === taskCount || avgProgress >= 100) ? '<i class="bi bi-check-lg me-1"></i>' : ''}${escapeHtml(compositeStatus)}
+                            </span>
                             <span class="text-muted" style="font-size: 0.65rem; font-weight: 600; line-height: 1.1;">${completedTasks}/${taskCount} Tasks</span>
-                            ${issueCount > 0 ? `
-                                <span class="badge bg-danger text-white px-1 mt-1 shadow-sm" style="font-size: 0.60rem;" title="${issueCount} task(s) have pending issues">
-                                    <i class="bi bi-bug-fill me-1"></i>${issueCount} Issue${issueCount > 1 ? 's' : ''}
+                            ${activeIssueCount > 0 ? `
+                                <span class="badge bg-danger text-white px-1 mt-1 shadow-sm" style="font-size: 0.60rem;" title="${activeIssueCount} task(s) have pending issues">
+                                    <i class="bi bi-bug-fill me-1"></i>${activeIssueCount} Active Issue${activeIssueCount > 1 ? 's' : ''}
+                                </span>` : (resolvedIssueCount > 0 && (completedTasks === taskCount || avgProgress >= 100) ? `
+                                <span class="badge bg-success-subtle text-success border border-success-subtle px-1 mt-1" style="font-size: 0.60rem;" title="All previous issues resolved">
+                                    <i class="bi bi-check2-circle me-1"></i>Fixed
                                 </span>` : (latestDeadline ? `
                                 <span class="text-muted font-monospace mt-1" style="font-size: 0.62rem;" title="Target Deadline: ${escapeHtml(latestDeadline)}">
                                     <i class="bi bi-calendar-event me-1 text-primary"></i>${escapeHtml(latestDeadline)}
-                                </span>` : '')
+                                </span>` : ''))
                             }
                         </div>
                     </td>`;
@@ -1650,13 +1722,22 @@ require_once 'header.php';
         let completed = 0;
         let totalSum = 0;
         let latestDate = null;
-        let issueCount = 0;
+        let activeIssues = 0;
+        let resolvedIssues = 0;
 
         tasks.forEach(t => {
             const pct = parseInt(t.progress_percent || 0);
             totalSum += pct;
-            if (t.status === 'Completed' || pct >= 100) completed++;
-            if (t.status === 'Issue' || (t.issue_notes && t.issue_notes.trim())) issueCount++;
+            const isDone = (t.status === 'Completed' || pct >= 100);
+            if (isDone) completed++;
+            
+            const hasIssue = (t.status === 'Issue' || (t.issue_notes && t.issue_notes.trim()));
+            if (hasIssue && !isDone) {
+                activeIssues++;
+            } else if (hasIssue && isDone) {
+                resolvedIssues++;
+            }
+
             if (t.estimated_deadline) {
                 if (!latestDate || t.estimated_deadline > latestDate) {
                     latestDate = t.estimated_deadline;
@@ -1666,16 +1747,20 @@ require_once 'header.php';
 
         const total = tasks.length;
         const avg = total > 0 ? Math.round(totalSum / total) : 0;
-        const circColor = getProgressColorJs(avg, issueCount > 0 ? 'Issue' : (completed === total ? 'Completed' : 'In Progress'));
+        const statusForCirc = (completed === total || avg >= 100) ? 'Completed' : (activeIssues > 0 && avg === 0 ? 'Issue' : 'In Progress');
+        const circColor = getProgressColorJs(avg, statusForCirc, activeIssues > 0);
 
         document.getElementById('pw_summary_circ').innerHTML = renderCircularProgressSvg(avg, circColor, 44, 3.5, '0.72rem');
         document.getElementById('pw_summary_text').innerText = `${completed} of ${total} Tasks Completed (${avg}%)`;
         document.getElementById('pw_summary_deadline').innerHTML = latestDate ? `<i class="bi bi-calendar-event me-1 text-primary"></i>Target: <strong>${escapeHtml(latestDate)}</strong>` : `<i class="bi bi-calendar-event me-1 text-muted"></i>No deadline set`;
 
         const issuesBadge = document.getElementById('pw_summary_issues');
-        if (issueCount > 0) {
+        if (activeIssues > 0) {
             issuesBadge.className = 'badge bg-danger text-white';
-            issuesBadge.innerHTML = `<i class="bi bi-bug-fill me-1"></i>${issueCount} Active Issue${issueCount > 1 ? 's' : ''}`;
+            issuesBadge.innerHTML = `<i class="bi bi-bug-fill me-1"></i>${activeIssues} Active Issue${activeIssues > 1 ? 's' : ''}`;
+        } else if (resolvedIssues > 0) {
+            issuesBadge.className = 'badge bg-success text-white';
+            issuesBadge.innerHTML = `<i class="bi bi-check2-circle me-1"></i>${resolvedIssues} Issue${resolvedIssues > 1 ? 's' : ''} Resolved`;
         } else {
             issuesBadge.className = 'badge bg-danger text-white d-none';
         }
