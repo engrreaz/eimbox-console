@@ -455,7 +455,7 @@ function get_progress_color($pct, $status = '') {
 
 // Fetch Master Modules for Filter Dropdown
 $modules_list = [];
-$mod_query = $conn->query("SELECT DISTINCT module_name, core FROM modulelist ORDER BY display_order ASC, module_name ASC");
+$mod_query = $conn->query("SELECT DISTINCT module_name, core FROM modulelist ORDER BY slno ASC, module_name ASC");
 if ($mod_query && $mod_query->num_rows > 0) {
     while ($m_row = $mod_query->fetch_assoc()) {
         $modules_list[] = $m_row;
