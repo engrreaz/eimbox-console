@@ -11,7 +11,7 @@ $platform = trim($_GET['platform'] ?? 'win32');
 
 // In production, this can be fetched from a database table or release configuration
 $updatePolicy = [
-    'latest_version'        => '1.0.1',
+    'latest_version'        => '1.0.0',
     'min_required_version'  => '1.0.0', // Versions below this MUST mandatorily update
     'is_mandatory'          => false,
     'release_date'          => '2026-08-28',
