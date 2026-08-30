@@ -96,9 +96,32 @@ if ($method === 'POST' || $method === 'PUT') {
 
     // Account Status & Display
     $status = isset($input['status']) ? intval($input['status']) : null;
-    $display = isset($input['display']) ? intval($input['display']) : null;
     $rootuser = isset($input['rootuser']) || isset($input['root_user']) ? trim($input['rootuser'] ?? $input['root_user'] ?? '') : null;
     $logo = isset($input['logo']) ? trim($input['logo']) : null;
+
+    // Process base64 logo upload if provided
+    if (!empty($input['logo_base64'])) {
+        $rawBase64 = $input['logo_base64'];
+        if (strpos($rawBase64, 'base64,') !== false) {
+            $rawBase64 = substr($rawBase64, strpos($rawBase64, 'base64,') + 7);
+        }
+        $imgData = base64_decode($rawBase64);
+        if ($imgData !== false && strlen($imgData) > 0) {
+            $logoFileName = $sccode . '.png';
+            $destDirs = [
+                __DIR__ . '/../../../../eimbox-root/assets/images/logos',
+                __DIR__ . '/../../../../eimbox-root/logo',
+                __DIR__ . '/../../uploads/logos'
+            ];
+            foreach ($destDirs as $d) {
+                if (!is_dir($d)) {
+                    @mkdir($d, 0777, true);
+                }
+                @file_put_contents($d . '/' . $logoFileName, $imgData);
+            }
+            $logo = $logoFileName;
+        }
+    }
 
     // Sensitive Payment & SMS Gateways (If provided by authorized admin)
     $bkash = isset($input['bkash']) ? trim($input['bkash']) : null;
@@ -149,44 +172,52 @@ if ($method === 'POST' || $method === 'PUT') {
     $addField('time_differ', $time_differ, 'i');
     $addField('intime', $intime);
     $addField('outtime', $outtime);
-    $addField('theme', $theme);
     $addField('progressguar', $progressguar, 'i');
-    $addField('serviceattnd', $serviceattnd, 'i');
-    $addField('servicefinance', $servicefinance, 'i');
-    $addField('servicestudent', $servicestudent, 'i');
-    $addField('app', $app, 'i');
-    $addField('package_name', $package_name);
-    $addField('package_id', $package_id, 'i');
-    $addField('tier', $tier);
-    $addField('pack', $pack, 'i');
-    $addField('packdate', $packdate);
-    $addField('expire', $expire);
-    $addField('billing_data', $billing_data);
-    $addField('valid_module', $valid_module);
-    $addField('active_module', $active_module);
-    $addField('valid_panel', $valid_panel);
-    $addField('active_panel', $active_panel);
-    $addField('profile_track', $profile_track, 'i');
-    $addField('self_control', $self_control, 'i');
-    $addField('daily_backup', $daily_backup, 'i');
-    $addField('monthly_backup', $monthly_backup, 'i');
-    $addField('cloud_storage', $cloud_storage, 'i');
-    $addField('backup_mail_2', $backup_mail_2);
-    $addField('backup_mail_3', $backup_mail_3);
-    $addField('status', $status, 'i');
-    $addField('display', $display, 'i');
     $addField('rootuser', $rootuser);
     $addField('logo', $logo);
-    $addField('bkash', $bkash);
-    $addField('nagad', $nagad);
-    $addField('rocket', $rocket);
-    $addField('bank', $bank);
-    $addField('sms_gateway', $sms_gateway);
-    $addField('sms_cost', $sms_cost, 'd');
-    $addField('sms_balance', $sms_balance, 'd');
-    $addField('account_balance', $account_balance, 'd');
-    $addField('api_key', $api_key);
-    $addField('secret_key', $secret_key);
+
+    // Strict Role-Based Access Control: Last 3 Sections (Subscription, Security, Gateways) require is_admin >= 3
+    $isAdminLevel = intval($user['is_admin'] ?? $user['admin'] ?? $user['admin_level'] ?? 0);
+    $userLevel = trim($user['userlevel'] ?? $user['role'] ?? '');
+    $canEditAdminSections = ($isAdminLevel >= 3) || in_array($userLevel, ['Super Administrator', 'Developer', 'Super Admin']);
+
+    if ($canEditAdminSections) {
+        $addField('theme', $theme);
+        $addField('serviceattnd', $serviceattnd, 'i');
+        $addField('servicefinance', $servicefinance, 'i');
+        $addField('servicestudent', $servicestudent, 'i');
+        $addField('app', $app, 'i');
+        $addField('package_name', $package_name);
+        $addField('package_id', $package_id, 'i');
+        $addField('tier', $tier);
+        $addField('pack', $pack, 'i');
+        $addField('packdate', $packdate);
+        $addField('expire', $expire);
+        $addField('billing_data', $billing_data);
+        $addField('valid_module', $valid_module);
+        $addField('active_module', $active_module);
+        $addField('valid_panel', $valid_panel);
+        $addField('active_panel', $active_panel);
+        $addField('profile_track', $profile_track, 'i');
+        $addField('self_control', $self_control, 'i');
+        $addField('daily_backup', $daily_backup, 'i');
+        $addField('monthly_backup', $monthly_backup, 'i');
+        $addField('cloud_storage', $cloud_storage, 'i');
+        $addField('backup_mail_2', $backup_mail_2);
+        $addField('backup_mail_3', $backup_mail_3);
+        $addField('status', $status, 'i');
+        $addField('display', $display, 'i');
+        $addField('bkash', $bkash);
+        $addField('nagad', $nagad);
+        $addField('rocket', $rocket);
+        $addField('bank', $bank);
+        $addField('sms_gateway', $sms_gateway);
+        $addField('sms_cost', $sms_cost, 'd');
+        $addField('sms_balance', $sms_balance, 'd');
+        $addField('account_balance', $account_balance, 'd');
+        $addField('api_key', $api_key);
+        $addField('secret_key', $secret_key);
+    }
 
     if (!empty($setClauses)) {
         $setClauses[] = "`modifieddate` = NOW()";
@@ -216,19 +247,55 @@ if (!$sc) {
     api_response('error', 'Institute profile not found for sccode: ' . $sccode, null, 404);
 }
 
-// 4. Fetch active counts
+// 4. Fetch active student & teacher counts
+$stCount = 0;
 $stCountStmt = $conn->prepare("SELECT COUNT(*) AS total_students FROM `sessioninfo` WHERE `sccode` = ? AND `sessionyear` LIKE ?");
-$curYear = '%' . date('Y') . '%';
-$stCountStmt->bind_param('is', $sccode, $curYear);
-$stCountStmt->execute();
-$stCount = $stCountStmt->get_result()->fetch_assoc()['total_students'] ?? 0;
-$stCountStmt->close();
+if ($stCountStmt) {
+    $curYear = '%' . date('Y') . '%';
+    $stCountStmt->bind_param('is', $sccode, $curYear);
+    $stCountStmt->execute();
+    $stCount = intval($stCountStmt->get_result()->fetch_assoc()['total_students'] ?? 0);
+    $stCountStmt->close();
+}
 
+if ($stCount === 0) {
+    $stCountStmt2 = $conn->prepare("SELECT COUNT(*) AS total_students FROM `sessioninfo` WHERE `sccode` = ?");
+    if ($stCountStmt2) {
+        $stCountStmt2->bind_param('i', $sccode);
+        $stCountStmt2->execute();
+        $stCount = intval($stCountStmt2->get_result()->fetch_assoc()['total_students'] ?? 0);
+        $stCountStmt2->close();
+    }
+}
+
+if ($stCount === 0) {
+    $stCountStmt3 = $conn->prepare("SELECT COUNT(*) AS total_students FROM `students` WHERE `sccode` = ?");
+    if ($stCountStmt3) {
+        $stCountStmt3->bind_param('i', $sccode);
+        $stCountStmt3->execute();
+        $stCount = intval($stCountStmt3->get_result()->fetch_assoc()['total_students'] ?? 0);
+        $stCountStmt3->close();
+    }
+}
+
+$teaCount = 0;
 $teaCountStmt = $conn->prepare("SELECT COUNT(*) AS total_teachers FROM `teacher` WHERE `sccode` = ?");
-$teaCountStmt->bind_param('i', $sccode);
-$teaCountStmt->execute();
-$teaCount = $teaCountStmt->get_result()->fetch_assoc()['total_teachers'] ?? 0;
-$teaCountStmt->close();
+if ($teaCountStmt) {
+    $teaCountStmt->bind_param('i', $sccode);
+    $teaCountStmt->execute();
+    $teaCount = intval($teaCountStmt->get_result()->fetch_assoc()['total_teachers'] ?? 0);
+    $teaCountStmt->close();
+}
+
+if ($teaCount === 0) {
+    $teaCountStmt2 = $conn->prepare("SELECT COUNT(*) AS total_teachers FROM `users` WHERE `sccode` = ? AND (`userlevel` LIKE '%Teacher%' OR `userlevel` LIKE '%Head%' OR `role` LIKE '%Teacher%')");
+    if ($teaCountStmt2) {
+        $teaCountStmt2->bind_param('i', $sccode);
+        $teaCountStmt2->execute();
+        $teaCount = intval($teaCountStmt2->get_result()->fetch_assoc()['total_teachers'] ?? 0);
+        $teaCountStmt2->close();
+    }
+}
 
 $actionMsg = ($method === 'POST' || $method === 'PUT') 
     ? 'Institute profile updated successfully.' 
