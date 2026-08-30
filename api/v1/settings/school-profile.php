@@ -283,7 +283,7 @@ api_response('success', $actionMsg, [
         'dista_differ' => intval($sc['dista_differ'] ?? 50),
         'time_differ' => intval($sc['time_differ'] ?? 600),
         'intime' => $sc['intime'] ?? '09:45:00',
-        'outtime' => $sc['outtime'] ?? '16:30:00',
+        'outtime' => $sc['outtime'] ?? '16:55:00',
 
         // Subscription & Packages
         'package_id' => intval($sc['package_id'] ?? 1),
