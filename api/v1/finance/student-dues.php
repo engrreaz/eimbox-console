@@ -17,13 +17,25 @@ if ($sccode <= 0 || empty($stid)) {
     api_response('error', 'Both sccode and stid are required.', null, 400);
 }
 
-// 1. Fetch Student Profile & Current Session
-$stmtSt = $conn->prepare("SELECT s.*, si.sessionyear, si.classname, si.sectionname, si.rollno, si.lastpr 
-FROM students s
-LEFT JOIN sessioninfo si ON si.stid = s.stid AND si.sccode = s.sccode
-WHERE s.sccode = ? AND s.stid = ?
-ORDER BY si.sessionyear DESC LIMIT 1");
-$stmtSt->bind_param('is', $sccode, $stid);
+$targetSession = trim($_GET['session'] ?? $_GET['sessionyear'] ?? '');
+
+// 1. Fetch Student Profile & Active Session Information
+if (!empty($targetSession)) {
+    $sessLike = "%$targetSession%";
+    $stmtSt = $conn->prepare("SELECT s.*, si.sessionyear, si.classname, si.sectionname, si.rollno, si.lastpr 
+    FROM students s
+    LEFT JOIN sessioninfo si ON si.stid = s.stid AND si.sccode = s.sccode AND (si.sessionyear = ? OR si.sessionyear LIKE ?)
+    WHERE s.sccode = ? AND s.stid = ?
+    ORDER BY (si.sessionyear = ?) DESC, si.id DESC LIMIT 1");
+    $stmtSt->bind_param('ssiss', $targetSession, $sessLike, $sccode, $stid, $targetSession);
+} else {
+    $stmtSt = $conn->prepare("SELECT s.*, si.sessionyear, si.classname, si.sectionname, si.rollno, si.lastpr 
+    FROM students s
+    LEFT JOIN sessioninfo si ON si.stid = s.stid AND si.sccode = s.sccode
+    WHERE s.sccode = ? AND s.stid = ?
+    ORDER BY si.sessionyear DESC LIMIT 1");
+    $stmtSt->bind_param('is', $sccode, $stid);
+}
 $stmtSt->execute();
 $student = $stmtSt->get_result()->fetch_assoc();
 $stmtSt->close();
@@ -32,26 +44,27 @@ if (!$student) {
     api_response('error', 'Student not found with the provided ID.', null, 404);
 }
 
-$sessionyear = $student['sessionyear'] ?: date('Y');
+$sessionyear = !empty($targetSession) ? $targetSession : ($student['sessionyear'] ?: date('Y'));
+$sessLike = "%$sessionyear%";
 
-// 2. Fetch Payable & Pending Items from stfinance (Filtered by month <= current_month or specified upto_month)
+// 2. Fetch Payable & Pending Items from stfinance (Filtered by active session and month)
 $currentMonth = intval(date('n')); // 1 to 12
 $uptoMonth = isset($_GET['upto_month']) && intval($_GET['upto_month']) > 0 ? intval($_GET['upto_month']) : $currentMonth;
 $allMonthsParam = $_GET['all_months'] ?? null;
 $allMonths = ($allMonthsParam !== null && ($allMonthsParam === '1' || $allMonthsParam === 'true' || $allMonthsParam === 1 || $allMonthsParam === true || $allMonthsParam === 'all'));
 
 if ($allMonths) {
-    $stmtFin = $conn->prepare("SELECT id, partid, itemcode, particulareng, particularben, amount, payableamt, paid, dues, month, setupdate
+    $stmtFin = $conn->prepare("SELECT * 
     FROM stfinance 
-    WHERE sccode = ? AND stid = ? AND dues > 0
+    WHERE sccode = ? AND stid = ? AND dues > 0 AND (sessionyear = ? OR sessionyear LIKE ?)
     ORDER BY month ASC, id ASC");
-    $stmtFin->bind_param('is', $sccode, $stid);
+    $stmtFin->bind_param('isis', $sccode, $stid, $sessionyear, $sessLike);
 } else {
-    $stmtFin = $conn->prepare("SELECT id, partid, itemcode, particulareng, particularben, amount, payableamt, paid, dues, month, setupdate
+    $stmtFin = $conn->prepare("SELECT * 
     FROM stfinance 
-    WHERE sccode = ? AND stid = ? AND dues > 0 AND (month <= ? OR month = 0 OR month IS NULL)
+    WHERE sccode = ? AND stid = ? AND dues > 0 AND (sessionyear = ? OR sessionyear LIKE ?) AND (month <= ? OR month = 0 OR month IS NULL)
     ORDER BY month ASC, id ASC");
-    $stmtFin->bind_param('isi', $sccode, $stid, $uptoMonth);
+    $stmtFin->bind_param('isisis', $sccode, $stid, $sessionyear, $sessLike, $uptoMonth);
 }
 
 $stmtFin->execute();
@@ -108,23 +121,60 @@ while ($item = $finRes->fetch_assoc()) {
 
     $payableItems[] = [
         'id' => intval($item['id']),
-        'partid' => intval($item['partid']),
-        'itemcode' => $item['itemcode'],
-        'title_en' => $item['particulareng'],
-        'title_bn' => $item['particularben'],
-        'amount' => floatval($item['amount']),
-        'payable_amt' => floatval($item['payableamt']),
-        'paid_so_far' => floatval($item['paid']),
+        'sccode' => intval($item['sccode'] ?? $sccode),
+        'sessionyear' => $item['sessionyear'] ?: $sessionyear,
+        'classname' => $item['classname'] ?: ($student['classname'] ?? ''),
+        'sectionname' => $item['sectionname'] ?: ($student['sectionname'] ?? ''),
+        'stid' => (string)$item['stid'],
+        'rollno' => intval($item['rollno'] ?: ($student['rollno'] ?? 1)),
+        'partid' => intval($item['partid'] ?? 0),
+        'itemcode' => $item['itemcode'] ?? '',
+        'sub_head' => intval($item['sub_head'] ?? 0),
+        'title_en' => $item['particulareng'] ?? 'Fee Item',
+        'particulareng' => $item['particulareng'] ?? 'Fee Item',
+        'title_bn' => $item['particularben'] ?? '',
+        'particularben' => $item['particularben'] ?? '',
+        'amount' => floatval($item['amount'] ?? 0),
+        'payable_amt' => floatval($item['payableamt'] ?? 0),
+        'payableamt' => floatval($item['payableamt'] ?? 0),
+        'paid_so_far' => floatval($item['paid'] ?? 0),
+        'paid' => floatval($item['paid'] ?? 0),
+        'paidx' => floatval($item['paidx'] ?? 0),
         'due_amount' => $itemDue,
+        'dues' => $itemDue,
         'month' => $itemMonth,
-        'setupdate' => $item['setupdate']
+        'idmon' => $item['idmon'] ?? '',
+        'setupdate' => $item['setupdate'] ?? null,
+        'setupby' => $item['setupby'] ?? null,
+        'modifieddate' => $item['modifieddate'] ?? null,
+        'modifiedby' => $item['modifiedby'] ?? null,
+        'pr1' => intval($item['pr1'] ?? 0),
+        'pr1no' => $item['pr1no'] ?? null,
+        'pr1date' => $item['pr1date'] ?? null,
+        'pr1by' => $item['pr1by'] ?? null,
+        'cashbook1' => intval($item['cashbook1'] ?? 0),
+        'pr2' => intval($item['pr2'] ?? 0),
+        'pr2no' => $item['pr2no'] ?? null,
+        'pr2date' => $item['pr2date'] ?? null,
+        'pr2by' => $item['pr2by'] ?? null,
+        'cashbook2' => intval($item['cashbook2'] ?? 0),
+        'remark' => $item['remark'] ?? null,
+        'extra' => intval($item['extra'] ?? 0),
+        'last_update' => $item['last_update'] ?? null,
+        'validate' => intval($item['validate'] ?? 0),
+        'validationtime' => $item['validationtime'] ?? '2024-01-01 00:00:00',
+        'deleteby' => $item['deleteby'] ?? null,
+        'deletetime' => $item['deletetime'] ?? null,
+        'splitid' => $item['splitid'] ?? null,
+        'scan_status' => intval($item['scan_status'] ?? 3),
+        'splitid2' => $item['splitid2'] !== null ? intval($item['splitid2']) : null
     ];
 }
 $stmtFin->close();
 
-// Fetch overall all-time total dues for the student
-$stmtAllDues = $conn->prepare("SELECT COALESCE(SUM(dues), 0) AS all_dues FROM stfinance WHERE sccode = ? AND stid = ? AND dues > 0");
-$stmtAllDues->bind_param('is', $sccode, $stid);
+// Fetch overall all-time total dues for the student in the active session
+$stmtAllDues = $conn->prepare("SELECT COALESCE(SUM(dues), 0) AS all_dues FROM stfinance WHERE sccode = ? AND stid = ? AND dues > 0 AND (sessionyear = ? OR sessionyear LIKE ?)");
+$stmtAllDues->bind_param('isis', $sccode, $stid, $sessionyear, $sessLike);
 $stmtAllDues->execute();
 $allTimeTotalDues = floatval($stmtAllDues->get_result()->fetch_assoc()['all_dues'] ?? $totalDues);
 $stmtAllDues->close();
