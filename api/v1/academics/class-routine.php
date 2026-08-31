@@ -204,25 +204,89 @@ if ($method === 'GET') {
         $tStmt->close();
     }
 
-    // Fetch Subjects for Class
+    // Fetch School Category from scinfo
+    $sccategory = 'School';
+    $scStmt = $conn->prepare("SELECT sccategory FROM scinfo WHERE sccode = ? OR sccode = 0 ORDER BY (sccode = ?) DESC LIMIT 1");
+    if ($scStmt) {
+        $scStmt->bind_param("ii", $sccode, $sccode);
+        $scStmt->execute();
+        $scRes = $scStmt->get_result();
+        if ($scRow = $scRes->fetch_assoc()) {
+            $sccategory = trim($scRow['sccategory'] ?? 'School');
+        }
+        $scStmt->close();
+    }
+
+    // Fetch Subjects for Class from subsetup with fallback to subjects table
     $subjects = [];
-    $sStmt = $conn->prepare("SELECT ss.subject as subcode, COALESCE(s.subject, CONCAT('Subject #', ss.subject)) as subname, COALESCE(s.subshname, '') as shortname 
+    $sStmt = $conn->prepare("SELECT ss.subject as subcode, ss.tid,
+                                    COALESCE(s.subject, CONCAT('Subject #', ss.subject)) as subname,
+                                    COALESCE(s.subben, '') as subben,
+                                    COALESCE(s.subshname, '') as shortname,
+                                    t.tname as teacher_name
                             FROM subsetup ss 
-                            LEFT JOIN subjects s ON (s.subcode = ss.subject AND (s.sccode = 0 OR s.sccode = ss.sccode))
-                            WHERE ss.sccode = ? AND ss.sessionyear = ? AND ss.classname = ?
-                            ORDER BY ss.slno ASC");
+                            LEFT JOIN (
+                              SELECT s1.*,
+                                     ROW_NUMBER() OVER (
+                                       PARTITION BY s1.subcode 
+                                       ORDER BY (s1.sccode = ?) DESC,
+                                                (CASE WHEN s1.sccategory = ? THEN 1 WHEN s1.sccategory IS NULL OR s1.sccategory = '' THEN 2 ELSE 3 END) ASC,
+                                                s1.id DESC
+                                     ) AS rn
+                              FROM subjects s1
+                              WHERE (s1.sccode = ? OR s1.sccode = 0)
+                                AND (s1.sccategory = ? OR s1.sccategory = '' OR s1.sccategory IS NULL OR s1.sccode = ?)
+                            ) s ON s.subcode = ss.subject AND s.rn = 1
+                            LEFT JOIN teacher t ON (t.tid = ss.tid OR t.id = ss.tid) AND (t.sccode = ss.sccode OR t.sccode = 0)
+                            WHERE (ss.sccode = ? OR ss.sccode = 0) 
+                              AND (ss.sessionyear = ? OR ss.sessionyear = '' OR ss.sessionyear IS NULL) 
+                              AND ss.classname = ?
+                              AND (ss.sectionname = ? OR ss.sectionname = 'All' OR ss.sectionname = '' OR ss.sectionname IS NULL OR ? = 'All' OR ? = '')
+                            ORDER BY CAST(COALESCE(ss.slno, 999) AS UNSIGNED) ASC, ss.subject ASC");
     if ($sStmt) {
-        $sStmt->bind_param("iss", $sccode, $session, $className);
+        $sStmt->bind_param("isisssisssss", $sccode, $sccategory, $sccode, $sccategory, $sccode, $sccode, $session, $className, $sectionName, $sectionName, $sectionName);
         $sStmt->execute();
         $sRes = $sStmt->get_result();
         while ($sRow = $sRes->fetch_assoc()) {
             $subjects[] = [
                 'subcode' => intval($sRow['subcode']),
                 'subname' => $sRow['subname'],
-                'shortname' => $sRow['shortname'] ?: $sRow['subname']
+                'subben' => $sRow['subben'] ?: '',
+                'shortname' => $sRow['shortname'] ?: $sRow['subname'],
+                'tid' => $sRow['tid'] ? (string)$sRow['tid'] : '',
+                'teacher_name' => $sRow['teacher_name'] ?: ''
             ];
         }
         $sStmt->close();
+    }
+
+    // If no subsetup allocated, fallback to master subjects catalog
+    if (empty($subjects)) {
+        $mStmt = $conn->prepare("SELECT s1.subcode, s1.subject as subname, s1.subben, s1.subshname as shortname
+                                 FROM subjects s1
+                                 WHERE (s1.sccode = ? OR s1.sccode = 0)
+                                   AND (s1.sccategory = ? OR s1.sccategory = '' OR s1.sccategory IS NULL OR s1.sccode = ?)
+                                 ORDER BY s1.subcode ASC");
+        if ($mStmt) {
+            $mStmt->bind_param("isi", $sccode, $sccategory, $sccode);
+            $mStmt->execute();
+            $mRes = $mStmt->get_result();
+            $seen = [];
+            while ($mRow = $mRes->fetch_assoc()) {
+                $c = intval($mRow['subcode']);
+                if (isset($seen[$c])) continue;
+                $seen[$c] = true;
+                $subjects[] = [
+                    'subcode' => $c,
+                    'subname' => $mRow['subname'],
+                    'subben' => $mRow['subben'] ?: '',
+                    'shortname' => $mRow['shortname'] ?: $mRow['subname'],
+                    'tid' => '',
+                    'teacher_name' => ''
+                ];
+            }
+            $mStmt->close();
+        }
     }
 
     // Fetch Routine Entries
