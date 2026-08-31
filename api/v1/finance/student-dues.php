@@ -139,10 +139,10 @@ $stmtPr = $conn->prepare("SELECT
     MAX(entrytime) AS entrytime, 
     MAX(collection_media) AS collection_media 
 FROM stpr 
-WHERE sccode = ? AND stid = ? 
+WHERE sccode = ? AND stid = ? AND (sessionyear = ? OR sessionyear IS NULL OR sessionyear = '')
 GROUP BY prno, prdate
 ORDER BY prno DESC LIMIT 20");
-$stmtPr->bind_param('is', $sccode, $stid);
+$stmtPr->bind_param('iss', $sccode, $stid, $sessionyear);
 $stmtPr->execute();
 $resPr = $stmtPr->get_result();
 $paymentHistory = [];
