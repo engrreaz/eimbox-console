@@ -68,7 +68,7 @@ if ($supportsGlobal) {
     $types .= "i";
 }
 
-if (!empty($session) && in_array($tableName, ['examroutine', 'examlist', 'areas', 'sessioninfo', 'subsetup', 'stmark', 'stattnd', 'classschedule', 'clsroutine', 'syllabus', 'lesson_tracking'])) {
+if (!empty($session) && in_array($tableName, ['examroutine', 'examlist', 'areas', 'sessioninfo', 'subsetup', 'stmark', 'stattnd', 'stfinance', 'stpr', 'classschedule', 'clsroutine', 'syllabus', 'lesson_tracking'])) {
     $where[] = "(sessionyear = ? OR sessionyear IS NULL OR sessionyear = '')";
     $params[] = $session;
     $types .= "s";
@@ -81,7 +81,7 @@ if (!empty($since) && strtotime($since)) {
 }
 
 $whereClause = !empty($where) ? "WHERE " . implode(" AND ", $where) : "";
-$sql = "SELECT * FROM `{$tableName}` {$whereClause} ORDER BY id ASC LIMIT 5000";
+$sql = "SELECT * FROM `{$tableName}` {$whereClause} ORDER BY id ASC LIMIT 25000";
 
 $stmt = $conn->prepare($sql);
 if (!empty($params)) {

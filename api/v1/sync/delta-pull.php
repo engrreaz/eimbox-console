@@ -135,6 +135,22 @@ while ($row = $attRes->fetch_assoc()) {
 }
 $attStmt->close();
 
+// 5. Pull Delta Finance
+$financeDelta = [];
+$finStmt = $conn->prepare("SELECT id, sccode, sessionyear, classname, sectionname, stid, rollno, partid, itemcode, sub_head, particulareng, particularben, amount, month, idmon, setupdate, setupby, payableamt, modifieddate, modifiedby, paid, paidx, dues, pr1, pr1no, pr1date, pr1by, cashbook1, pr2, pr2no, pr2date, pr2by, cashbook2, remark, extra, last_update, validate, validationtime, splitid, splitid2 
+FROM stfinance 
+WHERE sccode = ? AND (modifieddate >= ? OR setupdate >= ?)
+ORDER BY id DESC LIMIT 5000");
+if ($finStmt) {
+    $finStmt->bind_param('iss', $sccode, $lastSync, $lastSync);
+    $finStmt->execute();
+    $finRes = $finStmt->get_result();
+    while ($fRow = $finRes->fetch_assoc()) {
+        $financeDelta[] = $fRow;
+    }
+    $finStmt->close();
+}
+
 api_response('success', 'Delta sync records pulled successfully.', [
     'sccode' => $sccode,
     'last_sync_timestamp' => $lastSync,
@@ -143,12 +159,14 @@ api_response('success', 'Delta sync records pulled successfully.', [
         'students' => count($studentsDelta),
         'marks' => count($marksDelta),
         'payments' => count($paymentsDelta),
-        'attendance' => count($attendanceDelta)
+        'attendance' => count($attendanceDelta),
+        'finance' => count($financeDelta)
     ],
     'changes' => [
         'students' => $studentsDelta,
         'marks' => $marksDelta,
         'payments' => $paymentsDelta,
-        'attendance' => $attendanceDelta
+        'attendance' => $attendanceDelta,
+        'finance' => $financeDelta
     ]
 ]);
