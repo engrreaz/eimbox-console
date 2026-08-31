@@ -282,10 +282,10 @@ if ($method === 'GET') {
     $mStmt = $conn->prepare("SELECT id, sccode, sccategory, subcode, subject, subben, subshname, fourth, sup_class 
                              FROM subjects 
                              WHERE (sccode = 0 OR sccode = ?) 
-                               AND (sccategory = ? OR sccategory = '' OR sccategory IS NULL)
+                               AND (sccategory = ? OR sccategory = '' OR sccategory IS NULL OR sccode = ?)
                              ORDER BY subcode ASC, (sccode = ?) DESC");
     if ($mStmt) {
-        $mStmt->bind_param("isi", $sccode, $sccategory, $sccode);
+        $mStmt->bind_param("isii", $sccode, $sccategory, $sccode, $sccode);
         $mStmt->execute();
         $mRes = $mStmt->get_result();
         while ($row = $mRes->fetch_assoc()) {
@@ -314,7 +314,7 @@ if ($method === 'GET') {
     // Fetch Classes & Sections for this session from areas table
     $classes = [];
     $sectionsMap = [];
-    $aStmt = $conn->prepare("SELECT areaname, subarea FROM areas WHERE sccode = ? AND sessionyear = ? GROUP BY areaname, subarea ORDER BY MIN(idno) ASC, areaname ASC, subarea ASC");
+    $aStmt = $conn->prepare("SELECT areaname, subarea FROM areas WHERE (sccode = ? OR sccode = 0) AND sessionyear = ? GROUP BY areaname, subarea ORDER BY MIN(idno) ASC, areaname ASC, subarea ASC");
     if ($aStmt) {
         $aStmt->bind_param("is", $sccode, $sessionyear);
         $aStmt->execute();
@@ -344,26 +344,36 @@ if ($method === 'GET') {
                        ss.subject as subcode, ss.fullmarks, ss.ctest, ss.mtest, ss.subj, ss.obj, ss.pra, ss.ca,
                        ss.camanual, ss.ctmt, ss.pass_algorithm, ss.fourth, ss.combind_1, ss.combind_2,
                        ss.combind_3, ss.combind_4, ss.tid,
-                       COALESCE(s.subject, CONCAT('Subject #', ss.subject)) as subject_name,
-                       COALESCE(s.subben, '') as subject_ben,
-                       COALESCE(s.subshname, '') as shortname,
-                       t.tname as teacher_name
+                       COALESCE(
+                         (SELECT s.subject FROM subjects s WHERE s.subcode = ss.subject AND (s.sccode = ss.sccode OR s.sccode = 0) AND (s.sccategory = ? OR s.sccategory = '' OR s.sccategory IS NULL OR s.sccode = ss.sccode) ORDER BY (s.sccode = ss.sccode) DESC, s.sccode DESC LIMIT 1),
+                         (SELECT s.subject FROM subjects s WHERE s.subcode = ss.subject AND (s.sccode = ss.sccode OR s.sccode = 0) ORDER BY (s.sccode = ss.sccode) DESC, s.sccode DESC LIMIT 1),
+                         CONCAT('Subject #', ss.subject)
+                       ) as subject_name,
+                       COALESCE(
+                         (SELECT s.subben FROM subjects s WHERE s.subcode = ss.subject AND (s.sccode = ss.sccode OR s.sccode = 0) AND (s.sccategory = ? OR s.sccategory = '' OR s.sccategory IS NULL OR s.sccode = ss.sccode) ORDER BY (s.sccode = ss.sccode) DESC, s.sccode DESC LIMIT 1),
+                         ''
+                       ) as subject_ben,
+                       COALESCE(
+                         (SELECT s.subshname FROM subjects s WHERE s.subcode = ss.subject AND (s.sccode = ss.sccode OR s.sccode = 0) AND (s.sccategory = ? OR s.sccategory = '' OR s.sccategory IS NULL OR s.sccode = ss.sccode) ORDER BY (s.sccode = ss.sccode) DESC, s.sccode DESC LIMIT 1),
+                         ''
+                       ) as shortname,
+                       t.tname as teacher_name,
+                       t.position as teacher_pos
                 FROM subsetup ss
-                LEFT JOIN subjects s ON (s.subcode = ss.subject AND (s.sccode = 0 OR s.sccode = ss.sccode) AND (s.sccategory = ? OR s.sccategory = '' OR s.sccategory IS NULL))
-                LEFT JOIN teacher t ON (t.sccode = ss.sccode AND (t.tid = ss.tid OR t.id = ss.tid))
-                WHERE ss.sccode = ? AND ss.sessionyear = ? AND ss.classname = ?";
+                LEFT JOIN teacher t ON (t.sccode = ss.sccode OR t.sccode = 0) AND (t.tid = ss.tid OR t.id = ss.tid)
+                WHERE (ss.sccode = ? OR ss.sccode = 0) AND (ss.sessionyear = ? OR ss.sessionyear = '' OR ss.sessionyear IS NULL) AND ss.classname = ?";
         
-        $params = [$sccategory, $sccode, $sessionyear, $classname];
-        $types = "siss";
+        $params = [$sccategory, $sccategory, $sccategory, $sccode, $sessionyear, $classname];
+        $types = "sssiss";
 
         if (!empty($sectionname) && $sectionname !== 'All') {
-            $sql .= " AND (ss.sectionname = ? OR ss.sectionname = 'All' OR ss.sectionname = '')";
+            $sql .= " AND (ss.sectionname = ? OR ss.sectionname = 'All' OR ss.sectionname = '' OR ss.sectionname IS NULL)";
             $params[] = $sectionname;
             $types .= "s";
         }
 
         if (!empty($slot) && $slot !== 'All') {
-            $sql .= " AND (ss.slot = ? OR ss.slot = '' OR ss.slot IS NULL)";
+            $sql .= " AND (ss.slot = ? OR ss.slot = 'School' OR ss.slot = '' OR ss.slot IS NULL)";
             $params[] = $slot;
             $types .= "s";
         }
