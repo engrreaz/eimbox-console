@@ -57,7 +57,27 @@ if ($method === 'DELETE' || ($method === 'POST' && $action === 'delete')) {
     api_response('success', 'Class section removed successfully.', ['deleted_id' => $id]);
 }
 
-// 3. Handle POST: Clone Session Structure
+// 3. Handle POST: Reorder Areas (update idno)
+if ($method === 'POST' && ($action === 'reorder' || $action === 'reorder_areas')) {
+    $items = $input['items'] ?? [];
+    $updatedCount = 0;
+    if (!empty($items) && is_array($items)) {
+        $upStmt = $conn->prepare("UPDATE areas SET idno = ?, modifieddate = NOW() WHERE id = ? AND (sccode = ? OR sccode = 0 OR sccode IS NULL)");
+        foreach ($items as $it) {
+            $itemId = intval($it['id'] ?? 0);
+            $itemIdno = intval($it['idno'] ?? 0);
+            if ($itemId > 0) {
+                $upStmt->bind_param("iii", $itemIdno, $itemId, $sccode);
+                $upStmt->execute();
+                $updatedCount++;
+            }
+        }
+        $upStmt->close();
+    }
+    api_response('success', "Updated sequence for $updatedCount items.", ['updated_count' => $updatedCount]);
+}
+
+// 4. Handle POST: Clone Session Structure
 if ($method === 'POST' && ($action === 'clone_session' || $action === 'copy_session')) {
     $fromSession = trim($input['from_session'] ?? $input['from_year'] ?? '');
     $toSession = trim($input['to_session'] ?? $input['to_year'] ?? '');
