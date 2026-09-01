@@ -94,6 +94,9 @@ if ($stmt) {
 
 $tableNames = array_values(array_unique(array_column($changedTables, 'table')));
 
+
+error_log("Changed tables: " . print_r($changedTables, true));
+
 api_response('success', 'Changed tables fetched successfully.', [
     'sccode' => $sccode,
     'since' => $since ?: null,
