@@ -68,7 +68,13 @@ if ($supportsGlobal) {
     $types .= "i";
 }
 
-if (!empty($session) && in_array($tableName, ['examroutine', 'examlist', 'areas', 'sessioninfo', 'subsetup', 'stmark', 'stattnd', 'classschedule', 'clsroutine', 'syllabus', 'lesson_tracking'])) {
+$sessionAwareTables = [
+    'examroutine', 'examlist', 'areas', 'sessioninfo', 'subsetup', 
+    'stmark', 'stattnd', 'stfinance', 'stpr', 'classschedule', 
+    'clsroutine', 'syllabus', 'lesson_tracking'
+];
+
+if (!empty($session) && in_array($tableName, $sessionAwareTables)) {
     $where[] = "(sessionyear = ? OR sessionyear IS NULL OR sessionyear = '')";
     $params[] = $session;
     $types .= "s";
