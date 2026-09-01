@@ -19,6 +19,8 @@ $user = authenticate_token($conn);
 $sccode = intval($_GET['sccode'] ?? $user['sccode'] ?? 0);
 $since = trim($_GET['since'] ?? '');
 
+error_log("changed table function start: " . $since);
+
 if ($sccode <= 0) {
     api_response('error', 'Valid School Code (sccode) is required.', null, 400);
 }
