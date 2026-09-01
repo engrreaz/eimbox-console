@@ -6,7 +6,7 @@
  */
 
 require_once __DIR__ . '/../bootstrap.php';
-error_log('pull------------------------------------.php');
+error_log('pull.php*************************************');
 // Authenticate Request
 $user = function_exists('api_authenticate_request') ? api_authenticate_request() : authenticate_token($conn);
 $sccode = (int)($user['sccode'] ?? 0);
