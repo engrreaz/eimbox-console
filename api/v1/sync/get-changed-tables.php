@@ -48,7 +48,7 @@ $ignoredTables = [
     'local_pending_deletions', 'sync_dirty_tables', 'sync_pending_deletions',
     'sync_tombstones', 'sync_changed_tables', 'connection_log', 'logbook',
     'qrcodelogin', 'active_sessions', 'user_sessions', 'todolist', 'user_actions',
-    'track_users', 'trackbook', 'admin_actions'
+    'track_users', 'trackbook', 'admin_actions', 'otp', 'auth_logs'
 ];
 $placeholders = implode(',', array_fill(0, count($ignoredTables), '?'));
 
