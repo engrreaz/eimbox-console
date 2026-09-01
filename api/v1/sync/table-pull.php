@@ -7,6 +7,7 @@
 
 require_once __DIR__ . '/../bootstrap.php';
 error_log('pull------------------------------------.php');
+@file_put_contents(__DIR__ . '/sync_debug.log', date('Y-m-d H:i:s') . " - [table-pull.php] table=" . ($_GET['table'] ?? '') . ", sccode=" . ($_GET['sccode'] ?? '') . ", session=" . ($_GET['session'] ?? '') . "\n", FILE_APPEND);
 // Authenticate Request
 $user = function_exists('api_authenticate_request') ? api_authenticate_request() : authenticate_token($conn);
 $sccode = (int)($user['sccode'] ?? 0);
