@@ -16,7 +16,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
     exit;
 }
 
-// 2. Comprehensive API Error, Request & Response Logging
+// 2. Comprehensive API Error, Request & Response Logging & Timezone Setup
+date_default_timezone_set('Asia/Dhaka');
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
@@ -175,6 +176,11 @@ if (!isset($conn) || !$conn) {
         api_log_error('DB_CONNECT_ERROR', $e->getMessage(), $e->getFile(), $e->getLine());
         api_response('error', 'Database connection error: ' . $e->getMessage(), null, 500);
     }
+}
+
+// Ensure MySQL session operates in Asia/Dhaka (+06:00)
+if (isset($conn) && $conn) {
+    @$conn->query("SET time_zone = '+06:00'");
 }
 
 /**
