@@ -88,7 +88,7 @@ if (!empty($since) && strtotime($since)) {
 
 $whereClause = !empty($where) ? "WHERE " . implode(" AND ", $where) : "";
 $sql = "SELECT * FROM `{$tableName}` {$whereClause} ORDER BY id ASC LIMIT 25000";
-
+error_log($sql);
 $stmt = $conn->prepare($sql);
 if (!empty($params)) {
     $stmt->bind_param($types, ...$params);
