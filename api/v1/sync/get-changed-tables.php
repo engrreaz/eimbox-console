@@ -61,6 +61,8 @@ if (empty($since)) {
             WHERE (`sccode` = ? OR `sccode` = 0) 
               AND `table_name` NOT IN ($placeholders) 
             ORDER BY `last_changed_at` DESC";
+
+            error_log($sql); 
     $stmt = $conn->prepare($sql);
     $types = 'i' . str_repeat('s', count($ignoredTables));
     $params = array_merge([$sccode], $ignoredTables);
