@@ -41,16 +41,41 @@ $timeRes = $conn->query("SELECT NOW() as `server_time`");
 $serverTimeRow = $timeRes ? $timeRes->fetch_assoc() : null;
 $serverTime = $serverTimeRow['server_time'] ?? date('Y-m-d H:i:s');
 
-// 3. Query changed tables for this sccode since timestamp
+// 3. Query changed tables for this sccode since timestamp (excluding volatile logging/audit tables)
+$ignoredTables = [
+    'sync_history_log', 'user_activity_log', 'user_screen_logs', 'app_preferences',
+    'offline_sync_queue', 'sync_queue', 'schema_info', 'local_dirty_tables',
+    'local_pending_deletions', 'sync_dirty_tables', 'sync_pending_deletions',
+    'sync_tombstones', 'sync_changed_tables', 'connection_log', 'logbook',
+    'qrcodelogin', 'active_sessions', 'user_sessions', 'todolist', 'user_actions',
+    'track_users', 'trackbook', 'admin_actions'
+];
+$placeholders = implode(',', array_fill(0, count($ignoredTables), '?'));
+
 $changedTables = [];
 
 if (empty($since)) {
     // If no since param is passed, return all tracked tables for this sccode
-    $stmt = $conn->prepare("SELECT `table_name`, `last_changed_at`, `change_type`, `change_count` FROM `sync_changed_tables` WHERE `sccode` = ? OR `sccode` = 0 ORDER BY `last_changed_at` DESC");
-    $stmt->bind_param('i', $sccode);
+    $sql = "SELECT `table_name`, `last_changed_at`, `change_type`, `change_count` 
+            FROM `sync_changed_tables` 
+            WHERE (`sccode` = ? OR `sccode` = 0) 
+              AND `table_name` NOT IN ($placeholders) 
+            ORDER BY `last_changed_at` DESC";
+    $stmt = $conn->prepare($sql);
+    $types = 'i' . str_repeat('s', count($ignoredTables));
+    $params = array_merge([$sccode], $ignoredTables);
+    $stmt->bind_param($types, ...$params);
 } else {
-    $stmt = $conn->prepare("SELECT `table_name`, `last_changed_at`, `change_type`, `change_count` FROM `sync_changed_tables` WHERE (`sccode` = ? OR `sccode` = 0) AND `last_changed_at` >= ? ORDER BY `last_changed_at` DESC");
-    $stmt->bind_param('is', $sccode, $since);
+    $sql = "SELECT `table_name`, `last_changed_at`, `change_type`, `change_count` 
+            FROM `sync_changed_tables` 
+            WHERE (`sccode` = ? OR `sccode` = 0) 
+              AND `last_changed_at` >= ? 
+              AND `table_name` NOT IN ($placeholders) 
+            ORDER BY `last_changed_at` DESC";
+    $stmt = $conn->prepare($sql);
+    $types = 'is' . str_repeat('s', count($ignoredTables));
+    $params = array_merge([$sccode, $since], $ignoredTables);
+    $stmt->bind_param($types, ...$params);
 }
 
 if ($stmt) {
