@@ -74,12 +74,13 @@ if (empty($since)) {
               AND `last_changed_at` >= ? 
               AND `table_name` NOT IN ($placeholders) 
             ORDER BY `last_changed_at` DESC";
+            error_log($sql); 
     $stmt = $conn->prepare($sql);
     $types = 'is' . str_repeat('s', count($ignoredTables));
     $params = array_merge([$sccode, $since], $ignoredTables);
     $stmt->bind_param($types, ...$params);
 }
-
+ 
 if ($stmt) {
     $stmt->execute();
     $result = $stmt->get_result();
