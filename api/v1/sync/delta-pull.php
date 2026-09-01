@@ -6,7 +6,7 @@
  */
 
 require_once __DIR__ . '/../bootstrap.php';
-
+error_log('delta-pull.php');
 // Authenticate Bearer Token
 $user = authenticate_token($conn);
 
