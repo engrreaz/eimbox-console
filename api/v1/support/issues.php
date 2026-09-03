@@ -16,7 +16,7 @@
 
 require_once __DIR__ . '/../bootstrap.php';
 
-// 1. Ensure `issues_tracker` table exists in MySQL with complete schema
+// 1. Ensure `issues_tracker` & `screen_issues` tables exist in MySQL with complete schema
 $conn->query("CREATE TABLE IF NOT EXISTS `issues_tracker` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `title` VARCHAR(50) DEFAULT NULL,
@@ -29,11 +29,45 @@ $conn->query("CREATE TABLE IF NOT EXISTS `issues_tracker` (
   `cache` ENUM('Not Tested', 'OK', 'Error', 'warning', 'Issues') NOT NULL DEFAULT 'Not Tested',
   `push` ENUM('Not Tested', 'OK', 'Error', 'warning', 'Issues') NOT NULL DEFAULT 'Not Tested',
   `pull` ENUM('Not Tested', 'OK', 'Error', 'warning', 'Issues') NOT NULL DEFAULT 'Not Tested',
+  `dropdown` ENUM('Not Tested', 'OK', 'Error', 'warning', 'Issues') NOT NULL DEFAULT 'Not Tested',
+  `modal` ENUM('Not Tested', 'OK', 'Error', 'warning', 'Issues') NOT NULL DEFAULT 'Not Tested',
+  `print` ENUM('Not Tested', 'OK', 'Error', 'warning', 'Issues') NOT NULL DEFAULT 'Not Tested',
+  `pdf` ENUM('Not Tested', 'OK', 'Error', 'warning', 'Issues') NOT NULL DEFAULT 'Not Tested',
   `notes` VARCHAR(500) DEFAULT NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `modifieddate` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  INDEX `idx_route` (`route`),
+  UNIQUE KEY `idx_route_unique` (`route`),
   INDEX `idx_modifieddate` (`modifieddate`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+
+// Ensure missing columns exist in existing MySQL issues_tracker
+$newCols = ['dropdown', 'modal', 'print', 'pdf'];
+foreach ($newCols as $col) {
+    $colCheck = $conn->query("SHOW COLUMNS FROM `issues_tracker` LIKE '$col'");
+    if ($colCheck && $colCheck->num_rows === 0) {
+        $conn->query("ALTER TABLE `issues_tracker` ADD COLUMN `$col` ENUM('Not Tested', 'OK', 'Error', 'warning', 'Issues') NOT NULL DEFAULT 'Not Tested'");
+    }
+}
+
+// Ensure `screen_issues` child table exists
+$conn->query("CREATE TABLE IF NOT EXISTS `screen_issues` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `screen_id` INT DEFAULT 0,
+  `route` VARCHAR(200) NOT NULL,
+  `screen_title` VARCHAR(50) DEFAULT '',
+  `issue_title` VARCHAR(255) NOT NULL,
+  `description` TEXT DEFAULT NULL,
+  `dimension` VARCHAR(50) DEFAULT 'General',
+  `priority` VARCHAR(50) DEFAULT 'Medium',
+  `status` VARCHAR(50) DEFAULT 'Open',
+  `progress_pct` INT DEFAULT 0,
+  `assigned_to` VARCHAR(100) DEFAULT '',
+  `created_by` VARCHAR(100) DEFAULT 'Admin',
+  `resolved_at` DATETIME DEFAULT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `modifieddate` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX `idx_si_route` (`route`),
+  INDEX `idx_si_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
