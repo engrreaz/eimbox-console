@@ -45,23 +45,7 @@ if (isset($conn) && $conn instanceof mysqli && !$conn->connect_error) {
     }
 }
 
-// Fallback staff if empty
-if (empty($staff)) {
-    $staff = [
-        [
-            'staff_id'       => 'T-1001',
-            'name_bn'        => 'মো: রফিকুল ইসলাম',
-            'name_en'        => 'Md. Rafiqul Islam',
-            'designation_bn' => 'প্রধান শিক্ষক',
-            'staff_type'     => 'teacher',
-            'phone'          => '01712000001',
-            'email'          => 'headmaster@school.edu.bd',
-            'department'     => 'প্রশাসন ও গণিত',
-            'order_priority' => 1,
-            'status'         => 'active'
-        ]
-    ];
-}
+// Return actual staff records
 
 cms_api_response('success', 'সেন্ট্রাল ক্লাউড থেকে সর্বশেষ ডেটা প্যাকেজ সফলভাবে প্রস্তুত করা হয়েছে।', [
     'eiin'            => $eiin,
