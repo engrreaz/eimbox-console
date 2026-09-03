@@ -93,10 +93,11 @@ function get_cms_api_input(): array
 }
 
 /**
- * Validate API Key & EIIN Header/Payload
+ * Validate 2-Key Pair (API Key + Secret Key) bound to sccode
  */
 function authenticate_cms_request(?mysqli $conn = null): array
 {
+    global $conn;
     $input = get_cms_api_input();
     $headers = [];
 
@@ -113,25 +114,82 @@ function authenticate_cms_request(?mysqli $conn = null): array
         }
     }
 
-    $authHeader = $headers['authorization'] ?? $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
-    $apiKey = '';
-    if (preg_match('/Bearer\s+(\S+)/i', $authHeader, $matches)) {
-        $apiKey = $matches[1];
-    } elseif (!empty($input['api_key'])) {
-        $apiKey = trim((string)$input['api_key']);
-    }
-
-    $eiin = $headers['x-eimbox-eiin'] ?? $input['school_eiin'] ?? $input['eiin'] ?? $input['sccode'] ?? '';
+    // 1. Extract School EIIN / sccode
+    $eiin = $headers['x-eimbox-eiin'] ?? $headers['x-eimbox-sccode'] ?? $input['school_eiin'] ?? $input['eiin'] ?? $input['sccode'] ?? '';
     $eiin = trim((string)$eiin);
 
     if (empty($eiin)) {
         cms_api_response('error', 'ইনস্টিটিউশন EIIN বা School Code (sccode) প্রদান করা আবশ্যক।', null, 400);
     }
 
+    // 2. Extract API Key (Public Client Key)
+    $apiKey = $headers['x-eimbox-api-key'] ?? $input['api_key'] ?? $input['apiKey'] ?? '';
+    $apiKey = trim((string)$apiKey);
+
+    // 3. Extract Secret Key (Private Token)
+    $authHeader = $headers['authorization'] ?? $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
+    $secretKey = '';
+    if (preg_match('/Bearer\s+(\S+)/i', $authHeader, $matches)) {
+        $secretKey = $matches[1];
+    } elseif (!empty($headers['x-eimbox-secret-key'])) {
+        $secretKey = trim((string)$headers['x-eimbox-secret-key']);
+    } elseif (!empty($input['secret_key'])) {
+        $secretKey = trim((string)$input['secret_key']);
+    }
+
+    // 4. Server-Side Key Verification against Database
+    if ($conn && $conn instanceof mysqli && !$conn->connect_error) {
+        // Auto-create table if not exists for fail-safe setup
+        @$conn->query("CREATE TABLE IF NOT EXISTS `school_api_keys` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `sccode` VARCHAR(30) NOT NULL UNIQUE,
+            `school_name` VARCHAR(150) NULL,
+            `api_key` VARCHAR(80) NOT NULL UNIQUE,
+            `secret_key` VARCHAR(120) NOT NULL,
+            `status` ENUM('active', 'suspended', 'revoked') DEFAULT 'active',
+            `allowed_domains` VARCHAR(255) NULL,
+            `last_used_at` DATETIME NULL,
+            `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+            `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            INDEX `idx_sccode_keys` (`sccode`, `api_key`, `secret_key`, `status`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+
+        $stmt = $conn->prepare("SELECT * FROM `school_api_keys` WHERE `sccode` = ? LIMIT 1");
+        if ($stmt) {
+            $stmt->bind_param("s", $eiin);
+            $stmt->execute();
+            $keyRecord = $stmt->get_result()->fetch_assoc();
+
+            if (!$keyRecord) {
+                cms_api_response('error', "প্রতিষ্ঠান কোড [{$eiin}] সেন্ট্রাল ক্লাউড সার্ভারে নিবন্ধিত নয়। অনুগ্রহ করে অ্যাডমিনের সাথে যোগাযোগ করুন।", null, 403);
+            }
+
+            if (($keyRecord['status'] ?? '') !== 'active') {
+                cms_api_response('error', "প্রতিষ্ঠান কোড [{$eiin}] এর ক্লাউড সিঙ্ক সেবা সাময়িকভাবে স্থগিত (Suspended) রয়েছে।", null, 403);
+            }
+
+            // Verify Key Matching
+            $validApi = !empty($apiKey) && hash_equals($keyRecord['api_key'], $apiKey);
+            $validSec = !empty($secretKey) && hash_equals($keyRecord['secret_key'], $secretKey);
+
+            if (!$validApi || !$validSec) {
+                cms_api_response('error', "অবৈধ API Key অথবা Secret Key! প্রতিষ্ঠান কোড [{$eiin}] এর সাথে প্রদত্ত কী-জোড়া মেলেনি।", [
+                    'provided_sccode'  => $eiin,
+                    'api_key_valid'    => $validApi,
+                    'secret_key_valid' => $validSec
+                ], 401);
+            }
+
+            // Update last used timestamp
+            @$conn->query("UPDATE `school_api_keys` SET `last_used_at` = NOW() WHERE `id` = " . (int)$keyRecord['id']);
+        }
+    }
+
     return [
-        'eiin'    => $eiin,
-        'apiKey'  => $apiKey,
-        'input'   => $input,
-        'headers' => $headers
+        'eiin'      => $eiin,
+        'apiKey'    => $apiKey,
+        'secretKey' => $secretKey,
+        'input'     => $input,
+        'headers'   => $headers
     ];
 }
