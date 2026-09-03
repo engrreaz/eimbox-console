@@ -36,8 +36,8 @@ if ($action === 'lookup' || $action === 'search_student') {
                        s.previll, s.prepo, s.preps, s.predist, s.pervill, s.perpo, s.perps, s.perdist,
                        s.photo, s.photo_id
                 FROM sessioninfo si
-                LEFT JOIN students s ON (s.stid = si.stid AND s.sccode = si.sccode)
-                WHERE si.sccode = ? 
+                LEFT JOIN students s ON (s.stid = si.stid AND (s.sccode = 0 OR s.sccode = si.sccode))
+                WHERE (si.sccode = ? OR si.sccode = 0) 
                   AND (si.sessionyear = ? OR ? = '' OR ? = 'all')
                   AND si.stid = ?
                 LIMIT 1";
@@ -57,8 +57,8 @@ if ($action === 'lookup' || $action === 'search_student') {
                            s.previll, s.prepo, s.preps, s.predist, s.pervill, s.perpo, s.perps, s.perdist,
                            s.photo, s.photo_id
                     FROM sessioninfo si
-                    LEFT JOIN students s ON (s.stid = si.stid AND s.sccode = si.sccode)
-                    WHERE si.sccode = ? AND si.stid = ?
+                    LEFT JOIN students s ON (s.stid = si.stid AND (s.sccode = 0 OR s.sccode = si.sccode))
+                    WHERE (si.sccode = ? OR si.sccode = 0) AND si.stid = ?
                     ORDER BY si.sessionyear DESC, si.id DESC
                     LIMIT 1";
             $fStmt = $conn->prepare($fallbackSql);
@@ -96,8 +96,8 @@ if ($action === 'lookup' || $action === 'search_student') {
                        si.rate, si.sector,
                        s.stnameeng, s.stnameben, s.guarmobile, s.previll, s.predist
                 FROM sessioninfo si
-                LEFT JOIN students s ON (s.stid = si.stid AND s.sccode = si.sccode)
-                WHERE si.sccode = ?
+                LEFT JOIN students s ON (s.stid = si.stid AND (s.sccode = 0 OR s.sccode = si.sccode))
+                WHERE (si.sccode = ? OR si.sccode = 0)
                   AND (si.sessionyear = ? OR ? = '' OR ? = 'all')
                   AND (s.stnameeng LIKE ? OR s.stnameben LIKE ? OR CAST(si.stid AS CHAR) LIKE ? OR CAST(si.rollno AS CHAR) LIKE ?)
                 ORDER BY si.classname ASC, si.sectionname ASC, CAST(si.rollno AS UNSIGNED) ASC
@@ -257,8 +257,12 @@ if ($method === 'GET') {
                    s.previll, s.prepo, s.preps, s.predist, s.pervill, s.perpo, s.perps, s.perdist,
                    s.photo, s.photo_id
             FROM sessioninfo si
-            LEFT JOIN students s ON (s.stid = si.stid AND s.sccode = si.sccode)
-            WHERE si.sccode = ? AND si.rate < 100";
+            LEFT JOIN students s ON (s.stid = si.stid AND (s.sccode = 0 OR s.sccode = si.sccode))
+            WHERE (si.sccode = ? OR si.sccode = 0) 
+              AND (
+                (si.rate IS NOT NULL AND si.rate < 100) 
+                OR (si.sector IS NOT NULL AND si.sector != '' AND LOWER(si.sector) NOT IN ('general', 'regular', 'null', 'none'))
+              )";
     
     $params = [$sccode];
     $types = "i";
