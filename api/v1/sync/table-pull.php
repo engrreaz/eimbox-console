@@ -51,6 +51,9 @@ $conn->query("
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ");
 
+// Tables without sccode column (Global Master Tables)
+$tablesWithoutSccode = ['notice_category', 'ben_address', 'permissions_role'];
+
 // Tables with global sccode=0 fallback
 $supportsGlobal = in_array($tableName, ['gpa', 'subjects', 'examlist', 'slots', 'settings', 'classschedule']);
 
@@ -58,7 +61,9 @@ $where = [];
 $params = [];
 $types = "";
 
-if ($supportsGlobal) {
+if (in_array($tableName, $tablesWithoutSccode)) {
+    // Global master table without sccode column -> no sccode filter needed
+} elseif ($supportsGlobal) {
     $where[] = "(sccode = ? OR sccode = 0)";
     $params[] = $activeSccode;
     $types .= "i";
@@ -105,15 +110,28 @@ $stmt->close();
 // Fetch deleted tombstones if incremental sync timestamp provided
 $deletedIds = [];
 if (!empty($since) && strtotime($since)) {
-    $tombStmt = $conn->prepare("SELECT record_id FROM `sync_tombstones` WHERE (sccode = ? OR sccode = 0) AND table_name = ? AND deleted_at >= ? LIMIT 1000");
-    if ($tombStmt) {
-        $tombStmt->bind_param('iss', $activeSccode, $tableName, $since);
-        $tombStmt->execute();
-        $tombRes = $tombStmt->get_result();
-        while ($tRow = $tombRes->fetch_assoc()) {
-            $deletedIds[] = (int)$tRow['record_id'];
+    if (in_array($tableName, $tablesWithoutSccode)) {
+        $tombStmt = $conn->prepare("SELECT record_id FROM `sync_tombstones` WHERE table_name = ? AND deleted_at >= ? LIMIT 1000");
+        if ($tombStmt) {
+            $tombStmt->bind_param('ss', $tableName, $since);
+            $tombStmt->execute();
+            $tombRes = $tombStmt->get_result();
+            while ($tRow = $tombRes->fetch_assoc()) {
+                $deletedIds[] = (int)$tRow['record_id'];
+            }
+            $tombStmt->close();
         }
-        $tombStmt->close();
+    } else {
+        $tombStmt = $conn->prepare("SELECT record_id FROM `sync_tombstones` WHERE (sccode = ? OR sccode = 0) AND table_name = ? AND deleted_at >= ? LIMIT 1000");
+        if ($tombStmt) {
+            $tombStmt->bind_param('iss', $activeSccode, $tableName, $since);
+            $tombStmt->execute();
+            $tombRes = $tombStmt->get_result();
+            while ($tRow = $tombRes->fetch_assoc()) {
+                $deletedIds[] = (int)$tRow['record_id'];
+            }
+            $tombStmt->close();
+        }
     }
 }
 

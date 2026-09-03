@@ -296,7 +296,9 @@ foreach ($transactions as $tx) {
             $rowRecord = $payload['record'] ?? $payload['data'] ?? $payload;
             unset($rowRecord['table'], $rowRecord['local_id'], $rowRecord['sync_status']);
 
-            $rowRecord['sccode'] = $sccode;
+            if (!in_array($targetTable, ['notice_category', 'ben_address', 'permissions_role'])) {
+                $rowRecord['sccode'] = $sccode;
+            }
             $rowRecord['modifieddate'] = date('Y-m-d H:i:s');
 
             $existingId = intval($rowRecord['id'] ?? 0);
