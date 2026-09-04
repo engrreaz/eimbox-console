@@ -34,7 +34,8 @@ $allowedTables = [
     'lesson_tracking', 'sessionyear', 'settings', 'scinfo', 'ben_address',
     'tickets', 'ticket_messages', 'events', 'notice', 'notice_category',
     'usersapp', 'permissions_role', 'user_custom_permissions',
-    'account_head', 'account_sub_head', 'bankinfo', 'banktrans', 'cashbook'
+    'account_head', 'account_sub_head', 'bankinfo', 'banktrans', 'cashbook',
+    'account_head_default', 'account_sub_head_default'
 ];
 
 $results = [];
