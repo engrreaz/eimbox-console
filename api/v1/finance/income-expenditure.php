@@ -1,253 +1,237 @@
 <?php
 /**
- * EIMBox REST API — Income & Expenditure Accounts Ledger
+ * EIMBox REST API — Income & Expenditure Accounts & Auditable Financial Reports
  * Endpoint: /api/v1/finance/income-expenditure.php
  */
 
 require_once __DIR__ . '/../bootstrap.php';
 
-// Authenticate Request with Fallback
-$user = null;
-$headers = function_exists('getallheaders') ? getallheaders() : [];
-$authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
-
-if (!empty($authHeader)) {
-    try {
-        $user = api_authenticate_request();
-    } catch (Exception $e) {
-        // Fallback below
-    }
-}
-
-$inputData = get_api_input();
-$sccode = (int)($user['sccode'] ?? $_GET['sccode'] ?? $_POST['sccode'] ?? $inputData['sccode'] ?? $headers['X-School-Code'] ?? $headers['x-school-code'] ?? 0);
-
-if ($sccode <= 0) {
-    api_send_response(400, false, "Valid school institution code (sccode) is required.");
-}
-
-$conn = api_get_db_connection();
+$auth = authenticate_token($conn);
+$sccode = (int)($auth['sccode'] ?? 0);
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
-// 1. GET: Fetch Income & Expenditure Ledger Vouchers with Metrics
-if ($method === 'GET') {
-    $fromDate = trim($_GET['from_date'] ?? $_GET['date'] ?? '');
-    $toDate = trim($_GET['to_date'] ?? $fromDate);
-    $type = trim($_GET['type'] ?? 'All');
-    $category = trim($_GET['category'] ?? $_GET['cat'] ?? 'All');
-    $sessionyear = trim($_GET['sessionyear'] ?? $_GET['session'] ?? '');
+if ($method !== 'GET') {
+    api_response('error', 'Only GET method is supported for financial reports', null, 405);
+}
 
-    $where = ["c.sccode = ?"];
-    $types = "i";
-    $params = [$sccode];
+$reportType = $_GET['report_type'] ?? 'income_expenditure'; // 'daily_cashbook', 'receipts_payments', 'income_expenditure', 'head_ledger'
+$sessionyear = isset($_GET['sessionyear']) ? (int)$_GET['sessionyear'] : (int)date('Y');
+$fromDate = $_GET['from_date'] ?? $_GET['date_from'] ?? date('Y-01-01');
+$toDate = $_GET['to_date'] ?? $_GET['date_to'] ?? date('Y-12-31');
 
-    if (!empty($fromDate)) {
-        if (!empty($toDate) && $toDate !== $fromDate) {
-            $where[] = "c.date BETWEEN ? AND ?";
-            $params[] = $fromDate;
-            $params[] = $toDate;
-            $types .= "ss";
-        } else {
-            $where[] = "c.date = ?";
-            $params[] = $fromDate;
-            $types .= "s";
+// Fetch Institution Info
+$scStmt = $conn->prepare("SELECT scname, scadd1, scadd2, ps, dist, sccode, sessionyear as active_session FROM scinfo WHERE sccode = ? LIMIT 1");
+$scStmt->bind_param("i", $sccode);
+$scStmt->execute();
+$school = $scStmt->get_result()->fetch_assoc() ?? [
+    'scname' => 'Institutional Accounts Studio',
+    'scadd1' => '',
+    'dist' => '',
+    'sccode' => $sccode
+];
+
+switch ($reportType) {
+    case 'daily_cashbook':
+        $targetDate = $_GET['date'] ?? $toDate;
+        
+        // Opening balance before $targetDate
+        $opStmt = $conn->prepare("SELECT COALESCE(SUM(income), 0) - COALESCE(SUM(expenditure), 0) as opening_bal
+                                 FROM cashbook
+                                 WHERE sccode = ? AND date < ? AND (status = 1 OR status IS NULL)");
+        $opStmt->bind_param("is", $sccode, $targetDate);
+        $opStmt->execute();
+        $openingBalance = (float)($opStmt->get_result()->fetch_assoc()['opening_bal'] ?? 0);
+
+        // Fetch day's entries
+        $dStmt = $conn->prepare("SELECT cb.*, ah.head_name, ah.head_name_bn, ash.sub_head, ash.sub_head_bn, bi.bankname
+                                FROM cashbook cb
+                                LEFT JOIN account_head ah ON cb.account_head = ah.id
+                                LEFT JOIN account_sub_head ash ON cb.account_sub_head = ash.id
+                                LEFT JOIN bankinfo bi ON cb.bank_account_id = bi.id
+                                WHERE cb.sccode = ? AND cb.date = ? AND (cb.status = 1 OR cb.status IS NULL)
+                                ORDER BY cb.id ASC");
+        $dStmt->bind_param("is", $sccode, $targetDate);
+        $dStmt->execute();
+        $dRes = $dStmt->get_result();
+
+        $receipts = [];
+        $payments = [];
+        $totalReceipts = 0;
+        $totalPayments = 0;
+
+        while ($row = $dRes->fetch_assoc()) {
+            $row['income'] = (float)$row['income'];
+            $row['expenditure'] = (float)$row['expenditure'];
+            $row['amount'] = (float)$row['amount'];
+
+            if ($row['income'] > 0 || strtolower($row['type']) === 'income') {
+                $totalReceipts += $row['income'] > 0 ? $row['income'] : $row['amount'];
+                $receipts[] = $row;
+            } else {
+                $totalPayments += $row['expenditure'] > 0 ? $row['expenditure'] : $row['amount'];
+                $payments[] = $row;
+            }
         }
-    }
 
-    if (!empty($type) && $type !== 'All') {
-        $where[] = "c.type = ?";
-        $params[] = $type;
-        $types .= "s";
-    }
+        $closingBalance = $openingBalance + $totalReceipts - $totalPayments;
 
-    if (!empty($category) && $category !== 'All') {
-        $where[] = "(c.account_head = ? OR c.particulars LIKE ?)";
-        $params[] = $category;
-        $params[] = "%$category%";
-        $types .= "ss";
-    }
+        api_response('success', 'Daily cashbook generated', [
+            'school' => $school,
+            'report_date' => $targetDate,
+            'opening_balance' => $openingBalance,
+            'total_receipts' => $totalReceipts,
+            'total_payments' => $totalPayments,
+            'closing_balance' => $closingBalance,
+            'receipts' => $receipts,
+            'payments' => $payments
+        ]);
+        break;
 
-    if (!empty($sessionyear) && $sessionyear !== 'All') {
-        $where[] = "(c.sessionyear = ? OR c.year = ?)";
-        $params[] = (int)$sessionyear;
-        $params[] = (int)$sessionyear;
-        $types .= "ii";
-    }
+    case 'receipts_payments':
+    case 'income_expenditure':
+        // Head & Subhead aggregated summary
+        $stmt = $conn->prepare("SELECT 
+                                    ah.id as head_id,
+                                    COALESCE(ah.head_name, 'Uncategorized') as head_name,
+                                    COALESCE(ah.head_name_bn, '') as head_name_bn,
+                                    COALESCE(ah.head_type, cb.type) as head_type,
+                                    ash.id as sub_head_id,
+                                    COALESCE(ash.sub_head, cb.category, 'General') as sub_head_name,
+                                    COALESCE(ash.sub_head_bn, '') as sub_head_bn,
+                                    COALESCE(SUM(cb.income), 0) as total_income,
+                                    COALESCE(SUM(cb.expenditure), 0) as total_expense
+                                FROM cashbook cb
+                                LEFT JOIN account_head ah ON cb.account_head = ah.id
+                                LEFT JOIN account_sub_head ash ON cb.account_sub_head = ash.id
+                                WHERE cb.sccode = ? AND (cb.date BETWEEN ? AND ?) AND (cb.status = 1 OR cb.status IS NULL)
+                                GROUP BY cb.account_head, cb.account_sub_head, ah.head_name, ash.sub_head, cb.type
+                                ORDER BY ah.display_order ASC, ah.id ASC, ash.display_order ASC");
+        
+        $stmt->bind_param("iss", $sccode, $fromDate, $toDate);
+        $stmt->execute();
+        $res = $stmt->get_result();
 
-    $sql = "SELECT c.id, c.sccode, c.date, c.account_head, c.partid, c.particulars, c.amount,
-                   c.type, c.memono, c.month, c.year, c.entryby, c.entrytime, c.sessionyear,
-                   c.payment_by, c.attachment
-            FROM cashbook c
-            WHERE " . implode(" AND ", $where) . "
-            ORDER BY c.date DESC, c.id DESC
-            LIMIT 500";
+        $incomeSections = [];
+        $expenseSections = [];
+        $grandTotalIncome = 0;
+        $grandTotalExpense = 0;
 
-    $stmt = $conn->prepare($sql);
-    if ($stmt) {
+        while ($r = $res->fetch_assoc()) {
+            $r['total_income'] = (float)$r['total_income'];
+            $r['total_expense'] = (float)$r['total_expense'];
+
+            if ($r['total_income'] > 0) {
+                $headKey = $r['head_name'];
+                if (!isset($incomeSections[$headKey])) {
+                    $incomeSections[$headKey] = [
+                        'head_name' => $r['head_name'],
+                        'head_name_bn' => $r['head_name_bn'],
+                        'sub_total' => 0,
+                        'sub_heads' => []
+                    ];
+                }
+                $incomeSections[$headKey]['sub_total'] += $r['total_income'];
+                $incomeSections[$headKey]['sub_heads'][] = [
+                    'sub_head_name' => $r['sub_head_name'],
+                    'sub_head_bn' => $r['sub_head_bn'],
+                    'amount' => $r['total_income']
+                ];
+                $grandTotalIncome += $r['total_income'];
+            }
+
+            if ($r['total_expense'] > 0) {
+                $headKey = $r['head_name'];
+                if (!isset($expenseSections[$headKey])) {
+                    $expenseSections[$headKey] = [
+                        'head_name' => $r['head_name'],
+                        'head_name_bn' => $r['head_name_bn'],
+                        'sub_total' => 0,
+                        'sub_heads' => []
+                    ];
+                }
+                $expenseSections[$headKey]['sub_total'] += $r['total_expense'];
+                $expenseSections[$headKey]['sub_heads'][] = [
+                    'sub_head_name' => $r['sub_head_name'],
+                    'sub_head_bn' => $r['sub_head_bn'],
+                    'amount' => $r['total_expense']
+                ];
+                $grandTotalExpense += $r['total_expense'];
+            }
+        }
+
+        $surplusDeficit = $grandTotalIncome - $grandTotalExpense;
+
+        api_response('success', 'Income & Expenditure statement generated', [
+            'school' => $school,
+            'period' => [
+                'sessionyear' => $sessionyear,
+                'from_date' => $fromDate,
+                'to_date' => $toDate
+            ],
+            'income_sections' => array_values($incomeSections),
+            'expense_sections' => array_values($expenseSections),
+            'grand_total_income' => $grandTotalIncome,
+            'grand_total_expense' => $grandTotalExpense,
+            'net_surplus_deficit' => $surplusDeficit,
+            'status' => ($surplusDeficit >= 0) ? 'Surplus (উদ্বৃত্ত)' : 'Deficit (ঘাটতি)'
+        ]);
+        break;
+
+    case 'head_ledger':
+        $headId = (int)($_GET['head_id'] ?? 0);
+        $subHeadId = (int)($_GET['sub_head_id'] ?? 0);
+
+        $sql = "SELECT cb.*, ah.head_name, ah.head_name_bn, ash.sub_head as sub_head_name, ash.sub_head_bn, bi.bankname
+                FROM cashbook cb
+                LEFT JOIN account_head ah ON cb.account_head = ah.id
+                LEFT JOIN account_sub_head ash ON cb.account_sub_head = ash.id
+                LEFT JOIN bankinfo bi ON cb.bank_account_id = bi.id
+                WHERE cb.sccode = ? AND (cb.date BETWEEN ? AND ?) AND (cb.status = 1 OR cb.status IS NULL)";
+        
+        $params = [$sccode, $fromDate, $toDate];
+        $types = "iss";
+
+        if ($headId > 0) {
+            $sql .= " AND cb.account_head = ?";
+            $params[] = $headId;
+            $types .= "i";
+        }
+        if ($subHeadId > 0) {
+            $sql .= " AND cb.account_sub_head = ?";
+            $params[] = $subHeadId;
+            $types .= "i";
+        }
+
+        $sql .= " ORDER BY cb.date ASC, cb.id ASC";
+
+        $stmt = $conn->prepare($sql);
         $stmt->bind_param($types, ...$params);
         $stmt->execute();
         $res = $stmt->get_result();
 
-        $vouchers = [];
-        $totalIncome = 0;
-        $totalExpense = 0;
-        $byCategory = [];
-        $categories = [];
+        $ledgerEntries = [];
+        $totalDr = 0;
+        $totalCr = 0;
 
-        while ($r = $res->fetch_assoc()) {
-            $amt = (float)$r['amount'];
-            $vType = ucfirst(strtolower($r['type'] ?? 'Expense'));
-            $cat = !empty($r['account_head']) ? $r['account_head'] : 'General Operations';
-
-            if ($vType === 'Income') {
-                $totalIncome += $amt;
-            } else {
-                $totalExpense += $amt;
-            }
-
-            if (!isset($byCategory[$cat])) {
-                $byCategory[$cat] = ['income' => 0, 'expense' => 0, 'count' => 0];
-            }
-            if ($vType === 'Income') {
-                $byCategory[$cat]['income'] += $amt;
-            } else {
-                $byCategory[$cat]['expense'] += $amt;
-            }
-            $byCategory[$cat]['count']++;
-
-            if (!in_array($cat, $categories)) {
-                $categories[] = $cat;
-            }
-
-            $vouchers[] = [
-                'id' => (int)$r['id'],
-                'sccode' => (int)$r['sccode'],
-                'date' => $r['date'],
-                'type' => $vType,
-                'category' => $cat,
-                'partid' => (int)($r['partid'] ?? 0),
-                'particulars' => $r['particulars'],
-                'amount' => $amt,
-                'memono' => $r['memono'] ? (string)$r['memono'] : 'V-' . $r['id'],
-                'payment_by' => !empty($r['payment_by']) ? $r['payment_by'] : 'Cash',
-                'entryby' => $r['entryby'] ?: 'Admin',
-                'entrytime' => $r['entrytime'] ?: date('Y-m-d H:i:s'),
-                'attachment' => $r['attachment'] ?? null
-            ];
-        }
-        $stmt->close();
-
-        // Also fetch default distinct categories for active school
-        $catStmt = $conn->prepare("SELECT DISTINCT account_head FROM cashbook WHERE sccode = ? AND account_head IS NOT NULL AND account_head != ''");
-        if ($catStmt) {
-            $catStmt->bind_param("i", $sccode);
-            $catStmt->execute();
-            $cRes = $catStmt->get_result();
-            while ($cr = $cRes->fetch_assoc()) {
-                if (!in_array($cr['account_head'], $categories)) {
-                    $categories[] = $cr['account_head'];
-                }
-            }
-            $catStmt->close();
+        while ($row = $res->fetch_assoc()) {
+            $row['income'] = (float)$row['income'];
+            $row['expenditure'] = (float)$row['expenditure'];
+            $row['amount'] = (float)$row['amount'];
+            $totalDr += $row['income'];
+            $totalCr += $row['expenditure'];
+            $ledgerEntries[] = $row;
         }
 
-        $surplus = $totalIncome - $totalExpense;
-
-        api_send_response(200, true, "Income and expenditure ledger loaded.", [
-            'vouchers' => $vouchers,
-            'count' => count($vouchers),
-            'total_income' => $totalIncome,
-            'total_expenditure' => $totalExpense,
-            'net_surplus' => $surplus,
-            'by_category' => $byCategory,
-            'categories' => $categories
+        api_response('success', 'Head ledger generated', [
+            'school' => $school,
+            'period' => ['from' => $fromDate, 'to' => $toDate],
+            'total_income' => $totalDr,
+            'total_expense' => $totalCr,
+            'net_balance' => $totalDr - $totalCr,
+            'entries' => $ledgerEntries
         ]);
-    } else {
-        api_send_response(500, false, "Database query preparation failed: " . $conn->error);
-    }
+        break;
+
+    default:
+        api_response('error', 'Invalid report type requested', null, 400);
 }
-
-// 2. POST: Create or Update Cashbook Voucher
-if ($method === 'POST') {
-    $input = get_api_input();
-    $id = isset($input['id']) && (int)$input['id'] > 0 ? (int)$input['id'] : null;
-    $date = trim($input['date'] ?? date('Y-m-d'));
-    $type = ucfirst(strtolower(trim($input['type'] ?? 'Expense')));
-    $accountHead = trim($input['category'] ?? $input['account_head'] ?? 'General Operations');
-    $partid = (int)($input['partid'] ?? 0);
-    $particulars = trim($input['particulars'] ?? $input['description'] ?? '');
-    $amount = (float)($input['amount'] ?? 0);
-    $memono = trim($input['memono'] ?? $input['voucher_no'] ?? '');
-    $paymentBy = trim($input['payment_by'] ?? 'Cash');
-    $sessionyear = (int)($input['sessionyear'] ?? date('Y', strtotime($date)));
-    $month = (int)date('n', strtotime($date));
-    $year = (int)date('Y', strtotime($date));
-    $entryby = $user['profilename'] ?? $user['username'] ?? 'Admin';
-
-    if (empty($particulars) || $amount <= 0) {
-        api_send_response(400, false, "Particulars description and valid amount > 0 are required.");
-    }
-
-    if ($id) {
-        $stmt = $conn->prepare("UPDATE cashbook SET
-            date = ?, account_head = ?, partid = ?, particulars = ?, amount = ?, type = ?,
-            memono = ?, payment_by = ?, month = ?, year = ?, sessionyear = ?
-            WHERE id = ? AND sccode = ?");
-        $stmt->bind_param("ssisdsssiiiii",
-            $date, $accountHead, $partid, $particulars, $amount, $type,
-            $memono, $paymentBy, $month, $year, $sessionyear, $id, $sccode
-        );
-        if ($stmt->execute()) {
-            $stmt->close();
-            api_send_response(200, true, "Voucher updated successfully.", ['id' => $id]);
-        } else {
-            $err = $stmt->error;
-            $stmt->close();
-            api_send_response(500, false, "Failed to update voucher: " . $err);
-        }
-    } else {
-        $stmt = $conn->prepare("INSERT INTO cashbook (
-            sccode, date, account_head, partid, particulars, amount, type,
-            memono, payment_by, month, year, sessionyear, entryby, entrytime
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
-        $stmt->bind_param("issisdsssiiis",
-            $sccode, $date, $accountHead, $partid, $particulars, $amount, $type,
-            $memono, $paymentBy, $month, $year, $sessionyear, $entryby
-        );
-        if ($stmt->execute()) {
-            $newId = $stmt->insert_id;
-            $stmt->close();
-            api_send_response(200, true, "New voucher recorded successfully.", ['id' => $newId]);
-        } else {
-            $err = $stmt->error;
-            $stmt->close();
-            api_send_response(500, false, "Failed to record voucher: " . $err);
-        }
-    }
-}
-
-// 3. DELETE: Delete Voucher
-if ($method === 'DELETE') {
-    $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-    if ($id <= 0) {
-        $input = get_api_input();
-        $id = (int)($input['id'] ?? 0);
-    }
-
-    if ($id <= 0) {
-        api_send_response(400, false, "Voucher ID is required for deletion.");
-    }
-
-    $stmt = $conn->prepare("DELETE FROM cashbook WHERE id = ? AND sccode = ?");
-    $stmt->bind_param("ii", $id, $sccode);
-    if ($stmt->execute()) {
-        $stmt->close();
-        api_send_response(200, true, "Voucher deleted successfully.");
-    } else {
-        $err = $stmt->error;
-        $stmt->close();
-        api_send_response(500, false, "Failed to delete voucher: " . $err);
-    }
-}
-
-api_send_response(405, false, "Method not allowed.");

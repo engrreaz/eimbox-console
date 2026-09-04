@@ -1,25 +1,20 @@
 <?php
 /**
  * EIMBox REST API — Issue Tracker & Screen Status Audit Matrix Engine
- * Endpoint: /api/v1/support/issues.php
+ * Endpoint: /api/v1/support/issues.php (Alias: /api/v1/issues/index.php)
  * 
- * Supports:
- *   - GET  [?route=X&status=Y&search=Z&limit=N&offset=M] : Fetch issues list with filtering
- *   - GET  ?action=stats                                : Get aggregate status breakdown metrics
- *   - GET  ?action=get&id=X                             : Fetch single issue by ID
- *   - GET  ?action=get&route=X                          : Fetch single issue by route
- *   - POST [action=save|create]                         : Create or update issue audit entry
- *   - POST action=batch                                 : Batch upsert multiple issue records
- *   - PUT                                               : Update existing issue audit entry
- *   - DELETE [?id=X] / POST [action=delete]             : Delete issue entry by ID
+ * Supports 12 Core Dimensions:
+ *   - ui, view, insert, update, delete, cache, push, pull, dropdown, modal, print, pdf
+ * Supports Granular Child Issues:
+ *   - screen_issues (multi-task tracking per route)
  */
 
 require_once __DIR__ . '/../bootstrap.php';
 
-// 1. Ensure `issues_tracker` & `screen_issues` tables exist in MySQL with complete schema
+// 1. Ensure `issues_tracker` table exists in MySQL with complete 12-dimension schema
 $conn->query("CREATE TABLE IF NOT EXISTS `issues_tracker` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `title` VARCHAR(50) DEFAULT NULL,
+  `title` VARCHAR(100) DEFAULT NULL,
   `route` VARCHAR(200) DEFAULT NULL,
   `ui` ENUM('Not Tested', 'OK', 'Error', 'warning', 'Issues') NOT NULL DEFAULT 'Not Tested',
   `view` ENUM('Not Tested', 'OK', 'Error', 'warning', 'Issues') NOT NULL DEFAULT 'Not Tested',
@@ -40,24 +35,24 @@ $conn->query("CREATE TABLE IF NOT EXISTS `issues_tracker` (
   INDEX `idx_modifieddate` (`modifieddate`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
 
-// Ensure missing columns exist in existing MySQL issues_tracker
-$newCols = ['dropdown', 'modal', 'print', 'pdf'];
-foreach ($newCols as $col) {
+// Ensure all 12 dimensions exist in MySQL issues_tracker
+$allDimCols = ['dropdown', 'modal', 'print', 'pdf'];
+foreach ($allDimCols as $col) {
     $colCheck = $conn->query("SHOW COLUMNS FROM `issues_tracker` LIKE '$col'");
     if ($colCheck && $colCheck->num_rows === 0) {
         $conn->query("ALTER TABLE `issues_tracker` ADD COLUMN `$col` ENUM('Not Tested', 'OK', 'Error', 'warning', 'Issues') NOT NULL DEFAULT 'Not Tested'");
     }
 }
 
-// Ensure `screen_issues` child table exists
+// 2. Ensure `screen_issues` child table exists in MySQL
 $conn->query("CREATE TABLE IF NOT EXISTS `screen_issues` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `screen_id` INT DEFAULT 0,
   `route` VARCHAR(200) NOT NULL,
-  `screen_title` VARCHAR(50) DEFAULT '',
+  `screen_title` VARCHAR(100) DEFAULT '',
   `issue_title` VARCHAR(255) NOT NULL,
   `description` TEXT DEFAULT NULL,
-  `dimension` VARCHAR(50) DEFAULT 'General',
+  `dimension` VARCHAR(50) DEFAULT 'general',
   `priority` VARCHAR(50) DEFAULT 'Medium',
   `status` VARCHAR(50) DEFAULT 'Open',
   `progress_pct` INT DEFAULT 0,
@@ -84,38 +79,207 @@ function sanitize_issue_enum($val) {
 // 1. GET Request Handler
 // ----------------------------------------------------
 if ($method === 'GET') {
-    // Action A: Aggregate Summary & Status Stats
+    
+    // Action A: Aggregate Summary & Health Statistics for 12 Dimensions
     if ($action === 'stats') {
-        $statsSql = "SELECT 
-            COUNT(*) AS total,
-            SUM(CASE WHEN `ui` = 'Error' OR `view` = 'Error' OR `insert` = 'Error' OR `update` = 'Error' OR `delete` = 'Error' OR `cache` = 'Error' OR `push` = 'Error' OR `pull` = 'Error' THEN 1 ELSE 0 END) AS error_count,
-            SUM(CASE WHEN (`ui` = 'Issues' OR `view` = 'Issues' OR `insert` = 'Issues' OR `update` = 'Issues' OR `delete` = 'Issues' OR `cache` = 'Issues' OR `push` = 'Issues' OR `pull` = 'Issues') AND NOT (`ui` = 'Error' OR `view` = 'Error' OR `insert` = 'Error' OR `update` = 'Error' OR `delete` = 'Error' OR `cache` = 'Error' OR `push` = 'Error' OR `pull` = 'Error') THEN 1 ELSE 0 END) AS issues_count,
-            SUM(CASE WHEN (`ui` = 'warning' OR `view` = 'warning' OR `insert` = 'warning' OR `update` = 'warning' OR `delete` = 'warning' OR `cache` = 'warning' OR `push` = 'warning' OR `pull` = 'warning') AND NOT (`ui` = 'Error' OR `view` = 'Error' OR `insert` = 'Error' OR `update` = 'Error' OR `delete` = 'Error' OR `cache` = 'Error' OR `push` = 'Error' OR `pull` = 'Error' OR `ui` = 'Issues' OR `view` = 'Issues' OR `insert` = 'Issues' OR `update` = 'Issues' OR `delete` = 'Issues' OR `cache` = 'Issues' OR `push` = 'Issues' OR `pull` = 'Issues') THEN 1 ELSE 0 END) AS warning_count,
-            SUM(CASE WHEN (`ui` = 'Not Tested' OR `view` = 'Not Tested' OR `insert` = 'Not Tested' OR `update` = 'Not Tested' OR `delete` = 'Not Tested' OR `cache` = 'Not Tested' OR `push` = 'Not Tested' OR `pull` = 'Not Tested') AND NOT (`ui` = 'Error' OR `view` = 'Error' OR `insert` = 'Error' OR `update` = 'Error' OR `delete` = 'Error' OR `cache` = 'Error' OR `push` = 'Error' OR `pull` = 'Error' OR `ui` = 'Issues' OR `view` = 'Issues' OR `insert` = 'Issues' OR `update` = 'Issues' OR `delete` = 'Issues' OR `cache` = 'Issues' OR `push` = 'Issues' OR `pull` = 'Issues' OR `ui` = 'warning' OR `view` = 'warning' OR `insert` = 'warning' OR `update` = 'warning' OR `delete` = 'warning' OR `cache` = 'warning' OR `push` = 'warning' OR `pull` = 'warning') THEN 1 ELSE 0 END) AS not_tested_count,
-            SUM(CASE WHEN `ui` = 'OK' AND `view` = 'OK' AND `insert` = 'OK' AND `update` = 'OK' AND `delete` = 'OK' AND `cache` = 'OK' AND `push` = 'OK' AND `pull` = 'OK' THEN 1 ELSE 0 END) AS ok_count
-        FROM `issues_tracker`";
-        
-        $res = $conn->query($statsSql);
-        $row = $res ? $res->fetch_assoc() : [];
-        $total = intval($row['total'] ?? 0);
-        $error = intval($row['error_count'] ?? 0);
-        $issues = intval($row['issues_count'] ?? 0);
-        $warning = intval($row['warning_count'] ?? 0);
-        $notTested = intval($row['not_tested_count'] ?? 0);
-        $ok = intval($row['ok_count'] ?? 0);
+        $allRows = $conn->query("SELECT * FROM `issues_tracker`");
+        $total = 0;
+        $okCount = 0;
+        $warningCount = 0;
+        $issuesCount = 0;
+        $errorCount = 0;
+        $notTestedCount = 0;
+        $totalHealthSum = 0;
+        $auditedCount = 0;
+
+        $dimFields = ['ui', 'view', 'insert', 'update', 'delete', 'cache', 'push', 'pull', 'dropdown', 'modal', 'print', 'pdf'];
+
+        if ($allRows) {
+            while ($row = $allRows->fetch_assoc()) {
+                $total++;
+                $rowOk = 0;
+                $rowWarn = 0;
+                $rowIssues = 0;
+                $rowNotTested = 0;
+
+                foreach ($dimFields as $f) {
+                    $v = $row[$f] ?? 'Not Tested';
+                    if ($v === 'OK') $rowOk++;
+                    else if ($v === 'warning') $rowWarn++;
+                    else if ($v === 'Issues' || $v === 'Error') $rowIssues++;
+                    else $rowNotTested++;
+                }
+
+                $tested = 12 - $rowNotTested;
+                if ($tested === 0) {
+                    $notTestedCount++;
+                } else if ($rowIssues > 0) {
+                    $issuesCount++;
+                    $dimScore = (($rowOk * 100) + ($rowWarn * 50)) / 12;
+                    $healthScore = max(10, min(85, round($dimScore - ($rowIssues * 10))));
+                    $totalHealthSum += $healthScore;
+                    $auditedCount++;
+                } else if ($rowWarn > 0 || $rowNotTested > 0) {
+                    $warningCount++;
+                    $healthScore = max(50, min(95, round((($rowOk * 100) + ($rowWarn * 65) + ($rowNotTested * 50)) / 12)));
+                    $totalHealthSum += $healthScore;
+                    $auditedCount++;
+                } else {
+                    $okCount++;
+                    $totalHealthSum += 100;
+                    $auditedCount++;
+                }
+            }
+        }
+
+        $avgHealth = $auditedCount > 0 ? round($totalHealthSum / $auditedCount) : 0;
 
         api_response('success', 'Issue statistics calculated successfully.', [
             'total' => $total,
-            'notTested' => $notTested,
-            'ok' => $ok,
-            'error' => $error,
-            'warning' => $warning,
-            'issues' => $issues
+            'auditedCount' => $auditedCount,
+            'avgHealth' => $avgHealth,
+            'notTested' => $notTestedCount,
+            'ok' => $okCount,
+            'warning' => $warningCount,
+            'issues' => $issuesCount,
+            'error' => $errorCount
         ]);
     }
 
-    // Action B: Fetch Single Issue by ID or Route
-    if ($action === 'get' || isset($_GET['id']) || (isset($_GET['route']) && $action === 'by_route')) {
+    // Action B: Granular Screen Issues Stats (Route specific or global)
+    if ($action === 'screen_issues_stats') {
+        $route = trim($_GET['route'] ?? $input['route'] ?? '');
+        $sql = "SELECT * FROM `screen_issues`";
+        $params = [];
+        $types = '';
+
+        if (!empty($route)) {
+            $sql .= " WHERE `route` = ?";
+            $params[] = $route;
+            $types .= 's';
+        }
+
+        $stmt = $conn->prepare($sql);
+        if (!empty($types)) {
+            $stmt->bind_param($types, ...$params);
+        }
+        $stmt->execute();
+        $res = $stmt->get_result();
+
+        $total = 0;
+        $openCount = 0;
+        $inProgressCount = 0;
+        $resolvedCount = 0;
+        $criticalCount = 0;
+        $totalProgress = 0;
+
+        if ($res) {
+            while ($r = $res->fetch_assoc()) {
+                $total++;
+                $st = strtolower(trim($r['status'] ?? ''));
+                if ($st === 'resolved' || $st === 'closed') {
+                    $resolvedCount++;
+                } else if ($st === 'in progress' || $st === 'in review') {
+                    $inProgressCount++;
+                } else {
+                    $openCount++;
+                }
+
+                if (($r['priority'] ?? '') === 'Critical') {
+                    $criticalCount++;
+                }
+
+                $totalProgress += intval($r['progress_pct'] ?? 0);
+            }
+        }
+
+        $avgProgress = $total > 0 ? round($totalProgress / $total) : 0;
+
+        api_response('success', 'Screen child issues stats retrieved.', [
+            'route' => $route,
+            'total' => $total,
+            'open' => $openCount,
+            'inProgress' => $inProgressCount,
+            'resolved' => $resolvedCount,
+            'critical' => $criticalCount,
+            'avgProgress' => $avgProgress
+        ]);
+    }
+
+    // Action C: List Granular Child Screen Issues
+    if ($action === 'screen_issues') {
+        $route = trim($_GET['route'] ?? $input['route'] ?? '');
+        $status = trim($_GET['status'] ?? $input['status'] ?? '');
+        $priority = trim($_GET['priority'] ?? $input['priority'] ?? '');
+
+        $where = [];
+        $params = [];
+        $types = '';
+
+        if (!empty($route)) {
+            $where[] = "`route` = ?";
+            $params[] = $route;
+            $types .= 's';
+        }
+        if (!empty($status) && $status !== 'all') {
+            $where[] = "`status` = ?";
+            $params[] = $status;
+            $types .= 's';
+        }
+        if (!empty($priority) && $priority !== 'all') {
+            $where[] = "`priority` = ?";
+            $params[] = $priority;
+            $types .= 's';
+        }
+
+        $whereSql = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+        $sql = "SELECT * FROM `screen_issues` $whereSql ORDER BY `modifieddate` DESC, `id` DESC";
+
+        $stmt = $conn->prepare($sql);
+        if (!empty($types)) {
+            $stmt->bind_param($types, ...$params);
+        }
+        $stmt->execute();
+        $res = $stmt->get_result();
+
+        $items = [];
+        if ($res) {
+            while ($row = $res->fetch_assoc()) {
+                $row['id'] = intval($row['id']);
+                $row['screen_id'] = intval($row['screen_id']);
+                $row['progress_pct'] = intval($row['progress_pct']);
+                $items[] = $row;
+            }
+        }
+
+        api_response('success', 'Child screen issues loaded.', $items);
+    }
+
+    // Action D: Fetch Single Child Issue by ID
+    if ($action === 'screen_issue_by_id') {
+        $id = intval($_GET['id'] ?? $input['id'] ?? 0);
+        if ($id <= 0) {
+            api_response('error', 'Valid issue ID is required.', null, 400);
+        }
+
+        $stmt = $conn->prepare("SELECT * FROM `screen_issues` WHERE `id` = ? LIMIT 1");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $record = $res ? $res->fetch_assoc() : null;
+
+        if ($record) {
+            $record['id'] = intval($record['id']);
+            $record['screen_id'] = intval($record['screen_id']);
+            $record['progress_pct'] = intval($record['progress_pct']);
+            api_response('success', 'Child screen issue retrieved.', $record);
+        } else {
+            api_response('error', 'Child screen issue not found.', null, 404);
+        }
+    }
+
+    // Action E: Fetch Single Issue Matrix Entry by ID or Route
+    if ($action === 'get' || (isset($_GET['id']) && $action !== 'screen_issue_by_id') || (isset($_GET['route']) && $action === 'by_route')) {
         $id = intval($_GET['id'] ?? $input['id'] ?? 0);
         $route = trim($_GET['route'] ?? $input['route'] ?? '');
 
@@ -141,11 +305,11 @@ if ($method === 'GET') {
         }
     }
 
-    // Action C: List Issues with Filters
+    // Action F: List Issues Matrix with 12-dimension Filters
     $route = trim($_GET['route'] ?? '');
     $status = trim($_GET['status'] ?? '');
     $search = trim($_GET['search'] ?? '');
-    $limit = max(1, min(1000, intval($_GET['limit'] ?? 200)));
+    $limit = max(1, min(1000, intval($_GET['limit'] ?? 500)));
     $offset = max(0, intval($_GET['offset'] ?? 0));
 
     $whereClauses = [];
@@ -160,8 +324,8 @@ if ($method === 'GET') {
 
     if (!empty($status) && $status !== 'all') {
         $cleanStatus = sanitize_issue_enum($status);
-        $whereClauses[] = "(`ui` = ? OR `view` = ? OR `insert` = ? OR `update` = ? OR `delete` = ? OR `cache` = ? OR `push` = ? OR `pull` = ?)";
-        for ($i = 0; $i < 8; $i++) {
+        $whereClauses[] = "(`ui` = ? OR `view` = ? OR `insert` = ? OR `update` = ? OR `delete` = ? OR `cache` = ? OR `push` = ? OR `pull` = ? OR `dropdown` = ? OR `modal` = ? OR `print` = ? OR `pdf` = ?)";
+        for ($i = 0; $i < 12; $i++) {
             $params[] = $cleanStatus;
             $types .= 's';
         }
@@ -216,10 +380,11 @@ if ($method === 'GET') {
 }
 
 // ----------------------------------------------------
-// 2. POST / PUT Request Handler (Save / Create / Update / Batch)
+// 2. POST / PUT Request Handler
 // ----------------------------------------------------
 if ($method === 'POST' || $method === 'PUT') {
-    // Action A: Delete by POST
+
+    // Action A: Delete by POST (issues_tracker or screen_issues)
     if ($action === 'delete') {
         $id = intval($input['id'] ?? $_GET['id'] ?? 0);
         if ($id <= 0) {
@@ -236,7 +401,127 @@ if ($method === 'POST' || $method === 'PUT') {
         }
     }
 
-    // Action B: Batch Sync / Upsert
+    // Action B: Delete Child Screen Issue
+    if ($action === 'delete_screen_issue') {
+        $id = intval($input['id'] ?? $_GET['id'] ?? 0);
+        if ($id <= 0) {
+            api_response('error', 'Valid child issue ID is required to delete.', null, 400);
+        }
+        $delStmt = $conn->prepare("DELETE FROM `screen_issues` WHERE `id` = ?");
+        $delStmt->bind_param("i", $id);
+        $delStmt->execute();
+
+        if ($delStmt->affected_rows > 0) {
+            api_response('success', "Child issue #$id deleted successfully.");
+        } else {
+            api_response('error', "Child issue #$id not found or already deleted.", null, 404);
+        }
+    }
+
+    // Action C: Save / Upsert Single Child Screen Issue
+    if ($action === 'save_screen_issue') {
+        $id = intval($input['id'] ?? 0);
+        $screenId = intval($input['screen_id'] ?? 0);
+        $route = mb_substr(trim($input['route'] ?? ''), 0, 200);
+        $screenTitle = mb_substr(trim($input['screen_title'] ?? ''), 0, 100);
+        $issueTitle = mb_substr(trim($input['issue_title'] ?? ''), 0, 255);
+        $description = trim($input['description'] ?? '');
+        $dimension = mb_substr(trim($input['dimension'] ?? 'general'), 0, 50);
+        $priority = mb_substr(trim($input['priority'] ?? 'Medium'), 0, 50);
+        $status = mb_substr(trim($input['status'] ?? 'Open'), 0, 50);
+        $progressPct = max(0, min(100, intval($input['progress_pct'] ?? 0)));
+        $assignedTo = mb_substr(trim($input['assigned_to'] ?? ''), 0, 100);
+        $createdBy = mb_substr(trim($input['created_by'] ?? 'Admin'), 0, 100);
+        $resolvedAt = ($status === 'Resolved' || $status === 'Closed') ? date('Y-m-d H:i:s') : null;
+
+        if (empty($route) || empty($issueTitle)) {
+            api_response('error', 'Both route and issue_title are required.', null, 400);
+        }
+
+        if ($id > 0) {
+            $stmt = $conn->prepare("UPDATE `screen_issues` SET 
+                `screen_id` = ?, `route` = ?, `screen_title` = ?, `issue_title` = ?, `description` = ?,
+                `dimension` = ?, `priority` = ?, `status` = ?, `progress_pct` = ?, `assigned_to` = ?,
+                `resolved_at` = ?, `modifieddate` = CURRENT_TIMESTAMP
+                WHERE `id` = ?");
+            $stmt->bind_param("isssssssissi", $screenId, $route, $screenTitle, $issueTitle, $description, $dimension, $priority, $status, $progressPct, $assignedTo, $resolvedAt, $id);
+            $stmt->execute();
+
+            api_response('success', "Child issue #$id updated successfully.", [
+                'id' => $id,
+                'route' => $route,
+                'issue_title' => $issueTitle
+            ]);
+        } else {
+            $stmt = $conn->prepare("INSERT INTO `screen_issues` 
+                (`screen_id`, `route`, `screen_title`, `issue_title`, `description`, `dimension`, `priority`, `status`, `progress_pct`, `assigned_to`, `created_by`, `resolved_at`)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("isssssssisss", $screenId, $route, $screenTitle, $issueTitle, $description, $dimension, $priority, $status, $progressPct, $assignedTo, $createdBy, $resolvedAt);
+            $stmt->execute();
+            $newId = $conn->insert_id;
+
+            api_response('success', "New child issue #$newId recorded successfully.", [
+                'id' => $newId,
+                'route' => $route,
+                'issue_title' => $issueTitle
+            ], 201);
+        }
+    }
+
+    // Action D: Batch Sync Child Screen Issues
+    if ($action === 'batch_screen_issues') {
+        $items = $input['items'] ?? [];
+        if (!is_array($items) || empty($items)) {
+            api_response('error', 'No child items provided for batch sync.', null, 400);
+        }
+
+        $processed = 0;
+        $stmt = $conn->prepare("INSERT INTO `screen_issues` 
+            (`id`, `screen_id`, `route`, `screen_title`, `issue_title`, `description`, `dimension`, `priority`, `status`, `progress_pct`, `assigned_to`, `created_by`, `resolved_at`)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE 
+                `screen_id` = VALUES(`screen_id`),
+                `route` = VALUES(`route`),
+                `screen_title` = VALUES(`screen_title`),
+                `issue_title` = VALUES(`issue_title`),
+                `description` = VALUES(`description`),
+                `dimension` = VALUES(`dimension`),
+                `priority` = VALUES(`priority`),
+                `status` = VALUES(`status`),
+                `progress_pct` = VALUES(`progress_pct`),
+                `assigned_to` = VALUES(`assigned_to`),
+                `resolved_at` = VALUES(`resolved_at`),
+                `modifieddate` = CURRENT_TIMESTAMP");
+
+        foreach ($items as $c) {
+            $id = intval($c['id'] ?? 0);
+            $screenId = intval($c['screen_id'] ?? 0);
+            $route = mb_substr(trim($c['route'] ?? ''), 0, 200);
+            $screenTitle = mb_substr(trim($c['screen_title'] ?? ''), 0, 100);
+            $issueTitle = mb_substr(trim($c['issue_title'] ?? ''), 0, 255);
+            $description = trim($c['description'] ?? '');
+            $dimension = mb_substr(trim($c['dimension'] ?? 'general'), 0, 50);
+            $priority = mb_substr(trim($c['priority'] ?? 'Medium'), 0, 50);
+            $status = mb_substr(trim($c['status'] ?? 'Open'), 0, 50);
+            $progressPct = max(0, min(100, intval($c['progress_pct'] ?? 0)));
+            $assignedTo = mb_substr(trim($c['assigned_to'] ?? ''), 0, 100);
+            $createdBy = mb_substr(trim($c['created_by'] ?? 'Admin'), 0, 100);
+            $resolvedAt = !empty($c['resolved_at']) ? $c['resolved_at'] : (($status === 'Resolved' || $status === 'Closed') ? date('Y-m-d H:i:s') : null);
+
+            if (empty($route) || empty($issueTitle)) continue;
+
+            $stmt->bind_param("iissssssissss", $id, $screenId, $route, $screenTitle, $issueTitle, $description, $dimension, $priority, $status, $progressPct, $assignedTo, $createdBy, $resolvedAt);
+            if ($stmt->execute()) {
+                $processed++;
+            }
+        }
+
+        api_response('success', "Batch sync of child issues completed. Processed $processed items.", [
+            'processed' => $processed
+        ]);
+    }
+
+    // Action E: Batch Sync 12-Dimension Issues Matrix
     if ($action === 'batch' || isset($input['items'])) {
         $items = $input['items'] ?? [];
         if (!is_array($items) || empty($items)) {
@@ -244,8 +529,9 @@ if ($method === 'POST' || $method === 'PUT') {
         }
 
         $upsertCount = 0;
-        $stmt = $conn->prepare("INSERT INTO `issues_tracker` (`title`, `route`, `ui`, `view`, `insert`, `update`, `delete`, `cache`, `push`, `pull`, `notes`)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        $stmt = $conn->prepare("INSERT INTO `issues_tracker` 
+            (`title`, `route`, `ui`, `view`, `insert`, `update`, `delete`, `cache`, `push`, `pull`, `dropdown`, `modal`, `print`, `pdf`, `notes`)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE 
                 `title` = VALUES(`title`),
                 `ui` = VALUES(`ui`),
@@ -256,11 +542,15 @@ if ($method === 'POST' || $method === 'PUT') {
                 `cache` = VALUES(`cache`),
                 `push` = VALUES(`push`),
                 `pull` = VALUES(`pull`),
+                `dropdown` = VALUES(`dropdown`),
+                `modal` = VALUES(`modal`),
+                `print` = VALUES(`print`),
+                `pdf` = VALUES(`pdf`),
                 `notes` = VALUES(`notes`),
                 `modifieddate` = CURRENT_TIMESTAMP");
 
         foreach ($items as $item) {
-            $t = mb_substr(trim($item['title'] ?? ''), 0, 50);
+            $t = mb_substr(trim($item['title'] ?? ''), 0, 100);
             $r = mb_substr(trim($item['route'] ?? ''), 0, 200);
             if (empty($r)) continue;
 
@@ -272,9 +562,13 @@ if ($method === 'POST' || $method === 'PUT') {
             $cache = sanitize_issue_enum($item['cache'] ?? 'Not Tested');
             $push = sanitize_issue_enum($item['push'] ?? 'Not Tested');
             $pull = sanitize_issue_enum($item['pull'] ?? 'Not Tested');
+            $dropdown = sanitize_issue_enum($item['dropdown'] ?? 'Not Tested');
+            $modal = sanitize_issue_enum($item['modal'] ?? 'Not Tested');
+            $print = sanitize_issue_enum($item['print'] ?? 'Not Tested');
+            $pdf = sanitize_issue_enum($item['pdf'] ?? 'Not Tested');
             $notes = mb_substr(trim($item['notes'] ?? ''), 0, 500);
 
-            $stmt->bind_param("sssssssssss", $t, $r, $ui, $view, $ins, $upd, $del, $cache, $push, $pull, $notes);
+            $stmt->bind_param("sssssssssssssss", $t, $r, $ui, $view, $ins, $upd, $del, $cache, $push, $pull, $dropdown, $modal, $print, $pdf, $notes);
             if ($stmt->execute()) {
                 $upsertCount++;
             }
@@ -285,10 +579,10 @@ if ($method === 'POST' || $method === 'PUT') {
         ]);
     }
 
-    // Action C: Single Upsert (Insert or Update)
+    // Action F: Single Upsert for 12-Dimension Matrix Entry
     $id = intval($input['id'] ?? $_GET['id'] ?? 0);
     $route = mb_substr(trim($input['route'] ?? ''), 0, 200);
-    $title = mb_substr(trim($input['title'] ?? ''), 0, 50);
+    $title = mb_substr(trim($input['title'] ?? ''), 0, 100);
 
     if (empty($route)) {
         api_response('error', 'Route name is required.', null, 400);
@@ -305,14 +599,18 @@ if ($method === 'POST' || $method === 'PUT') {
     $cache = sanitize_issue_enum($input['cache'] ?? 'Not Tested');
     $push = sanitize_issue_enum($input['push'] ?? 'Not Tested');
     $pull = sanitize_issue_enum($input['pull'] ?? 'Not Tested');
+    $dropdown = sanitize_issue_enum($input['dropdown'] ?? 'Not Tested');
+    $modal = sanitize_issue_enum($input['modal'] ?? 'Not Tested');
+    $print = sanitize_issue_enum($input['print'] ?? 'Not Tested');
+    $pdf = sanitize_issue_enum($input['pdf'] ?? 'Not Tested');
     $notes = mb_substr(trim($input['notes'] ?? ''), 0, 500);
 
     if ($id > 0) {
         // Update existing by ID
         $updateStmt = $conn->prepare("UPDATE `issues_tracker` 
-            SET `title` = ?, `route` = ?, `ui` = ?, `view` = ?, `insert` = ?, `update` = ?, `delete` = ?, `cache` = ?, `push` = ?, `pull` = ?, `notes` = ?
+            SET `title` = ?, `route` = ?, `ui` = ?, `view` = ?, `insert` = ?, `update` = ?, `delete` = ?, `cache` = ?, `push` = ?, `pull` = ?, `dropdown` = ?, `modal` = ?, `print` = ?, `pdf` = ?, `notes` = ?
             WHERE `id` = ?");
-        $updateStmt->bind_param("sssssssssssi", $title, $route, $ui, $view, $insert, $update, $delete, $cache, $push, $pull, $notes, $id);
+        $updateStmt->bind_param("sssssssssssssssi", $title, $route, $ui, $view, $insert, $update, $delete, $cache, $push, $pull, $dropdown, $modal, $print, $pdf, $notes, $id);
         $updateStmt->execute();
 
         api_response('success', "Issue record #$id updated successfully.", [
@@ -331,9 +629,9 @@ if ($method === 'POST' || $method === 'PUT') {
         if ($existing && !empty($existing['id'])) {
             $existingId = intval($existing['id']);
             $updateStmt = $conn->prepare("UPDATE `issues_tracker` 
-                SET `title` = ?, `ui` = ?, `view` = ?, `insert` = ?, `update` = ?, `delete` = ?, `cache` = ?, `push` = ?, `pull` = ?, `notes` = ?
+                SET `title` = ?, `ui` = ?, `view` = ?, `insert` = ?, `update` = ?, `delete` = ?, `cache` = ?, `push` = ?, `pull` = ?, `dropdown` = ?, `modal` = ?, `print` = ?, `pdf` = ?, `notes` = ?
                 WHERE `id` = ?");
-            $updateStmt->bind_param("ssssssssssi", $title, $ui, $view, $insert, $update, $delete, $cache, $push, $pull, $notes, $existingId);
+            $updateStmt->bind_param("ssssssssssssssi", $title, $ui, $view, $insert, $update, $delete, $cache, $push, $pull, $dropdown, $modal, $print, $pdf, $notes, $existingId);
             $updateStmt->execute();
 
             api_response('success', "Issue record updated for route '$route'.", [
@@ -343,9 +641,10 @@ if ($method === 'POST' || $method === 'PUT') {
             ]);
         } else {
             // Insert new record
-            $insStmt = $conn->prepare("INSERT INTO `issues_tracker` (`title`, `route`, `ui`, `view`, `insert`, `update`, `delete`, `cache`, `push`, `pull`, `notes`)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $insStmt->bind_param("sssssssssss", $title, $route, $ui, $view, $insert, $update, $delete, $cache, $push, $pull, $notes);
+            $insStmt = $conn->prepare("INSERT INTO `issues_tracker` 
+                (`title`, `route`, `ui`, `view`, `insert`, `update`, `delete`, `cache`, `push`, `pull`, `dropdown`, `modal`, `print`, `pdf`, `notes`)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $insStmt->bind_param("sssssssssssssss", $title, $route, $ui, $view, $insert, $update, $delete, $cache, $push, $pull, $dropdown, $modal, $print, $pdf, $notes);
             $insStmt->execute();
             $newId = $conn->insert_id;
 
@@ -362,6 +661,23 @@ if ($method === 'POST' || $method === 'PUT') {
 // 3. DELETE Request Handler
 // ----------------------------------------------------
 if ($method === 'DELETE') {
+    if ($action === 'delete_screen_issue') {
+        $id = intval($_GET['id'] ?? $input['id'] ?? 0);
+        if ($id <= 0) {
+            api_response('error', 'Valid child issue ID is required to delete.', null, 400);
+        }
+
+        $delStmt = $conn->prepare("DELETE FROM `screen_issues` WHERE `id` = ?");
+        $delStmt->bind_param("i", $id);
+        $delStmt->execute();
+
+        if ($delStmt->affected_rows > 0) {
+            api_response('success', "Child issue #$id deleted successfully.");
+        } else {
+            api_response('error', "Child issue #$id not found or already deleted.", null, 404);
+        }
+    }
+
     $id = intval($_GET['id'] ?? $input['id'] ?? 0);
     if ($id <= 0) {
         api_response('error', 'Valid issue ID is required to delete.', null, 400);
