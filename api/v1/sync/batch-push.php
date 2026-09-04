@@ -32,7 +32,9 @@ $allowedTables = [
     'students', 'sessioninfo', 'stmark', 'stattnd', 'stfinance', 'stpr', 
     'slots', 'teacher', 'classschedule', 'clsroutine', 'syllabus', 
     'lesson_tracking', 'sessionyear', 'settings', 'scinfo', 'ben_address',
-    'tickets', 'ticket_messages', 'events', 'notice', 'notice_category'
+    'tickets', 'ticket_messages', 'events', 'notice', 'notice_category',
+    'usersapp', 'permissions_role', 'user_custom_permissions',
+    'account_head', 'account_sub_head', 'bankinfo', 'banktrans', 'cashbook'
 ];
 
 $results = [];

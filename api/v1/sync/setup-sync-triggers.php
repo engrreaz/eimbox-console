@@ -65,7 +65,8 @@ $whitelist = [
     'sessionyear', 'settings', 'scinfo', 'ben_address', 'tickets', 
     'ticket_messages', 'events', 'notice', 'notice_category', 'classschedule', 
     'clsroutine', 'syllabus', 'lesson_tracking', 'usersapp', 'permissions_role',
-    'user_custom_permissions', 'slots', 'examroutine'
+    'user_custom_permissions', 'slots', 'examroutine',
+    'account_head', 'account_sub_head', 'bankinfo', 'banktrans', 'cashbook'
 ];
 
 // Target tables are all discovered tables matching whitelist or present in database

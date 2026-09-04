@@ -26,7 +26,8 @@ $allowedTables = [
     'slots', 'teacher', 'classschedule', 'clsroutine', 'syllabus', 
     'lesson_tracking', 'sessionyear', 'settings', 'scinfo', 'ben_address',
     'tickets', 'ticket_messages', 'events', 'notice', 'notice_category',
-    'usersapp', 'permissions_role', 'user_custom_permissions'
+    'usersapp', 'permissions_role', 'user_custom_permissions',
+    'account_head', 'account_sub_head', 'bankinfo', 'banktrans', 'cashbook'
 ];
 
 if (empty($tableName) || !in_array($tableName, $allowedTables)) {
@@ -55,7 +56,7 @@ $conn->query("
 $tablesWithoutSccode = ['notice_category', 'ben_address', 'permissions_role'];
 
 // Tables with global sccode=0 fallback
-$supportsGlobal = in_array($tableName, ['gpa', 'subjects', 'examlist', 'slots', 'settings', 'classschedule']);
+$supportsGlobal = in_array($tableName, ['gpa', 'subjects', 'examlist', 'slots', 'settings', 'classschedule', 'account_head']);
 
 $where = [];
 $params = [];
@@ -76,7 +77,7 @@ if (in_array($tableName, $tablesWithoutSccode)) {
 $sessionAwareTables = [
     'examroutine', 'examlist', 'areas', 'sessioninfo', 'subsetup', 
     'stmark', 'stattnd', 'stfinance', 'stpr', 'classschedule', 
-    'clsroutine', 'syllabus', 'lesson_tracking'
+    'clsroutine', 'syllabus', 'lesson_tracking', 'cashbook'
 ];
 
 if (!empty($session) && in_array($tableName, $sessionAwareTables)) {
