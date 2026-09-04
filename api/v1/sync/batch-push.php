@@ -35,7 +35,8 @@ $allowedTables = [
     'tickets', 'ticket_messages', 'events', 'notice', 'notice_category',
     'usersapp', 'permissions_role', 'user_custom_permissions',
     'account_head', 'account_sub_head', 'bankinfo', 'banktrans', 'cashbook',
-    'account_head_default', 'account_sub_head_default'
+    'account_head_default', 'account_sub_head_default',
+    'app_releases', 'app_roadmap', 'faq_desktop'
 ];
 
 $results = [];
@@ -299,7 +300,7 @@ foreach ($transactions as $tx) {
             $rowRecord = $payload['record'] ?? $payload['data'] ?? $payload;
             unset($rowRecord['table'], $rowRecord['local_id'], $rowRecord['sync_status']);
 
-            if (!in_array($targetTable, ['notice_category', 'ben_address', 'permissions_role'])) {
+            if (!in_array($targetTable, ['notice_category', 'ben_address', 'permissions_role', 'account_head_default', 'app_releases', 'app_roadmap', 'faq_desktop'])) {
                 $rowRecord['sccode'] = $sccode;
             }
             $rowRecord['modifieddate'] = date('Y-m-d H:i:s');

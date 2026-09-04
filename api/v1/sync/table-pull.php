@@ -28,7 +28,8 @@ $allowedTables = [
     'tickets', 'ticket_messages', 'events', 'notice', 'notice_category',
     'usersapp', 'permissions_role', 'user_custom_permissions',
     'account_head', 'account_sub_head', 'bankinfo', 'banktrans', 'cashbook',
-    'account_head_default', 'account_sub_head_default'
+    'account_head_default', 'account_sub_head_default',
+    'app_releases', 'app_roadmap', 'faq_desktop'
 ];
 
 if (empty($tableName) || !in_array($tableName, $allowedTables)) {
@@ -54,7 +55,7 @@ $conn->query("
 ");
 
 // Tables without sccode column (Global Master Tables)
-$tablesWithoutSccode = ['notice_category', 'ben_address', 'permissions_role', 'account_head_default'];
+$tablesWithoutSccode = ['notice_category', 'ben_address', 'permissions_role', 'account_head_default', 'app_releases', 'app_roadmap', 'faq_desktop'];
 
 // Tables with global sccode=0 fallback
 $supportsGlobal = in_array($tableName, ['gpa', 'subjects', 'examlist', 'slots', 'settings', 'classschedule', 'account_head', 'account_sub_head', 'account_sub_head_default']);
