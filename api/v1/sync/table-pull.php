@@ -54,10 +54,10 @@ $conn->query("
 ");
 
 // Tables without sccode column (Global Master Tables)
-$tablesWithoutSccode = ['notice_category', 'ben_address', 'permissions_role'];
+$tablesWithoutSccode = ['notice_category', 'ben_address', 'permissions_role', 'account_head_default'];
 
 // Tables with global sccode=0 fallback
-$supportsGlobal = in_array($tableName, ['gpa', 'subjects', 'examlist', 'slots', 'settings', 'classschedule', 'account_head']);
+$supportsGlobal = in_array($tableName, ['gpa', 'subjects', 'examlist', 'slots', 'settings', 'classschedule', 'account_head', 'account_sub_head', 'account_sub_head_default']);
 
 $where = [];
 $params = [];
