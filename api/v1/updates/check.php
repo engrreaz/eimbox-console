@@ -11,12 +11,12 @@ $platform = trim($_GET['platform'] ?? 'win32');
 
 // In production, this can be fetched from a database table or release configuration
 $updatePolicy = [
-    'latest_version'        => '1.0.0',
+    'latest_version'        => '2.0.0',
     'min_required_version'  => '1.0.0', // Versions below this MUST mandatorily update
     'is_mandatory'          => false,
-    'release_date'          => '2026-08-28',
-    'title'                 => 'EIMBox Desktop Studio 1.0.1 Maintenance Release',
-    'release_notes'         => 'Includes push/pull ignore list separation, dual progress bar telemetry, app lock screen overlay, and remote roadmap integration.',
+    'release_date'          => '2026-09-04',
+    'title'                 => 'EIMBox Desktop Studio 2.0.0 Release',
+    'release_notes'         => 'Complete institutional workstation with offline-first SQLite synchronization, dual biometric bridge, custom grade scale matrix, student fee waivers, and Windows 11 Fluent interface.',
     'download_url'          => 'https://console.eimbox.com/downloads/eimbox-desktop-setup.exe',
     'checksum_sha256'       => 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 ];

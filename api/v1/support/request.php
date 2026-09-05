@@ -12,6 +12,46 @@
 
 require_once __DIR__ . '/../bootstrap.php';
 
+$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+$input = get_api_input();
+$action = $_GET['action'] ?? $input['action'] ?? '';
+
+// Ensure modulelist table exists
+$conn->query("CREATE TABLE IF NOT EXISTS modulelist (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    slno INT NOT NULL DEFAULT '99',
+    module_name VARCHAR(25) UNIQUE DEFAULT NULL,
+    module_icon VARCHAR(20) NOT NULL DEFAULT 'circle-square',
+    descrip VARCHAR(250) DEFAULT NULL,
+    entryby VARCHAR(120) DEFAULT NULL,
+    modifieddate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    is_public INT NOT NULL DEFAULT '1',
+    core INT NOT NULL DEFAULT '0'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+// Public Action: Return Public Modules Catalog from `modulelist` (WHERE is_public = 1)
+if ($method === 'GET' && ($action === 'modules' || ($_GET['type'] ?? '') === 'modules')) {
+    $sql = "SELECT id, slno, module_name, module_icon, descrip, is_public, core 
+            FROM modulelist 
+            WHERE is_public = 1 
+            ORDER BY slno ASC, module_name ASC";
+    $res = $conn->query($sql);
+    $modules = [];
+    if ($res) {
+        while ($row = $res->fetch_assoc()) {
+            $row['id'] = intval($row['id']);
+            $row['slno'] = intval($row['slno']);
+            $row['is_public'] = intval($row['is_public']);
+            $row['core'] = intval($row['core']);
+            $modules[] = $row;
+        }
+    }
+    api_response('success', 'Public modules loaded successfully.', [
+        'count' => count($modules),
+        'modules' => $modules
+    ]);
+}
+
 $user = null;
 $headers = function_exists('getallheaders') ? getallheaders() : [];
 $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
@@ -20,10 +60,6 @@ if (!empty($authHeader) && preg_match('/Bearer\s(\S+)/', $authHeader)) {
         $user = authenticate_token($conn);
     } catch (Exception $e) {}
 }
-
-$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-$input = get_api_input();
-$action = $_GET['action'] ?? $input['action'] ?? '';
 
 // Ensure support_requests table exists with full schema
 $conn->query("CREATE TABLE IF NOT EXISTS support_requests (
@@ -42,19 +78,6 @@ $conn->query("CREATE TABLE IF NOT EXISTS support_requests (
     submitted_by VARCHAR(100),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-
-// Ensure modulelist table exists
-$conn->query("CREATE TABLE IF NOT EXISTS modulelist (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    slno INT NOT NULL DEFAULT '99',
-    module_name VARCHAR(25) UNIQUE DEFAULT NULL,
-    module_icon VARCHAR(20) NOT NULL DEFAULT 'circle-square',
-    descrip VARCHAR(250) DEFAULT NULL,
-    entryby VARCHAR(120) DEFAULT NULL,
-    modifieddate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    is_public INT NOT NULL DEFAULT '1',
-    core INT NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 
 // ----------------------------------------------------

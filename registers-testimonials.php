@@ -118,7 +118,7 @@ if ($scinfo_query) {
                                     </td>
                                     <td>
                                         <span id="gpa_<?= $row['stid'] ?>"><?= $row['gpa'] > 0 ? $row['gpa'] : '' ?></span>
-                                        <span id="gla_<?= $row['stid'] ?>"><?= $row['gpa'] > 0 ? ' / ' . $row['gla'] : '' ?></span>
+                                        <span id="gla_<?= $row['stid'] ?>"><?= ($row['gpa'] > 0 && !empty($row['gla'])) ? ' / ' . $row['gla'] : '' ?></span>
                                     </td>
                                      <td class="text-center" id="action-cell-<?= $row['stid'] ?>">
                                          <div class="dropdown">
@@ -381,7 +381,7 @@ if ($scinfo_query) {
                     document.getElementById('board_roll_' + stid).textContent = formData.get('rollno');
                     document.getElementById('regd_no_' + stid).textContent = formData.get('regdno');
                     document.getElementById('gpa_' + stid).textContent = formData.get('gpa') > 0 ? formData.get('gpa') : '';
-                    document.getElementById('gla_' + stid).textContent = formData.get('gpa') > 0 ? ' / ' + response.gla : '';
+                    document.getElementById('gla_' + stid).textContent = (formData.get('gpa') > 0 && response.gla) ? ' / ' + response.gla : '';
                     document.getElementById('fname_' + stid).textContent = formData.get('fname');
                     document.getElementById('mname_' + stid).textContent = formData.get('mname');
 
