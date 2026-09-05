@@ -86,6 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    error_log("Updating student: " . $stid . " with GPA: " . $gpa . " and GLA: " . $gla);
     // Prepare the update statement
     $stmt = $conn->prepare("
         UPDATE students 
