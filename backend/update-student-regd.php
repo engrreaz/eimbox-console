@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   id ASC 
                 LIMIT 1
             ");
-            error_log(""
+            error_log("
                 SELECT gl FROM gpa 
                 WHERE (sccode = ? OR sccode = 0 OR sccode = '0' OR sccode IS NULL) 
                   AND gp <= ? 
@@ -61,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   gp DESC, 
                   id ASC 
                 LIMIT 1
-            "");
+            ");
             error_log($sscode . '/' . $numeric_gpa . '/'    . $sccode);
             if ($stmt_gla) {
                 $stmt_gla->bind_param("sds", $sccode, $numeric_gpa, $sccode);
