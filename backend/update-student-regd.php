@@ -52,17 +52,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   id ASC 
                 LIMIT 1
             ");
-            error_log("
-                SELECT gl FROM gpa 
-                WHERE (sccode = ? OR sccode = 0 OR sccode = '0' OR sccode IS NULL) 
-                  AND gp <= ? 
-                ORDER BY 
-                  (CASE WHEN sccode = ? THEN 1 WHEN sccode = 0 OR sccode = '0' THEN 2 ELSE 3 END) ASC,
-                  gp DESC, 
-                  id ASC 
-                LIMIT 1
-            ");
-            error_log($sccode . '/' . $numeric_gpa . '/'    . $sccode);
+   
+
             if ($stmt_gla) {
                 $stmt_gla->bind_param("sds", $sccode, $numeric_gpa, $sccode);
                 $stmt_gla->execute();
@@ -97,7 +88,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    error_log("Updating student: " . $stid . " with GPA: " . $gpa . " and GLA: " . $gla);
     // Prepare the update statement
     $stmt = $conn->prepare("
         UPDATE students  
