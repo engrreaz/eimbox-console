@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   id ASC 
                 LIMIT 1
             ");
-            error_log($sscode . '/' . $numeric_gpa . '/'    . $sccode);
+            error_log($sccode . '/' . $numeric_gpa . '/'    . $sccode);
             if ($stmt_gla) {
                 $stmt_gla->bind_param("sds", $sccode, $numeric_gpa, $sccode);
                 $stmt_gla->execute();
