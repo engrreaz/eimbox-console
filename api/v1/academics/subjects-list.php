@@ -72,7 +72,7 @@ while ($row = $res->fetch_assoc()) {
     ];
 }
 $stmt->close();
-
+error_log("subjects-list.php" . print_r($subjects, true));
 api_response('success', 'Subjects loaded successfully.', [
     'sccode' => $sccode,
     'class' => $className ?: 'All',

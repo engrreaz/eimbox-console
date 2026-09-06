@@ -362,7 +362,7 @@ foreach ($transactions as $tx) {
         ];
     }
 }
-
+error_log("batch-push.php" . print_r($results, true));
 api_response('success', 'Batch synchronization processed.', [
     'total_processed' => count($transactions),
     'synced_count' => $syncedCount,
