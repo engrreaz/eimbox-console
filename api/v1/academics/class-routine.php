@@ -220,7 +220,7 @@ if ($method === 'GET') {
     // Fetch Subjects for Class from subsetup with fallback to subjects table
     $subjects = [];
     $sStmt = $conn->prepare("SELECT ss.subject as subcode, ss.tid,
-                                    COALESCE(s.subject, CONCAT('Subject #', ss.subject)) as subname,
+                                    COALESCE(s.subject, '') as subname,
                                     COALESCE(s.subben, '') as subben,
                                     COALESCE(s.subshname, '') as shortname,
                                     t.tname as teacher_name

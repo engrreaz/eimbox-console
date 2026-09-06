@@ -33,7 +33,7 @@ if ($method === 'DELETE' || ($method === 'POST' && $action === 'delete')) {
     }
 
     if ($type === 'master') {
-        $stmt = $conn->prepare("DELETE FROM subjects WHERE id = ? AND sccode = ?");
+        $stmt = $conn->prepare("DELETE FROM subjects WHERE id = ? AND sccode = ? AND subcode BETWEEN 401 AND 800");
         $stmt->bind_param("ii", $id, $sccode);
         $stmt->execute();
         $affected = $stmt->affected_rows;
@@ -41,7 +41,7 @@ if ($method === 'DELETE' || ($method === 'POST' && $action === 'delete')) {
         if ($affected > 0) {
             api_response('success', 'Custom master subject removed successfully.', ['deleted_id' => $id]);
         } else {
-            api_response('error', 'Subject not found or cannot delete global subject.', null, 404);
+            api_response('error', 'Subject not found or cannot delete NCTB standard subject (Code outside 401-800).', null, 403);
         }
     } else {
         $stmt = $conn->prepare("DELETE FROM subsetup WHERE id = ? AND sccode = ?");
@@ -114,8 +114,12 @@ if ($method === 'POST' && ($action === 'save_master' || $action === 'save_master
         api_response('error', 'Subject code and Subject name in English are required.', null, 422);
     }
 
+    if ($subcode < 401 || $subcode > 800) {
+        api_response('error', "Institutional custom subject code must strictly be between 401 and 800. Provided code ($subcode) is outside allowed range.", null, 422);
+    }
+
     if ($id > 0) {
-        $stmt = $conn->prepare("UPDATE subjects SET subcode = ?, subject = ?, subben = ?, subshname = ?, fourth = ?, sup_class = ?, sccategory = ?, modifieddate = NOW() WHERE id = ? AND sccode = ?");
+        $stmt = $conn->prepare("UPDATE subjects SET subcode = ?, subject = ?, subben = ?, subshname = ?, fourth = ?, sup_class = ?, sccategory = ?, modifieddate = NOW() WHERE id = ? AND sccode = ? AND subcode BETWEEN 401 AND 800");
         $stmt->bind_param("isssissii", $subcode, $subjectEn, $subjectBn, $subshname, $fourth, $supClass, $category, $id, $sccode);
         $stmt->execute();
         $stmt->close();
@@ -347,7 +351,7 @@ if ($method === 'GET') {
                        COALESCE(
                          (SELECT s.subject FROM subjects s WHERE s.subcode = ss.subject AND (s.sccode = ss.sccode OR s.sccode = 0) AND (s.sccategory = ? OR s.sccategory = '' OR s.sccategory IS NULL OR s.sccode = ss.sccode) ORDER BY (s.sccode = ss.sccode) DESC, s.sccode DESC LIMIT 1),
                          (SELECT s.subject FROM subjects s WHERE s.subcode = ss.subject AND (s.sccode = ss.sccode OR s.sccode = 0) ORDER BY (s.sccode = ss.sccode) DESC, s.sccode DESC LIMIT 1),
-                         CONCAT('Subject #', ss.subject)
+                         ''
                        ) as subject_name,
                        COALESCE(
                          (SELECT s.subben FROM subjects s WHERE s.subcode = ss.subject AND (s.sccode = ss.sccode OR s.sccode = 0) AND (s.sccategory = ? OR s.sccategory = '' OR s.sccategory IS NULL OR s.sccode = ss.sccode) ORDER BY (s.sccode = ss.sccode) DESC, s.sccode DESC LIMIT 1),

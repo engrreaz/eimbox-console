@@ -84,8 +84,13 @@ foreach ($deletions as $del) {
     $conn->begin_transaction();
     try {
         // 1. Delete from target table
-        $delStmt = $conn->prepare("DELETE FROM `{$tbl}` WHERE `id` = ? AND (`sccode` = ? OR `sccode` = 0)");
-        $delStmt->bind_param('ii', $serverId, $sccode);
+        if ($tbl === 'subjects') {
+            $delStmt = $conn->prepare("DELETE FROM `subjects` WHERE `id` = ? AND `sccode` = ? AND `subcode` BETWEEN 401 AND 800");
+            $delStmt->bind_param('ii', $serverId, $sccode);
+        } else {
+            $delStmt = $conn->prepare("DELETE FROM `{$tbl}` WHERE `id` = ? AND `sccode` = ?");
+            $delStmt->bind_param('ii', $serverId, $sccode);
+        }
         $delStmt->execute();
         $affected = $delStmt->affected_rows;
         $delStmt->close();

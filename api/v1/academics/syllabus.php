@@ -118,7 +118,7 @@ if ($method === 'GET') {
 
     // Fetch Subjects for this class
     $subjects = [];
-    $sStmt = $conn->prepare("SELECT ss.subject as subcode, COALESCE(s.subject, CONCAT('Subject #', ss.subject)) as subname, COALESCE(s.subshname, '') as shortname 
+    $sStmt = $conn->prepare("SELECT ss.subject as subcode, COALESCE(s.subject, '') as subname, COALESCE(s.subshname, '') as shortname 
                             FROM subsetup ss 
                             LEFT JOIN subjects s ON (s.subcode = ss.subject AND (s.sccode = 0 OR s.sccode = ss.sccode))
                             WHERE ss.sccode = ? AND ss.sessionyear = ? AND ss.classname = ?

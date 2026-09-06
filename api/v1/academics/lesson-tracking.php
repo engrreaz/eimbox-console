@@ -210,7 +210,7 @@ if ($method === 'GET') {
             'period' => intval($r['period']),
             'period_label' => "Period {$r['period']}",
             'subcode' => intval($r['subcode']),
-            'subject_name' => $r['subject_name'] ?: ($r['subcode'] ? "Subject #{$r['subcode']}" : 'General Class'),
+            'subject_name' => $r['subject_name'] ?: '',
             'tid' => intval($r['tid']),
             'teacher_name' => $r['teacher_name'] ?: 'Faculty',
             'topic_covered' => $r['topic_covered'],

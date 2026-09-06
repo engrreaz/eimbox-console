@@ -303,6 +303,15 @@ foreach ($transactions as $tx) {
             if (!in_array($targetTable, ['notice_category', 'ben_address', 'permissions_role', 'account_head_default', 'app_releases', 'app_roadmap', 'faq_desktop'])) {
                 $rowRecord['sccode'] = $sccode;
             }
+
+            // Enforce 401-800 code range strictly for subjects table
+            if ($targetTable === 'subjects') {
+                $subcodeVal = intval($rowRecord['subcode'] ?? 0);
+                if ($subcodeVal < 401 || $subcodeVal > 800) {
+                    throw new Exception("Custom subject code must strictly be between 401 and 800. Subcode ({$subcodeVal}) is outside allowed range.");
+                }
+            }
+
             $rowRecord['modifieddate'] = date('Y-m-d H:i:s');
 
             $existingId = intval($rowRecord['id'] ?? 0);
