@@ -113,7 +113,7 @@ if ($tableName === 'subjects') {
         $sccategory = 'School';
     }
 
-    $where[] = "(LOWER(sccategory) = LOWER(?) OR sccategory = '' OR sccategory IS NULL OR sccode = ?)";
+    $where[] = "(LOWER(sccategory) = LOWER(?) OR sccode = ?)";
     $params[] = $sccategory;
     $params[] = $activeSccode;
     $types .= "si";
