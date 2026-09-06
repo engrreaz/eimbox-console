@@ -94,6 +94,31 @@ if (!empty($since) && strtotime($since)) {
     $types .= "s";
 }
 
+// Category filter for subjects table (e.g. School, Madrasah, College)
+if ($tableName === 'subjects') {
+    $sccategory = trim($_GET['sccategory'] ?? $_GET['category'] ?? '');
+    if (empty($sccategory)) {
+        $scStmt = $conn->prepare("SELECT sccategory FROM scinfo WHERE sccode = ? LIMIT 1");
+        if ($scStmt) {
+            $scStmt->bind_param("i", $activeSccode);
+            $scStmt->execute();
+            $scRes = $scStmt->get_result();
+            if ($scRow = $scRes->fetch_assoc()) {
+                $sccategory = trim($scRow['sccategory'] ?? '');
+            }
+            $scStmt->close();
+        }
+    }
+    if (empty($sccategory)) {
+        $sccategory = 'School';
+    }
+
+    $where[] = "(LOWER(sccategory) = LOWER(?) OR sccategory = '' OR sccategory IS NULL OR sccode = ?)";
+    $params[] = $sccategory;
+    $params[] = $activeSccode;
+    $types .= "si";
+}
+
 $whereClause = !empty($where) ? "WHERE " . implode(" AND ", $where) : "";
 $sql = "SELECT * FROM `{$tableName}` {$whereClause} ORDER BY id ASC LIMIT 25000";
 error_log($sql);
