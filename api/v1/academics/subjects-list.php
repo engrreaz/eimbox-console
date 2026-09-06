@@ -38,11 +38,12 @@ if (empty($sccategory)) {
 $stmt = $conn->prepare("SELECT id, sccode, sccategory, subcode, subject AS subname, subben AS subname_bn, subshname AS shortname, ncode, fourth, sup_class 
 FROM subjects 
 WHERE (sccode = ? OR sccode = 0)
-  AND (sccategory = ? OR sccategory = '' OR sccategory IS NULL)
+  AND sccategory = ?
 ORDER BY subcode ASC, (sccode = ?) DESC");
 $stmt->bind_param('isi', $sccode, $sccategory, $sccode);
 $stmt->execute();
 $res = $stmt->get_result();
+
 
 $subjects = [];
 $seenSubcodes = [];

@@ -138,6 +138,9 @@ if (!empty($since) && strtotime($since)) {
     }
 }
 
+
+error_log("table-pull.php". print_r($rows, true));
+
 $responseData = [
     'table' => $tableName,
     'sccode' => $activeSccode,
