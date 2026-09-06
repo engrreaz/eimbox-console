@@ -28,7 +28,8 @@ $allowedTables = [
     'usersapp', 'permissions_role', 'user_custom_permissions',
     'account_head', 'account_sub_head', 'bankinfo', 'banktrans', 'cashbook',
     'account_head_default', 'account_sub_head_default',
-    'app_releases', 'app_roadmap', 'faq_desktop'
+    'app_releases', 'app_roadmap', 'faq_desktop',
+    'tabulatingsheet', 'tabulatingsheetex', 'tabulatingsheetpibi'
 ];
 
 if (empty($tableName) || !in_array($tableName, $allowedTables)) {
@@ -78,7 +79,8 @@ if (in_array($tableName, $tablesWithoutSccode)) {
 $sessionAwareTables = [
     'examroutine', 'examlist', 'areas', 'sessioninfo', 'subsetup', 
     'stmark', 'stattnd', 'stfinance', 'stpr', 'classschedule', 
-    'clsroutine', 'syllabus', 'lesson_tracking', 'cashbook'
+    'clsroutine', 'syllabus', 'lesson_tracking', 'cashbook',
+    'tabulatingsheet', 'tabulatingsheetex', 'tabulatingsheetpibi'
 ];
 
 if (!empty($session) && in_array($tableName, $sessionAwareTables)) {

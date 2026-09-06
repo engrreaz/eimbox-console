@@ -36,7 +36,8 @@ $allowedTables = [
     'usersapp', 'permissions_role', 'user_custom_permissions',
     'account_head', 'account_sub_head', 'bankinfo', 'banktrans', 'cashbook',
     'account_head_default', 'account_sub_head_default',
-    'app_releases', 'app_roadmap', 'faq_desktop'
+    'app_releases', 'app_roadmap', 'faq_desktop',
+    'tabulatingsheet', 'tabulatingsheetex', 'tabulatingsheetpibi'
 ];
 
 $results = [];
