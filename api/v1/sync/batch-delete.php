@@ -126,7 +126,6 @@ foreach ($deletions as $del) {
 if ($tombStmt) {
     $tombStmt->close();
 }
-error_log("batch-delete.php" . print_r($results, true));
 api_response('success', "Processed {$deletedCount} deletions successfully.", [
     'sccode' => $sccode,
     'deleted_count' => $deletedCount,
