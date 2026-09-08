@@ -13,7 +13,7 @@ echo '<option value=""></option>';
 $q = "SELECT MAX(idno) as idno, areaname FROM areas 
     WHERE sccode='$sccode' AND slot='$slot' AND sessionyear='$session' 
     GROUP BY areaname order by idno";
-      echo $q;
+      error_log($q);
 
 $r = $conn->query($q);
 while ($row = $r->fetch_assoc()) {
