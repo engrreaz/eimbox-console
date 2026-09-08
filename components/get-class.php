@@ -18,3 +18,4 @@ while ($r = mysqli_fetch_assoc($q)) {
 }
 error_log(print_r($data, true));
 echo json_encode($data);
+ 
