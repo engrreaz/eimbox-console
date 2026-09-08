@@ -11,7 +11,7 @@ $sy = $_COOKIE['chain-session'] ?? $y_v4;
 echo '<option value=""></option>';
 
 $q = "SELECT MAX(idno) as idno, areaname FROM areas 
-    WHERE sccode='$sccode' AND slot='$slot' AND sessionyear='$session' 
+    WHERE sccode='$sccode' AND slot='$slot' AND sessionyear='$sessionyear' 
     GROUP BY areaname order by idno";
       error_log($q);
 
