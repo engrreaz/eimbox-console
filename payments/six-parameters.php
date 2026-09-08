@@ -2,11 +2,11 @@
 
     <!-- TYPE -->
     <div class="col-md-2">
-        <label class="form-label small">Type</label>
-        <select class="form-select form-select-sm" name="type" id="type-main" disabled>
-            <option value="">Overall</option>
-            <option value="item">Item</option>
-            <option value="student">Student</option>
+        <label class="form-label small fw-semibold">Filter Type</label>
+        <select class="form-select form-select-sm" name="type" id="type-main">
+            <option value="">Overall (All)</option>
+            <option value="item">Specific Item</option>
+            <option value="student">Specific Student</option>
             <option value="class">Class</option>
             <option value="section">Section</option>
         </select>
@@ -14,26 +14,32 @@
 
     <!-- PART -->
     <div class="col-md-2">
-        <label class="form-label small">Range</label>
-        <select class="form-select form-select-sm" name="part" id="part-main" disabled>
-            <option value="">Full Range</option>
-            <option value="ind">Individual</option>
+        <label class="form-label small fw-semibold">Range</label>
+        <select class="form-select form-select-sm" name="part" id="part-main">
+            <option value="all">Full Range (All Items)</option>
+            <option value="ind">Individual Setup</option>
         </select>
     </div>
 
     <!-- ITEM / CODE -->
     <div class="col-md-2">
-        <label class="form-label small">Item / Code</label>
-        <select class="form-select form-select-sm" name="icode" id="icode-main" disabled>
-            <option value=""></option>
+        <label class="form-label small fw-semibold">Fee Item</label>
+        <select class="form-select form-select-sm" name="icode" id="icode-main">
+            <option value="">-- All Items --</option>
             <?php
-            $q = "SELECT itemcode, particulareng 
+            $q = "SELECT itemcode, particulareng, particularben 
                   FROM financesetup
                   WHERE sccode='$sccode' AND sessionyear LIKE '%$sy%'
-                  ORDER BY particulareng";
+                  ORDER BY slno ASC, particulareng ASC";
             $r = $conn->query($q);
-            while ($row = $r->fetch_assoc()) {
-                echo "<option value='{$row['itemcode']}'>{$row['particulareng']}</option>";
+            if ($r && $r->num_rows > 0) {
+                while ($row = $r->fetch_assoc()) {
+                    $itemTitle = htmlspecialchars($row['particulareng']);
+                    if (!empty($row['particularben'])) {
+                        $itemTitle .= " (" . htmlspecialchars($row['particularben']) . ")";
+                    }
+                    echo "<option value='{$row['itemcode']}'>{$itemTitle}</option>";
+                }
             }
             ?>
         </select>
@@ -41,25 +47,27 @@
 
     <!-- STUDENT -->
     <div class="col-md-2">
-        <label class="form-label small">Student ID</label>
+        <label class="form-label small fw-semibold">Student ID</label>
         <input type="text" class="form-control form-control-sm"
                name="stid" id="student-main"
-               placeholder="Student ID" disabled>
+               placeholder="e.g. 2026001">
     </div>
 
     <!-- CLASS -->
     <div class="col-md-2">
-        <label class="form-label small">Class</label>
-        <select class="form-select form-select-sm" name="cls" id="class-main" disabled>
-            <option value=""></option>
+        <label class="form-label small fw-semibold">Class</label>
+        <select class="form-select form-select-sm" name="cls" id="class-main">
+            <option value="">-- All Classes --</option>
             <?php
             $q = "SELECT DISTINCT areaname
                   FROM areas
                   WHERE sccode='$sccode' AND sessionyear LIKE '%$sy%'
-                  ORDER BY areaname";
+                  ORDER BY idno ASC, areaname ASC";
             $r = $conn->query($q);
-            while ($row = $r->fetch_assoc()) {
-                echo "<option value='{$row['areaname']}'>{$row['areaname']}</option>";
+            if ($r && $r->num_rows > 0) {
+                while ($row = $r->fetch_assoc()) {
+                    echo "<option value='{$row['areaname']}'>{$row['areaname']}</option>";
+                }
             }
             ?>
         </select>
@@ -67,16 +75,19 @@
 
     <!-- SECTION -->
     <div class="col-md-2">
-        <label class="form-label small">Section</label>
-        <select class="form-select form-select-sm" name="sec" id="section-main" disabled>
-            <option value=""></option>
+        <label class="form-label small fw-semibold">Section</label>
+        <select class="form-select form-select-sm" name="sec" id="section-main">
+            <option value="">-- All Sections --</option>
         </select>
     </div>
 
 </div>
 
-<div class="col-md-12 text-end mt-2">
+<div class="col-md-12 text-end mb-3">
+    <button type="button" class="btn btn-sm btn-outline-secondary me-2" onclick="window.location.href='sync-payments.php'">
+        <i class="bi bi-arrow-counterclockwise me-1"></i> Clear Filter
+    </button>
     <button type="button" class="btn btn-sm btn-primary" id="applyFilter">
-        <i class="bi bi-funnel"></i>&nbsp; Apply Filter
+        <i class="bi bi-funnel me-1"></i> Apply Filter
     </button>
 </div>

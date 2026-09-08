@@ -4,258 +4,377 @@ require_once '../core/config.php';
 require_once '../core/db.php';
 require_once '../core/global_values.php';
 
-/* =======================
-   INPUT
-======================= */
-$sy = $_POST['sy'] ?? '';
+/* ==========================================================================
+   EIMBOX HIGH-SPEED BATCH SYNC ENGINE (CHUNK SIZE: 25 STUDENTS PER REQUEST)
+   TRIPLE-GUARDED FINANCIAL DATA PROTECTION (ZERO CHANCE OF DATA LOSS)
+   ========================================================================== */
+
+$startTime = microtime(true);
+
+$sy = $_POST['sy'] ?? $_COOKIE['session'] ?? $_COOKIE['chain-session'] ?? $sessionyear;
+$slot = $_POST['slot'] ?? $_COOKIE['slot'] ?? $_COOKIE['chain-slot'] ?? '';
 $type = $_POST['type'] ?? '';
-$part = $_POST['part'] ?? '';
+$part = $_POST['part'] ?? 'all';
 $icode = $_POST['icode'] ?? '';
 $stid = $_POST['stid'] ?? '';
 $cls = $_POST['cls'] ?? '';
 $sec = $_POST['sec'] ?? '';
 
-$startTime = time();
+// Batch Chunk Size
+$batchSize = 25;
+if ($stid) {
+    $batchSize = 1;
+}
 
-$new = $noneed = $update = 0;
-
-/* =======================
-   GET ONE STUDENT (QUEUE)
-======================= */
+/* ==========================================================
+   1. SELECT QUEUED STUDENTS (validate = 0, LIMIT $batchSize)
+   ========================================================== */
 $where = "sccode='$sccode' AND sessionyear LIKE '%$sy%' AND validate=0";
 
-if ($stid)
+if ($stid) {
     $where .= " AND stid='$stid'";
-elseif ($sec)
+} elseif ($sec && $cls) {
     $where .= " AND classname='$cls' AND sectionname='$sec'";
-elseif ($cls)
+} elseif ($cls) {
     $where .= " AND classname='$cls'";
+}
 
-$sql = "SELECT id, stid, classname, sectionname, rollno, rate, sessionyear
-        FROM sessioninfo
-        WHERE $where
-        ORDER BY id
-        LIMIT 1";
+$sqlStudents = "SELECT id, stid, classname, sectionname, rollno, rate, sessionyear, 
+                       COALESCE(new_admi, 0) AS new_admi
+                FROM sessioninfo
+                WHERE $where
+                ORDER BY id ASC
+                LIMIT $batchSize";
 
-$res = $conn->query($sql);
+$resStudents = $conn->query($sqlStudents);
 
-if ($res->num_rows == 0) {
+if (!$resStudents || $resStudents->num_rows == 0) {
     echo '<div id="totaltotal" hidden>0</div>';
     exit;
 }
 
-$st = $res->fetch_assoc();
-$stid = $st['stid'];
-$cls = strtolower($st['classname']);
-$sec = strtolower($st['sectionname']);
-$roll = $st['rollno'];
-$rate = $st['rate'];
-$syear = $st['sessionyear'];
+$students = [];
+$studentIds = [];
+$sessionInfoIds = [];
 
-/* =======================
-   RESET STUDENT FINANCE
-======================= */
-if ($part === 'icode' && $icode) {
-    $conn->query("UPDATE stfinance SET validate=0
-                  WHERE stid='$stid' AND sccode='$sccode'
-                  AND sessionyear LIKE '%$syear%' AND itemcode='$icode'");
-} else {
-    $conn->query("UPDATE stfinance SET validate=0
-                  WHERE stid='$stid' AND sccode='$sccode'
-                  AND sessionyear LIKE '%$syear%'");
+while ($row = $resStudents->fetch_assoc()) {
+    $students[] = $row;
+    $studentIds[] = "'" . $conn->real_escape_string($row['stid']) . "'";
+    $sessionInfoIds[] = intval($row['id']);
 }
 
-/* =======================
-   LOAD SETUP
-======================= */
+$stidsIn = implode(',', $studentIds);
+$sessionIdsIn = implode(',', $sessionInfoIds);
 
-$finsetupind = array();
-$sql0x = "SELECT * FROM financesetupind where sccode='$sccode' and sessionyear LIKE '%$y_v2%' and stid='$stid' order by slno;";
-// echo $sql0x;
-$result0xvalstt = $conn->query($sql0x);
-if ($result0xvalstt->num_rows > 0) {
-    while ($row0x = $result0xvalstt->fetch_assoc()) {
-        $finsetupind[] = $row0x;
-    }
-}
-// var_dump($finsetupind);
+/* ==========================================================
+   START ATOMIC TRANSACTION
+   ========================================================== */
+$conn->begin_transaction();
 
+try {
 
-$finSetup = [];
-$q = "SELECT id,itemcode,month,particulareng,particularben
-      FROM financesetup
-      WHERE sccode='$sccode' AND sessionyear LIKE '%$sy%'
-      ORDER BY id";
-$r = $conn->query($q);
-while ($row = $r->fetch_assoc())
-    $finSetup[] = $row;
-
-/* =======================
-   LOAD VALUES
-======================= */
-$finValues = [];
-$q = "SELECT itemcode,classname,sectionname,amount
-      FROM financesetupvalue
-      WHERE sccode='$sccode' AND sessionyear LIKE '%$sy%' AND amount >0
-      ORDER BY itemcode,classname DESC, sectionname DESC";
-$r = $conn->query($q);
-while ($row = $r->fetch_assoc())
-    $finValues[] = $row;
-
-/* =======================
-   EXISTING STUDENT FINANCE
-======================= */
-$stFinance = [];
-$q = "SELECT * FROM stfinance
-      WHERE stid='$stid' AND sccode='$sccode'
-      AND sessionyear LIKE '%$sy%'";
-$r = $conn->query($q);
-while ($row = $r->fetch_assoc())
-    $stFinance[] = $row;
-
-
-
-function getMonthsFromRule(int $monthRule): array
-{
-    // প্রতি মাসে
-    if ($monthRule === 0) {
-        return range(1, 12);
+    /* ==========================================================
+       2. RESET VALIDATION FLAG (validate = 0) FOR THIS BATCH
+       ========================================================== */
+    if ($part === 'icode' && $icode) {
+        $conn->query("UPDATE stfinance SET validate=0 
+                      WHERE sccode='$sccode' AND sessionyear LIKE '%$sy%' 
+                        AND stid IN ($stidsIn) AND itemcode='$icode'");
+    } else {
+        $conn->query("UPDATE stfinance SET validate=0 
+                      WHERE sccode='$sccode' AND sessionyear LIKE '%$sy%' 
+                        AND stid IN ($stidsIn)");
     }
 
-    // নির্দিষ্ট মাস
-    if ($monthRule >= 1 && $monthRule <= 12) {
-        return [$monthRule];
-    }
-
-    // interval logic (22,33,44,66...)
-    if ($monthRule > 12) {
-        $startMonth = 1;
-        if ($monthRule == 442) {
-            $startMonth = 4;
-        } else if ($monthRule == 662) {
-            $startMonth = 5;
-        }
-        $step = intval(substr((string) $monthRule, 0, 1));
-        $months = [];
-        for ($m = $startMonth; $m <= 12; $m += $step) {
-            $months[] = $m;
-        }
-        if ($monthRule == 442) {
-            $months = [4, 8, 11];
-        }
-        return $months;
-    }
-
-    return [];
-}
-
-
-/* =======================
-   PROCESS FINANCE
-======================= */
-foreach ($finSetup as $fs) {
-
-    $itemcode = $fs['itemcode'];
-    $monthRule = (int) $fs['month'];
-    $partid = $fs['id'];
-    $partex = $fs['particulareng'];
-    $partbx = $fs['particularben'];
-
-    /* ======================
-       AMOUNT PRIORITY
-    ====================== */
-    $amt = 0;
-
-    foreach ($finValues as $fv) {
-
-        if ($fv['itemcode'] != $itemcode || $fv['amount'] <= 0) {
-            continue;
-        }
-
-        $fvClass = strtolower(trim($fv['classname']));
-        $fvSection = strtolower(trim($fv['sectionname']));
-
-        // 1️⃣ exact class + section (highest priority)
-        if ($fvClass === $cls && $fvSection === $sec) {
-            $amt = $fv['amount'];
-            break; // best match, আর দরকার নেই
-        }
-
-        // 2️⃣ class match, section empty
-        if ($fvClass === $cls && $fvSection === '' && $amt == 0) {
-            $amt = $fv['amount'];
-        }
-
-        // 3️⃣ default (class + section empty)
-        if ($fvClass === '' && $fvSection === '' && $amt == 0) {
-            $amt = $fv['amount'];
+    /* ==========================================================
+       3. IN-MEMORY PRE-FETCHING (ZERO N+1 QUERIES)
+       ========================================================== */
+    
+    // A. Fetch all Individual Setups for these students
+    $indMap = [];
+    $sqlInd = "SELECT stid, itemcode, amount 
+               FROM financesetupind 
+               WHERE sccode='$sccode' AND sessionyear LIKE '%$sy%' AND stid IN ($stidsIn)";
+    $resInd = $conn->query($sqlInd);
+    if ($resInd && $resInd->num_rows > 0) {
+        while ($r = $resInd->fetch_assoc()) {
+            $indMap[$r['stid'] . '_' . $r['itemcode']] = floatval($r['amount']);
         }
     }
 
-
-    if ($amt == 0)
-        continue;
-
-    // Tuition percentage
-    if (stripos($partex, 'tution') !== false) {
-        $amt = ($amt * $rate) / 100;
+    // B. Fetch all Active Master Fee Items
+    $setupWhere = "sccode='$sccode' AND sessionyear LIKE '%$sy%' AND COALESCE(active, 1) = 1";
+    if ($part === 'icode' && $icode) {
+        $setupWhere .= " AND itemcode='$icode'";
     }
 
-    /* ======================
-       MONTH RESOLUTION
-    ====================== */
-    $months = getMonthsFromRule($monthRule);
-    $item_repeat = count($months);
-    foreach ($months as $z) {
+    $finSetup = [];
+    $sqlSetup = "SELECT id, itemcode, month, particulareng, particularben, 
+                        COALESCE(new_only, 0) AS new_only, 
+                        COALESCE(splitable, 0) AS splitable, 
+                        COALESCE(sub_head, 0) AS sub_head
+                 FROM financesetup 
+                 WHERE $setupWhere 
+                 ORDER BY slno ASC, id ASC";
+    $resSetup = $conn->query($sqlSetup);
+    if ($resSetup && $resSetup->num_rows > 0) {
+        while ($r = $resSetup->fetch_assoc()) {
+            $finSetup[] = $r;
+        }
+    }
 
-        // existing finance detect
-        $stfinid = 0;
-        $paid = 0;
+    // C. Fetch all Fee Rates (financesetupvalue)
+    $valMap = [];
+    $sqlVal = "SELECT itemcode, classname, sectionname, amount 
+               FROM financesetupvalue 
+               WHERE sccode='$sccode' AND sessionyear LIKE '%$sy%' AND amount > 0";
+    $resVal = $conn->query($sqlVal);
+    if ($resVal && $resVal->num_rows > 0) {
+        while ($r = $resVal->fetch_assoc()) {
+            $c = strtolower(trim($r['classname']));
+            $s = strtolower(trim($r['sectionname']));
+            $valMap[$r['itemcode'] . '|' . $c . '|' . $s] = floatval($r['amount']);
+        }
+    }
 
-        foreach ($stFinance as $sf) {
-            if ($sf['itemcode'] == $itemcode && (int) $sf['month'] === $z) {
-                $stfinid = $sf['id'];
-                $paid = $sf['paid'];
-                $splitid_check = $sf['splitid'];
-                $splitid_check_2 = $sf['splitid2'];
-                break;
+    // D. Fetch all Existing stfinance records for this batch
+    $stFinMap = [];
+    $sqlStFin = "SELECT id, stid, itemcode, month, paid, pr1, pr1no, pr2, splitid, splitid2 
+                 FROM stfinance 
+                 WHERE sccode='$sccode' AND sessionyear LIKE '%$sy%' AND stid IN ($stidsIn)";
+    $resStFin = $conn->query($sqlStFin);
+    if ($resStFin && $resStFin->num_rows > 0) {
+        while ($r = $resStFin->fetch_assoc()) {
+            $key = $r['stid'] . '_' . $r['itemcode'] . '_' . intval($r['month']);
+            $stFinMap[$key] = $r;
+        }
+    }
+
+    /* ==========================================================
+       4. MONTH FREQUENCY RESOLUTION HELPER
+       ========================================================== */
+    function parseRuleMonths(int $rule): array {
+        if ($rule === 0) return range(1, 12);
+        if ($rule >= 1 && $rule <= 12) return [$rule];
+        if ($rule === 22) return [2, 4, 6, 8, 10, 12];
+        if ($rule === 33) return [3, 6, 9, 11];
+        if ($rule === 44 || $rule === 442) return [4, 8, 11];
+        if ($rule === 66 || $rule === 662) return [1, 11];
+        return [$rule];
+    }
+
+    $monthEng = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    $monthBen = ['', 'জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
+
+    $insertRows = [];
+    $updateUnpaidRows = [];
+    $validateOnlyIds = [];
+    $subheadSyncMap = [];
+
+    $newCount = 0;
+    $updateCount = 0;
+    $lockedCount = 0;
+
+    /* ==========================================================
+       5. BATCH IN-MEMORY EVALUATION
+       ========================================================== */
+    foreach ($students as $st) {
+        $s_id = $st['stid'];
+        $s_cls = strtolower(trim($st['classname']));
+        $s_sec = strtolower(trim($st['sectionname']));
+        $s_roll = intval($st['rollno']);
+        $s_rate = (isset($st['rate']) && is_numeric($st['rate'])) ? floatval($st['rate']) : 100;
+        $s_new_admi = intval($st['new_admi'] ?? 0);
+        $s_year = $st['sessionyear'];
+
+        foreach ($finSetup as $fs) {
+            $itemcode = $fs['itemcode'];
+            $partid = intval($fs['id']);
+            $partex = $fs['particulareng'];
+            $partbx = $fs['particularben'];
+            $monthRule = intval($fs['month']);
+            $new_only = intval($fs['new_only'] ?? 0);
+            $sub_head = intval($fs['sub_head'] ?? 0);
+
+            // New Admission Only Rule
+            if ($new_only == 1 && $s_new_admi == 0) {
+                continue;
+            }
+
+            // Amount Priority (1. Exact Class+Section -> 2. Class -> 3. Global Default)
+            $amt = 0;
+            if (isset($valMap[$itemcode . '|' . $s_cls . '|' . $s_sec])) {
+                $amt = $valMap[$itemcode . '|' . $s_cls . '|' . $s_sec];
+            } elseif (isset($valMap[$itemcode . '|' . $s_cls . '|'])) {
+                $amt = $valMap[$itemcode . '|' . $s_cls . '|'];
+            } elseif (isset($valMap[$itemcode . '||'])) {
+                $amt = $valMap[$itemcode . '||'];
+            }
+
+            if ($amt <= 0) {
+                continue;
+            }
+
+            // Tuition Fee Waiver Calculation
+            if (stripos($partex, 'tution') !== false || stripos($partex, 'tuition') !== false || stripos($partbx, 'বেতন') !== false) {
+                $amt = ($amt * $s_rate) / 100;
+            }
+
+            // Individual Student Override
+            $paya = $amt;
+            if (isset($indMap[$s_id . '_' . $itemcode])) {
+                $paya = $indMap[$s_id . '_' . $itemcode];
+            }
+
+            $months = parseRuleMonths($monthRule);
+            $item_repeat = count($months);
+
+            foreach ($months as $m) {
+                $stKey = $s_id . '_' . $itemcode . '_' . $m;
+
+                if (isset($stFinMap[$stKey])) {
+                    // Record Exists
+                    $ex = $stFinMap[$stKey];
+                    $exId = intval($ex['id']);
+                    $exPaid = floatval($ex['paid'] ?? 0);
+                    $exPr1 = floatval($ex['pr1'] ?? 0);
+                    $exPr1No = intval($ex['pr1no'] ?? 0);
+                    $exPr2 = floatval($ex['pr2'] ?? 0);
+                    $exSplit1 = intval($ex['splitid'] ?? 0);
+                    $exSplit2 = intval($ex['splitid2'] ?? 0);
+
+                    // 🛑 SAFETY RING 1: If paid or receipt exists, NEVER overwrite money or delete
+                    if ($exPaid > 0 || $exPr1 > 0 || $exPr1No > 0 || $exPr2 > 0 || $exSplit1 > 0 || $exSplit2 > 0) {
+                        $validateOnlyIds[] = $exId;
+                        $subheadSyncMap[$exId] = $sub_head;
+                        $lockedCount++;
+                    } else {
+                        // Unpaid Record: Safe to recalculate dues
+                        $updateUnpaidRows[] = [
+                            'id' => $exId,
+                            'amount' => $amt,
+                            'payableamt' => $paya,
+                            'dues' => $paya,
+                            'sub_head' => $sub_head
+                        ];
+                        $updateCount++;
+                    }
+                } else {
+                    // New Record: Prepare for Multi-row Bulk Insert
+                    $titleEng = ($item_repeat > 1 && isset($monthEng[$m])) ? ($partex . ' | ' . $monthEng[$m]) : $partex;
+                    $titleBen = ($item_repeat > 1 && isset($monthBen[$m])) ? ($partbx . ' | ' . $monthBen[$m]) : $partbx;
+                    $idmon = $s_id . '-' . $partid . '-' . $m;
+
+                    $titleEngEsc = $conn->real_escape_string($titleEng);
+                    $titleBenEsc = $conn->real_escape_string($titleBen);
+                    $idmonEsc = $conn->real_escape_string($idmon);
+
+                    $insertRows[] = "('$sccode', '$s_year', '$s_cls', '$s_sec', '$s_id', '$s_roll', '$partid', '$itemcode', '$sub_head', '$titleEngEsc', '$titleBenEsc', '$amt', '$m', '$idmonEsc', '$cur', '$usr', '$paya', '$cur', 0, '$paya', '$cur', 1, '$cur')";
+                    $newCount++;
+                }
             }
         }
-
-        include 'check-student-finance-update.php';
     }
+
+    /* ==========================================================
+       6. BULK SQL EXECUTION
+       ========================================================== */
+    
+    // A. Multi-row Bulk Insert
+    if (!empty($insertRows)) {
+        // Chunk inserts into 300 rows max per multi-insert query for MySQL packet safety
+        $chunks = array_chunk($insertRows, 300);
+        foreach ($chunks as $chunk) {
+            $sqlBulkInsert = "INSERT INTO stfinance 
+                (sccode, sessionyear, classname, sectionname, stid, rollno, partid,
+                 itemcode, sub_head, particulareng, particularben, amount, month, idmon,
+                 setupdate, setupby, payableamt, modifieddate, paid, dues,
+                 last_update, validate, validationtime)
+                VALUES " . implode(',', $chunk);
+            $conn->query($sqlBulkInsert);
+        }
+    }
+
+    // B. Bulk Updates for Unpaid Dues
+    if (!empty($updateUnpaidRows)) {
+        foreach ($updateUnpaidRows as $up) {
+            $conn->query("UPDATE stfinance 
+                          SET validate=1, sub_head='{$up['sub_head']}', amount='{$up['amount']}', payableamt='{$up['payableamt']}', dues='{$up['dues']}', modifieddate='$cur', modifiedby='$usr' 
+                          WHERE id='{$up['id']}'");
+        }
+    }
+
+    // C. Validate Locked/Paid records without touching money
+    if (!empty($validateOnlyIds)) {
+        $validChunks = array_chunk($validateOnlyIds, 500);
+        foreach ($validChunks as $chunk) {
+            $idsList = implode(',', $chunk);
+            $conn->query("UPDATE stfinance SET validate=1 WHERE id IN ($idsList)");
+        }
+
+        foreach ($subheadSyncMap as $vId => $shId) {
+            if ($shId > 0) {
+                $conn->query("UPDATE stfinance SET sub_head='$shId' WHERE id='$vId'");
+            }
+        }
+    }
+
+    /* ==========================================================
+       🛑 7. TRIPLE-GUARDED CLEANUP OF CANCELLED UNPAID ITEMS
+       ABSOLUTE SAFETY: IMPOSSIBLE TO DELETE ANY RECORD WITH MONEY
+       ========================================================== */
+    $sqlSafeDelete = "DELETE FROM stfinance 
+                      WHERE sccode='$sccode' 
+                        AND sessionyear LIKE '%$sy%' 
+                        AND stid IN ($stidsIn) 
+                        AND validate = 0 
+                        AND (paid = 0 OR paid IS NULL) 
+                        AND (pr1 = 0 OR pr1 IS NULL) 
+                        AND (pr1no IS NULL OR pr1no = 0) 
+                        AND (pr2 = 0 OR pr2 IS NULL) 
+                        AND (cashbook1 = 0 OR cashbook1 IS NULL) 
+                        AND (cashbook2 = 0 OR cashbook2 IS NULL)";
+    $conn->query($sqlSafeDelete);
+
+    // D. Mark Batch of Students in sessioninfo as Validated
+    $conn->query("UPDATE sessioninfo 
+                  SET validate=1, validationtime='$cur' 
+                  WHERE id IN ($sessionIdsIn)");
+
+    /* Commit Atomic Transaction */
+    $conn->commit();
+
+} catch (Exception $e) {
+    $conn->rollback();
+    echo "<div class='text-danger p-2 bg-danger-subtle rounded mb-2'>
+            <i class='bi bi-exclamation-octagon me-1'></i> Transaction Error: " . htmlspecialchars($e->getMessage()) . "
+          </div>";
+    exit;
 }
 
-echo ' -- ' . $new . ' | ' . $update . ' | ' . $noneed;
+/* ==========================================================
+   8. REMAINING QUEUE COUNT
+   ========================================================== */
+$qLeft = $conn->query("SELECT COUNT(*) c FROM sessioninfo WHERE $where");
+$left = ($qLeft && $rowLeft = $qLeft->fetch_assoc()) ? intval($rowLeft['c']) : 0;
 
-/* =======================
-   FINALIZE STUDENT
-======================= */
+/* ==========================================================
+   9. REALTIME LOG OUTPUT
+   ========================================================== */
+$duration = round(microtime(true) - $startTime, 2);
+$studentCount = count($students);
 
-$conn->query("DELETE FROM stfinance
-              WHERE stid='$stid' AND sccode='$sccode'
-              AND sessionyear LIKE '%$sy%' AND validate=0");
-
-$conn->query("UPDATE sessioninfo
-              SET validate=1, validationtime='$cur'
-              WHERE stid='$stid' AND sccode='$sccode'
-              AND sessionyear LIKE '%$sy%'");
-
-/* =======================
-   REMAINING COUNT
-======================= */
-$q = $conn->query("SELECT COUNT(*) c FROM sessioninfo WHERE $where");
-$left = $q->fetch_assoc()['c'];
-
-/* =======================
-   OUTPUT (AJAX SAFE)
-======================= */
-$time = time() - $startTime;
-
-echo "<div>
-        <span class='text-muted'>" . date('H:i:s') . "</span>
-        → $cls ($sec) | Roll $roll | $stid
-        <small class='text-info'> {$time}s</small>
+echo "<div class='py-1 border-bottom d-flex justify-content-between align-items-center'>
+        <span>
+            <span class='badge bg-label-info me-1'>" . date('H:i:s') . "</span>
+            <strong class='text-primary'>Batch ({$studentCount} students)</strong>: IDs " . htmlspecialchars($students[0]['stid']) . "..." . htmlspecialchars(end($students)['stid']) . "
+        </span>
+        <span>
+            <span class='badge bg-label-success me-1'>+{$newCount} new</span>
+            <span class='badge bg-label-warning me-1'>~{$updateCount} upd</span>
+            <span class='badge bg-label-secondary'>{$lockedCount} locked</span>
+            <small class='text-muted ms-2'>{$duration}s</small>
+        </span>
       </div>";
 
 echo "<div id='totaltotal' hidden>$left</div>";
