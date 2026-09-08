@@ -11,9 +11,10 @@ $q = mysqli_query($conn, "SELECT MAX(idno) as idno, areaname FROM areas
     WHERE sccode='$sccode' AND slot='$slot' AND sessionyear='$session' 
     GROUP BY areaname order by idno");
 
+
 $data = [];
 while ($r = mysqli_fetch_assoc($q)) {
     $data[] = ["value" => $r['areaname'], "label" => $r['areaname']];
 }
-
+error_log(print_r($data, true));
 echo json_encode($data);

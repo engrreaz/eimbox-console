@@ -212,7 +212,15 @@ $stmt->close();
             </li>
         <?php endforeach; ?>
 
+        <div class="cards" id="sidebar_space">
+        <div class="" style="height:80px;"> 
+
+        </div>
+    </div>
     </ul>
+
+
+    
 </aside>
 
 

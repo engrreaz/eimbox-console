@@ -53,6 +53,30 @@ while ($m = $res->fetch_assoc()) {
     $status_list[] = $m;
 }
 
+// সব modulemanager রেকর্ড একবারেই ফেচ করে মেমোরি হ্যাশম্যাপে রাখা
+$modules_by_page = [];
+$mm_res = $conn->query("SELECT module_name, module_topic, descrip, status_name, nav_title, nav_icon, root_page, related_pages FROM modulemanager");
+if ($mm_res) {
+    while ($row = $mm_res->fetch_assoc()) {
+        $related = explode(',', $row['related_pages'] ?? '');
+        foreach ($related as $rp) {
+            $rp = trim($rp);
+            if ($rp !== '') {
+                $modules_by_page[$rp] = $row;
+            }
+        }
+    }
+}
+
+// সব permission_map রেকর্ড একবারেই ফেচ করে 2D Array তে রাখা
+$permissions_map = [];
+$perm_res = $conn->query("SELECT page_name, userlevel, permission FROM permission_map WHERE (sccode IS NULL OR sccode='' OR sccode='0')");
+if ($perm_res) {
+    while ($p = $perm_res->fetch_assoc()) {
+        $permissions_map[$p['page_name']][$p['userlevel']] = (string) $p['permission'];
+    }
+}
+
 // বর্তমান ডিরেক্টরির ফাইল লিস্ট
 $files = array_filter(scandir(__DIR__), function ($f) {
     return is_file($f) && substr($f, -4) === '.php'; // শুধু php ফাইল ধরলাম
@@ -128,12 +152,7 @@ $files = array_filter(scandir(__DIR__), function ($f) {
     echo "</tr></thead><tbody>";
 
     foreach ($files as $file) {
-        $stmt = $conn->prepare("SELECT module_name, module_topic, descrip , status_name, nav_title, nav_icon, root_page
-                            FROM modulemanager 
-                            WHERE FIND_IN_SET(?, related_pages)");
-        $stmt->bind_param("s", $file);
-        $stmt->execute();
-        $data = $stmt->get_result()->fetch_assoc();
+        $data = $modules_by_page[$file] ?? [];
 
         $module_name = $data['module_name'] ?? '';
         $topic = $data['module_topic'] ?? '';
@@ -207,20 +226,7 @@ $files = array_filter(scandir(__DIR__), function ($f) {
                      data-field='root_page' data-id='{$file}' value=\"{$root_page}\" /></td>";
 
         foreach ($roles as $role) {
-            $stmt2 = $conn->prepare("SELECT permission 
-                         FROM permission_map 
-                         WHERE (sccode IS NULL OR sccode='' OR sccode='0')
-                           AND page_name=? 
-                           AND userlevel=? 
-                         LIMIT 1");
-            $stmt2->bind_param("ss", $file, $role);
-            $stmt2->execute();
-            $perm_row = $stmt2->get_result()->fetch_assoc();
-            $perm_val = isset($perm_row['permission']) ? (string) $perm_row['permission'] : '';
-
-
-
-            $perm_val = isset($perm_row['permission']) ? (string) $perm_row['permission'] : '';
+            $perm_val = $permissions_map[$file][$role] ?? '';
 
             $cssClass = 'perm-none';
             $tooltip = 'Not Assigned';
@@ -365,17 +371,6 @@ $files = array_filter(scandir(__DIR__), function ($f) {
     });
 
 
-</script>
-
-<script>
-    $(document).ready(function () {
-        $('#permissionTable').DataTable({
-            "pageLength": 10,
-            "lengthMenu": [5, 10, 25, 50, 100],
-            "ordering": true,
-            "searching": true
-        });
-    });
 </script>
 
 
