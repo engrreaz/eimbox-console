@@ -2307,6 +2307,10 @@ if ($monitorPanel === true) { ?>
 // }
 // echo "</pre>";
 unset($_SESSION['query_log']);
+
+// Include Cross-Platform Issue Tracker & Dimension Health Modal
+include_once __DIR__ . '/components/issue-tracker-modal.php';
+
 $conn->close();
 
 ?>
