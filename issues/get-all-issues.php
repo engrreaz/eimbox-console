@@ -1,7 +1,7 @@
 <?php
 /**
  * EIMBox Issue Tracker API - Get All Issues
- * Multi-Platform aggregation, KPIs, search and dimension health overview
+ * Moved to issues/ directory for better organization.
  */
 require_once __DIR__ . '/../bootstrap.php';
 
@@ -43,14 +43,11 @@ if (!empty($priority) && $priority !== 'All') {
 if (!empty($search)) {
     $where[] = "(`feature` LIKE ? OR `topic` LIKE ? OR `issues` LIKE ? OR `script` LIKE ?)";
     $like = "%$search%";
-    $params[] = $like;
-    $params[] = $like;
-    $params[] = $like;
-    $params[] = $like;
+    $params[] = $like; $params[] = $like; $params[] = $like; $params[] = $like;
     $types .= "ssss";
 }
 
-$whereSql = implode(" AND ", $where);
+$whereSql = implode(' AND ', $where);
 $sql = "SELECT * FROM eimbox_features WHERE $whereSql ORDER BY id DESC";
 
 if (!empty($params)) {
@@ -70,53 +67,41 @@ if (isset($stmt)) $stmt->close();
 
 // Compute KPIs
 $totalIssues = count($issues);
-$openCount = 0;
-$ongoingCount = 0;
-$testingCount = 0;
-$completedCount = 0;
-$criticalCount = 0;
-$highCount = 0;
+$openCount = $ongoingCount = $testingCount = $completedCount = $criticalCount = $highCount = 0;
 $sumProgress = 0;
-
 $platformStats = [
     'Dashboard' => 0,
     'Console' => 0,
     'Android Lite' => 0,
     'Android Premium' => 0,
-    'Desktop' => 0
+    'Desktop' => 0,
 ];
-
 foreach ($issues as $iss) {
     $st = strtolower($iss['status'] ?? '');
     $pr = strtolower($iss['priority'] ?? '');
     $pl = $iss['platform'] ?? 'Dashboard';
-
-    if (isset($platformStats[$pl])) {
-        $platformStats[$pl]++;
-    }
-
+    if (isset($platformStats[$pl])) $platformStats[$pl]++;
     if ($st === 'open' || $st === 'pending') $openCount++;
     elseif ($st === 'ongoing') $ongoingCount++;
     elseif ($st === 'testing') $testingCount++;
     elseif ($st === 'completed' || $st === 'closed') $completedCount++;
-
     if ($pr === 'critical') $criticalCount++;
     elseif ($pr === 'high') $highCount++;
-
     $sumProgress += (int)($iss['progress_percent'] ?? 0);
 }
-
 $avgProgress = $totalIssues > 0 ? round($sumProgress / $totalIssues, 1) : 100.0;
 
 // Fetch Dimension Summaries
-$dimSql = "SELECT * FROM issues_tracker ORDER BY id DESC";
+$dimSql = "SELECT * FROM issues_tracker WHERE (`platform` = ? OR `platform` = 'General') ORDER BY id DESC";
+    $dimStmt = $conn->prepare($dimSql);
+    $dimStmt->bind_param('s', $platform);
+    $dimStmt->execute();
+    $dimRes = $dimStmt->get_result();
 $dimRes = $conn->query($dimSql);
 $dimensionScreens = [];
 $totalScreensWithDimensions = 0;
 $dimensionProblemSum = 0;
-
-$dimKeys = ['ui', 'light', 'dark', 'view', 'insert', 'update', 'delete', 'cache', 'push', 'pull', 'dropdown', 'modal', 'print', 'pdf', 'permission'];
-
+$dimKeys = ['ui','light','dark','view','insert','update','delete','cache','push','pull','dropdown','modal','print','pdf','permission'];
 while ($d = $dimRes->fetch_assoc()) {
     $screenProb = 0;
     foreach ($dimKeys as $dk) {
@@ -130,11 +115,9 @@ while ($d = $dimRes->fetch_assoc()) {
     $d['problem_percent'] = $screenProbAvg;
     $d['health_percent'] = round(100 - $screenProbAvg, 1);
     $dimensionScreens[] = $d;
-
     $dimensionProblemSum += $screenProbAvg;
     $totalScreensWithDimensions++;
 }
-
 $globalDimProblemAvg = $totalScreensWithDimensions > 0 ? round($dimensionProblemSum / $totalScreensWithDimensions, 1) : 0;
 $globalHealth = round(100 - ($totalIssues > 0 ? ((100 - $avgProgress) + $globalDimProblemAvg) / 2 : $globalDimProblemAvg), 1);
 
@@ -161,7 +144,6 @@ $featSql = "
 $featRes = $conn->query($featSql);
 $featuresCatalog = [];
 $trackedIds = [];
-
 function calc_dim_problem_score($val) {
     $st = strtolower(trim((string)$val));
     if ($st === 'not tested' || $st === '' || $st === null) return 100.0;
@@ -171,7 +153,6 @@ function calc_dim_problem_score($val) {
     if ($st === 'ok' || $st === 'completed' || $st === 'not applicable' || $st === 'n/a') return 0.0;
     return 100.0;
 }
-
 if ($featRes) {
     while ($fRow = $featRes->fetch_assoc()) {
         if (!empty($fRow['tracker_id'])) {
@@ -189,131 +170,27 @@ if ($featRes) {
         $fRow['dimensions'] = $dims;
         $fRow['problem_percent'] = $probAvg;
         $fRow['health_percent'] = round(100 - $probAvg, 1);
-
-        // Attach issues for this feature
-        $fId = (int)$fRow['feature_id'];
-        $fName = $fRow['feature_name'];
-        $fRoute = $fRow['route'] ?? '';
-        $fIssues = [];
-        $fPlatformBreakdown = ['Console' => 0, 'Dashboard' => 0, 'Android Lite' => 0, 'Android Premium' => 0, 'Desktop' => 0, 'General' => 0];
-
-        foreach ($issues as $iss) {
-            $match = false;
-            if ($fId > 0 && isset($iss['feature_id']) && (int)$iss['feature_id'] === $fId) $match = true;
-            elseif (!empty($iss['feature']) && strtolower($iss['feature']) === strtolower($fName)) $match = true;
-            elseif (!empty($iss['script']) && !empty($fRoute) && strtolower(basename($iss['script'])) === strtolower(basename($fRoute))) $match = true;
-
-            if ($match) {
-                $fIssues[] = $iss;
-                $plat = $iss['platform'] ?? 'General';
-                if (isset($fPlatformBreakdown[$plat])) {
-                    $fPlatformBreakdown[$plat]++;
-                } else {
-                    $fPlatformBreakdown['General']++;
-                }
-            }
-        }
-
-        $fRow['issues'] = $fIssues;
-        $fRow['issue_count'] = count($fIssues);
-        $fRow['platform_breakdown'] = $fPlatformBreakdown;
         $featuresCatalog[] = $fRow;
     }
+    $featRes->free();
 }
 
-// Append any unlinked tracked screens from issues_tracker
-$unlinkedSql = "SELECT * FROM issues_tracker";
-if (!empty($trackedIds)) {
-    $unlinkedSql .= " WHERE id NOT IN (" . implode(',', $trackedIds) . ")";
-}
-$unlinkedRes = $conn->query($unlinkedSql);
-if ($unlinkedRes) {
-    while ($uRow = $unlinkedRes->fetch_assoc()) {
-        $dimProbSum = 0;
-        $dims = [];
-        foreach ($dimKeys as $dk) {
-            $val = $uRow[$dk] ?? 'Not Tested';
-            if (empty($val)) $val = 'Not Tested';
-            $dims[$dk] = $val;
-            $dimProbSum += calc_dim_problem_score($val);
-        }
-        $probAvg = round($dimProbSum / count($dimKeys), 1);
-        
-        $uRoute = $uRow['route'] ?? '';
-        $uTitle = $uRow['title'] ?: $uRoute;
-        $uIssues = [];
-        $uPlatformBreakdown = ['Console' => 0, 'Dashboard' => 0, 'Android Lite' => 0, 'Android Premium' => 0, 'Desktop' => 0, 'General' => 0];
-
-        foreach ($issues as $iss) {
-            $match = false;
-            if (!empty($iss['script']) && !empty($uRoute) && strtolower(basename($iss['script'])) === strtolower(basename($uRoute))) $match = true;
-            elseif (!empty($iss['screen_title']) && strtolower($iss['screen_title']) === strtolower($uTitle)) $match = true;
-            elseif (!empty($iss['feature']) && strtolower($iss['feature']) === strtolower($uTitle)) $match = true;
-
-            if ($match) {
-                $uIssues[] = $iss;
-                $plat = $iss['platform'] ?? 'General';
-                if (isset($uPlatformBreakdown[$plat])) {
-                    $uPlatformBreakdown[$plat]++;
-                } else {
-                    $uPlatformBreakdown['General']++;
-                }
-            }
-        }
-
-        $featuresCatalog[] = [
-            'feature_id' => $uRow['feature_id'] ?: 0,
-            'feature_name' => $uTitle,
-            'feature_desc' => 'Tracked screen route',
-            'module_name' => 'General',
-            'module_slno' => 999,
-            'module_icon' => 'display',
-            'tracker_id' => $uRow['id'],
-            'screen_title' => $uTitle,
-            'route' => $uRoute,
-            'dimensions' => $dims,
-            'problem_percent' => $probAvg,
-            'health_percent' => round(100 - $probAvg, 1),
-            'notes' => $uRow['notes'] ?? '',
-            'issues' => $uIssues,
-            'issue_count' => count($uIssues),
-            'platform_breakdown' => $uPlatformBreakdown
-        ];
-    }
-}
-
-// Fetch all modules from modulelist ordered by slno
-$modules = [];
-$modQuery = $conn->query("SELECT id, module_name, slno, module_icon, descrip FROM modulelist WHERE module_name IS NOT NULL AND module_name != '' ORDER BY slno ASC, module_name ASC");
-if ($modQuery) {
-    while ($mRow = $modQuery->fetch_assoc()) {
-        $modules[] = $mRow;
-    }
-}
-
-// If modulelist is empty or missing, collect distinct module names from features
-if (empty($modules)) {
-    $fallbackModQuery = $conn->query("SELECT DISTINCT module_name FROM features WHERE module_name IS NOT NULL AND module_name != '' ORDER BY module_name ASC");
-    if ($fallbackModQuery) {
-        $sl = 1;
-        while ($fm = $fallbackModQuery->fetch_assoc()) {
-            $modules[] = [
-                'id' => $sl,
-                'module_name' => $fm['module_name'],
-                'slno' => $sl,
-                'module_icon' => 'folder2',
-                'descrip' => ''
-            ];
-            $sl++;
+// Attach issues to each feature
+foreach ($featuresCatalog as &$feat) {
+    $fid = (int)$feat['feature_id'];
+    $feat['issues'] = [];
+    foreach ($issues as $iss) {
+        if ((int)($iss['feature_id'] ?? 0) === $fid) {
+            $feat['issues'][] = $iss;
         }
     }
 }
 
-api_response('success', 'All issues data retrieved successfully', [
-    'platform' => $platform,
-    'total_issues' => $totalIssues,
+$response = [
+    'status' => 'success',
+    'platformStats' => $platformStats,
     'kpis' => [
-        'total' => $totalIssues,
+        'total_issues' => $totalIssues,
         'open' => $openCount,
         'ongoing' => $ongoingCount,
         'testing' => $testingCount,
@@ -322,10 +199,11 @@ api_response('success', 'All issues data retrieved successfully', [
         'high' => $highCount,
         'avg_progress' => $avgProgress,
         'global_health' => $globalHealth,
-        'platforms' => $platformStats
     ],
+    'dimensions' => $dimensionScreens,
+    'features' => $featuresCatalog,
     'issues' => $issues,
-    'dimension_screens' => $dimensionScreens,
-    'features_catalog' => $featuresCatalog,
-    'modules' => $modules
-], 200);
+];
+header('Content-Type: application/json');
+echo json_encode($response);
+?>

@@ -17,6 +17,9 @@ require_once 'header.php';
             <button class="btn btn-outline-primary btn-sm rounded-pill px-3" onclick="loadAllIssues()">
                 <i class="bi bi-arrow-clockwise me-1"></i> Refresh Data
             </button>
+            <button class="btn btn-primary btn-sm rounded-pill px-3" onclick="openCreateFeatureModal()">
+                <i class="bi bi-folder-plus me-1"></i> Add Feature
+            </button>
             <button class="btn btn-success btn-sm rounded-pill px-3" onclick="openCreateIssueModal()">
                 <i class="bi bi-plus-circle me-1"></i> Report New Issue
             </button>
@@ -144,20 +147,25 @@ require_once 'header.php';
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
                 <ul class="nav nav-tabs card-header-tabs" id="mainIssueTabs">
                     <li class="nav-item">
-                        <button class="nav-link active fw-bold" data-bs-toggle="tab" data-bs-target="#tab-all-issues">
-                            <i class="bi bi-table me-1"></i> Issues List (<span id="tab-issues-badge">0</span>)
+                        <button class="nav-link active fw-bold" data-bs-toggle="tab" data-bs-target="#tab-features-catalog">
+                            <i class="bi bi-layers-half me-1 text-primary"></i> Features & Dimensions (<span id="tab-features-badge">0</span>)
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#tab-all-issues">
+                            <i class="bi bi-bug me-1 text-danger"></i> Reported Issues (<span id="tab-issues-badge">0</span>)
                         </button>
                     </li>
                     <li class="nav-item">
                         <button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#tab-screen-dimensions">
-                            <i class="bi bi-grid-3x3-gap me-1"></i> Screen Health Matrix (<span id="tab-screens-badge">0</span>)
+                            <i class="bi bi-grid-3x3-gap me-1 text-info"></i> Full Matrix (<span id="tab-screens-badge">0</span>)
                         </button>
                     </li>
                 </ul>
 
                 <!-- Filter Controls -->
                 <div class="d-flex flex-wrap align-items-center gap-2">
-                    <input type="text" id="filter-search" class="form-control form-control-sm" placeholder="Search issues, topics, scripts..." style="width: 220px;" oninput="applyFilters()">
+                    <input type="text" id="filter-search" class="form-control form-control-sm" placeholder="Search features, modules, scripts..." style="width: 220px;" oninput="applyFilters()">
                     <select id="filter-module" class="form-select form-select-sm" style="width: 140px;" onchange="applyFilters()">
                         <option value="All">All Modules</option>
                     </select>
@@ -182,9 +190,51 @@ require_once 'header.php';
 
         <div class="card-body p-0">
             <div class="tab-content">
+
+                <!-- TAB 1: FEATURES & DIMENSIONS TABLE (ORDERED BY MODULE) -->
+                <div class="tab-pane fade show active p-0" id="tab-features-catalog">
+                    <!-- Compact Legend Bar -->
+                    <div class="d-flex flex-wrap align-items-center justify-content-between px-3 py-2 bg-light border-bottom small text-muted">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="fw-bold text-dark"><i class="bi bi-info-circle me-1"></i> Dimension Icons:</span>
+                            <span><i class="bi bi-check-circle-fill text-success"></i> OK</span>
+                            <span><i class="bi bi-x-circle-fill text-danger"></i> Error (70%)</span>
+                            <span><i class="bi bi-bug-fill text-danger opacity-75"></i> Bug (30%)</span>
+                            <span><i class="bi bi-clock-history text-warning"></i> On Progress (50%)</span>
+                            <span><i class="bi bi-dash-circle text-muted"></i> Not Tested (100%)</span>
+                            <span><i class="bi bi-slash-circle text-info"></i> N/A (0%)</span>
+                        </div>
+                        <div class="small text-muted">
+                            Ordered by <code>modulelist.slno</code> & Module
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" id="featuresCatalogTable">
+                            <thead class="table-light text-uppercase small" style="font-size: 11px; letter-spacing: 0.5px;">
+                                <tr>
+                                    <th style="width: 45px;" class="ps-3 text-center">#</th>
+                                    <th style="width: 130px;">Module</th>
+                                    <th>Feature & Screen Route</th>
+                                    <th style="width: 290px;">15 Dimensions</th>
+                                    <th style="width: 85px;" class="text-center">Error %</th>
+                                    <th style="width: 95px;" class="text-center">Issues</th>
+                                    <th style="width: 110px;" class="text-end pe-3">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="featuresCatalogTableBody">
+                                <tr>
+                                    <td colspan="7" class="text-center py-5 text-muted">
+                                        <div class="spinner-border spinner-border-sm me-2 text-primary"></div> Loading features catalog...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
                 
-                <!-- TAB 1: ALL ISSUES TABLE -->
-                <div class="tab-pane fade show active" id="tab-all-issues">
+                <!-- TAB 2: ALL ISSUES TABLE -->
+                <div class="tab-pane fade" id="tab-all-issues">
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0" id="issuesMasterTable">
                             <thead class="table-light text-uppercase small" style="font-size: 11px; letter-spacing: 0.5px;">
@@ -211,7 +261,7 @@ require_once 'header.php';
                     </div>
                 </div>
 
-                <!-- TAB 2: SCREEN DIMENSIONS MATRIX -->
+                <!-- TAB 3: SCREEN DIMENSIONS MATRIX -->
                 <div class="tab-pane fade p-3" id="tab-screen-dimensions">
                     <div class="alert alert-info py-2 px-3 small d-flex justify-content-between align-items-center mb-3">
                         <div>
@@ -345,13 +395,107 @@ require_once 'header.php';
     </div>
 </div>
 
+<!-- Feature Issues List Popup Modal -->
+<div class="modal fade" id="featureIssuesPopupModal" tabindex="-1" aria-hidden="true" style="z-index: 106000;">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 14px; overflow: hidden;">
+            <div class="modal-header bg-dark text-white py-3 px-4 d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-exclamation-triangle-fill text-warning fs-5"></i>
+                    <div>
+                        <h5 class="modal-title fw-bold text-white mb-0" id="featureIssuesModalTitle">Feature Issues</h5>
+                        <small class="opacity-75" id="featureIssuesModalSubtitle"></small>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="btn btn-sm btn-success rounded-pill px-3" id="featureIssuesModalAddBtn">
+                        <i class="bi bi-plus-circle me-1"></i> Add Issue
+                    </button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+            </div>
+            <div class="modal-body p-4 bg-light">
+                <div id="featureIssuesModalList">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+            <div class="modal-footer bg-white py-2 px-4">
+                <button type="button" class="btn btn-sm btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Feature Add / Edit Master Modal -->
+<div class="modal fade" id="featureMasterModal" tabindex="-1" aria-hidden="true" style="z-index: 105500;">
+    <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 14px; overflow: hidden;">
+            <div class="modal-header bg-primary text-white py-3 px-4">
+                <h5 class="modal-title fw-bold text-white mb-0" id="featureModalTitle">
+                    <i class="bi bi-folder-plus me-1"></i> Add Feature
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <input type="hidden" id="modal-feature-id" value="0">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">Module <span class="text-danger">*</span></label>
+                        <select id="modal-feature-module" class="form-select">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">Feature Name <span class="text-danger">*</span></label>
+                        <input type="text" id="modal-feature-name" class="form-control" placeholder="e.g. Student Admission, Mark Entry Grid">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">Associated Script Route</label>
+                        <input type="text" id="modal-feature-route" class="form-control" placeholder="e.g. student-profile.php, api/v1/save-mark.php">
+                        <small class="text-muted" style="font-size: 11px;">Links this feature to screen dimension matrix & quick Go action</small>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">Feature Description</label>
+                        <textarea id="modal-feature-desc" class="form-control" rows="3" placeholder="Explain the feature purpose, components or business rules..."></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light py-2 px-4">
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary rounded-pill px-4" id="saveFeatureBtn" onclick="saveFeature()">
+                    <i class="bi bi-check2-circle me-1"></i> Save Feature
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?php require_once 'footer.php'; ?>
 
 <!-- Master Issue Tracker Script -->
 <script>
 let allIssuesCache = [];
 let allDimensionsCache = [];
+let allFeaturesCatalogCache = [];
 let activePlatformFilter = 'All';
+
+const DIMENSION_CONFIG = [
+    { key: 'ui', label: 'UI / UX', short: 'UI' },
+    { key: 'light', label: 'Light Theme', short: 'Light' },
+    { key: 'dark', label: 'Dark Theme', short: 'Dark' },
+    { key: 'view', label: 'Data View', short: 'View' },
+    { key: 'insert', label: 'Data Add', short: 'Add' },
+    { key: 'update', label: 'Data Edit', short: 'Edit' },
+    { key: 'delete', label: 'Data Delete', short: 'Del' },
+    { key: 'cache', label: 'Cache Sync', short: 'Cache' },
+    { key: 'push', label: 'Cloud Push', short: 'Push' },
+    { key: 'pull', label: 'Local Pull', short: 'Pull' },
+    { key: 'dropdown', label: 'Cascading Dropdown', short: 'Drop' },
+    { key: 'modal', label: 'Dialog / Modal', short: 'Modal' },
+    { key: 'print', label: 'Print Layout', short: 'Print' },
+    { key: 'pdf', label: 'PDF Export', short: 'PDF' },
+    { key: 'permission', label: 'RBAC Access', short: 'Perm' }
+];
 
 document.addEventListener("DOMContentLoaded", function () {
     loadAllIssues();
@@ -369,12 +513,13 @@ function setPlatformFilter(platform, tabBtn) {
 }
 
 function loadAllIssues() {
-    fetch(`api/v1/issues/get-all-issues.php?platform=${encodeURIComponent(activePlatformFilter)}`)
+    fetch(`issues/get-all-issues.php?platform=${encodeURIComponent(activePlatformFilter)}`)
         .then(res => res.json())
         .then(res => {
             if (res.status === 'success' && res.data) {
                 allIssuesCache = res.data.issues || [];
                 allDimensionsCache = res.data.dimension_screens || [];
+                allFeaturesCatalogCache = res.data.features_catalog || [];
 
                 updateKpiDashboard(res.data.kpis);
                 populateModuleFilter(res.data.modules);
@@ -411,23 +556,31 @@ function updateKpiDashboard(kpis) {
     document.getElementById('kpi-completed-issues').innerText = kpis.completed || 0;
     document.getElementById('kpi-avg-progress').innerText = `Avg Progress: ${kpis.avg_progress || 0}%`;
 
+    document.getElementById('tab-features-badge').innerText = allFeaturesCatalogCache.length;
     document.getElementById('tab-issues-badge').innerText = kpis.total || 0;
     document.getElementById('tab-screens-badge').innerText = allDimensionsCache.length;
 }
 
+let allModulesCache = [];
+
 function populateModuleFilter(modules) {
     const modSelect = document.getElementById('filter-module');
     const modalModSelect = document.getElementById('modal-module');
-    if (!modules || !modSelect) return;
+    const modalFeatureModSelect = document.getElementById('modal-feature-module');
+    if (!modules || modules.length === 0) return;
+
+    allModulesCache = modules;
 
     let opts = '<option value="All">All Modules</option>';
     let modalOpts = '';
     modules.forEach(m => {
-        opts += `<option value="${m.module_name}">${m.module_name}</option>`;
-        modalOpts += `<option value="${m.module_name}">${m.module_name}</option>`;
+        const modName = m.module_name || m;
+        opts += `<option value="${modName}">${modName}</option>`;
+        modalOpts += `<option value="${modName}">${modName}</option>`;
     });
-    modSelect.innerHTML = opts;
+    if (modSelect) modSelect.innerHTML = opts;
     if (modalModSelect) modalModSelect.innerHTML = modalOpts;
+    if (modalFeatureModSelect) modalFeatureModSelect.innerHTML = modalOpts;
 }
 
 function applyFilters() {
@@ -436,7 +589,8 @@ function applyFilters() {
     const status = document.getElementById('filter-status').value;
     const priority = document.getElementById('filter-priority').value;
 
-    const filtered = allIssuesCache.filter(item => {
+    // Filter Issues Table
+    const filteredIssues = allIssuesCache.filter(item => {
         if (module !== 'All' && item.module !== module) return false;
         if (status !== 'All' && item.status !== status) return false;
         if (priority !== 'All' && item.priority !== priority) return false;
@@ -446,8 +600,361 @@ function applyFilters() {
         }
         return true;
     });
+    renderIssuesTable(filteredIssues);
 
-    renderIssuesTable(filtered);
+    // Filter Features Catalog Table
+    const filteredFeatures = allFeaturesCatalogCache.filter(f => {
+        if (module !== 'All' && f.module_name !== module) return false;
+        if (status !== 'All') {
+            const hasStatus = (f.issues || []).some(iss => iss.status === status);
+            if (!hasStatus) return false;
+        }
+        if (priority !== 'All') {
+            const hasPriority = (f.issues || []).some(iss => iss.priority === priority);
+            if (!hasPriority) return false;
+        }
+        if (search) {
+            const combined = `${f.feature_name} ${f.module_name} ${f.route || ''} ${f.feature_desc || ''}`.toLowerCase();
+            if (!combined.includes(search)) return false;
+        }
+        return true;
+    });
+    renderFeaturesCatalogTable(filteredFeatures);
+}
+
+function getDimensionIcon(status, dimLabel) {
+    const s = String(status || '').toLowerCase().trim();
+    if (s === 'ok' || s === 'completed') {
+        return `<i class="bi bi-check-circle-fill text-success" data-bs-toggle="tooltip" data-bs-placement="top" title="${dimLabel}: OK"></i>`;
+    } else if (s === 'error') {
+        return `<i class="bi bi-x-circle-fill text-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="${dimLabel}: Error"></i>`;
+    } else if (s === 'bug') {
+        return `<i class="bi bi-bug-fill text-danger" style="opacity:0.85;" data-bs-toggle="tooltip" data-bs-placement="top" title="${dimLabel}: Bug"></i>`;
+    } else if (s === 'on progress' || s === 'ongoing') {
+        return `<i class="bi bi-clock-history text-warning" data-bs-toggle="tooltip" data-bs-placement="top" title="${dimLabel}: In Progress"></i>`;
+    } else if (s === 'not applicable' || s === 'n/a' || s === 'na') {
+        return `<i class="bi bi-slash-circle text-info" data-bs-toggle="tooltip" data-bs-placement="top" title="${dimLabel}: N/A"></i>`;
+    }
+    return `<i class="bi bi-dash-circle text-muted" style="opacity: 0.35;" data-bs-toggle="tooltip" data-bs-placement="top" title="${dimLabel}: Not Tested"></i>`;
+}
+
+function renderFeaturesCatalogTable(features) {
+    const tbody = document.getElementById('featuresCatalogTableBody');
+    if (!tbody) return;
+
+    if (features.length === 0) {
+        tbody.innerHTML = `
+        <tr>
+            <td colspan="7" class="text-center py-5 text-muted">
+                <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary"></i>
+                <h6 class="fw-bold mb-1">No Matching Features Found</h6>
+                <p class="small mb-0">Try changing your filters or search keywords above.</p>
+            </td>
+        </tr>`;
+        return;
+    }
+
+    let html = '';
+    features.forEach((f, idx) => {
+        const dims = f.dimensions || {};
+        const err = f.problem_percent !== undefined ? f.problem_percent : 0;
+        const issCount = f.issue_count || 0;
+
+        let errBadgeClass = 'bg-success text-white';
+        if (err > 50) errBadgeClass = 'bg-danger text-white';
+        else if (err > 20) errBadgeClass = 'bg-warning text-dark';
+        else if (err > 0) errBadgeClass = 'bg-info text-dark';
+
+        // 15 compact icons
+        let compactIconsHtml = '<div class="d-inline-flex flex-wrap gap-1 align-items-center py-1 px-2 bg-light rounded border">';
+        DIMENSION_CONFIG.forEach(d => {
+            const val = dims[d.key] || 'Not Tested';
+            compactIconsHtml += getDimensionIcon(val, d.label);
+        });
+        compactIconsHtml += '</div>';
+
+        // Issue Count badge button
+        let issueBadgeHtml = '';
+        if (issCount > 0) {
+            issueBadgeHtml = `
+            <button type="button" class="btn btn-sm btn-danger py-0 px-2 rounded-pill fw-bold" onclick="openFeatureIssuesPopup(${idx})" title="Click to view ${issCount} reported issues">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i>${issCount}
+            </button>`;
+        } else {
+            issueBadgeHtml = `
+            <span class="badge bg-light text-muted border rounded-pill py-1 px-2" style="font-size: 11px;">
+                <i class="bi bi-check2 text-success me-1"></i>0
+            </span>`;
+        }
+
+        // Go button
+        let goBtnHtml = '';
+        if (f.route && f.route.trim() !== '') {
+            goBtnHtml = `
+            <a href="${f.route}" target="_blank" class="btn btn-sm btn-primary rounded-pill px-2 py-0 d-inline-flex align-items-center gap-1" title="Open ${f.route}">
+                <i class="bi bi-box-arrow-up-right"></i><span>Go</span>
+            </a>`;
+        } else {
+            goBtnHtml = `
+            <button class="btn btn-sm btn-light text-muted rounded-pill px-2 py-0 d-inline-flex align-items-center gap-1" disabled title="No route link available">
+                <i class="bi bi-box-arrow-up-right"></i><span>Go</span>
+            </button>`;
+        }
+
+        // Main Row
+        html += `
+        <tr id="feat-row-${idx}">
+            <td class="ps-3 text-center">
+                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1 rounded-circle" onclick="toggleFeatureDetail(${idx})" id="expand-btn-${idx}" title="Expand platform & dimension details">
+                    <i class="bi bi-chevron-down" id="feat-icon-${idx}"></i>
+                </button>
+            </td>
+            <td>
+                <span class="badge bg-light text-dark border d-inline-flex align-items-center gap-1">
+                    <i class="bi bi-${f.module_icon || 'folder2'} text-primary"></i>
+                    <span>${f.module_name}</span>
+                </span>
+            </td>
+            <td>
+                <div class="fw-bold text-dark">${f.feature_name}</div>
+                <div class="text-muted small d-flex align-items-center gap-2">
+                    <code class="text-secondary" style="font-size: 10px;">${f.route || 'No script route'}</code>
+                    ${f.feature_desc ? `<span class="text-truncate" style="max-width: 250px;">• ${f.feature_desc}</span>` : ''}
+                </div>
+            </td>
+            <td>${compactIconsHtml}</td>
+            <td class="text-center">
+                <span class="badge ${errBadgeClass} fw-bold" style="font-size: 11px;">${err}%</span>
+            </td>
+            <td class="text-center">${issueBadgeHtml}</td>
+            <td class="text-end pe-3">
+                <div class="d-inline-flex align-items-center gap-1">
+                    ${goBtnHtml}
+                    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill" onclick="openScreenModalFromMatrix('${f.route || f.feature_name}')" title="Configure 15 Dimensions">
+                        <i class="bi bi-sliders"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 rounded-pill" onclick="openEditFeatureModal(${idx})" title="Edit Feature Details">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2 rounded-pill" onclick="deleteFeature(${f.feature_id})" title="Delete Feature">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>`;
+
+        // Expandable Platform Breakdown & Detail Child Row
+        const pb = f.platform_breakdown || {};
+        html += `
+        <tr id="feat-detail-row-${idx}" style="display: none;" class="bg-light">
+            <td colspan="7" class="p-3">
+                <div class="card border shadow-sm p-3 bg-white" style="border-radius: 12px;">
+                    <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                        <div>
+                            <h6 class="fw-bold mb-0 text-dark">
+                                <i class="bi bi-display me-1 text-primary"></i> Cross-Platform & Dimension Health Breakdown: ${f.feature_name}
+                            </h6>
+                            <small class="text-muted">${f.module_name} • Route: <code>${f.route || 'Not assigned'}</code></small>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <button class="btn btn-sm btn-success rounded-pill px-3" onclick="quickCreateIssueForFeature(${idx})">
+                                <i class="bi bi-plus-circle me-1"></i> Report Issue
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="openEditFeatureModal(${idx})">
+                                <i class="bi bi-pencil me-1"></i> Edit Feature
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="openScreenModalFromMatrix('${f.route || f.feature_name}')">
+                                <i class="bi bi-sliders me-1"></i> Dimensions
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger rounded-pill px-2" onclick="deleteFeature(${f.feature_id})" title="Delete Feature">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Platform Breakdown Cards -->
+                    <div class="row g-2 mb-3">
+                        <div class="col">
+                            <div class="card p-2 border ${pb.Console > 0 ? 'border-danger bg-danger bg-opacity-10' : 'bg-light'} text-center h-100">
+                                <small class="text-muted fw-bold">Console</small>
+                                <div class="fs-6 fw-bold ${pb.Console > 0 ? 'text-danger' : 'text-success'} mt-1">
+                                    <i class="bi ${pb.Console > 0 ? 'bi-exclamation-circle' : 'bi-check2'} me-1"></i>${pb.Console || 0} Issues
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="card p-2 border ${pb.Dashboard > 0 ? 'border-danger bg-danger bg-opacity-10' : 'bg-light'} text-center h-100">
+                                <small class="text-muted fw-bold">Dashboard</small>
+                                <div class="fs-6 fw-bold ${pb.Dashboard > 0 ? 'text-danger' : 'text-success'} mt-1">
+                                    <i class="bi ${pb.Dashboard > 0 ? 'bi-exclamation-circle' : 'bi-check2'} me-1"></i>${pb.Dashboard || 0} Issues
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="card p-2 border ${pb['Android Lite'] > 0 ? 'border-danger bg-danger bg-opacity-10' : 'bg-light'} text-center h-100">
+                                <small class="text-muted fw-bold">Android Lite</small>
+                                <div class="fs-6 fw-bold ${pb['Android Lite'] > 0 ? 'text-danger' : 'text-success'} mt-1">
+                                    <i class="bi ${pb['Android Lite'] > 0 ? 'bi-exclamation-circle' : 'bi-check2'} me-1"></i>${pb['Android Lite'] || 0} Issues
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="card p-2 border ${pb['Android Premium'] > 0 ? 'border-danger bg-danger bg-opacity-10' : 'bg-light'} text-center h-100">
+                                <small class="text-muted fw-bold">Android Native</small>
+                                <div class="fs-6 fw-bold ${pb['Android Premium'] > 0 ? 'text-danger' : 'text-success'} mt-1">
+                                    <i class="bi ${pb['Android Premium'] > 0 ? 'bi-exclamation-circle' : 'bi-check2'} me-1"></i>${pb['Android Premium'] || 0} Issues
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="card p-2 border ${pb.Desktop > 0 ? 'border-danger bg-danger bg-opacity-10' : 'bg-light'} text-center h-100">
+                                <small class="text-muted fw-bold">Desktop</small>
+                                <div class="fs-6 fw-bold ${pb.Desktop > 0 ? 'text-danger' : 'text-success'} mt-1">
+                                    <i class="bi ${pb.Desktop > 0 ? 'bi-exclamation-circle' : 'bi-check2'} me-1"></i>${pb.Desktop || 0} Issues
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Full 15 Dimensions Badges Grid -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-uppercase text-muted mb-1">15 Dimension Verification Details</label>
+                        <div class="d-flex flex-wrap gap-2">
+                            ${DIMENSION_CONFIG.map(d => {
+                                const val = dims[d.key] || 'Not Tested';
+                                const badgeClass = eimboxGetStatusBadgeClass ? eimboxGetStatusBadgeClass(val) : 'bg-secondary text-white';
+                                return `<span class="badge ${badgeClass} p-2 rounded-3 small">
+                                    <strong>${d.label}:</strong> ${val}
+                                </span>`;
+                            }).join('')}
+                        </div>
+                    </div>
+
+                    ${f.notes ? `
+                    <div class="alert alert-light border py-2 px-3 small mb-0">
+                        <i class="bi bi-sticky me-1 text-primary"></i> <strong>Implementation Notes:</strong> ${f.notes}
+                    </div>` : ''}
+                </div>
+            </td>
+        </tr>`;
+    });
+
+    tbody.innerHTML = html;
+
+    // Initialize Bootstrap tooltips
+    if (typeof bootstrap !== 'undefined') {
+        const tooltipList = [].slice.call(document.querySelectorAll('#featuresCatalogTable [data-bs-toggle="tooltip"]'));
+        tooltipList.map(el => new bootstrap.Tooltip(el));
+    }
+}
+
+function toggleFeatureDetail(idx) {
+    const detailRow = document.getElementById(`feat-detail-row-${idx}`);
+    const icon = document.getElementById(`feat-icon-${idx}`);
+    if (!detailRow) return;
+
+    if (detailRow.style.display === 'none') {
+        detailRow.style.display = 'table-row';
+        if (icon) {
+            icon.classList.remove('bi-chevron-down');
+            icon.classList.add('bi-chevron-up');
+        }
+    } else {
+        detailRow.style.display = 'none';
+        if (icon) {
+            icon.classList.remove('bi-chevron-up');
+            icon.classList.add('bi-chevron-down');
+        }
+    }
+}
+
+function openFeatureIssuesPopup(idx) {
+    const f = allFeaturesCatalogCache[idx];
+    if (!f) return;
+
+    document.getElementById('featureIssuesModalTitle').innerText = `${f.feature_name} - Issues`;
+    document.getElementById('featureIssuesModalSubtitle').innerText = `${f.module_name} • ${f.route || 'No Route'}`;
+
+    const addBtn = document.getElementById('featureIssuesModalAddBtn');
+    if (addBtn) {
+        addBtn.onclick = function () {
+            const bsModal = bootstrap.Modal.getInstance(document.getElementById('featureIssuesPopupModal'));
+            if (bsModal) bsModal.hide();
+            quickCreateIssueForFeature(idx);
+        };
+    }
+
+    const listContainer = document.getElementById('featureIssuesModalList');
+    const issues = f.issues || [];
+
+    if (issues.length === 0) {
+        listContainer.innerHTML = `
+        <div class="card border-0 text-center py-5 bg-white" style="border-radius: 12px;">
+            <i class="bi bi-check-circle-fill text-success fs-1 mb-2"></i>
+            <h6 class="fw-bold text-dark">No Active Issues</h6>
+            <p class="text-muted small mb-0">All systems and dimensions are clear for this feature.</p>
+        </div>`;
+    } else {
+        let html = '<div class="list-group gap-2">';
+        issues.forEach(iss => {
+            const priorityColor = iss.priority === 'Critical' ? 'danger' : (iss.priority === 'High' ? 'warning text-dark' : 'secondary');
+            const statusColor = iss.status === 'Completed' ? 'success' : (iss.status === 'Ongoing' ? 'primary' : 'dark');
+
+            html += `
+            <div class="list-group-item border rounded-3 p-3 shadow-sm bg-white">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <span class="badge bg-secondary me-1">${iss.platform || 'General'}</span>
+                        <span class="badge bg-${priorityColor} me-1">${iss.priority}</span>
+                        <span class="badge bg-${statusColor} me-2">${iss.status}</span>
+                        <strong class="text-dark">${iss.topic || iss.feature || 'Issue #' + iss.id}</strong>
+                    </div>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary py-0 px-2" onclick="openEditIssueFromPopup(${JSON.stringify(iss).replace(/"/g, '&quot;')})">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                    </div>
+                </div>
+                <p class="mb-2 text-secondary small">${iss.issues || 'No description provided'}</p>
+                <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top">
+                    <div class="d-flex align-items-center gap-2 w-50">
+                        <span class="small text-muted" style="font-size: 11px;">Progress:</span>
+                        <div class="progress flex-grow-1" style="height: 6px;">
+                            <div class="progress-bar bg-success" style="width: ${iss.progress_percent || 0}%;"></div>
+                        </div>
+                        <span class="small fw-bold" style="font-size: 11px;">${iss.progress_percent || 0}%</span>
+                    </div>
+                    <div class="small text-muted" style="font-size: 11px;">
+                        <i class="bi bi-person me-1"></i>${iss.assigned_to || 'Unassigned'}
+                    </div>
+                </div>
+            </div>`;
+        });
+        html += '</div>';
+        listContainer.innerHTML = html;
+    }
+
+    const bsModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('featureIssuesPopupModal'));
+    bsModal.show();
+}
+
+function openEditIssueFromPopup(iss) {
+    const popModal = bootstrap.Modal.getInstance(document.getElementById('featureIssuesPopupModal'));
+    if (popModal) popModal.hide();
+    openEditIssueModal(iss);
+}
+
+function quickCreateIssueForFeature(idx) {
+    const f = allFeaturesCatalogCache[idx];
+    openCreateIssueModal();
+    if (f) {
+        const modSelect = document.getElementById('modal-module');
+        if (modSelect) modSelect.value = f.module_name;
+        const scriptInput = document.getElementById('modal-script');
+        if (scriptInput) scriptInput.value = f.route || '';
+        const topicInput = document.getElementById('modal-topic');
+        if (topicInput) topicInput.value = f.feature_name || '';
+    }
 }
 
 function renderIssuesTable(issues) {
@@ -667,9 +1174,162 @@ function deleteMasterIssue(id) {
 }
 
 function openScreenModalFromMatrix(route) {
-    EIMBOX_ISSUE_CONFIG.script = route;
-    const currentScriptEl = document.getElementById('eimbox-current-script-name');
-    if (currentScriptEl) currentScriptEl.innerText = route;
-    eimboxOpenIssueModal();
+    if (typeof eimboxOpenIssueModal === 'function') {
+        EIMBOX_ISSUE_CONFIG.script = route;
+        const currentScriptEl = document.getElementById('eimbox-current-script-name');
+        if (currentScriptEl) currentScriptEl.innerText = route;
+        eimboxOpenIssueModal();
+    } else {
+        window.open(route, '_blank');
+    }
+}
+
+/* Feature Master Management */
+function syncFeatureModuleDropdown(selectedVal = '') {
+    const modSelect = document.getElementById('modal-feature-module');
+    if (!modSelect) return;
+
+    // If options are missing or empty, build them from allModulesCache
+    if (modSelect.options.length === 0 && allModulesCache.length > 0) {
+        let opts = '';
+        allModulesCache.forEach(m => {
+            const name = m.module_name || m;
+            opts += `<option value="${name}">${name}</option>`;
+        });
+        modSelect.innerHTML = opts;
+    }
+
+    if (selectedVal) {
+        // Ensure option exists even if not in standard list
+        let exists = false;
+        for (let i = 0; i < modSelect.options.length; i++) {
+            if (modSelect.options[i].value.toLowerCase() === selectedVal.toLowerCase()) {
+                modSelect.selectedIndex = i;
+                exists = true;
+                break;
+            }
+        }
+        if (!exists) {
+            const opt = document.createElement('option');
+            opt.value = selectedVal;
+            opt.innerText = selectedVal;
+            opt.selected = true;
+            modSelect.appendChild(opt);
+        }
+    } else if (modSelect.options.length > 0) {
+        modSelect.selectedIndex = 0;
+    }
+}
+
+function openCreateFeatureModal() {
+    document.getElementById('featureModalTitle').innerHTML = '<i class="bi bi-folder-plus me-1"></i> Add New Feature';
+    document.getElementById('modal-feature-id').value = '0';
+    document.getElementById('modal-feature-name').value = '';
+    document.getElementById('modal-feature-route').value = '';
+    document.getElementById('modal-feature-desc').value = '';
+
+    syncFeatureModuleDropdown();
+
+    const bsModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('featureMasterModal'));
+    bsModal.show();
+}
+
+function openEditFeatureModal(idx) {
+    const f = allFeaturesCatalogCache[idx];
+    if (!f) return;
+
+    document.getElementById('featureModalTitle').innerHTML = `<i class="bi bi-pencil-square me-1"></i> Edit Feature: ${f.feature_name}`;
+    document.getElementById('modal-feature-id').value = f.feature_id;
+    document.getElementById('modal-feature-name').value = f.feature_name || '';
+    document.getElementById('modal-feature-route').value = f.route || '';
+    document.getElementById('modal-feature-desc').value = f.feature_desc || '';
+
+    syncFeatureModuleDropdown(f.module_name || 'General');
+
+    const bsModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('featureMasterModal'));
+    bsModal.show();
+}
+
+function saveFeature() {
+    const id = parseInt(document.getElementById('modal-feature-id').value) || 0;
+    const action = id > 0 ? 'update' : 'create';
+    const featureName = document.getElementById('modal-feature-name').value.trim();
+    const moduleName = document.getElementById('modal-feature-module').value;
+    const route = document.getElementById('modal-feature-route').value.trim();
+    const desc = document.getElementById('modal-feature-desc').value.trim();
+
+    if (!featureName) {
+        alert('Please enter a feature name.');
+        document.getElementById('modal-feature-name').focus();
+        return;
+    }
+
+    const saveBtn = document.getElementById('saveFeatureBtn');
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
+    }
+
+    const payload = {
+        action: action,
+        id: id,
+        feature_id: id,
+        feature_name: featureName,
+        module_name: moduleName,
+        route: route,
+        description: desc
+    };
+
+    fetch('api/v1/issues/manage-feature.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(res => {
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="bi bi-check2-circle me-1"></i> Save Feature';
+        }
+
+        if (res.status === 'success') {
+            const bsModal = bootstrap.Modal.getInstance(document.getElementById('featureMasterModal'));
+            if (bsModal) bsModal.hide();
+            loadAllIssues();
+        } else {
+            alert(res.message || 'Error saving feature');
+        }
+    })
+    .catch(err => {
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="bi bi-check2-circle me-1"></i> Save Feature';
+        }
+        console.error('Save feature error:', err);
+        alert('An unexpected error occurred while saving the feature.');
+    });
+}
+
+function deleteFeature(featureId) {
+    if (!featureId) return;
+    if (!confirm(`Are you sure you want to delete this feature (ID: ${featureId})? This will also unlink any issues attached to this feature.`)) return;
+
+    fetch('api/v1/issues/manage-feature.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete', id: featureId, feature_id: featureId })
+    })
+    .then(res => res.json())
+    .then(res => {
+        if (res.status === 'success') {
+            loadAllIssues();
+        } else {
+            alert(res.message || 'Error deleting feature');
+        }
+    })
+    .catch(err => {
+        console.error('Delete feature error:', err);
+        alert('An unexpected error occurred while deleting the feature.');
+    });
 }
 </script>

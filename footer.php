@@ -2308,8 +2308,10 @@ if ($monitorPanel === true) { ?>
 // echo "</pre>";
 unset($_SESSION['query_log']);
 
-// Include Cross-Platform Issue Tracker & Dimension Health Modal
-include_once __DIR__ . '/components/issue-tracker-modal.php';
+// Include Cross-Platform Issue Tracker & Dimension Health Modal (Only for Admin users)
+if (isset($is_admin) && $is_admin > 0) {
+    include_once __DIR__ . '/components/issue-tracker-modal.php';
+}
 
 $conn->close();
 

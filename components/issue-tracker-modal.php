@@ -3,6 +3,10 @@
  * EIMBox Screen Issue & Dimension Health Modal Component
  * Displays screen dimensions health, formula-based problem %, and issue management
  */
+$isAdminUser = intval($is_admin ?? $_SESSION['isadmin'] ?? 0);
+if ($isAdminUser <= 0) {
+    return;
+}
 $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
 ?>
 <!-- Issue Tracker Floating Trigger -->
@@ -99,9 +103,14 @@ $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
                                 <i class="bi bi-info-circle-fill me-1"></i> <strong>Dimension Health Formula:</strong> 
                                 Not Tested: 100%, Error: 70%, On Progress: 50%, Bug: 30%, OK / N/A: 0% problem.
                             </div>
-                            <button class="btn btn-sm btn-primary rounded-pill px-3" onclick="eimboxSaveAllDimensions()">
-                                <i class="bi bi-check2-circle me-1"></i> Save Changes
-                            </button>
+                            <div class="d-flex align-items-center gap-2">
+                                <span id="eimbox-dim-autosave-status" class="badge bg-light text-secondary border d-none" style="font-size: 11px;">
+                                    <i class="bi bi-check2 me-1"></i> Auto-saved
+                                </span>
+                                <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="eimboxSaveAllDimensions(true)">
+                                    <i class="bi bi-check2-circle me-1"></i> Save All
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Dimensions Grid -->
@@ -114,8 +123,11 @@ $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
 
                         <!-- Notes -->
                         <div class="mt-4">
-                            <label class="form-label fw-bold small text-muted text-uppercase">Screen Implementation Notes</label>
-                            <textarea id="eimbox-dimension-notes" class="form-control" rows="2" placeholder="Write any specific screen-level technical or functional notes here..."></textarea>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label fw-bold small text-muted text-uppercase mb-0">Screen Implementation Notes</label>
+                                <span class="text-muted" style="font-size: 11px;">Auto-saves on blur</span>
+                            </div>
+                            <textarea id="eimbox-dimension-notes" class="form-control" rows="2" placeholder="Write any specific screen-level technical or functional notes here..." onblur="eimboxSaveNotes()"></textarea>
                         </div>
                     </div>
 
@@ -362,12 +374,130 @@ function eimboxRenderDimensions(data) {
     container.innerHTML = html;
 }
 
-function eimboxChangeDimensionBadge(selectEl) {
-    const val = selectEl.value;
-    selectEl.className = `form-select form-select-sm fw-bold ${eimboxGetStatusBadgeClass(val)}`;
+let eimboxAutosaveTimer = null;
+function eimboxShowAutosaveStatus(type, text) {
+    const el = document.getElementById('eimbox-dim-autosave-status');
+    if (!el) return;
+
+    if (eimboxAutosaveTimer) clearTimeout(eimboxAutosaveTimer);
+
+    el.classList.remove('d-none', 'bg-light', 'bg-success', 'bg-danger', 'bg-warning', 'text-white', 'text-secondary', 'text-primary');
+    if (type === 'saving') {
+        el.className = 'badge bg-light text-primary border';
+        el.innerHTML = `<span class="spinner-border spinner-border-sm me-1" style="width: 10px; height: 10px;"></span> ${text}`;
+    } else if (type === 'saved') {
+        el.className = 'badge bg-success text-white shadow-sm';
+        el.innerHTML = `<i class="bi bi-check2-circle me-1"></i> ${text}`;
+        eimboxAutosaveTimer = setTimeout(() => {
+            el.classList.add('d-none');
+        }, 2500);
+    } else if (type === 'error') {
+        el.className = 'badge bg-danger text-white shadow-sm';
+        el.innerHTML = `<i class="bi bi-exclamation-circle me-1"></i> ${text}`;
+        eimboxAutosaveTimer = setTimeout(() => {
+            el.classList.add('d-none');
+        }, 4000);
+    }
 }
 
-function eimboxSaveAllDimensions() {
+function eimboxGetProblemScore(status) {
+    const s = String(status || '').toLowerCase().trim();
+    if (s === 'not tested' || s === 'nottest') return 100.0;
+    if (s === 'error') return 70.0;
+    if (s === 'on progress' || s === 'ongoing' || s === 'progress') return 50.0;
+    if (s === 'bug') return 30.0;
+    if (s === 'ok' || s === 'completed' || s === 'not applicable' || s === 'n/a' || s === 'na') return 0.0;
+    return 100.0;
+}
+
+function eimboxRecalculateDimensionsLocal() {
+    const selects = document.querySelectorAll('[data-dim-key]');
+    if (!selects.length) return;
+
+    let totalScore = 0;
+    selects.forEach(s => {
+        totalScore += eimboxGetProblemScore(s.value);
+    });
+
+    const dimProbAvg = Math.round(totalScore / selects.length);
+    const statEl = document.getElementById('eimbox-dim-prob-stat');
+    if (statEl) statEl.innerText = `${dimProbAvg}% Prob`;
+
+    const healthPercent = Math.max(0, 100 - dimProbAvg);
+    eimboxUpdateCircularUI(dimProbAvg, healthPercent);
+}
+
+function eimboxChangeDimensionBadge(selectEl) {
+    const val = selectEl.value;
+    const dimKey = selectEl.getAttribute('data-dim-key');
+    selectEl.className = `form-select form-select-sm fw-bold ${eimboxGetStatusBadgeClass(val)}`;
+
+    // Update in-memory state
+    if (eimboxCurrentIssueData && eimboxCurrentIssueData.dimensions) {
+        eimboxCurrentIssueData.dimensions[dimKey] = val;
+    }
+
+    // Recalculate and update UI circles immediately
+    eimboxRecalculateDimensionsLocal();
+
+    // Show instant saving indicator
+    eimboxShowAutosaveStatus('saving', `Saving ${dimKey}...`);
+
+    // Asynchronously save dimension via API
+    fetch(`${EIMBOX_ISSUE_CONFIG.apiBase}save-dimension.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            route: EIMBOX_ISSUE_CONFIG.script,
+            dimension: dimKey,
+            status: val
+        })
+    })
+    .then(res => res.json())
+    .then(res => {
+        if (res.status === 'success') {
+            eimboxShowAutosaveStatus('saved', 'Auto-saved ✓');
+        } else {
+            eimboxShowAutosaveStatus('error', res.message || 'Save failed');
+            console.error('Dimension save error:', res.message);
+        }
+    })
+    .catch(err => {
+        eimboxShowAutosaveStatus('error', 'Network error');
+        console.error('Dimension save error:', err);
+    });
+}
+
+function eimboxSaveNotes() {
+    const notesEl = document.getElementById('eimbox-dimension-notes');
+    if (!notesEl) return;
+    const notes = notesEl.value.trim();
+
+    eimboxShowAutosaveStatus('saving', 'Saving notes...');
+
+    fetch(`${EIMBOX_ISSUE_CONFIG.apiBase}save-dimension.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            route: EIMBOX_ISSUE_CONFIG.script,
+            notes: notes
+        })
+    })
+    .then(res => res.json())
+    .then(res => {
+        if (res.status === 'success') {
+            eimboxShowAutosaveStatus('saved', 'Notes saved ✓');
+        } else {
+            eimboxShowAutosaveStatus('error', res.message || 'Notes save failed');
+        }
+    })
+    .catch(err => {
+        eimboxShowAutosaveStatus('error', 'Network error');
+        console.error('Notes save error:', err);
+    });
+}
+
+function eimboxSaveAllDimensions(isManual = false) {
     const selects = document.querySelectorAll('[data-dim-key]');
     const dimUpdates = {};
     selects.forEach(s => {
@@ -382,6 +512,8 @@ function eimboxSaveAllDimensions() {
         notes: notes
     };
 
+    eimboxShowAutosaveStatus('saving', 'Saving all...');
+
     fetch(`${EIMBOX_ISSUE_CONFIG.apiBase}save-dimension.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -390,13 +522,17 @@ function eimboxSaveAllDimensions() {
     .then(res => res.json())
     .then(res => {
         if (res.status === 'success') {
-            eimboxLoadPageIssues();
-            alert('Dimensions saved successfully!');
+            eimboxShowAutosaveStatus('saved', 'All saved successfully ✓');
+            eimboxLoadPageIssues(false);
         } else {
-            alert(res.message || 'Error saving dimensions');
+            eimboxShowAutosaveStatus('error', res.message || 'Error saving');
+            if (isManual) alert(res.message || 'Error saving dimensions');
         }
     })
-    .catch(err => console.error('Save dimension error:', err));
+    .catch(err => {
+        eimboxShowAutosaveStatus('error', 'Network error');
+        console.error('Save dimension error:', err);
+    });
 }
 
 function eimboxRenderIssues(data) {
