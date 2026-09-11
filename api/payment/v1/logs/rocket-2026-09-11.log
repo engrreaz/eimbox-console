@@ -1,0 +1,60 @@
+[2026-09-11 13:49:45] [VALIDATION_REQUEST] REQ: {"usrid":"Rocket","pswrd":"Rocket123","refNo1":"1031871687","refNo2":"103187","refNo3":""} | RES: null
+[2026-09-11 13:49:45] [RESPONSE] REQ: "api" | RES: {"errCode":"01","errMsg":"Student Not Found for given ID and Institution"}
+[2026-09-11 13:52:26] [VALIDATION_REQUEST] REQ: {"usrid":"Rocket","pswrd":"Rocket123","refNo1":"1031871631","refNo2":"103187","refNo3":""} | RES: null
+[2026-09-11 13:52:26] [RESPONSE] REQ: "api" | RES: {"errCode":"00","errMsg":"Successful","customerName":"sdfdsfs","optionalInfo1":"Class: Eight (Computer)","optionalInfo2":"Roll: 1 | Year: 2026","optionalInfo3":"Institute SC: 103187","amount":"128"}
+[2026-09-11 13:52:58] [VALIDATION_REQUEST] REQ: {"usrid":"Rocket","pswrd":"Rocket123","refNo1":"1031871631","refNo2":"103187","refNo3":""} | RES: null
+[2026-09-11 13:52:58] [RESPONSE] REQ: "api" | RES: {"errCode":"00","errMsg":"Successful","customerName":"sdfdsfs","optionalInfo1":"Class: Eight (Computer)","optionalInfo2":"Roll: 1 | Year: 2026","optionalInfo3":"Institute SC: 103187","amount":"128"}
+[2026-09-11 13:53:24] [VALIDATION_REQUEST] REQ: {"usrid":"Rocket","pswrd":"Rocket13","refNo1":"1031871631","refNo2":"103187","refNo3":""} | RES: null
+[2026-09-11 13:53:24] [RESPONSE] REQ: "validate_rocket_auth" | RES: {"errCode":"01","errMsg":"Invalid Authentication"}
+[2026-09-11 13:53:30] [VALIDATION_REQUEST] REQ: {"usrid":"Rocket","pswrd":"Rocket1223","refNo1":"1031871631","refNo2":"103187","refNo3":""} | RES: null
+[2026-09-11 13:53:30] [RESPONSE] REQ: "validate_rocket_auth" | RES: {"errCode":"01","errMsg":"Invalid Authentication"}
+[2026-09-11 13:53:35] [VALIDATION_REQUEST] REQ: {"usrid":"Rocket0","pswrd":"Rocket123","refNo1":"1031871631","refNo2":"103187","refNo3":""} | RES: null
+[2026-09-11 13:53:35] [RESPONSE] REQ: "validate_rocket_auth" | RES: {"errCode":"01","errMsg":"Invalid Authentication"}
+[2026-09-11 13:53:40] [VALIDATION_REQUEST] REQ: {"usrid":"Rocket","pswrd":"Rocket123","refNo1":"1031871631","refNo2":"103187","refNo3":""} | RES: null
+[2026-09-11 13:53:40] [RESPONSE] REQ: "api" | RES: {"errCode":"00","errMsg":"Successful","customerName":"sdfdsfs","optionalInfo1":"Class: Eight (Computer)","optionalInfo2":"Roll: 1 | Year: 2026","optionalInfo3":"Institute SC: 103187","amount":"128"}
+[2026-09-11 13:58:38] [CONFIRMATION_REQUEST] REQ: {"userid":"Rocket","password":"Rocket123","txnid":"DBBLTESTTXN001","txndate":"2026-09-11 13:45:00","refno1":"1031871631","refno2":"103187","refno3":"","amount":"128"} | RES: null
+[2026-09-11 13:58:38] [RESPONSE] REQ: "api" | RES: {"errCode":"99","errMsg":"Database error: Incorrect integer value: 'DBBLTESTTXN001' for column 'pr1no' at row 1"}
+[2026-09-11 14:12:04] [CONFIRMATION_REQUEST] REQ: {"userid":"Rocket","password":"Rocket123","txnid":"DBBLTESTTXN001","txndate":"2026-09-11 13:45:00","refno1":"1031871631","refno2":"103187","refno3":"","amount":"128"} | RES: null
+[2026-09-11 14:12:04] [RESPONSE] REQ: "api" | RES: {"errCode":"99","errMsg":"Database error: Incorrect date value: '2026' for column 'pr1date' at row 1"}
+[2026-09-11 14:14:53] [CONFIRMATION_REQUEST] REQ: {"userid":"Rocket","password":"Rocket123","txnid":"DBBLTESTTXN001","txndate":"2026-09-11 13:45:00","refno1":"1031871631","refno2":"103187","refno3":"","amount":"128"} | RES: null
+[2026-09-11 14:14:53] [RESPONSE] REQ: "api" | RES: {"errCode":"99","errMsg":"Database error: Incorrect date value: '2026' for column 'pr1date' at row 1"}
+[2026-09-11 14:17:30] [CONFIRMATION_REQUEST] REQ: {"userid":"Rocket","password":"Rocket123","txnid":"DBBLTESTTXN001","txndate":"2026-09-11 13:45:00","refno1":"1031871631","refno2":"103187","refno3":"","amount":"128"} | RES: null
+[2026-09-11 14:17:30] [RESPONSE] REQ: "api" | RES: {"errCode":"99","errMsg":"Database error: Incorrect date value: '2026' for column 'pr1date' at row 1"}
+[2026-09-11 14:25:13] [CONFIRMATION_REQUEST] REQ: {"userid":"Rocket","password":"Rocket123","txnid":"DBBLTESTTXN001","txndate":"2026-09-11 13:45:00","refno1":"1031871631","refno2":"103187","refno3":"","amount":"128"} | RES: null
+[2026-09-11 14:25:13] [RESPONSE] REQ: "api" | RES: {"errCode":"99","errMsg":"Database error: Incorrect integer value: 'Rocket Pay' for column 'partid' at row 1"}
+[2026-09-11 14:26:57] [CONFIRMATION_REQUEST] REQ: {"userid":"Rocket","password":"Rocket123","txnid":"DBBLTESTTXN001","txndate":"2026-09-11 13:45:00","refno1":"1031871631","refno2":"103187","refno3":"","amount":"128"} | RES: null
+[2026-09-11 14:26:57] [RESPONSE] REQ: "api" | RES: {"errCode":"00","errMsg":"Payment Information Updated Successfully"}
+[2026-09-11 14:29:50] [CONFIRMATION_REQUEST] REQ: {"userid":"Rocket","password":"Rocket123","txnid":"DBBLTESTTXN001","txndate":"2026-09-11 13:45:00","refno1":"1031871631","refno2":"103187","refno3":"","amount":"128"} | RES: null
+[2026-09-11 14:29:50] [RESPONSE] REQ: "api" | RES: {"errCode":"00","errMsg":"Payment Information Updated Successfully"}
+[2026-09-11 14:30:10] [CONFIRMATION_REQUEST] REQ: {"userid":"Rocket","password":"Rocket123","txnid":"DBBLTESTTXN002","txndate":"2026-09-11 13:45:00","refno1":"1031871631","refno2":"103187","refno3":"","amount":"128"} | RES: null
+[2026-09-11 14:30:10] [RESPONSE] REQ: "api" | RES: {"errCode":"00","errMsg":"Payment Information Updated Successfully"}
+[2026-09-11 14:33:52] [CONFIRMATION_REQUEST] REQ: {"userid":"Rocket","password":"Rocket123","txnid":"DBBLTESTTXN003","txndate":"2026-09-11 13:45:00","refno1":"1031871631","refno2":"103187","refno3":"","amount":"128"} | RES: null
+[2026-09-11 14:33:52] [RESPONSE] REQ: "api" | RES: {"errCode":"00","errMsg":"Payment Information Updated Successfully"}
+[2026-09-11 14:35:52] [VALIDATION_REQUEST] REQ: {"usrid":"Rocket","pswrd":"Rocket123","refNo1":"1031871631","refNo2":"103187","refNo3":""} | RES: null
+[2026-09-11 14:35:52] [RESPONSE] REQ: "api" | RES: {"errCode":"00","errMsg":"Successful","customerName":"sdfdsfs","optionalInfo1":"Class: Eight (Computer)","optionalInfo2":"Roll: 1 | Year: 2026","optionalInfo3":"Institute SC: 103187","amount":"0"}
+[2026-09-11 14:37:19] [INQUIRY_REQUEST] REQ: {"userid":"Rocket","password":"Rocket123","txnid":"DBBLTESTTXN001","refno1":"1031871631","refno2":"103187"} | RES: null
+[2026-09-11 14:37:19] [RESPONSE] REQ: "api" | RES: {"errCode":"00","errMsg":"Payment Information Updated Successfully"}
+[2026-09-11 14:44:09] [INQUIRY_REQUEST] REQ: {"userid":"Rocket","password":"Rocket123","txnid":"DBBLTESTTXN001","refno1":"1031871631","refno2":"103187"} | RES: null
+[2026-09-11 14:44:09] [RESPONSE] REQ: "api" | RES: {"errCode":"00","errMsg":"Payment Information Updated Successfully"}
+[2026-09-11 14:51:14] [VALIDATION_REQUEST] REQ: {"usrid":"Rocket","pswrd":"Rocket123","refNo1":"1031871631","refNo2":"103187","refNo3":""} | RES: null
+[2026-09-11 14:51:14] [RESPONSE] REQ: "api" | RES: {"errCode":"00","errMsg":"Successful","customerName":"sdfdsfs","optionalInfo1":"Class: Eight (Computer)","optionalInfo2":"Roll: 1 | Year: 2026","optionalInfo3":"Institute SC: 103187","amount":"0"}
+[2026-09-11 14:51:22] [VALIDATION_REQUEST] REQ: {"usrid":"Rocket","pswrd":"Rocket123","refNo1":"1031871631","refNo2":"103186","refNo3":""} | RES: null
+[2026-09-11 14:51:22] [RESPONSE] REQ: "api" | RES: {"errCode":"01","errMsg":"Student Not Found for given ID and Institution"}
+[2026-09-11 14:51:30] [VALIDATION_REQUEST] REQ: {"usrid":"Rocket","pswrd":"Rocket123","refNo1":"1031871632","refNo2":"103187","refNo3":""} | RES: null
+[2026-09-11 14:51:30] [RESPONSE] REQ: "api" | RES: {"errCode":"00","errMsg":"Successful","customerName":"sdfdsfdsfsdf","optionalInfo1":"Class: Eight (Computer)","optionalInfo2":"Roll: 2 | Year: 2026","optionalInfo3":"Institute SC: 103187","amount":"149"}
+[2026-09-11 14:53:18] [CONFIRMATION_REQUEST] REQ: {"userid":"Rocket","password":"Rocket123","txnid":"DBBLTESTTXN011","txndate":"2026-09-11 13:45:00","refno1":"1031871631","refno2":"103187","refno3":"","amount":"1200"} | RES: null
+[2026-09-11 14:53:18] [RESPONSE] REQ: "api" | RES: {"errCode":"99","errMsg":"Database error: Duplicate entry '0' for key 'rocket_transactions.txnid'"}
+[2026-09-11 14:53:46] [CONFIRMATION_REQUEST] REQ: {"userid":"Rocket","password":"Rocket123","txnid":"DBBLTESTTXN012","txndate":"2026-09-11 13:45:00","refno1":"1031871631","refno2":"103187","refno3":"","amount":"1200"} | RES: null
+[2026-09-11 14:53:46] [RESPONSE] REQ: "api" | RES: {"errCode":"99","errMsg":"Database error: Duplicate entry '0' for key 'rocket_transactions.txnid'"}
+[2026-09-11 14:54:55] [CONFIRMATION_REQUEST] REQ: {"userid":"Rocket","password":"Rocket123","txnid":"DBBLTESTTXN012","txndate":"2026-09-11 13:45:00","refno1":"1031871631","refno2":"103187","refno3":"","amount":"1200"} | RES: null
+[2026-09-11 14:54:55] [RESPONSE] REQ: "api" | RES: {"errCode":"99","errMsg":"Database error: Duplicate entry '0' for key 'rocket_transactions.txnid'"}
+[2026-09-11 14:57:40] [CONFIRMATION_REQUEST] REQ: {"userid":"Rocket","password":"Rocket123","txnid":"DBBLTESTTXN012","txndate":"2026-09-11 13:45:00","refno1":"1031871631","refno2":"103187","refno3":"","amount":"1200"} | RES: null
+[2026-09-11 14:57:40] [RESPONSE] REQ: "api" | RES: {"errCode":"00","errMsg":"Payment Information Updated Successfully"}
+[2026-09-11 14:59:56] [CONFIRMATION_REQUEST] REQ: {"userid":"Rocket","password":"Rocket123","txnid":"DBBLTESTTXN012","txndate":"2026-09-11 13:45:00","refno1":"1031871631","refno2":"103187","refno3":"","amount":"1200"} | RES: null
+[2026-09-11 14:59:56] [RESPONSE] REQ: "api" | RES: {"errCode":"00","errMsg":"Payment Information Updated Successfully"}
+[2026-09-11 15:01:51] [INQUIRY_REQUEST] REQ: {"userid":"Rocket","password":"Rocket123","txnid":"DBBLTESTTXN012","refno1":"1031871631","refno2":"103187"} | RES: null
+[2026-09-11 15:01:51] [RESPONSE] REQ: "api" | RES: {"errCode":"00","errMsg":"Payment Information Updated Successfully"}
+[2026-09-11 15:01:55] [INQUIRY_REQUEST] REQ: {"userid":"Rocket","password":"Rocket123","txnid":"DBBLTESTTXN012","refno1":"1031871631","refno2":"103187"} | RES: null
+[2026-09-11 15:01:55] [RESPONSE] REQ: "api" | RES: {"errCode":"00","errMsg":"Payment Information Updated Successfully"}
+[2026-09-11 15:02:00] [CONFIRMATION_REQUEST] REQ: {"userid":"Rocket","password":"Rocket123","txnid":"DBBLTESTTXN012","txndate":"2026-09-11 13:45:00","refno1":"1031871631","refno2":"103187","refno3":"","amount":"1200"} | RES: null
+[2026-09-11 15:02:00] [RESPONSE] REQ: "api" | RES: {"errCode":"00","errMsg":"Payment Information Updated Successfully"}

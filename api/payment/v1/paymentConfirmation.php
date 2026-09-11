@@ -13,7 +13,7 @@ $input = get_rocket_input();
 log_rocket_transaction('CONFIRMATION_REQUEST', $input, null);
 
 $txnId = trim((string)($input['txnid'] ?? $input['txnId'] ?? ''));
-$txnDate = trim((string)($input['txndate'] ?? $input['txnDate'] ?? date('Y-m-d H:i:s')));
+$txnDate = $txnDate_rocket = trim((string)($input['txndate'] ?? $input['txnDate'] ?? date('Y-m-d H:i:s')));
 $refNo1 = trim((string)($input['refno1'] ?? $input['refNo1'] ?? ''));
 $refNo2 = trim((string)($input['refno2'] ?? $input['refNo2'] ?? ''));
 $refNo3 = trim((string)($input['refno3'] ?? $input['refNo3'] ?? ''));
@@ -100,15 +100,50 @@ try {
                    AND stid = ? 
                    AND month <= ? 
                    AND dues > 0 
-                 ORDER BY month ASC, partid ASC, id ASC";
+                 ORDER BY month ASC, id ASC";
     $dueStmt = $conn->prepare($dueQuery);
     $dueStmt->bind_param("isis", $sccode, $syPattern, $stid, $currMonth);
     $dueStmt->execute();
     $dueRes = $dueStmt->get_result();
 
+    // 6. Generate PRNO for Student in this Session
+    // Query the latest receipt (prno) for this student from `stpr`
+    $lastPrStmt = $conn->prepare("SELECT prno FROM stpr WHERE sccode = ? AND stid = ? AND sessionyear = ? ORDER BY id DESC LIMIT 1");
+    $lastPrStmt->bind_param("iis", $sccode, $stid, $actualYear);
+    $lastPrStmt->execute();
+    $lastPrRes = $lastPrStmt->get_result();
+    $lastPrRow = $lastPrRes->fetch_assoc();
+    $lastPrStmt->close();
+
+    $newPrNo = 0;
+    if ($lastPrRow && !empty($lastPrRow['prno']) && is_numeric($lastPrRow['prno'])) {
+        // Increment last prno by 1
+        $newPrNo = (int)$lastPrRow['prno'] + 1;
+    } else {
+        // Generate new 8-digit receipt number:
+        // First 2 digits: Last 2 digits of sessionyear (e.g., '26' from '2026' or '2025-26')
+        $cleanYear = preg_replace('/[^0-9]/', '', (string)$actualYear);
+        $yearPrefix = strlen($cleanYear) >= 2 ? substr($cleanYear, -2) : date('y');
+
+        // Middle 4 digits: Last 4 digits of student ID (stid)
+        $cleanStid = (string)$stid;
+        $stidPart = strlen($cleanStid) >= 4 ? substr($cleanStid, -4) : str_pad($cleanStid, 4, '0', STR_PAD_LEFT);
+
+        // Last 2 digits: Sequence starting with '01'
+        $newPrNo = (int)($yearPrefix . $stidPart . "01");
+    }
+
     $remainingToPay = $amount;
     $updatedCount = 0;
+
+    // Ensure pure DATE format (YYYY-MM-DD) for stfinance (pr1date, pr2date) and stpr (prdate)
     $payDateFormatted = date('Y-m-d');
+    if (!empty($txnDate)) {
+        $parsedTime = strtotime($txnDate);
+        if ($parsedTime !== false) {
+            $payDateFormatted = date('Y-m-d', $parsedTime);
+        }
+    }
 
     while ($row = $dueRes->fetch_assoc()) {
         if ($remainingToPay <= 0) {
@@ -134,7 +169,8 @@ try {
                       `$prByField` = 'Rocket' 
                   WHERE id = ? AND sccode = ?";
         $upStmt = $conn->prepare($upSql);
-        $upStmt->bind_param("ddsssii", $payForThisItem, $payForThisItem, $payForThisItem, $txnId, $payDateFormatted, $fId, $sccode);
+        $intPrNo = (int)$newPrNo;
+        $upStmt->bind_param("dddisii", $payForThisItem, $payForThisItem, $payForThisItem, $intPrNo, $payDateFormatted, $fId, $sccode);
         $upStmt->execute();
         $upStmt->close();
 
@@ -143,40 +179,41 @@ try {
     }
     $dueStmt->close();
 
-    // 7. Insert Receipt into `stpr` Table
+    // 7. Insert Receipt into `stpr` Table (excluding partid)
     $prInsertSql = "INSERT INTO stpr (
         sessionyear, sccode, classname, sectionname, stid, rollno, 
-        prno, prdate, partid, amount, entryby, entrytime, 
+        prno, prdate, amount, entryby, entrytime, 
         smstxt, smscnt, mobileno, smsstatus, statusvalue
     ) VALUES (
         ?, ?, ?, ?, ?, ?, 
-        ?, ?, 'Rocket Pay', ?, 'Rocket', NOW(), 
+        ?, ?, ?, 'Rocket', NOW(), 
         '', 0, ?, 0, ?
     )";
     $prStmt = $conn->prepare($prInsertSql);
     $statusValue = "TxnID: $txnId | DBBL Rocket";
-    $prStmt->bind_param("sississsdss", 
+    $intPrNo = (int)$newPrNo;
+    $prStmt->bind_param("sissiiissss", 
         $actualYear, $sccode, $className, $sectionName, $stid, $rollNo,
-        $txnId, $payDateFormatted, $amount, $mobile, $statusValue
+        $intPrNo, $payDateFormatted, $amount, $mobile, $statusValue
     );
     $prStmt->execute();
     $prStmt->close();
 
     // Update lastpr in sessioninfo
     $upSess = $conn->prepare("UPDATE sessioninfo SET lastpr = ? WHERE sccode = ? AND stid = ? AND sessionyear LIKE ?");
-    $upSess->bind_param("siis", $txnId, $sccode, $stid, $syPattern);
+    $upSess->bind_param("iiis", $intPrNo, $sccode, $stid, $syPattern);
     $upSess->execute();
     $upSess->close();
 
     // 8. Log into `rocket_transactions`
     $rawPayload = json_encode($input, JSON_UNESCAPED_UNICODE);
     $logTxnSql = "INSERT INTO rocket_transactions (
-        sccode, stid, sessionyear, txnid, txndate, amount, 
+        sccode, stid, sessionyear, prno, txnid, txndate, amount, 
         refno1, refno2, refno3, status, response_code, response_msg, raw_request
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Success', '00', 'Payment Information Updated Successfully', ?)";
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Success', '00', 'Payment Information Updated Successfully', ?)";
     $logTxnStmt = $conn->prepare($logTxnSql);
-    $logTxnStmt->bind_param("iissdsssss", 
-        $sccode, $stid, $actualYear, $txnId, $txnDate, $amount,
+    $logTxnStmt->bind_param("iissssdssss", 
+        $sccode, $stid, $actualYear, $intPrNo, $txnId, $txnDate_rocket, $amount,
         $refNo1, $refNo2, $refNo3, $rawPayload
     );
     $logTxnStmt->execute();

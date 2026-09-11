@@ -64,6 +64,7 @@ $initSql = "CREATE TABLE IF NOT EXISTS `rocket_transactions` (
     `sccode` INT NOT NULL,
     `stid` INT NOT NULL,
     `sessionyear` VARCHAR(20) NOT NULL,
+    `prno` BIGINT NULL DEFAULT NULL,
     `txnid` VARCHAR(60) NOT NULL UNIQUE,
     `txndate` VARCHAR(40) NULL,
     `amount` DECIMAL(10,2) NOT NULL,
@@ -76,9 +77,18 @@ $initSql = "CREATE TABLE IF NOT EXISTS `rocket_transactions` (
     `raw_request` TEXT NULL,
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     INDEX `idx_txn` (`txnid`),
+    INDEX `idx_prno` (`prno`),
     INDEX `idx_student` (`sccode`, `stid`, `sessionyear`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 @$conn->query($initSql);
+
+// Ensure `prno` column exists if rocket_transactions was created earlier without it
+$checkCol = $conn->query("SHOW COLUMNS FROM `rocket_transactions` LIKE 'prno'");
+if ($checkCol && $checkCol->num_rows === 0) {
+    @$conn->query("ALTER TABLE `rocket_transactions` ADD `prno` BIGINT NULL DEFAULT NULL AFTER `sessionyear`");
+}
+// Clean up any test row where txnid was accidentally set to '0' or empty during earlier parameter mismatch tests
+@$conn->query("DELETE FROM `rocket_transactions` WHERE `txnid` = '0' OR `txnid` = ''");
 
 // Ensure payment_gateway_keys table exists for per-sccode API key & Secret Key
 $initKeysSql = "CREATE TABLE IF NOT EXISTS `payment_gateway_keys` (
@@ -97,8 +107,8 @@ $initKeysSql = "CREATE TABLE IF NOT EXISTS `payment_gateway_keys` (
 @$conn->query($initKeysSql);
 
 // 4. Default Biller Credentials (Global DBBL Rocket Partnership)
-define('ROCKET_DEFAULT_USER', 'Rocket');
-define('ROCKET_DEFAULT_PASS', 'Rocket123');
+define('ROCKET_DEFAULT_USER', 'Rocket00');
+define('ROCKET_DEFAULT_PASS', 'Rocket12321');
 
 /**
  * Log Rocket Gateway Activity

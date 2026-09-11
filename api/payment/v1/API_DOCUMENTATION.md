@@ -66,13 +66,13 @@ As mandated by the DBBL specification, requests also transmit user credentials d
 
 ## 3. Reference Parameters Convention
 
-DBBL Rocket provides 3 reference fields (`refNo1`, `refNo2`, `refNo3`). EIMBox handles standard flexible mapping:
+DBBL Rocket provides 3 reference fields (`refNo1`, `refNo2`, `refNo3`). EIMBox standard mapping:
 
 | Parameter | Data Type | Requirement | Description | Accepted Formats |
 |---|---|---|---|---|
-| `refNo1` | Alpha-Numeric (25) | **Mandatory** | Primary Student Identifier | • `sccode-stid` (e.g. `1001-10502`)<br>• Student ID only (e.g. `10502`) |
-| `refNo2` | Alpha-Numeric (25) | Optional | Institution Code (`sccode`) | If `refNo1` contains only Student ID, `refNo2` specifies the school code (e.g. `1001`). |
-| `refNo3` | Alpha-Numeric (25) | Optional | Academic Session Year | Academic Year (e.g. `2026`). Defaults to active academic year if left blank. |
+| `refNo1` | Numeric / String (10-25) | **Mandatory** | Student Identifier (`stid`) | • 10-digit Student ID (e.g. `1031871631`)<br>• Backward-compatible combined format (e.g. `103187-1031871631`) |
+| `refNo2` | Numeric / String (6) | **Mandatory** (for independent schools) | Institution EIIN / School Code (`sccode`) | 6-digit Institution Code (e.g. `103187`) fixed for each school. |
+| `refNo3` | Numeric / String (4-10) | Optional | Academic Session Year | Academic Year (e.g. `2026`). If empty, automatically resolves to the student's latest active academic session from `sessioninfo`. |
 
 ---
 
@@ -80,29 +80,29 @@ DBBL Rocket provides 3 reference fields (`refNo1`, `refNo2`, `refNo3`). EIMBox h
 
 ### 4.1 Validation API (`/paymentValidation`)
 
-Validates student existence, queries real-time dues from `stfinance`, and returns the student name and exact amount payable.
+Validates student existence, queries real-time dues from `stfinance`, and returns the student name, academic details, and exact amount payable.
 
-* **Endpoint URL:** `https://console.eimbox.com/api/payment/v1/paymentValidation`  
+* **Endpoint URL:** `https://console.eimbox.com/api/payment/v1/paymentValidation` (or `paymentValidation.php`)
 * **HTTP Method:** `POST`  
 * **Type:** Amount Provided from Partner API (DBBL Doc Section 4.2.b)
 
 #### Request Fields:
 | Parameter | Type | Required | Description |
 |---|---|---|---|
-| `usrid` | String | Yes | Biller User ID |
-| `pswrd` | String | Yes | Biller Password |
-| `refNo1` | String | Yes | Student Reference (e.g. `1001-10502`) |
-| `refNo2` | String | No | Institution Code (`sccode`) if not in `refNo1` |
-| `refNo3` | String | No | Session Year (e.g. `2026`) |
+| `usrid` | String | Yes | Biller User ID (e.g. `Rocket00`) |
+| `pswrd` | String | Yes | Biller Password (e.g. `Rocket12321`) |
+| `refNo1` | String | Yes | 10-digit Student ID (e.g. `1031871631`) |
+| `refNo2` | String | Yes | 6-digit Institution Code (`sccode` / EIIN, e.g. `103187`) |
+| `refNo3` | String | No | Session Year (optional) |
 
 #### Sample Request:
 ```json
 {
-  "usrid": "Rocket",
-  "pswrd": "Rocket123",
-  "refNo1": "1001-10502",
-  "refNo2": "",
-  "refNo3": "2026"
+  "usrid": "Rocket00",
+  "pswrd": "Rocket12321",
+  "refNo1": "1031871631",
+  "refNo2": "103187",
+  "refNo3": ""
 }
 ```
 
@@ -122,11 +122,11 @@ Validates student existence, queries real-time dues from `stfinance`, and return
 {
   "errCode": "00",
   "errMsg": "Successful",
-  "customerName": "RAKIBUL HASAN",
-  "optionalInfo1": "Class: Nine (A)",
-  "optionalInfo2": "Roll: 05 | Year: 2026",
-  "optionalInfo3": "Institute SC: 1001",
-  "amount": "1500"
+  "customerName": "MD. RAHIM AHMED",
+  "optionalInfo1": "Class: Ten (A)",
+  "optionalInfo2": "Roll: 01 | Year: 2026",
+  "optionalInfo3": "Institute SC: 103187",
+  "amount": "1200"
 }
 ```
 
@@ -142,35 +142,44 @@ Validates student existence, queries real-time dues from `stfinance`, and return
 
 ### 4.2 Confirmation API (`/paymentConfirmation`)
 
-Dispatched by DBBL Rocket immediately after the user confirms payment. Settles student finance ledgers, generates receipt record (`stpr`), and logs audit entry.
+Dispatched by DBBL Rocket immediately after the user confirms payment. Settles student finance ledgers (`stfinance`), generates receipt record (`stpr`) with student receipt number (`prno`), and logs audit entry.
 
-* **Endpoint URL:** `https://console.eimbox.com/api/payment/v1/paymentConfirmation`  
+* **Endpoint URL:** `https://console.eimbox.com/api/payment/v1/paymentConfirmation` (or `paymentConfirmation.php`)  
 * **HTTP Method:** `POST`  
 * **DBBL Doc Reference:** Section 4.1.b & 4.2.c
 
 #### Request Fields:
 | Parameter | Type | Required | Description |
 |---|---|---|---|
-| `userid` | String | Yes | Biller User ID |
-| `password` | String | Yes | Biller Password |
+| `userid` | String | Yes | Biller User ID (e.g. `Rocket00`) |
+| `password` | String | Yes | Biller Password (e.g. `Rocket12321`) |
 | `txnid` | String (15-60) | Yes | DBBL Rocket Unique Transaction ID |
-| `txndate` | String (25) | No | Transaction Timestamp (e.g. `11-Sep-2026 04:50:00 AM`) |
-| `refno1` | String | Yes | Student Reference |
-| `refno2` | String | No | School Code / Secondary Reference |
-| `refno3` | String | No | Session Year |
+| `txndate` | String (25) | No | Transaction Timestamp (e.g. `2026-09-11 13:45:00`) |
+| `refno1` | String | Yes | 10-digit Student ID (`stid`, e.g. `1031871631`) |
+| `refno2` | String | Yes | 6-digit Institution Code (`sccode`, e.g. `103187`) |
+| `refno3` | String | No | Session Year (optional) |
 | `amount` | Numeric | Yes | Paid Amount in BDT |
+
+#### Receipt Number (`prno`) Generation Standard:
+* EIMBox queries the student's latest receipt in the academic year from `stpr`.
+* If a previous receipt exists, it increments: `prno = last_prno + 1`.
+* If it is the student's first receipt of the academic year, an **8-digit number** is generated:
+  - **First 2 digits:** Last 2 digits of the session year (e.g., `26` for `2026` or `2025-26`).
+  - **Middle 4 digits:** Last 4 digits of student ID (`stid`, e.g., `1631` from `1031871631`).
+  - **Last 2 digits:** Sequence starting with `01`.
+  - *Example:* For session `2026` and student `1031871631`, the first receipt is `26163101`.
 
 #### Sample Request:
 ```json
 {
-  "userid": "Rocket",
-  "password": "Rocket123",
-  "txnid": "DBBL202609110001",
-  "txndate": "11-Sep-2026 04:50:00 AM",
-  "refno1": "1001-10502",
-  "refno2": "",
-  "refno3": "2026",
-  "amount": "1500"
+  "userid": "Rocket00",
+  "password": "Rocket12321",
+  "txnid": "DBBLTESTTXN012",
+  "txndate": "2026-09-11 13:45:00",
+  "refno1": "1031871631",
+  "refno2": "103187",
+  "refno3": "",
+  "amount": "1200"
 }
 ```
 
@@ -256,12 +265,13 @@ Used by the DBBL Rocket automated scheduler to verify transaction settlement sta
 ```bash
 curl -i -X POST "https://console.eimbox.com/api/payment/v1/paymentValidation" \
   -H "Content-Type: application/json" \
-  -u "Rocket:Rocket123" \
+  -u "Rocket00:Rocket12321" \
   -d '{
-    "usrid": "Rocket",
-    "pswrd": "Rocket123",
-    "refNo1": "1001-10502",
-    "refNo3": "2026"
+    "usrid": "Rocket00",
+    "pswrd": "Rocket12321",
+    "refNo1": "1031871631",
+    "refNo2": "103187",
+    "refNo3": ""
   }'
 ```
 
@@ -269,14 +279,15 @@ curl -i -X POST "https://console.eimbox.com/api/payment/v1/paymentValidation" \
 ```bash
 curl -i -X POST "https://console.eimbox.com/api/payment/v1/paymentConfirmation" \
   -H "Content-Type: application/json" \
-  -u "Rocket:Rocket123" \
+  -u "Rocket00:Rocket12321" \
   -d '{
-    "userid": "Rocket",
-    "password": "Rocket123",
-    "txnid": "TEST_TXN_001",
-    "txndate": "11-Sep-2026 05:00:00 AM",
-    "refno1": "1001-10502",
-    "amount": "1500"
+    "userid": "Rocket00",
+    "password": "Rocket12321",
+    "txnid": "DBBLTESTTXN012",
+    "txndate": "2026-09-11 13:45:00",
+    "refno1": "1031871631",
+    "refno2": "103187",
+    "amount": "1200"
   }'
 ```
 
@@ -284,11 +295,11 @@ curl -i -X POST "https://console.eimbox.com/api/payment/v1/paymentConfirmation" 
 ```bash
 curl -i -X POST "https://console.eimbox.com/api/payment/v1/getPaymentStatus" \
   -H "Content-Type: application/json" \
-  -u "Rocket:Rocket123" \
+  -u "Rocket00:Rocket12321" \
   -d '{
-    "userid": "Rocket",
-    "password": "Rocket123",
-    "txnid": "TEST_TXN_001"
+    "userid": "Rocket00",
+    "password": "Rocket12321",
+    "txnid": "DBBLTESTTXN012"
   }'
 ```
 
@@ -297,31 +308,33 @@ curl -i -X POST "https://console.eimbox.com/api/payment/v1/getPaymentStatus" \
 ```powershell
 $headers = @{
     "Content-Type" = "application/json"
-    "Authorization" = "Basic " + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("Rocket:Rocket123"))
+    "Authorization" = "Basic " + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("Rocket00:Rocket12321"))
 }
 
 # 1. Validation
 $valBody = @{
-    usrid = "Rocket"
-    pswrd = "Rocket123"
-    refNo1 = "1001-10502"
-    refNo3 = "2026"
+    usrid = "Rocket00"
+    pswrd = "Rocket12321"
+    refNo1 = "1031871631"
+    refNo2 = "103187"
+    refNo3 = ""
 } | ConvertTo-Json
 
-$valRes = Invoke-RestMethod -Uri "https://console.eimbox.com/api/payment/v1/paymentValidation" -Method Post -Headers $headers -Body $valBody
+$valRes = Invoke-RestMethod -Uri "http://localhost/eimbox-dashboard/eimbox-materio/api/payment/v1/paymentValidation.php" -Method Post -Headers $headers -Body $valBody
 $valRes | ConvertTo-Json
 
 # 2. Confirmation
 $confBody = @{
-    userid = "Rocket"
-    password = "Rocket123"
+    userid = "Rocket00"
+    password = "Rocket12321"
     txnid = "DBBL_" + (Get-Random -Minimum 100000 -Maximum 999999)
-    txndate = (Get-Date).ToString("dd-MMM-yyyy hh:mm:ss tt")
-    refno1 = "1001-10502"
+    txndate = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
+    refno1 = "1031871631"
+    refno2 = "103187"
     amount = $valRes.amount
 } | ConvertTo-Json
 
-$confRes = Invoke-RestMethod -Uri "https://console.eimbox.com/api/payment/v1/paymentConfirmation" -Method Post -Headers $headers -Body $confBody
+$confRes = Invoke-RestMethod -Uri "http://localhost/eimbox-dashboard/eimbox-materio/api/payment/v1/paymentConfirmation.php" -Method Post -Headers $headers -Body $confBody
 $confRes | ConvertTo-Json
 ```
 
