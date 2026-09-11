@@ -9,23 +9,74 @@ if ($isAdminUser <= 0) {
 }
 $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
 ?>
-<!-- Issue Tracker Floating Trigger -->
+<!-- Issue Tracker Floating Trigger: Circular Bar Only (No pill) -->
 <div id="eimbox-issue-tracker-floating" style="position: fixed; bottom: 42px; right: 20px; z-index: 99998;">
-    <button type="button" class="btn btn-sm btn-dark shadow-lg d-flex align-items-center gap-2 px-3 py-2 rounded-pill" 
-            onclick="eimboxOpenIssueModal()" style="border: 2px solid rgba(255,255,255,0.2); backdrop-filter: blur(8px);">
-        <!-- Mini circular SVG -->
-        <div style="width: 22px; height: 22px; position: relative;">
-            <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg);">
-                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" 
-                      fill="none" stroke="#444" stroke-width="4.5" />
-                <path id="eimbox-mini-circle-progress" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" 
-                      fill="none" stroke="#28a745" stroke-width="4.5" stroke-dasharray="0, 100" />
-            </svg>
+    <button type="button" class="btn btn-dark shadow-lg rounded-circle p-0 position-relative d-flex align-items-center justify-content-center" 
+            onclick="eimboxOpenIssueModal()" 
+            id="eimbox-floating-trigger-btn"
+            title="Screen Tracker: 0% Problem | 100% Health (Click to open)"
+            style="width: 46px; height: 46px; min-width: 46px; min-height: 46px; border: 2px solid rgba(255,255,255,0.25); backdrop-filter: blur(8px); transition: transform 0.2s ease;">
+        <!-- Circular Progress SVG Ring -->
+        <svg viewBox="0 0 36 36" style="width: 38px; height: 38px; transform: rotate(-90deg);">
+            <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" 
+                  fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="4" />
+            <path id="eimbox-mini-circle-progress" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" 
+                  fill="none" stroke="#28a745" stroke-width="4.2" stroke-dasharray="0, 100" stroke-linecap="round" />
+        </svg>
+        <!-- Centered Percentage Value -->
+        <div class="position-absolute top-50 start-50 translate-middle text-center text-white" style="line-height: 1; pointer-events: none;">
+            <span id="eimbox-mini-issue-text" class="fw-bold" style="font-size: 11px;">0%</span>
         </div>
-        <span id="eimbox-mini-issue-text" class="fw-semibold small" style="letter-spacing: 0.3px;">Track Issue</span>
-        <span id="eimbox-mini-issue-badge" class="badge rounded-pill bg-danger" style="display:none; font-size: 10px;">0</span>
+        <!-- Tiny Notification Badge for Issues (if any) -->
+        <span id="eimbox-mini-issue-badge" class="badge rounded-pill bg-danger border border-white position-absolute" 
+              style="display: none; font-size: 8.5px; top: -3px; right: -3px; padding: 2px 4px; line-height: 1;">0</span>
     </button>
 </div>
+
+<!-- Custom Modal Styling for Compact 18 Dimensions & Mobile Responsiveness -->
+<style>
+#eimboxIssueTrackerModal .modal-dialog {
+    max-width: 980px;
+    margin: 0.5rem auto;
+}
+@media (max-width: 576px) {
+    #eimboxIssueTrackerModal .modal-dialog {
+        margin: 0.25rem;
+        max-width: 100%;
+    }
+    #eimboxIssueTrackerModal .modal-content {
+        border-radius: 12px !important;
+    }
+}
+.eimbox-dim-tile {
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.09);
+    border-radius: 8px;
+    padding: 6px 6px;
+    transition: all 0.15s ease-in-out;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+.eimbox-dim-tile:hover {
+    border-color: #0d6efd;
+    box-shadow: 0 2px 6px rgba(13, 110, 253, 0.12);
+}
+.eimbox-dim-select {
+    font-size: 10px !important;
+    height: 23px !important;
+    min-height: 23px !important;
+    padding: 0 4px !important;
+    border-radius: 5px !important;
+    cursor: pointer;
+    text-align: center;
+    text-align-last: center;
+    border: 0 !important;
+}
+.eimbox-dim-select option {
+    background-color: #ffffff;
+    color: #212529;
+    font-weight: normal;
+}
+</style>
 
 <!-- Issue Tracker Modal -->
 <div class="modal fade" id="eimboxIssueTrackerModal" tabindex="-1" aria-hidden="true" style="z-index: 105000;">
@@ -33,10 +84,10 @@ $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
         <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
             
             <!-- Modal Header -->
-            <div class="modal-header bg-dark text-white py-3 px-4 d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center gap-3">
+            <div class="modal-header bg-dark text-white py-2 px-3 py-md-3 px-md-4 d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2 gap-md-3">
                     <!-- Circular Health / Problem Score -->
-                    <div style="width: 58px; height: 58px; position: relative;" class="flex-shrink-0">
+                    <div style="width: 46px; height: 46px; position: relative;" class="flex-shrink-0">
                         <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg);">
                             <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" 
                                   fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="3.5" />
@@ -44,20 +95,20 @@ $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
                                   fill="none" stroke="#28a745" stroke-width="3.8" stroke-dasharray="0, 100" stroke-linecap="round" />
                         </svg>
                         <div class="position-absolute top-50 start-50 translate-middle text-center" style="line-height: 1;">
-                            <span id="eimbox-modal-prob-percent" class="fw-bold" style="font-size: 13px;">0%</span>
-                            <div style="font-size: 8px; opacity: 0.7;">Problem</div>
+                            <span id="eimbox-modal-prob-percent" class="fw-bold" style="font-size: 11px;">0%</span>
+                            <div style="font-size: 7.5px; opacity: 0.7;">Problem</div>
                         </div>
                     </div>
 
                     <div>
-                        <div class="d-flex align-items-center gap-2">
-                            <h5 class="modal-title fw-bold text-white mb-0" id="eimbox-modal-title">Screen Issue & Health Tracker</h5>
-                            <span id="eimbox-health-badge" class="badge bg-success small">Health: 100%</span>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <h6 class="modal-title fw-bold text-white mb-0" id="eimbox-modal-title" style="font-size: 15px;">Screen Issue & Health Tracker</h6>
+                            <span id="eimbox-health-badge" class="badge bg-success" style="font-size: 10px;">Health: 100%</span>
                         </div>
-                        <div class="small opacity-75 mt-1 d-flex align-items-center gap-2">
-                            <code class="text-warning bg-black bg-opacity-25 px-2 py-0.5 rounded" id="eimbox-current-script-name"><?= htmlspecialchars($currentScript) ?></code>
-                            <span>• Platform:</span>
-                            <select id="eimbox-platform-select" class="form-select form-select-sm py-0 px-2 d-inline-block w-auto bg-secondary text-white border-0" onchange="eimboxLoadPageIssues()">
+                        <div class="small opacity-75 mt-0.5 d-flex align-items-center gap-1.5 flex-wrap" style="font-size: 11px;">
+                            <code class="text-warning bg-black bg-opacity-25 px-1.5 py-0.5 rounded" id="eimbox-current-script-name"><?= htmlspecialchars($currentScript) ?></code>
+                            <span class="d-none d-sm-inline text-white-50">• Platform:</span>
+                            <select id="eimbox-platform-select" class="form-select form-select-sm py-0 px-1.5 d-inline-block w-auto bg-secondary text-white border-0" style="font-size: 11px; height: 22px;" onchange="eimboxLoadPageIssues()">
                                 <option value="Console" selected>Console</option>
                                 <option value="Dashboard">Dashboard</option>
                                 <option value="Android Lite">Android Lite</option>
@@ -65,27 +116,65 @@ $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
                                 <option value="Desktop">Desktop</option>
                             </select>
                         </div>
+                        <!-- Feature Selector & Linker Bar -->
+                        <div class="d-flex align-items-center gap-1.5 flex-wrap mt-1.5" style="font-size: 11px;">
+                            <span class="text-white-50"><i class="bi bi-box-seam text-info me-1"></i>Feature:</span>
+                            <div class="input-group input-group-sm" style="width: auto;">
+                                <select id="eimbox-feature-select" class="form-select form-select-sm py-0 px-2 bg-secondary text-white border-0" style="font-size: 11px; height: 23px; min-width: 170px; max-width: 260px;" onchange="eimboxOnFeatureSelectChange(this)" title="Select existing feature to link this screen">
+                                    <option value="0">-- Loading Features --</option>
+                                </select>
+                                <button type="button" class="btn btn-sm btn-info text-dark py-0 px-2 fw-semibold d-inline-flex align-items-center gap-0.5" style="font-size: 10px; height: 23px;" onclick="eimboxToggleQuickNewFeature()" title="Create & Link New Feature for this Screen">
+                                    <i class="bi bi-plus-lg"></i><span>New</span>
+                                </button>
+                            </div>
+                            <span id="eimbox-feature-module-badge" class="badge bg-primary bg-opacity-25 text-info border border-info border-opacity-25" style="font-size: 9.5px; display: none;"></span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="d-flex align-items-center gap-2">
-                    <a href="issue-tracker-all.php" class="btn btn-outline-light btn-sm rounded-pill px-3" target="_blank">
+                <div class="d-flex align-items-center gap-1.5">
+                    <a href="issue-tracker-all.php" class="btn btn-outline-light btn-sm rounded-pill px-2 py-0.5 d-none d-sm-inline-flex align-items-center" style="font-size: 11.5px;" target="_blank">
                         <i class="bi bi-box-arrow-up-right me-1"></i> Full Tracker
                     </a>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
             </div>
 
+            <!-- Quick New Feature Inline Card -->
+            <div id="eimbox-quick-feature-box" class="bg-dark border-top border-bottom border-primary border-opacity-50 p-2.5 px-3 px-md-4 text-white" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-1.5">
+                    <span class="fw-bold small text-info d-flex align-items-center gap-1" style="font-size: 11.5px;">
+                        <i class="bi bi-folder-plus"></i> Create & Link New Feature for <code><?= htmlspecialchars($currentScript) ?></code>
+                    </span>
+                    <button type="button" class="btn-close btn-close-white" style="font-size: 8.5px;" onclick="eimboxToggleQuickNewFeature(false)"></button>
+                </div>
+                <div class="row g-2 align-items-center">
+                    <div class="col-12 col-md-5">
+                        <input type="text" id="eimbox-new-feature-name" class="form-control form-control-sm py-1 px-2 bg-secondary bg-opacity-25 text-white border-secondary" style="font-size: 11.5px; height: 28px;" placeholder="Feature Title (e.g. Student Attendance Register)">
+                    </div>
+                    <div class="col-7 col-md-4">
+                        <select id="eimbox-new-feature-module" class="form-select form-select-sm py-1 px-2 bg-secondary bg-opacity-25 text-white border-secondary" style="font-size: 11.5px; height: 28px;">
+                            <!-- Populated dynamically from modules -->
+                        </select>
+                    </div>
+                    <div class="col-5 col-md-3">
+                        <button type="button" class="btn btn-sm btn-success py-1 px-2 rounded-pill w-100 d-inline-flex align-items-center justify-content-center gap-1" style="font-size: 11.5px; height: 28px;" onclick="eimboxCreateAndLinkFeature()">
+                            <i class="bi bi-check2"></i> <span>Save & Link</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Modal Nav Tabs -->
-            <div class="bg-light border-bottom px-4 pt-2">
+            <div class="bg-light border-bottom px-2 px-md-4 pt-1.5">
                 <ul class="nav nav-tabs border-0" id="eimboxIssueTabs" role="tablist">
                     <li class="nav-item">
-                        <button class="nav-link active fw-semibold" id="tab-dimensions-link" data-bs-toggle="tab" data-bs-target="#tab-dimensions" type="button">
-                            <i class="bi bi-grid-3x3-gap-fill me-1"></i> Screen Dimensions (<span id="eimbox-dim-prob-stat">0%</span>)
+                        <button class="nav-link active fw-semibold py-1.5 px-2 px-md-3" id="tab-dimensions-link" data-bs-toggle="tab" data-bs-target="#tab-dimensions" type="button" style="font-size: 12.5px;">
+                            <i class="bi bi-grid-3x3-gap-fill me-1"></i> Dimensions (<span id="eimbox-dim-prob-stat">0%</span>)
                         </button>
                     </li>
                     <li class="nav-item">
-                        <button class="nav-link fw-semibold" id="tab-issues-link" data-bs-toggle="tab" data-bs-target="#tab-issues" type="button">
+                        <button class="nav-link fw-semibold py-1.5 px-2 px-md-3" id="tab-issues-link" data-bs-toggle="tab" data-bs-target="#tab-issues" type="button" style="font-size: 12.5px;">
                             <i class="bi bi-exclamation-triangle-fill me-1"></i> Reported Issues (<span id="eimbox-issues-count-stat">0</span>)
                         </button>
                     </li>
@@ -93,41 +182,53 @@ $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
             </div>
 
             <!-- Modal Body -->
-            <div class="modal-body p-4 bg-light bg-opacity-50">
+            <div class="modal-body p-2 p-md-3 bg-light bg-opacity-50">
                 <div class="tab-content" id="eimboxIssueTabsContent">
                     
                     <!-- TAB 1: DIMENSIONS -->
                     <div class="tab-pane fade show active" id="tab-dimensions" role="tabpanel">
-                        <div class="alert alert-info py-2 px-3 small d-flex justify-content-between align-items-center mb-3">
-                            <div>
-                                <i class="bi bi-info-circle-fill me-1"></i> <strong>Dimension Health Formula:</strong> 
-                                Not Tested: 100%, Error: 70%, On Progress: 50%, Bug: 30%, OK / N/A: 0% problem.
-                            </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <span id="eimbox-dim-autosave-status" class="badge bg-light text-secondary border d-none" style="font-size: 11px;">
-                                    <i class="bi bi-check2 me-1"></i> Auto-saved
-                                </span>
-                                <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="eimboxSaveAllDimensions(true)">
-                                    <i class="bi bi-check2-circle me-1"></i> Save All
-                                </button>
+                        <!-- Compact Top Toolbar -->
+                        <div class="card border shadow-xs p-1.5 p-md-2 mb-2 bg-white" style="border-radius: 8px;">
+                            <div class="d-flex justify-content-between align-items-center gap-1 flex-wrap">
+                                <div class="d-flex align-items-center gap-1.5">
+                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25" style="font-size: 10.5px;">
+                                        <i class="bi bi-grid-3x3 me-1"></i> 18 Dimensions
+                                    </span>
+                                    <span class="badge border text-secondary d-none d-sm-inline-block" style="font-size: 9.5px;" title="Formula: Not Tested: 100%, Error: 70%, Progress: 50%, Bug: 30%, OK/NA: 0%">
+                                        <i class="bi bi-info-circle me-0.5"></i> Health Formula
+                                    </span>
+                                    <span id="eimbox-dim-autosave-status" class="badge bg-light text-secondary border d-none" style="font-size: 10px;">
+                                        <i class="bi bi-check2 me-1"></i> Saved
+                                    </span>
+                                </div>
+                                <div class="d-flex align-items-center gap-1 ms-auto">
+                                    <button class="btn btn-sm btn-outline-success py-0.5 px-2 rounded-pill d-inline-flex align-items-center gap-1" style="font-size: 10.5px; height: 24px;" onclick="eimboxMarkAllDimensionsOK()" title="Mark all 18 dimensions as OK">
+                                        <i class="bi bi-check-all"></i> <span>All OK</span>
+                                    </button>
+                                    <button class="btn btn-sm btn-primary py-0.5 px-2.5 rounded-pill d-inline-flex align-items-center gap-1" style="font-size: 10.5px; height: 24px;" onclick="eimboxSaveAllDimensions(true)" title="Save All Dimensions">
+                                        <i class="bi bi-check2-circle"></i> <span>Save</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Dimensions Grid -->
-                        <div class="row g-3" id="eimbox-dimensions-grid">
+                        <!-- Dimensions Grid: 6 columns on desktop/laptop, 3 columns on mobile (3 rows of 6 = 18 tiles) -->
+                        <div class="row row-cols-3 row-cols-sm-3 row-cols-md-6 g-1.5 g-md-2" id="eimbox-dimensions-grid">
                             <!-- Populated via JS -->
-                            <div class="col-12 text-center py-4 text-muted">
+                            <div class="col-12 text-center py-3 text-muted">
                                 <div class="spinner-border spinner-border-sm me-2"></div> Loading dimensions...
                             </div>
                         </div>
 
-                        <!-- Notes -->
-                        <div class="mt-4">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <label class="form-label fw-bold small text-muted text-uppercase mb-0">Screen Implementation Notes</label>
-                                <span class="text-muted" style="font-size: 11px;">Auto-saves on blur</span>
+                        <!-- Notes Section (Compact) -->
+                        <div class="mt-2">
+                            <div class="d-flex justify-content-between align-items-center mb-0.5">
+                                <label class="form-label fw-semibold text-muted text-uppercase mb-0" style="font-size: 9.5px; letter-spacing: 0.3px;">
+                                    <i class="bi bi-sticky me-1"></i> Screen Implementation Notes
+                                </label>
+                                <span class="text-muted" style="font-size: 9.5px;">Auto-saves on blur</span>
                             </div>
-                            <textarea id="eimbox-dimension-notes" class="form-control" rows="2" placeholder="Write any specific screen-level technical or functional notes here..." onblur="eimboxSaveNotes()"></textarea>
+                            <textarea id="eimbox-dimension-notes" class="form-control form-control-sm py-1 px-2" rows="1" style="font-size: 11px; border-radius: 6px;" placeholder="Write any specific technical or functional notes here..." onblur="eimboxSaveNotes()"></textarea>
                         </div>
                     </div>
 
@@ -141,8 +242,8 @@ $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
                         </div>
 
                         <!-- Issue Form Card (Collapsible) -->
-                        <div id="eimbox-issue-form-card" class="card shadow-sm border-0 mb-4" style="display: none; background: #fff;">
-                            <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center border-bottom">
+                        <div id="eimbox-issue-form-card" class="card shadow-sm border-0 mb-4" style="display: none; border-radius: 12px;">
+                            <div class="card-header py-2 d-flex justify-content-between align-items-center border-bottom">
                                 <span class="fw-bold small" id="eimbox-form-mode-title"><i class="bi bi-pencil-square me-1"></i> Add Issue</span>
                                 <button type="button" class="btn-close" onclick="eimboxHideIssueForm()"></button>
                             </div>
@@ -227,23 +328,29 @@ $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
 <script>
 const EIMBOX_ISSUE_CONFIG = {
     script: "<?= $currentScript ?>",
-    apiBase: "api/v1/issues/",
+    apiBase: "issues/",
+    featureId: 0,
+    featureName: "",
+    moduleName: "General",
     dimensions: [
-        { key: 'ui', label: 'UI / UX Layout', icon: 'bi-window-sidebar' },
-        { key: 'light', label: 'Light Theme', icon: 'bi-sun' },
-        { key: 'dark', label: 'Dark Theme', icon: 'bi-moon-stars' },
-        { key: 'view', label: 'Data View / Query', icon: 'bi-eye' },
-        { key: 'insert', label: 'Data Insert / Add', icon: 'bi-plus-circle' },
-        { key: 'update', label: 'Data Update / Edit', icon: 'bi-pencil-square' },
-        { key: 'delete', label: 'Data Delete / Remove', icon: 'bi-trash' },
-        { key: 'cache', label: 'Cache / Local State', icon: 'bi-hdd' },
-        { key: 'push', label: 'Push Sync (Cloud)', icon: 'bi-cloud-arrow-up' },
-        { key: 'pull', label: 'Pull Sync (Local)', icon: 'bi-cloud-arrow-down' },
-        { key: 'dropdown', label: 'Dropdown / Cascade', icon: 'bi-menu-button-wide' },
-        { key: 'modal', label: 'Modal / Popups', icon: 'bi-front' },
-        { key: 'print', label: 'Print Layout', icon: 'bi-printer' },
-        { key: 'pdf', label: 'PDF Export', icon: 'bi-file-earmark-pdf' },
-        { key: 'permission', label: 'RBAC Permission', icon: 'bi-shield-lock' }
+        { key: 'ui', label: 'UI / UX Layout', short: 'UI/UX', icon: 'bi-window-sidebar' },
+        { key: 'light', label: 'Light Theme', short: 'Light', icon: 'bi-sun' },
+        { key: 'dark', label: 'Dark Theme', short: 'Dark', icon: 'bi-moon-stars' },
+        { key: 'view', label: 'Data View / Query', short: 'View', icon: 'bi-eye' },
+        { key: 'insert', label: 'Data Insert / Add', short: 'Insert', icon: 'bi-plus-circle' },
+        { key: 'update', label: 'Data Update / Edit', short: 'Update', icon: 'bi-pencil-square' },
+        { key: 'delete', label: 'Data Delete / Remove', short: 'Delete', icon: 'bi-trash' },
+        { key: 'cache', label: 'Cache / Local State', short: 'Cache', icon: 'bi-hdd' },
+        { key: 'push', label: 'Push Sync (Cloud)', short: 'Push', icon: 'bi-cloud-arrow-up' },
+        { key: 'pull', label: 'Pull Sync (Local)', short: 'Pull', icon: 'bi-cloud-arrow-down' },
+        { key: 'dropdown', label: 'Dropdown / Cascade', short: 'Dropdown', icon: 'bi-menu-button-wide' },
+        { key: 'modal', label: 'Modal / Popups', short: 'Modal', icon: 'bi-front' },
+        { key: 'print', label: 'Print Layout', short: 'Print', icon: 'bi-printer' },
+        { key: 'pdf', label: 'PDF Export', short: 'PDF', icon: 'bi-file-earmark-pdf' },
+        { key: 'permission', label: 'RBAC Permission', short: 'RBAC', icon: 'bi-shield-lock' },
+        { key: 'documentation', label: 'Documentation', short: 'Doc', icon: 'bi-file-text' },
+        { key: 'faq', label: 'FAQ & Help', short: 'FAQ', icon: 'bi-question-circle' },
+        { key: 'youtube_video', label: 'YouTube Video', short: 'Video', icon: 'bi-youtube' }
     ]
 };
 
@@ -264,12 +371,12 @@ function eimboxOpenIssueModal() {
 
 function eimboxGetStatusBadgeClass(status) {
     const s = String(status || '').toLowerCase().trim();
-    if (s === 'ok' || s === 'completed' || s === 'closed') return 'bg-success text-white';
-    if (s === 'on progress' || s === 'ongoing') return 'bg-warning text-dark';
-    if (s === 'bug') return 'bg-danger bg-opacity-75 text-white';
-    if (s === 'error') return 'bg-danger text-white';
-    if (s === 'not applicable' || s === 'n/a') return 'bg-info text-dark';
-    return 'bg-secondary text-white'; // Not Tested
+    if (s === 'ok' || s === 'completed' || s === 'closed') return 'bg-success text-white border-0';
+    if (s === 'on progress' || s === 'ongoing' || s === 'progress') return 'bg-warning text-dark border-0';
+    if (s === 'bug') return 'bg-danger bg-opacity-75 text-white border-0';
+    if (s === 'error') return 'bg-danger text-white border-0';
+    if (s === 'not applicable' || s === 'n/a' || s === 'na') return 'bg-info text-dark border-0';
+    return 'bg-secondary text-white border-0'; // Not Tested
 }
 
 function eimboxUpdateCircularUI(problemPercent, healthPercent) {
@@ -289,7 +396,11 @@ function eimboxUpdateCircularUI(problemPercent, healthPercent) {
     }
     const miniText = document.getElementById('eimbox-mini-issue-text');
     if (miniText) {
-        miniText.innerText = `${prob}% Prob`;
+        miniText.innerText = `${prob}%`;
+    }
+    const triggerBtn = document.getElementById('eimbox-floating-trigger-btn');
+    if (triggerBtn) {
+        triggerBtn.setAttribute('title', `Screen Tracker: ${prob}% Problem | ${health}% Health (Click to open)`);
     }
 
     // Modal circle update
@@ -318,6 +429,22 @@ function eimboxLoadPageIssues(openAfterLoad) {
         .then(res => {
             if (res.status === 'success' && res.data) {
                 eimboxCurrentIssueData = res.data;
+
+                // Update feature tracking config
+                const curFeat = res.data.current_feature || null;
+                if (curFeat && curFeat.id > 0) {
+                    EIMBOX_ISSUE_CONFIG.featureId = parseInt(curFeat.id);
+                    EIMBOX_ISSUE_CONFIG.featureName = curFeat.feature_name;
+                    EIMBOX_ISSUE_CONFIG.moduleName = curFeat.module_name || 'General';
+                } else {
+                    EIMBOX_ISSUE_CONFIG.featureId = 0;
+                    EIMBOX_ISSUE_CONFIG.featureName = '';
+                    EIMBOX_ISSUE_CONFIG.moduleName = 'General';
+                }
+
+                // Populate feature dropdown and badge
+                eimboxPopulateFeatureSelect(res.data.features || [], res.data.modules || [], curFeat);
+
                 eimboxRenderDimensions(res.data);
                 eimboxRenderIssues(res.data);
                 eimboxUpdateCircularUI(res.data.problem_percent, res.data.health_percent);
@@ -330,6 +457,169 @@ function eimboxLoadPageIssues(openAfterLoad) {
             }
         })
         .catch(err => console.error('EIMBox Issue load error:', err));
+}
+
+function eimboxPopulateFeatureSelect(features, modules, currentFeature) {
+    const selectEl = document.getElementById('eimbox-feature-select');
+    const badgeEl = document.getElementById('eimbox-feature-module-badge');
+    const newModSelect = document.getElementById('eimbox-new-feature-module');
+    if (!selectEl) return;
+
+    if (newModSelect && modules && modules.length > 0) {
+        newModSelect.innerHTML = modules.map(m => `<option value="${m.module_name}">${m.module_name}</option>`).join('');
+    }
+
+    let html = `<option value="0">-- Select / Link Feature --</option>`;
+    html += `<option value="__NEW__" class="fw-bold text-info">+ [ Create New Feature... ]</option>`;
+
+    // Group features by module
+    const groups = {};
+    (features || []).forEach(f => {
+        const mod = f.module_name || 'General';
+        if (!groups[mod]) groups[mod] = [];
+        groups[mod].push(f);
+    });
+
+    Object.keys(groups).sort().forEach(modName => {
+        html += `<optgroup label="${modName}">`;
+        groups[modName].forEach(f => {
+            const isSel = currentFeature && parseInt(currentFeature.id) === parseInt(f.id);
+            html += `<option value="${f.id}" data-module="${f.module_name}" data-name="${f.feature_name}" ${isSel ? 'selected' : ''}>${f.feature_name}</option>`;
+        });
+        html += `</optgroup>`;
+    });
+
+    selectEl.innerHTML = html;
+
+    if (currentFeature && currentFeature.id > 0) {
+        selectEl.value = currentFeature.id;
+        if (badgeEl) {
+            badgeEl.style.display = 'inline-block';
+            badgeEl.className = 'badge bg-primary bg-opacity-25 text-info border border-info border-opacity-25';
+            badgeEl.innerHTML = `<i class="bi bi-folder2 me-1"></i>${currentFeature.module_name}`;
+        }
+    } else {
+        selectEl.value = '0';
+        if (badgeEl) {
+            badgeEl.style.display = 'inline-block';
+            badgeEl.className = 'badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-25';
+            badgeEl.innerHTML = `<i class="bi bi-exclamation-circle me-1"></i>Unlinked Feature`;
+        }
+    }
+}
+
+function eimboxOnFeatureSelectChange(selectEl) {
+    const val = selectEl.value;
+    if (val === '__NEW__') {
+        eimboxToggleQuickNewFeature(true);
+        selectEl.value = EIMBOX_ISSUE_CONFIG.featureId || '0';
+        return;
+    }
+
+    const featureId = parseInt(val) || 0;
+    if (featureId <= 0) {
+        return;
+    }
+
+    const opt = selectEl.selectedOptions[0];
+    const featureName = opt ? opt.getAttribute('data-name') : '';
+    const moduleName = opt ? opt.getAttribute('data-module') : '';
+
+    eimboxShowAutosaveStatus('saving', 'Linking feature...');
+
+    fetch(`${EIMBOX_ISSUE_CONFIG.apiBase}manage-feature.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            action: 'link_screen',
+            route: EIMBOX_ISSUE_CONFIG.script,
+            feature_id: featureId
+        })
+    })
+    .then(res => res.json())
+    .then(res => {
+        if (res.status === 'success') {
+            EIMBOX_ISSUE_CONFIG.featureId = featureId;
+            EIMBOX_ISSUE_CONFIG.featureName = featureName;
+            EIMBOX_ISSUE_CONFIG.moduleName = moduleName;
+
+            const badgeEl = document.getElementById('eimbox-feature-module-badge');
+            if (badgeEl) {
+                badgeEl.style.display = 'inline-block';
+                badgeEl.className = 'badge bg-primary bg-opacity-25 text-info border border-info border-opacity-25';
+                badgeEl.innerHTML = `<i class="bi bi-folder2 me-1"></i>${moduleName}`;
+            }
+
+            eimboxShowAutosaveStatus('saved', `Linked to ${featureName} ✓`);
+            eimboxLoadPageIssues();
+        } else {
+            eimboxShowAutosaveStatus('error', res.message || 'Link failed');
+        }
+    })
+    .catch(err => {
+        eimboxShowAutosaveStatus('error', 'Network error');
+        console.error('Feature link error:', err);
+    });
+}
+
+function eimboxToggleQuickNewFeature(show) {
+    const box = document.getElementById('eimbox-quick-feature-box');
+    if (!box) return;
+    if (show === undefined) {
+        box.style.display = box.style.display === 'none' ? 'block' : 'none';
+    } else {
+        box.style.display = show ? 'block' : 'none';
+    }
+    if (box.style.display === 'block') {
+        const input = document.getElementById('eimbox-new-feature-name');
+        if (input) {
+            if (!input.value) {
+                input.value = EIMBOX_ISSUE_CONFIG.script.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            }
+            input.focus();
+        }
+    }
+}
+
+function eimboxCreateAndLinkFeature() {
+    const nameInput = document.getElementById('eimbox-new-feature-name');
+    const modSelect = document.getElementById('eimbox-new-feature-module');
+    const name = nameInput ? nameInput.value.trim() : '';
+    const moduleName = modSelect ? modSelect.value : 'General';
+
+    if (!name) {
+        alert('Please enter a feature name.');
+        if (nameInput) nameInput.focus();
+        return;
+    }
+
+    eimboxShowAutosaveStatus('saving', 'Creating feature...');
+
+    fetch(`${EIMBOX_ISSUE_CONFIG.apiBase}manage-feature.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            action: 'create',
+            feature_name: name,
+            module_name: moduleName,
+            route: EIMBOX_ISSUE_CONFIG.script
+        })
+    })
+    .then(res => res.json())
+    .then(res => {
+        if (res.status === 'success') {
+            eimboxToggleQuickNewFeature(false);
+            eimboxShowAutosaveStatus('saved', `Created & Linked: ${name} ✓`);
+            eimboxLoadPageIssues();
+        } else {
+            eimboxShowAutosaveStatus('error', res.message || 'Error creating feature');
+            alert(res.message || 'Error creating feature');
+        }
+    })
+    .catch(err => {
+        eimboxShowAutosaveStatus('error', 'Network error');
+        console.error('Feature creation error:', err);
+    });
 }
 
 function eimboxRenderDimensions(data) {
@@ -345,6 +635,14 @@ function eimboxRenderDimensions(data) {
     if (statEl) statEl.innerText = `${dimProbAvg}% Prob`;
 
     const statuses = ['OK', 'On Progress', 'bug', 'error', 'Not Tested', 'Not applicable'];
+    const statusLabels = {
+        'OK': 'OK',
+        'On Progress': 'Progress',
+        'bug': 'Bug',
+        'error': 'Error',
+        'Not Tested': 'Untested',
+        'Not applicable': 'N/A'
+    };
 
     let html = '';
     EIMBOX_ISSUE_CONFIG.dimensions.forEach(d => {
@@ -352,21 +650,26 @@ function eimboxRenderDimensions(data) {
         const badgeClass = eimboxGetStatusBadgeClass(val);
 
         html += `
-        <div class="col-md-4 col-sm-6">
-            <div class="card border h-100 shadow-sm p-2" style="background:#fff; border-radius: 10px;">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bi ${d.icon} text-primary fs-5"></i>
-                        <span class="fw-semibold small">${d.label}</span>
-                    </div>
+        <div class="col">
+            <div class="eimbox-dim-tile h-100 d-flex flex-column justify-content-between">
+                <!-- Top: Icon & Label -->
+                <div class="d-flex align-items-center gap-1 text-truncate mb-1" title="${d.label}: ${val}">
+                    <i class="bi ${d.icon} text-primary" style="font-size: 11.5px; flex-shrink: 0;"></i>
+                    <span class="fw-bold text-truncate" style="font-size: 10px; line-height: 1.2;">
+                        <span class="d-none d-lg-inline">${d.label}</span>
+                        <span class="d-inline d-lg-none">${d.short}</span>
+                    </span>
                 </div>
-                <div class="mt-2">
-                    <select class="form-select form-select-sm fw-bold ${badgeClass}" 
-                            data-dim-key="${d.key}" 
-                            onchange="eimboxChangeDimensionBadge(this)">
-                        ${statuses.map(s => `<option value="${s}" ${s.toLowerCase() === val.toLowerCase() ? 'selected' : ''}>${s}</option>`).join('')}
-                    </select>
-                </div>
+                <!-- Bottom: Compact Select Dropdown -->
+                <select class="form-select form-select-sm fw-bold eimbox-dim-select ${badgeClass}" 
+                        data-dim-key="${d.key}" 
+                        onchange="eimboxChangeDimensionBadge(this)">
+                    ${statuses.map(s => {
+                        const isSelected = s.toLowerCase() === val.toLowerCase();
+                        const shortLbl = statusLabels[s] || s;
+                        return `<option value="${s}" ${isSelected ? 'selected' : ''}>${shortLbl}</option>`;
+                    }).join('')}
+                </select>
             </div>
         </div>`;
     });
@@ -430,7 +733,7 @@ function eimboxRecalculateDimensionsLocal() {
 function eimboxChangeDimensionBadge(selectEl) {
     const val = selectEl.value;
     const dimKey = selectEl.getAttribute('data-dim-key');
-    selectEl.className = `form-select form-select-sm fw-bold ${eimboxGetStatusBadgeClass(val)}`;
+    selectEl.className = `form-select form-select-sm fw-bold eimbox-dim-select ${eimboxGetStatusBadgeClass(val)}`;
 
     // Update in-memory state
     if (eimboxCurrentIssueData && eimboxCurrentIssueData.dimensions) {
@@ -443,12 +746,16 @@ function eimboxChangeDimensionBadge(selectEl) {
     // Show instant saving indicator
     eimboxShowAutosaveStatus('saving', `Saving ${dimKey}...`);
 
+    const platform = document.getElementById('eimbox-platform-select') ? document.getElementById('eimbox-platform-select').value : 'Console';
+
     // Asynchronously save dimension via API
     fetch(`${EIMBOX_ISSUE_CONFIG.apiBase}save-dimension.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             route: EIMBOX_ISSUE_CONFIG.script,
+            feature_id: EIMBOX_ISSUE_CONFIG.featureId || null,
+            platform: platform,
             dimension: dimKey,
             status: val
         })
@@ -468,10 +775,55 @@ function eimboxChangeDimensionBadge(selectEl) {
     });
 }
 
+function eimboxMarkAllDimensionsOK() {
+    const selects = document.querySelectorAll('#eimbox-dimensions-grid select[data-dim-key]');
+    if (!selects.length) return;
+
+    const allDims = {};
+    selects.forEach(s => {
+        s.value = 'OK';
+        s.className = `form-select form-select-sm fw-bold eimbox-dim-select ${eimboxGetStatusBadgeClass('OK')}`;
+        const k = s.getAttribute('data-dim-key');
+        if (k) allDims[k] = 'OK';
+    });
+
+    if (eimboxCurrentIssueData && eimboxCurrentIssueData.dimensions) {
+        Object.assign(eimboxCurrentIssueData.dimensions, allDims);
+    }
+
+    eimboxRecalculateDimensionsLocal();
+    eimboxShowAutosaveStatus('saving', 'Setting all dimensions OK...');
+
+    const platform = document.getElementById('eimbox-platform-select') ? document.getElementById('eimbox-platform-select').value : 'Console';
+
+    fetch(`${EIMBOX_ISSUE_CONFIG.apiBase}save-dimension.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            route: EIMBOX_ISSUE_CONFIG.script,
+            feature_id: EIMBOX_ISSUE_CONFIG.featureId || null,
+            platform: platform,
+            dimensions: allDims
+        })
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (res.status === 'success') {
+            eimboxShowAutosaveStatus('saved', 'All 18 dimensions OK');
+        } else {
+            eimboxShowAutosaveStatus('error', res.message || 'Error updating');
+        }
+    })
+    .catch(err => {
+        eimboxShowAutosaveStatus('error', 'Network error');
+    });
+}
+
 function eimboxSaveNotes() {
     const notesEl = document.getElementById('eimbox-dimension-notes');
     if (!notesEl) return;
     const notes = notesEl.value.trim();
+    const platform = document.getElementById('eimbox-platform-select') ? document.getElementById('eimbox-platform-select').value : 'Console';
 
     eimboxShowAutosaveStatus('saving', 'Saving notes...');
 
@@ -480,6 +832,8 @@ function eimboxSaveNotes() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             route: EIMBOX_ISSUE_CONFIG.script,
+            feature_id: EIMBOX_ISSUE_CONFIG.featureId || null,
+            platform: platform,
             notes: notes
         })
     })
@@ -505,9 +859,12 @@ function eimboxSaveAllDimensions(isManual = false) {
     });
 
     const notes = document.getElementById('eimbox-dimension-notes') ? document.getElementById('eimbox-dimension-notes').value : '';
+    const platform = document.getElementById('eimbox-platform-select') ? document.getElementById('eimbox-platform-select').value : 'Console';
 
     const payload = {
         route: EIMBOX_ISSUE_CONFIG.script,
+        feature_id: EIMBOX_ISSUE_CONFIG.featureId || null,
+        platform: platform,
         dimensions: dimUpdates,
         notes: notes
     };

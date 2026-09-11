@@ -117,3 +117,174 @@
   .dropdown-item.warning i {
       color: var(--bs-warning, #ff9f43) !important;
   }
+
+/* =========================================================
+   EIMBox Common Light / Dark Mode System
+   ========================================================= */
+:root {
+    --eimbox-card-bg: #ffffff;
+    --eimbox-card-border: rgba(0, 0, 0, 0.08);
+    --eimbox-card-muted: #64748b;
+    --eimbox-card-text: #1e293b;
+    --eimbox-bg-light: #f8fafc;
+    --eimbox-border-color: #e2e8f0;
+    --eimbox-circle-track: #edf2f7;
+}
+
+html.dark-style,
+body.dark-style,
+[data-bs-theme="dark"] {
+    --eimbox-card-bg: #2b2c40;
+    --eimbox-card-border: rgba(255, 255, 255, 0.08);
+    --eimbox-card-muted: #8688a5;
+    --eimbox-card-text: #dbdade;
+    --eimbox-bg-light: #232333;
+    --eimbox-border-color: rgba(255, 255, 255, 0.12);
+    --eimbox-circle-track: #35364e;
+}
+
+/* Common Stat & KPI Cards */
+.eimbox-stat-card,
+.kpi-card,
+.stat-card {
+    background-color: var(--bs-card-bg, var(--eimbox-card-bg)) !important;
+    background: var(--bs-card-bg, var(--eimbox-card-bg)) !important;
+    border: 1px solid var(--eimbox-card-border) !important;
+    color: var(--bs-body-color, var(--eimbox-card-text)) !important;
+    border-radius: 14px;
+    transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+
+/* Override cards with hardcoded inline white background in Dark Mode */
+html.dark-style .card[style*="background"],
+html.dark-style .card[style*="#fff"],
+html.dark-style .card[style*="#ffffff"],
+body.dark-style .card[style*="background"],
+body.dark-style .card[style*="#fff"],
+body.dark-style .card[style*="#ffffff"],
+[data-bs-theme="dark"] .card[style*="background"],
+[data-bs-theme="dark"] .card[style*="#fff"],
+[data-bs-theme="dark"] .card[style*="#ffffff"] {
+    background-color: #2b2c40 !important;
+    background: #2b2c40 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    color: #dbdade !important;
+}
+
+/* Dark Mode Overrides for Hardcoded Backgrounds & Texts */
+html.dark-style .bg-white,
+body.dark-style .bg-white,
+[data-bs-theme="dark"] .bg-white {
+    background-color: #2b2c40 !important;
+    color: #dbdade;
+}
+
+html.dark-style .bg-light,
+body.dark-style .bg-light,
+[data-bs-theme="dark"] .bg-light {
+    background-color: #232333 !important;
+    color: #dbdade;
+}
+
+html.dark-style .card-header.bg-white,
+html.dark-style .card-header:not(.bg-primary):not(.bg-danger):not(.bg-success):not(.bg-info):not(.bg-warning),
+[data-bs-theme="dark"] .card-header.bg-white,
+[data-bs-theme="dark"] .card-header:not(.bg-primary):not(.bg-danger):not(.bg-success):not(.bg-info):not(.bg-warning) {
+    background-color: #2b2c40 !important;
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+    color: #dbdade !important;
+}
+
+html.dark-style .text-dark,
+body.dark-style .text-dark,
+[data-bs-theme="dark"] .text-dark {
+    color: #e2e8f0 !important;
+}
+
+/* KPI Circle Track SVG Gauge */
+.kpi-circle-track-svg,
+#kpi-circle-track {
+    stroke: var(--eimbox-circle-track) !important;
+    transition: stroke 0.25s ease;
+}
+
+/* Filter Parameter Cards & Platform Selector */
+#platformFilterPills .nav-link {
+    border-radius: 10px;
+    border: 1px solid var(--eimbox-border-color);
+    background-color: var(--eimbox-bg-light);
+    color: var(--eimbox-card-text);
+    transition: all 0.2s ease-in-out;
+}
+
+#platformFilterPills .nav-link:hover {
+    background-color: rgba(105, 108, 255, 0.08);
+}
+
+#platformFilterPills .nav-link.active {
+    background-color: #696cff !important;
+    border-color: #696cff !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(105, 108, 255, 0.35);
+}
+
+html.dark-style #platformFilterPills .nav-link:not(.active),
+body.dark-style #platformFilterPills .nav-link:not(.active),
+[data-bs-theme="dark"] #platformFilterPills .nav-link:not(.active) {
+    background-color: #232333 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    color: #cbd5e1 !important;
+}
+
+/* Dark Mode Inputs in Filter Bars */
+html.dark-style .form-control,
+html.dark-style .form-select,
+[data-bs-theme="dark"] .form-control,
+[data-bs-theme="dark"] .form-select {
+    background-color: #2b2c40 !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    color: #dbdade !important;
+}
+
+html.dark-style .form-control:focus,
+html.dark-style .form-select:focus,
+[data-bs-theme="dark"] .form-control:focus,
+[data-bs-theme="dark"] .form-select:focus {
+    background-color: #2b2c40 !important;
+    border-color: #696cff !important;
+    color: #ffffff !important;
+}
+
+/* Tables in Dark Mode */
+html.dark-style .table-light,
+body.dark-style .table-light,
+[data-bs-theme="dark"] .table-light {
+    background-color: #232333 !important;
+    color: #cbd5e1 !important;
+}
+
+html.dark-style .table-light th,
+body.dark-style .table-light th,
+[data-bs-theme="dark"] .table-light th {
+    background-color: #232333 !important;
+    color: #94a3b8 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+html.dark-style .table-hover tbody tr:hover,
+[data-bs-theme="dark"] .table-hover tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+html.dark-style .modal-content,
+[data-bs-theme="dark"] .modal-content {
+    background-color: #2b2c40 !important;
+    color: #dbdade !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+html.dark-style .modal-footer.bg-light,
+[data-bs-theme="dark"] .modal-footer.bg-light {
+    background-color: #232333 !important;
+    border-top-color: rgba(255, 255, 255, 0.08) !important;
+}

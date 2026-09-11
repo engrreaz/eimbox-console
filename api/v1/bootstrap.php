@@ -200,6 +200,13 @@ function api_response($status = 'success', $message = '', $data = null, $httpCod
 }
 
 /**
+ * Standard JSON Error Sender
+ */
+function api_error($message = 'An error occurred', $httpCode = 400, $data = null) {
+    api_response('error', $message, $data, $httpCode);
+}
+
+/**
  * Parse incoming JSON body or $_POST
  */
 function get_api_input() {
