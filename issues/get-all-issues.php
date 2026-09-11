@@ -3,7 +3,9 @@
  * EIMBox Issue Tracker API - Get All Issues
  * Moved to issues/ directory for better organization.
  */
-require_once __DIR__ . '/../bootstrap.php';
+require_once __DIR__ . '/../core/config.php';
+require_once __DIR__ . '/../core/db.php';
+require_once __DIR__ . '/../core/global_values.php';
 
 $input = get_api_input();
 $platform = trim($input['platform'] ?? $_GET['platform'] ?? 'All');
