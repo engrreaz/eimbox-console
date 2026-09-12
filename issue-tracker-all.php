@@ -832,11 +832,17 @@ html.dark-style #featureMasterModal .form-select,
                     </div>
                 </div>
             </div>
-            <div class="modal-footer py-2 px-4 d-flex justify-content-between border-top">
+            <div class="modal-footer py-2 px-4 d-flex justify-content-between align-items-center border-top">
                 <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="resetFeatureModalToAdd()">
                     <i class="bi bi-arrow-counterclockwise me-1"></i> Clear Form
                 </button>
-                <div class="d-flex gap-2">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="form-check mb-0 d-flex align-items-center gap-1">
+                        <input class="form-check-input mt-0" type="checkbox" id="modal-feature-autoclose" checked="checked" autocomplete="off" style="cursor: pointer;">
+                        <label class="form-check-label small user-select-none text-muted" for="modal-feature-autoclose" style="cursor: pointer; font-size: 13px;">
+                            Auto close on save
+                        </label>
+                    </div>
                     <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-primary rounded-pill px-4" id="saveFeatureBtn" onclick="saveFeature()">
                         <i class="bi bi-check2-circle me-1"></i> Save Feature
@@ -879,6 +885,14 @@ const DIMENSION_CONFIG = [
 
 document.addEventListener("DOMContentLoaded", function () {
     loadAllIssues();
+
+    const featureModalEl = document.getElementById('featureMasterModal');
+    if (featureModalEl) {
+        featureModalEl.addEventListener('show.bs.modal', function () {
+            const autoCloseEl = document.getElementById('modal-feature-autoclose');
+            if (autoCloseEl) autoCloseEl.checked = true;
+        });
+    }
 });
 
 function setPlatformFilter(platform, tabBtn) {
@@ -919,7 +933,7 @@ function onPlatformDropdownChange(platform) {
 }
 
 function loadAllIssues() {
-    fetch(`issues/get-all-issues.php?platform=${encodeURIComponent(activePlatformFilter)}`)
+    return fetch(`issues/get-all-issues.php?platform=${encodeURIComponent(activePlatformFilter)}`)
         .then(res => res.json())
         .then(res => {
             if (res.status === 'success' && res.data) {
@@ -934,8 +948,12 @@ function loadAllIssues() {
                 applyFilters();
                 renderDimensionsMatrix(allDimensionsCache);
             }
+            return res;
         })
-        .catch(err => console.error('Error loading all issues:', err));
+        .catch(err => {
+            console.error('Error loading all issues:', err);
+            return null;
+        });
 }
 
 function updateKpiDashboard(kpis) {
@@ -2479,6 +2497,9 @@ function openCreateFeatureModal() {
     resetFeatureModalToAdd();
     renderFeatureModalTree(0);
 
+    const autoCloseEl = document.getElementById('modal-feature-autoclose');
+    if (autoCloseEl) autoCloseEl.checked = true;
+
     const searchInput = document.getElementById('treeFeatureSearchInput');
     if (searchInput) searchInput.value = '';
 
@@ -2550,9 +2571,24 @@ function saveFeature() {
 
         if (res.status === 'success') {
             showToast(res.message || 'Feature saved successfully!');
-            const bsModal = bootstrap.Modal.getInstance(document.getElementById('featureMasterModal'));
-            if (bsModal) bsModal.hide();
-            loadAllIssues();
+            const autoCloseEl = document.getElementById('modal-feature-autoclose');
+            const shouldAutoClose = autoCloseEl ? autoCloseEl.checked : true;
+
+            if (shouldAutoClose) {
+                const bsModal = bootstrap.Modal.getInstance(document.getElementById('featureMasterModal'));
+                if (bsModal) bsModal.hide();
+            } else {
+                if (action === 'create') {
+                    const currentModule = document.getElementById('modal-feature-module') ? document.getElementById('modal-feature-module').value : '';
+                    resetFeatureModalToAdd(currentModule);
+                }
+            }
+
+            loadAllIssues().then(() => {
+                if (!shouldAutoClose) {
+                    renderFeatureModalTree(currentTreeActiveFeatureId);
+                }
+            });
         } else {
             alert(res.message || 'Error saving feature');
         }
