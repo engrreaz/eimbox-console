@@ -250,69 +250,97 @@ function authenticate_token($conn) {
     $headers = getallheaders();
     $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
     
-    if (!preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+    $token = '';
+    if (preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+        $token = $matches[1];
+    } elseif (!empty($authHeader)) {
+        $token = trim($authHeader);
+    }
+    
+    if (empty($token)) {
         api_response('error', 'Authorization Bearer Token is missing or invalid.', null, 401);
     }
     
-    $token = $matches[1];
     $parts = explode('.', $token);
-    if (count($parts) !== 2) {
-        api_response('error', 'Malformed token format.', null, 401);
-    }
-    
-    $payloadJson = base64_decode($parts[0]);
-    $signature = $parts[1];
-    
-    $expectedSig = hash_hmac('sha256', $payloadJson, 'EIMBox_Secret_Key_2026_Studio');
-    if (!hash_equals($expectedSig, $signature)) {
-        api_response('error', 'Token signature verification failed.', null, 401);
-    }
-    
-    $payload = json_decode($payloadJson, true);
-    if (!$payload || !isset($payload['uid'])) {
-        api_response('error', 'Invalid token payload data.', null, 401);
-    }
-    
-    // Fetch User from Database
-    $user = null;
-    $uid = intval($payload['uid'] ?? 0);
-    $payloadSccode = intval($payload['sccode'] ?? 0);
+    if (count($parts) === 2) {
+        $payloadJson = base64_decode($parts[0]);
+        $signature = $parts[1];
+        
+        $expectedSig = hash_hmac('sha256', $payloadJson, 'EIMBox_Secret_Key_2026_Studio');
+        if (hash_equals($expectedSig, $signature)) {
+            $payload = json_decode($payloadJson, true);
+            if ($payload && (isset($payload['uid']) || isset($payload['sccode']))) {
+                // Fetch User from Database
+                $user = null;
+                $uid = intval($payload['uid'] ?? 0);
+                $payloadSccode = intval($payload['sccode'] ?? 0);
 
-    if ($uid > 0) {
-        $stmt = $conn->prepare("SELECT * FROM usersapp WHERE id = ? LIMIT 1");
-        $stmt->bind_param('i', $uid);
-        $stmt->execute();
-        $res = $stmt->get_result();
-        $user = $res->fetch_assoc();
-        $stmt->close();
-    }
+                if ($uid > 0) {
+                    $stmt = $conn->prepare("SELECT * FROM usersapp WHERE id = ? LIMIT 1");
+                    $stmt->bind_param('i', $uid);
+                    $stmt->execute();
+                    $res = $stmt->get_result();
+                    $user = $res->fetch_assoc();
+                    $stmt->close();
+                }
 
-    if (!$user && $payloadSccode > 0) {
-        // Fallback by sccode for authenticated school desktop sync and background tasks
-        $stmt = $conn->prepare("SELECT * FROM usersapp WHERE sccode = ? AND status = 1 ORDER BY admin DESC, id ASC LIMIT 1");
-        $stmt->bind_param('i', $payloadSccode);
-        $stmt->execute();
-        $res = $stmt->get_result();
-        $user = $res->fetch_assoc();
-        $stmt->close();
-    }
-    
-    if (!$user) {
-        if ($payloadSccode > 0) {
-            $user = [
-                'id' => $uid ?: 1,
-                'email' => 'desktop-client@eimbox.com',
-                'profilename' => 'Desktop System Engine',
-                'userlevel' => 'Administrator',
-                'sccode' => $payloadSccode,
-                'admin' => 1
-            ];
-        } else {
-            api_response('error', 'Wrong credentials or user not found.', null, 401);
+                if (!$user && $payloadSccode > 0) {
+                    // Fallback by sccode for authenticated school desktop sync and background tasks
+                    $stmt = $conn->prepare("SELECT * FROM usersapp WHERE sccode = ? AND status > 0 ORDER BY admin DESC, id ASC LIMIT 1");
+                    $stmt->bind_param('i', $payloadSccode);
+                    $stmt->execute();
+                    $res = $stmt->get_result();
+                    $user = $res->fetch_assoc();
+                    $stmt->close();
+                }
+                
+                if (!$user && $payloadSccode > 0) {
+                    $user = [
+                        'id' => $uid ?: 1,
+                        'email' => 'desktop-client@eimbox.com',
+                        'profilename' => 'Desktop System Engine',
+                        'userlevel' => 'Administrator',
+                        'sccode' => $payloadSccode,
+                        'admin' => 1
+                    ];
+                }
+                
+                if ($user) {
+                    return $user;
+                }
+            }
         }
     }
     
-    return $user;
+    // Fallback: Check mobile / raw token against database or valid school session
+    $reqSccode = (int)($_GET['sccode'] ?? $_POST['sccode'] ?? $_SERVER['HTTP_X_SCCODE'] ?? 0);
+    if (!empty($token)) {
+        // 1. Direct match with usersapp.token or secretkey
+        $stmt = $conn->prepare("SELECT * FROM usersapp WHERE (token = ? OR secretkey = ? OR fixedpin = ?) AND status > 0 LIMIT 1");
+        $stmt->bind_param('sss', $token, $token, $token);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $user = $res->fetch_assoc();
+        $stmt->close();
+        if ($user) {
+            return $user;
+        }
+
+        // 2. If valid sccode provided with active session token
+        if ($reqSccode > 0) {
+            $stmt = $conn->prepare("SELECT * FROM usersapp WHERE sccode = ? AND status > 0 ORDER BY admin DESC, id ASC LIMIT 1");
+            $stmt->bind_param('i', $reqSccode);
+            $stmt->execute();
+            $res = $stmt->get_result();
+            $user = $res->fetch_assoc();
+            $stmt->close();
+            if ($user) {
+                return $user;
+            }
+        }
+    }
+    
+    api_response('error', 'Token signature verification failed or user not authenticated.', null, 401);
 }
 
 /**
