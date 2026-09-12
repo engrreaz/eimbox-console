@@ -56,7 +56,8 @@ $allowedTables = [
     'tickets', 'ticket_messages', 'events', 'notice', 'notice_category',
     'usersapp', 'permissions_role', 'user_custom_permissions',
     'account_head', 'account_sub_head', 'bankinfo', 'banktrans', 'cashbook',
-    'tabulatingsheet', 'tabulatingsheetex', 'tabulatingsheetpibi'
+    'tabulatingsheet', 'tabulatingsheetex', 'tabulatingsheetpibi',
+    'issues_tracker', 'features', 'modulelist', 'eimbox_features'
 ];
 
 $results = [];

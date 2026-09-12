@@ -22,7 +22,8 @@ $basename = basename($target);
 $dimensionKeys = [
     'ui', 'light', 'dark', 'view', 'insert', 'update', 
     'delete', 'cache', 'push', 'pull', 'dropdown', 
-    'modal', 'print', 'pdf', 'permission'
+    'modal', 'print', 'pdf', 'permission',
+    'documentation', 'faq', 'youtube_video'
 ];
 
 /**
@@ -85,6 +86,9 @@ if (!$dimensions) {
         'print' => 'Not Tested',
         'pdf' => 'Not Tested',
         'permission' => 'Not Tested',
+        'documentation' => 'Not Tested',
+        'faq' => 'Not Tested',
+        'youtube_video' => 'Not Tested',
         'notes' => '',
         'created_at' => date('Y-m-d H:i:s'),
         'modifieddate' => date('Y-m-d H:i:s')

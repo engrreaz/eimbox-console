@@ -18,7 +18,8 @@ if (empty($route)) {
 $allowedDimensions = [
     'ui', 'light', 'dark', 'view', 'insert', 'update', 
     'delete', 'cache', 'push', 'pull', 'dropdown', 
-    'modal', 'print', 'pdf', 'permission'
+    'modal', 'print', 'pdf', 'permission',
+    'documentation', 'faq', 'youtube_video'
 ];
 
 $validStatuses = ['Not Tested', 'Not applicable', 'On Progress', 'bug', 'error', 'OK', 'ok'];

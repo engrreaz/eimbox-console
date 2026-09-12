@@ -37,7 +37,8 @@ $allowedTables = [
     'account_head', 'account_sub_head', 'bankinfo', 'banktrans', 'cashbook',
     'account_head_default', 'account_sub_head_default',
     'app_releases', 'app_roadmap', 'faq_desktop',
-    'tabulatingsheet', 'tabulatingsheetex', 'tabulatingsheetpibi'
+    'tabulatingsheet', 'tabulatingsheetex', 'tabulatingsheetpibi',
+    'issues_tracker', 'features', 'modulelist', 'eimbox_features'
 ];
 
 $results = [];

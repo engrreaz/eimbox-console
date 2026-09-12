@@ -22,17 +22,41 @@ if (empty($lastSync) || !strtotime($lastSync)) {
     $lastSync = date('Y-m-d 00:00:00');
 }
 
+$session = trim($_GET['session'] ?? '');
+if (empty($session) && $sccode > 0) {
+    $syStmt = $conn->prepare("SELECT syear FROM sessionyear WHERE sccode = ? AND active = 1 ORDER BY syear DESC LIMIT 1");
+    if ($syStmt) {
+        $syStmt->bind_param("i", $sccode);
+        $syStmt->execute();
+        $syRes = $syStmt->get_result();
+        if ($syRow = $syRes->fetch_assoc()) {
+            $session = trim($syRow['syear'] ?? '');
+        }
+        $syStmt->close();
+    }
+}
+
 $currentSyncTimestamp = date('Y-m-d H:i:s');
 
-// 1. Pull Delta Students
+// 1. Pull Delta Students (filtered by sccode and active session)
 $studentsDelta = [];
-$stStmt = $conn->prepare("SELECT s.stid, s.stnameeng, s.stnameben, s.guarmobile, s.modifieddate,
-si.sessionyear, si.classname, si.sectionname, si.rollno
-FROM students s
-LEFT JOIN sessioninfo si ON si.stid = s.stid AND si.sccode = s.sccode
-WHERE s.sccode = ? AND (s.modifieddate >= ? OR s.doa >= ?)
-ORDER BY s.modifieddate DESC LIMIT 500");
-$stStmt->bind_param('iss', $sccode, $lastSync, $lastSync);
+if (!empty($session)) {
+    $stStmt = $conn->prepare("SELECT s.stid, s.stnameeng, s.stnameben, s.guarmobile, s.modifieddate,
+    si.sessionyear, si.classname, si.sectionname, si.rollno
+    FROM students s
+    INNER JOIN sessioninfo si ON si.stid = s.stid AND si.sccode = s.sccode
+    WHERE s.sccode = ? AND si.sessionyear = ? AND (s.modifieddate >= ? OR s.doa >= ?)
+    ORDER BY s.modifieddate DESC LIMIT 500");
+    $stStmt->bind_param('isss', $sccode, $session, $lastSync, $lastSync);
+} else {
+    $stStmt = $conn->prepare("SELECT s.stid, s.stnameeng, s.stnameben, s.guarmobile, s.modifieddate,
+    si.sessionyear, si.classname, si.sectionname, si.rollno
+    FROM students s
+    LEFT JOIN sessioninfo si ON si.stid = s.stid AND si.sccode = s.sccode
+    WHERE s.sccode = ? AND (s.modifieddate >= ? OR s.doa >= ?)
+    ORDER BY s.modifieddate DESC LIMIT 500");
+    $stStmt->bind_param('iss', $sccode, $lastSync, $lastSync);
+}
 $stStmt->execute();
 $stRes = $stStmt->get_result();
 while ($row = $stRes->fetch_assoc()) {
@@ -50,13 +74,21 @@ while ($row = $stRes->fetch_assoc()) {
 }
 $stStmt->close();
 
-// 2. Pull Delta Marks
+// 2. Pull Delta Marks (filtered by sccode and active session)
 $marksDelta = [];
-$mStmt = $conn->prepare("SELECT id, sessionyear, exam, classname, sectionname, subject AS subcode, fullmark, stid, subj, obj, pra, ca, markobt, on100, gp, gl, entrydate, modifieddate 
-FROM stmark 
-WHERE sccode = ? AND (modifieddate >= ? OR entrydate >= ?)
-ORDER BY id DESC LIMIT 1000");
-$mStmt->bind_param('iss', $sccode, $lastSync, $lastSync);
+if (!empty($session)) {
+    $mStmt = $conn->prepare("SELECT id, sessionyear, exam, classname, sectionname, subject AS subcode, fullmark, stid, subj, obj, pra, ca, markobt, on100, gp, gl, entrydate, modifieddate 
+    FROM stmark 
+    WHERE sccode = ? AND sessionyear = ? AND (modifieddate >= ? OR entrydate >= ?)
+    ORDER BY id DESC LIMIT 1000");
+    $mStmt->bind_param('isss', $sccode, $session, $lastSync, $lastSync);
+} else {
+    $mStmt = $conn->prepare("SELECT id, sessionyear, exam, classname, sectionname, subject AS subcode, fullmark, stid, subj, obj, pra, ca, markobt, on100, gp, gl, entrydate, modifieddate 
+    FROM stmark 
+    WHERE sccode = ? AND (modifieddate >= ? OR entrydate >= ?)
+    ORDER BY id DESC LIMIT 1000");
+    $mStmt->bind_param('iss', $sccode, $lastSync, $lastSync);
+}
 $mStmt->execute();
 $mRes = $mStmt->get_result();
 while ($row = $mRes->fetch_assoc()) {
@@ -82,13 +114,21 @@ while ($row = $mRes->fetch_assoc()) {
 }
 $mStmt->close();
 
-// 3. Pull Delta Payment Receipts
+// 3. Pull Delta Payment Receipts (filtered by sccode and active session)
 $paymentsDelta = [];
-$pStmt = $conn->prepare("SELECT id, sessionyear, classname, sectionname, stid, rollno, prno, prdate, amount, entryby, entrytime, collection_media 
-FROM stpr 
-WHERE sccode = ? AND (entrytime >= ? OR modifieddate >= ?)
-ORDER BY id DESC LIMIT 500");
-$pStmt->bind_param('iss', $sccode, $lastSync, $lastSync);
+if (!empty($session)) {
+    $pStmt = $conn->prepare("SELECT id, sessionyear, classname, sectionname, stid, rollno, prno, prdate, amount, entryby, entrytime, collection_media 
+    FROM stpr 
+    WHERE sccode = ? AND sessionyear = ? AND (entrytime >= ? OR modifieddate >= ?)
+    ORDER BY id DESC LIMIT 500");
+    $pStmt->bind_param('isss', $sccode, $session, $lastSync, $lastSync);
+} else {
+    $pStmt = $conn->prepare("SELECT id, sessionyear, classname, sectionname, stid, rollno, prno, prdate, amount, entryby, entrytime, collection_media 
+    FROM stpr 
+    WHERE sccode = ? AND (entrytime >= ? OR modifieddate >= ?)
+    ORDER BY id DESC LIMIT 500");
+    $pStmt->bind_param('iss', $sccode, $lastSync, $lastSync);
+}
 $pStmt->execute();
 $pRes = $pStmt->get_result();
 while ($row = $pRes->fetch_assoc()) {
@@ -109,13 +149,21 @@ while ($row = $pRes->fetch_assoc()) {
 }
 $pStmt->close();
 
-// 4. Pull Delta Attendance
+// 4. Pull Delta Attendance (filtered by sccode and active session)
 $attendanceDelta = [];
-$attStmt = $conn->prepare("SELECT id, sessionyear, stid, adate, yn, intime, outtime, classname, sectionname, rollno, modifieddate, entrytime 
-FROM stattnd 
-WHERE sccode = ? AND (entrytime >= ? OR modifieddate >= ?)
-ORDER BY id DESC LIMIT 1000");
-$attStmt->bind_param('iss', $sccode, $lastSync, $lastSync);
+if (!empty($session)) {
+    $attStmt = $conn->prepare("SELECT id, sessionyear, stid, adate, yn, intime, outtime, classname, sectionname, rollno, modifieddate, entrytime 
+    FROM stattnd 
+    WHERE sccode = ? AND sessionyear = ? AND (entrytime >= ? OR modifieddate >= ?)
+    ORDER BY id DESC LIMIT 1000");
+    $attStmt->bind_param('isss', $sccode, $session, $lastSync, $lastSync);
+} else {
+    $attStmt = $conn->prepare("SELECT id, sessionyear, stid, adate, yn, intime, outtime, classname, sectionname, rollno, modifieddate, entrytime 
+    FROM stattnd 
+    WHERE sccode = ? AND (entrytime >= ? OR modifieddate >= ?)
+    ORDER BY id DESC LIMIT 1000");
+    $attStmt->bind_param('iss', $sccode, $lastSync, $lastSync);
+}
 $attStmt->execute();
 $attRes = $attStmt->get_result();
 while ($row = $attRes->fetch_assoc()) {
@@ -135,14 +183,26 @@ while ($row = $attRes->fetch_assoc()) {
 }
 $attStmt->close();
 
-// 5. Pull Delta Finance
+// 5. Pull Delta Finance (filtered by sccode and active session)
 $financeDelta = [];
-$finStmt = $conn->prepare("SELECT id, sccode, sessionyear, classname, sectionname, stid, rollno, partid, itemcode, sub_head, particulareng, particularben, amount, month, idmon, setupdate, setupby, payableamt, modifieddate, modifiedby, paid, paidx, dues, pr1, pr1no, pr1date, pr1by, cashbook1, pr2, pr2no, pr2date, pr2by, cashbook2, remark, extra, last_update, validate, validationtime, splitid, splitid2 
-FROM stfinance 
-WHERE sccode = ? AND (modifieddate >= ? OR setupdate >= ?)
-ORDER BY id DESC LIMIT 5000");
+if (!empty($session)) {
+    $finStmt = $conn->prepare("SELECT id, sccode, sessionyear, classname, sectionname, stid, rollno, partid, itemcode, sub_head, particulareng, particularben, amount, month, idmon, setupdate, setupby, payableamt, modifieddate, modifiedby, paid, paidx, dues, pr1, pr1no, pr1date, pr1by, cashbook1, pr2, pr2no, pr2date, pr2by, cashbook2, remark, extra, last_update, validate, validationtime, splitid, splitid2 
+    FROM stfinance 
+    WHERE sccode = ? AND sessionyear = ? AND (modifieddate >= ? OR setupdate >= ?)
+    ORDER BY id DESC LIMIT 5000");
+    if ($finStmt) {
+        $finStmt->bind_param('isss', $sccode, $session, $lastSync, $lastSync);
+    }
+} else {
+    $finStmt = $conn->prepare("SELECT id, sccode, sessionyear, classname, sectionname, stid, rollno, partid, itemcode, sub_head, particulareng, particularben, amount, month, idmon, setupdate, setupby, payableamt, modifieddate, modifiedby, paid, paidx, dues, pr1, pr1no, pr1date, pr1by, cashbook1, pr2, pr2no, pr2date, pr2by, cashbook2, remark, extra, last_update, validate, validationtime, splitid, splitid2 
+    FROM stfinance 
+    WHERE sccode = ? AND (modifieddate >= ? OR setupdate >= ?)
+    ORDER BY id DESC LIMIT 5000");
+    if ($finStmt) {
+        $finStmt->bind_param('iss', $sccode, $lastSync, $lastSync);
+    }
+}
 if ($finStmt) {
-    $finStmt->bind_param('iss', $sccode, $lastSync, $lastSync);
     $finStmt->execute();
     $finRes = $finStmt->get_result();
     while ($fRow = $finRes->fetch_assoc()) {
@@ -153,6 +213,7 @@ if ($finStmt) {
 
 api_response('success', 'Delta sync records pulled successfully.', [
     'sccode' => $sccode,
+    'session' => $session,
     'last_sync_timestamp' => $lastSync,
     'current_sync_timestamp' => $currentSyncTimestamp,
     'counts' => [

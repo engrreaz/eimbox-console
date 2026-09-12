@@ -29,7 +29,8 @@ $allowedTables = [
     'account_head', 'account_sub_head', 'bankinfo', 'banktrans', 'cashbook',
     'account_head_default', 'account_sub_head_default',
     'app_releases', 'app_roadmap', 'faq_desktop',
-    'tabulatingsheet', 'tabulatingsheetex', 'tabulatingsheetpibi'
+    'tabulatingsheet', 'tabulatingsheetex', 'tabulatingsheetpibi',
+    'issues_tracker', 'features', 'modulelist', 'eimbox_features'
 ];
 
 if (empty($tableName) || !in_array($tableName, $allowedTables)) {
@@ -54,11 +55,61 @@ $conn->query("
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ");
 
-// Tables without sccode column (Global Master Tables)
-$tablesWithoutSccode = ['notice_category', 'ben_address', 'permissions_role', 'account_head_default', 'app_releases', 'app_roadmap', 'faq_desktop'];
+// =========================================================================
+// 1. EXPLICIT LIST: Tables without sccode column (Global Master Tables)
+// =========================================================================
+$tablesWithoutSccode = [
+    'notice_category', 
+    'ben_address', 
+    'permissions_role', 
+    'account_head_default', 
+    'app_releases', 
+    'app_roadmap', 
+    'faq_desktop', 
+    'issues_tracker', 
+    'features', 
+    'modulelist', 
+    'eimbox_features'
+];
 
-// Tables with global sccode=0 fallback
-$supportsGlobal = in_array($tableName, ['gpa', 'subjects', 'examlist', 'slots', 'settings', 'classschedule', 'account_head', 'account_sub_head', 'account_sub_head_default']);
+// =========================================================================
+// 2. EXPLICIT LIST: Tables where global default fallback (sccode = 0) is allowed
+// STRICT: 'slots' is strictly institution-specific and MUST NEVER have sccode = 0
+// =========================================================================
+$tablesAllowedGlobalSccode0 = [
+    'gpa',
+    'subjects',
+    'examlist',
+    'settings',
+    'classschedule',
+    'account_head',
+    'account_sub_head',
+    'account_sub_head_default'
+];
+
+// =========================================================================
+// 3. EXPLICIT LIST: Tables strictly scoped to active session (sessionyear)
+// =========================================================================
+$sessionAwareTables = [
+    'examroutine', 'examlist', 'areas', 'sessioninfo', 'subsetup', 
+    'stmark', 'stattnd', 'stfinance', 'stpr', 'classschedule', 
+    'clsroutine', 'syllabus', 'lesson_tracking', 'cashbook',
+    'tabulatingsheet', 'tabulatingsheetex'
+];
+
+// Resolve active session from sessionyear table if not passed from client
+if (empty($session) && $activeSccode > 0) {
+    $syStmt = $conn->prepare("SELECT syear FROM sessionyear WHERE sccode = ? AND active = 1 ORDER BY syear DESC LIMIT 1");
+    if ($syStmt) {
+        $syStmt->bind_param("i", $activeSccode);
+        $syStmt->execute();
+        $syRes = $syStmt->get_result();
+        if ($syRow = $syRes->fetch_assoc()) {
+            $session = trim($syRow['syear'] ?? '');
+        }
+        $syStmt->close();
+    }
+}
 
 $where = [];
 $params = [];
@@ -66,27 +117,29 @@ $types = "";
 
 if (in_array($tableName, $tablesWithoutSccode)) {
     // Global master table without sccode column -> no sccode filter needed
-} elseif ($supportsGlobal) {
+} elseif (in_array($tableName, $tablesAllowedGlobalSccode0)) {
+    // Whitelisted global fallback tables allow sccode = ? OR sccode = 0
     $where[] = "(sccode = ? OR sccode = 0)";
     $params[] = $activeSccode;
     $types .= "i";
 } else {
+    // Strict multi-tenant rule: all other tables MUST filter by sccode = ?
     $where[] = "sccode = ?";
     $params[] = $activeSccode;
     $types .= "i";
 }
 
-$sessionAwareTables = [
-    'examroutine', 'examlist', 'areas', 'sessioninfo', 'subsetup', 
-    'stmark', 'stattnd', 'stfinance', 'stpr', 'classschedule', 
-    'clsroutine', 'syllabus', 'lesson_tracking', 'cashbook',
-    'tabulatingsheet', 'tabulatingsheetex', 'tabulatingsheetpibi'
-];
-
+// Session Filtering: Only fetch records for the active sessionyear
 if (!empty($session) && in_array($tableName, $sessionAwareTables)) {
-    $where[] = "(sessionyear = ? OR sessionyear IS NULL OR sessionyear = '')";
-    $params[] = $session;
-    $types .= "s";
+    if (in_array($tableName, $tablesAllowedGlobalSccode0)) {
+        $where[] = "(sessionyear = ? OR sccode = 0 OR sessionyear IS NULL OR sessionyear = '')";
+        $params[] = $session;
+        $types .= "s";
+    } else {
+        $where[] = "sessionyear = ?";
+        $params[] = $session;
+        $types .= "s";
+    }
 }
 
 if (!empty($since) && strtotime($since)) {
@@ -169,6 +222,9 @@ if (!empty($since) && strtotime($since)) {
 $responseData = [
     'table' => $tableName,
     'sccode' => $activeSccode,
+    'session' => $session,
+    'allowed_global_sccode0' => in_array($tableName, $tablesAllowedGlobalSccode0),
+    'session_filtered' => in_array($tableName, $sessionAwareTables),
     'count' => count($rows),
     'rows' => $rows,
     'deleted_ids' => $deletedIds,
