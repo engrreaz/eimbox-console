@@ -73,8 +73,8 @@ if (!empty($pushData) && is_array($pushData)) {
     $dimensions = $pushData['dimensions'] ?? [];
 
     // Check if record exists
-    $checkStmt = $conn->prepare("SELECT id FROM issues_tracker WHERE route = ? AND (platform = ? OR platform IS NULL) LIMIT 1");
-    $checkStmt->bind_param("ss", $route, $platform);
+    $checkStmt = $conn->prepare("SELECT id FROM issues_tracker WHERE (route = ? OR title = ?) AND (platform = ? OR platform LIKE 'Android%' OR platform = 'All' OR platform IS NULL OR platform = '') ORDER BY (platform = ?) DESC, id DESC LIMIT 1");
+    $checkStmt->bind_param("ssss", $route, $title, $platform, $platform);
     $checkStmt->execute();
     $existRow = $checkStmt->get_result()->fetch_assoc();
     $checkStmt->close();
@@ -154,16 +154,16 @@ if (!empty($pushData) && is_array($pushData)) {
 // -------------------------------------------------------------
 // 2. PULL PHASE
 // -------------------------------------------------------------
-$selStmt = $conn->prepare("SELECT * FROM issues_tracker WHERE route = ? AND (platform = ? OR platform IS NULL) ORDER BY id DESC LIMIT 1");
-$selStmt->bind_param("ss", $route, $platform);
+$selStmt = $conn->prepare("SELECT * FROM issues_tracker WHERE (route = ? OR title = ?) AND (platform = ? OR platform LIKE 'Android%' OR platform = 'All' OR platform IS NULL OR platform = '') ORDER BY (platform = ?) DESC, id DESC LIMIT 1");
+$selStmt->bind_param("ssss", $route, $title, $platform, $platform);
 $selStmt->execute();
 $serverRecord = $selStmt->get_result()->fetch_assoc();
 $selStmt->close();
 
 if (!$serverRecord) {
     // Try without platform condition
-    $selStmt2 = $conn->prepare("SELECT * FROM issues_tracker WHERE route = ? ORDER BY id DESC LIMIT 1");
-    $selStmt2->bind_param("s", $route);
+    $selStmt2 = $conn->prepare("SELECT * FROM issues_tracker WHERE route = ? OR title = ? ORDER BY id DESC LIMIT 1");
+    $selStmt2->bind_param("ss", $route, $title);
     $selStmt2->execute();
     $serverRecord = $selStmt2->get_result()->fetch_assoc();
     $selStmt2->close();
