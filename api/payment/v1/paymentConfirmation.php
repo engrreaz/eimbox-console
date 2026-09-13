@@ -79,32 +79,62 @@ $sessRes = $sessStmt->get_result();
 $session = $sessRes->fetch_assoc();
 $sessStmt->close();
 
+if (!$session) {
+    send_rocket_response('01', 'Academic Session record not found in sessioninfo for given Student and Institution');
+}
+
 $className = $session['classname'] ?? '';
 $sectionName = $session['sectionname'] ?? '';
 $rollNo = $session['rollno'] ?? '';
 $actualYear = $session['sessionyear'] ?? date('Y');
 $syPattern = "%" . $actualYear . "%";
 
-// 6. Settle Dues in `stfinance`
+// 6. Validate Outstanding Dues from `stfinance` table (same query logic as paymentValidation.php)
 $currMonth = (int)date('n');
 if ($currMonth >= 10) {
     $currMonth = 12;
 }
 
+$dueStmt = $conn->prepare("SELECT COALESCE(SUM(dues), 0) AS total_dues, COUNT(*) AS due_items 
+                           FROM stfinance 
+                           WHERE sccode = ? 
+                             AND sessionyear LIKE ? 
+                             AND stid = ? 
+                             AND month <= ? 
+                             AND dues > 0");
+$dueStmt->bind_param("isis", $sccode, $syPattern, $stid, $currMonth);
+$dueStmt->execute();
+$dueRes = $dueStmt->get_result();
+$dueRow = $dueRes->fetch_assoc();
+$dueStmt->close();
+
+$totalDues = (float)($dueRow['total_dues'] ?? 0.00);
+$expectedAmount = round($totalDues);
+
+if ($totalDues <= 0) {
+    send_rocket_response('99', 'No outstanding dues found for this student');
+}
+
+// Verify that the input amount matches the student's actual outstanding dues
+if (abs($amount - $totalDues) > 0.01 && abs($amount - $expectedAmount) > 0.01) {
+    send_rocket_response('99', "Payment amount mismatch: Provided ({$amount}) does not match outstanding dues ({$expectedAmount})");
+}
+
+// 7. Settle Dues in `stfinance`
 $conn->begin_transaction();
 try {
-    $dueQuery = "SELECT id, dues, paid, pr1 
-                 FROM stfinance 
-                 WHERE sccode = ? 
-                   AND sessionyear LIKE ? 
-                   AND stid = ? 
-                   AND month <= ? 
-                   AND dues > 0 
-                 ORDER BY month ASC, id ASC";
-    $dueStmt = $conn->prepare($dueQuery);
-    $dueStmt->bind_param("isis", $sccode, $syPattern, $stid, $currMonth);
-    $dueStmt->execute();
-    $dueRes = $dueStmt->get_result();
+    $settleQuery = "SELECT id, dues, paid, pr1 
+                    FROM stfinance 
+                    WHERE sccode = ? 
+                      AND sessionyear LIKE ? 
+                      AND stid = ? 
+                      AND month <= ? 
+                      AND dues > 0 
+                    ORDER BY month ASC, id ASC";
+    $settleStmt = $conn->prepare($settleQuery);
+    $settleStmt->bind_param("isis", $sccode, $syPattern, $stid, $currMonth);
+    $settleStmt->execute();
+    $settleRes = $settleStmt->get_result();
 
     // 6. Generate PRNO for Student in this Session
     // Query the latest receipt (prno) for this student from `stpr`
@@ -145,7 +175,7 @@ try {
         }
     }
 
-    while ($row = $dueRes->fetch_assoc()) {
+    while ($row = $settleRes->fetch_assoc()) {
         if ($remainingToPay <= 0) {
             break;
         }
@@ -177,7 +207,7 @@ try {
         $remainingToPay -= $payForThisItem;
         $updatedCount++;
     }
-    $dueStmt->close();
+    $settleStmt->close();
 
     // 7. Insert Receipt into `stpr` Table (excluding partid)
     $prInsertSql = "INSERT INTO stpr (
