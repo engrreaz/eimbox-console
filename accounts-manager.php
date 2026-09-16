@@ -18,7 +18,7 @@ if (isset($_POST['import_default_heads'])) {
             if ($h_name === '') continue;
 
             // চেক করা অলরেডি এই sccode-এ হেডটি আছে কিনা
-            $stmt = $conn->prepare("SELECT id FROM account_head WHERE sccode = ? AND head_name = ? LIMIT 1");
+            $stmt = $conn->prepare("SELECT id FROM account_head WHERE sccode = ? AND account_head = ? LIMIT 1");
             $stmt->bind_param("is", $sccode, $h_name);
             $stmt->execute();
             $check_res = $stmt->get_result();
@@ -53,7 +53,7 @@ if (isset($_POST['import_default_heads'])) {
                 $chk_sub->execute();
                 if ($chk_sub->get_result()->num_rows === 0) {
                     $ins_sub = $conn->prepare("INSERT INTO account_sub_head (sccode, account_head_id, account_head, sub_head, income, expenditure) VALUES (?, ?, ?, ?, ?, ?)");
-                    $ins_sub->bind_param("iisssi", $sccode, $head_id, $h_name, $s_name, $inc, $exp);
+                    $ins_sub->bind_param("iissii", $sccode, $head_id, $h_name, $s_name, $inc, $exp);
                     $ins_sub->execute();
                     $imported_subs++;
                 }
@@ -133,7 +133,7 @@ if (isset($_POST['save_sub'])) {
             $alert_type = 'success';
         } else {
             $stmt = $conn->prepare("INSERT INTO account_sub_head (sccode, account_head_id, account_head, sub_head, income, expenditure) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("iisssi", $sccode, $h_id, $h_name, $sub_name, $inc, $exp);
+            $stmt->bind_param("iissii", $sccode, $h_id, $h_name, $sub_name, $inc, $exp);
             $stmt->execute();
             $alert_msg = "Sub-Head created successfully.";
             $alert_type = 'success';
