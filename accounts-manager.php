@@ -18,7 +18,7 @@ if (isset($_POST['import_default_heads'])) {
             if ($h_name === '') continue;
 
             // চেক করা অলরেডি এই sccode-এ হেডটি আছে কিনা
-            $stmt = $conn->prepare("SELECT id FROM account_head WHERE sccode = ? AND account_head = ? LIMIT 1");
+            $stmt = $conn->prepare("SELECT id FROM account_head WHERE sccode = ? AND head_name = ? LIMIT 1");
             $stmt->bind_param("is", $sccode, $h_name);
             $stmt->execute();
             $check_res = $stmt->get_result();
