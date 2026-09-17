@@ -32,7 +32,8 @@ $allowed_fields = [
     'fnid',
     'mnid',
     'previll',
-    'prepo'
+    'prepo',
+    'guarmobile'
 ];
 
 if (!in_array($field, $allowed_fields)) {
