@@ -233,6 +233,8 @@ if (!empty($class) && !empty($sessionyear)) {
                             newDisplayText = 'Vill: ' + newValue;
                         } else if (originalText.startsWith('PO: ')) {
                             newDisplayText = 'PO: ' + newValue;
+                        } else if (originalText.startsWith('G: ')) {
+                            newDisplayText = 'G: ' + newValue;
                         }
                         cell.text(newDisplayText);
                         showToast('success', 'Information updated successfully.', 'Updated');
