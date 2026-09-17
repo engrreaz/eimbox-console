@@ -147,8 +147,8 @@ if (!empty($class) && !empty($sessionyear)) {
                                 </td>
                                 <td>
                                     <div class="editable" data-stid="<?= $student['stid'] ?>" data-field="fmobile">F: <?= htmlspecialchars($student['fmobile']) ?></div>
-                                    <div class="editable" data-stid="<?= $student['stid'] ?>" data-field="fmobile">M: <?= htmlspecialchars($student['mmobile']) ?></div>
-                                    <div class="editable" data-stid="<?= $student['stid'] ?>" data-field="mmobile">G: <?= htmlspecialchars($student['guarmobile']) ?></div>
+                                    <div class="editable" data-stid="<?= $student['stid'] ?>" data-field="mmobile">M: <?= htmlspecialchars($student['mmobile']) ?></div> 
+                                    <div class="editable" data-stid="<?= $student['stid'] ?>" data-field="guarmobile">G: <?= htmlspecialchars($student['guarmobile']) ?></div>
                                 </td>
                                 <td style="height: 50px;"></td>
                             </tr>
@@ -182,7 +182,7 @@ if (!empty($class) && !empty($sessionyear)) {
 
         // প্রিফিক্স (যেমন "F: ") বাদ দিয়ে শুধুমাত্র মূল টেক্সট নেওয়া
         var contentToEdit = originalText;
-        if (originalText.startsWith('F: ') || originalText.startsWith('M: ') ) {
+        if (originalText.startsWith('F: ') || originalText.startsWith('M: ')  || originalText.startsWith('G: ') ) {
             contentToEdit = originalText.substring(3);
         } else if (originalText.startsWith('Vill: ')) {
             contentToEdit = originalText.substring(6);
