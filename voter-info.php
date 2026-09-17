@@ -146,10 +146,9 @@ if (!empty($class) && !empty($sessionyear)) {
                                     <div class="editable" data-stid="<?= $student['stid'] ?>" data-field="prepo">PO: <?= htmlspecialchars($student['prepo']) ?></div>
                                 </td>
                                 <td>
-                                    <?php
-                                    $mobiles = array_unique(array_filter([$student['guarmobile'], $student['fmobile'], $student['mmobile']]));
-                                    echo htmlspecialchars(implode(', ', $mobiles));
-                                    ?>
+                                    <div class="editable" data-stid="<?= $student['stid'] ?>" data-field="fmobile">F: <?= htmlspecialchars($student['fmobile']) ?></div>
+                                    <div class="editable" data-stid="<?= $student['stid'] ?>" data-field="fmobile">M: <?= htmlspecialchars($student['mmobile']) ?></div>
+                                    <div class="editable" data-stid="<?= $student['stid'] ?>" data-field="mmobile">G: <?= htmlspecialchars($student['guarmobile']) ?></div>
                                 </td>
                                 <td style="height: 50px;"></td>
                             </tr>
