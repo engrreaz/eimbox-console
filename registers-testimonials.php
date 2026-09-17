@@ -132,12 +132,12 @@ if ($scinfo_query) {
  
                                                  if ($is_printable) {
                                                      // If issued, show all three
-                                                     echo '<a class="dropdown-item" href="javascript:void(0);" onclick="resultEntry(\'' . $row['rollno'] . '\')"><i class="bi bi-card-list me-2"></i> Update Result</a>';
+                                                     echo '<a class="dropdown-item" href="javascript:void(0);" onclick="openTestimonialModal(\'' . $row['stid'] . '\', \'' . addslashes($row['stnameeng']) . '\')"><i class="bi bi-file-earmark-text me-2"></i> Update Testimonial Info</a>';
                                                      echo '<a class="dropdown-item" href="javascript:void(0);" onclick="issue(\'' . $row['stid'] . '\')"><i class="bi bi-arrow-repeat me-2"></i> Re-issue Testimonial</a>';
                                                      echo '<a class="dropdown-item text-success" href="javascript:void(0);" onclick="printSingle(\'' . $row['stid'] . '\')"><i class="bi bi-printer me-2"></i> Print</a>';
                                                  } elseif ($is_data_updated) {
-                                                     // If data is updated but not issued, show Update Result and Issue Testimonial
-                                                     echo '<a class="dropdown-item" href="javascript:void(0);" onclick="resultEntry(\'' . $row['rollno'] . '\')"><i class="bi bi-card-list me-2"></i> Update Result</a>';
+                                                     // If data is updated but not issued, show Update Testimonial Info and Issue Testimonial
+                                                     echo '<a class="dropdown-item" href="javascript:void(0);" onclick="openTestimonialModal(\'' . $row['stid'] . '\', \'' . addslashes($row['stnameeng']) . '\')"><i class="bi bi-file-earmark-text me-2"></i> Update Testimonial Info</a>';
                                                      echo '<a class="dropdown-item" href="javascript:void(0);" onclick="issue(\'' . $row['stid'] . '\')"><i class="bi bi-file-earmark-check me-2"></i> Issue Testimonial</a>';
                                                  }
                                                  ?>
@@ -271,6 +271,54 @@ if ($scinfo_query) {
     </div>
 </div>
 
+<!-- Update Testimonial Info Modal -->
+<div class="modal fade" id="updateTestimonialModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-file-earmark-text me-2"></i>Update Testimonial Info</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="testimonial_modal_loading" class="text-center py-4" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <div class="mt-2 text-muted">Loading testimonial information...</div>
+                </div>
+                <form id="updateTestimonialForm">
+                    <input type="hidden" id="testimonial_modal_stid" name="stid">
+                    <input type="hidden" id="testimonial_modal_exam" name="exam">
+
+                    <div class="alert alert-info py-2 px-3 mb-3 d-flex align-items-center justify-content-between">
+                        <div>
+                            <strong id="testimonial_modal_stname">—</strong>
+                            <div class="small text-muted" id="testimonial_modal_stinfo"></div>
+                        </div>
+                        <span class="badge bg-primary" id="testimonial_modal_status"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="testimonial_modal_session" class="form-label">Session</label>
+                        <input type="text" class="form-control" id="testimonial_modal_session" name="session" placeholder="e.g. 2022-2023 or 2022-23" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="testimonial_modal_testdate" class="form-label">Testimonial Date (testdate)</label>
+                        <input type="date" class="form-control" id="testimonial_modal_testdate" name="testdate" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="btnSaveTestimonialInfo" onclick="saveTestimonialInfo()">
+                    <i class="bi bi-check-circle me-1"></i> Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?php require_once 'footer.php'; ?>
 
 <script>
@@ -279,6 +327,7 @@ if ($scinfo_query) {
     }
 
     const modifyModal = new bootstrap.Modal(document.getElementById('modifyStudentModal'));
+    const testimonialModal = new bootstrap.Modal(document.getElementById('updateTestimonialModal'));
 
     function issue(stid) {
         var exam = document.getElementById('exam').value;
@@ -436,7 +485,108 @@ if ($scinfo_query) {
         });
     }
 
-    // More JS functions for result entry can be added here if needed.
+    // Testimonial Modal Handlers
+    function openTestimonialModal(stid, stname) {
+        const exam = document.getElementById('exam')?.value || 'SSC';
+        document.getElementById('testimonial_modal_stid').value = stid;
+        document.getElementById('testimonial_modal_exam').value = exam;
+        document.getElementById('testimonial_modal_stname').textContent = stname || ('Student ID: ' + stid);
+        document.getElementById('testimonial_modal_stinfo').textContent = 'Exam: ' + exam + ' | ID: ' + stid;
+        document.getElementById('testimonial_modal_session').value = '';
+        document.getElementById('testimonial_modal_testdate').value = '';
+        document.getElementById('testimonial_modal_status').textContent = '';
+
+        $('#updateTestimonialForm').hide();
+        $('#testimonial_modal_loading').show();
+        $('#btnSaveTestimonialInfo').prop('disabled', true);
+        testimonialModal.show();
+
+        $.ajax({
+            url: 'backend/get-testimonial-info.php',
+            type: 'GET',
+            data: { stid: stid, exam: exam },
+            dataType: 'json',
+            success: function(response) {
+                $('#testimonial_modal_loading').hide();
+                $('#updateTestimonialForm').show();
+                $('#btnSaveTestimonialInfo').prop('disabled', false);
+
+                if (response.status === 'success') {
+                    document.getElementById('testimonial_modal_session').value = response.session || '';
+                    document.getElementById('testimonial_modal_testdate').value = response.testdate || '';
+                    if (response.stname) {
+                        document.getElementById('testimonial_modal_stname').textContent = response.stname;
+                    }
+                    const statusBadge = document.getElementById('testimonial_modal_status');
+                    if (response.is_issued) {
+                        statusBadge.className = 'badge bg-success';
+                        statusBadge.textContent = 'Issued (' + (response.testslno || '') + ')';
+                    } else {
+                        statusBadge.className = 'badge bg-warning text-dark';
+                        statusBadge.textContent = 'Not Issued Yet';
+                    }
+                } else {
+                    showToast('error', response.message || 'Failed to fetch testimonial info.', 'Error');
+                }
+            },
+            error: function() {
+                $('#testimonial_modal_loading').hide();
+                $('#updateTestimonialForm').show();
+                $('#btnSaveTestimonialInfo').prop('disabled', false);
+                showToast('error', 'Error loading testimonial info from server.', 'Server Error');
+            }
+        });
+    }
+
+    function saveTestimonialInfo() {
+        const form = document.getElementById('updateTestimonialForm');
+        const formData = new FormData(form);
+        const saveBtn = $('#btnSaveTestimonialInfo');
+
+        const sessionVal = formData.get('session')?.trim();
+        const testdateVal = formData.get('testdate')?.trim();
+
+        if (!sessionVal || !testdateVal) {
+            alert('Session and Testimonial Date are required.');
+            return;
+        }
+
+        saveBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Saving...');
+
+        $.ajax({
+            url: 'backend/update-testimonial-info.php',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            dataType: 'json',
+            success: function(response) {
+                saveBtn.prop('disabled', false).html('<i class="bi bi-check-circle me-1"></i> Save Changes');
+                if (response.status === 'success') {
+                    showToast('success', response.message, 'Success');
+                    testimonialModal.hide();
+
+                    const stid = formData.get('stid');
+                    const exam = formData.get('exam');
+
+                    // Refresh action cell
+                    $.get(`backend/get-testimonial-action-cell.php?stid=${stid}&exam=${exam}`, function(actionHtml) {
+                        $('#action-cell-' + stid).html(actionHtml);
+                    });
+
+                    // Mark row as table-success (issued)
+                    $('#student-row-' + stid).removeClass('table-warning table-primary').addClass('table-success');
+                    $('#student-row-' + stid + ' input.st-check').prop('disabled', false);
+                } else {
+                    showToast('error', response.message || 'Failed to update testimonial info.', 'Error');
+                }
+            },
+            error: function() {
+                saveBtn.prop('disabled', false).html('<i class="bi bi-check-circle me-1"></i> Save Changes');
+                showToast('error', 'An error occurred while saving testimonial info.', 'Server Error');
+            }
+        });
+    }
 </script>
 </body>
 

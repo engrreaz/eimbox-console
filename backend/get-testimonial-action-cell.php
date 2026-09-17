@@ -59,11 +59,11 @@ ob_end_clean(); // Clean (discard) the buffer from init.php
     <div class="dropdown-menu dropdown-menu-end">
         <a class="dropdown-item" href="javascript:void(0);" onclick="openModifyModal('<?= $stid ?>', '<?= addslashes($student_data['stnameeng']) ?>', '<?= addslashes($student_data['stnameben']) ?>', '<?= addslashes($student_data['fname']) ?>', '<?= addslashes($student_data['mname']) ?>', '<?= $student_data['rollno'] ?>', '<?= $student_data['regdno'] ?>', '<?= $student_data['gpa'] ?>', '<?= $student_data['sscpassyear'] ?>', '<?= $student_data['gender'] ?>', '<?= $student_data['dob'] ?>')"><i class="bi bi-pencil-square me-2"></i> Update Info</a>
         <?php if ($is_printable): ?>
-            <a class="dropdown-item" href="javascript:void(0);" onclick="resultEntry('<?= $student_data['rollno'] ?>')"><i class="bi bi-card-list me-2"></i> Update Result</a>
+            <a class="dropdown-item" href="javascript:void(0);" onclick="openTestimonialModal('<?= $stid ?>', '<?= addslashes($student_data['stnameeng']) ?>')"><i class="bi bi-file-earmark-text me-2"></i> Update Testimonial Info</a>
             <a class="dropdown-item" href="javascript:void(0);" onclick="issue('<?= $stid ?>')"><i class="bi bi-arrow-repeat me-2"></i> Re-issue Testimonial</a>
             <a class="dropdown-item text-success" href="javascript:void(0);" onclick="printSingle('<?= $stid ?>')"><i class="bi bi-printer me-2"></i> Print</a>
         <?php elseif ($is_data_updated): ?>
-            <a class="dropdown-item" href="javascript:void(0);" onclick="resultEntry('<?= $student_data['rollno'] ?>')"><i class="bi bi-card-list me-2"></i> Update Result</a>
+            <a class="dropdown-item" href="javascript:void(0);" onclick="openTestimonialModal('<?= $stid ?>', '<?= addslashes($student_data['stnameeng']) ?>')"><i class="bi bi-file-earmark-text me-2"></i> Update Testimonial Info</a>
             <a class="dropdown-item" href="javascript:void(0);" onclick="issue('<?= $stid ?>')"><i class="bi bi-file-earmark-check me-2"></i> Issue Testimonial</a>
         <?php endif; ?>
     </div>
