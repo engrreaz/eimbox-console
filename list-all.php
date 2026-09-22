@@ -58,7 +58,7 @@ $sl = 1; ?>
                 <div class="col-md-3">
                     <label class="form-label">Session</label>
                     <select name="sessionyear" class="form-select  form-select-sm">
-                        <option value="">All Session</option>
+                        
 
                         <?php
                         $sessionQuery = mysqli_query($conn, "
@@ -73,6 +73,7 @@ $sl = 1; ?>
                             echo '<option value="' . $sessionRow['sessionyear'] . '" ' . $selected . '>' . $sessionRow['sessionyear'] . '</option>';
                         }
                         ?>
+                        <option value="">All Session</option>
                     </select>
                 </div>
 
