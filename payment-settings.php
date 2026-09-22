@@ -129,13 +129,14 @@ function getFrequencyBadge($freq) {
 
         // 2. Fetch Account Sub-Head mappings for quick lookup
         $subHeadMap = [];
-        $subHeadQuery = $conn->query("SELECT s.id, s.sub_head, COALESCE(h.account_head, h.head_name, s.account_head, '') AS head_name 
+        $subHeadQuery = $conn->query("SELECT s.id, s.sub_head, h.head_name 
                                       FROM account_sub_head s 
                                       LEFT JOIN account_head h ON h.id = s.account_head_id 
                                       WHERE s.sccode='$sccode'");
         if ($subHeadQuery && $subHeadQuery->num_rows > 0) {
             while ($sh = $subHeadQuery->fetch_assoc()) {
-                $subHeadMap[$sh['id']] = $sh['head_name'] . ' → ' . $sh['sub_head'];
+                $headTitle = !empty($sh['head_name']) ? $sh['head_name'] : 'General';
+                $subHeadMap[$sh['id']] = $headTitle . ' → ' . $sh['sub_head'];
             }
         }
 
@@ -335,7 +336,7 @@ function getFrequencyBadge($freq) {
                             if ($headQuery && $headQuery->num_rows > 0) {
                                 while ($head = $headQuery->fetch_assoc()) {
                                     $head_id = $head['id'];
-                                    $headTitle = !empty($head['account_head']) ? $head['account_head'] : (!empty($head['head_name']) ? $head['head_name'] : ('Head #' . $head_id));
+                                    $headTitle = !empty($head['head_name']) ? $head['head_name'] : (!empty($head['account_head']) ? $head['account_head'] : ('Head #' . $head_id));
                                     echo '<optgroup label="' . htmlspecialchars($headTitle) . '">';
                                     
                                     $subQuery = $conn->query("SELECT * FROM account_sub_head 
