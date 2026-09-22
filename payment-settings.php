@@ -129,7 +129,7 @@ function getFrequencyBadge($freq) {
 
         // 2. Fetch Account Sub-Head mappings for quick lookup
         $subHeadMap = [];
-        $subHeadQuery = $conn->query("SELECT s.id, s.sub_head, h.head_name 
+        $subHeadQuery = $conn->query("SELECT s.id, s.sub_head, COALESCE(h.account_head, h.head_name, s.account_head, '') AS head_name 
                                       FROM account_sub_head s 
                                       LEFT JOIN account_head h ON h.id = s.account_head_id 
                                       WHERE s.sccode='$sccode'");
@@ -140,7 +140,7 @@ function getFrequencyBadge($freq) {
         }
 
         // 3. Fetch Items
-        $sqlItems = "SELECT *, COALESCE(active, 1) AS active FROM financesetup 
+        $sqlItems = "SELECT * FROM financesetup 
                      WHERE sccode='$sccode' 
                        AND sessionyear LIKE '%$session%' 
                        AND (slot='$slot' OR slot='' OR slot IS NULL)
@@ -152,7 +152,7 @@ function getFrequencyBadge($freq) {
                 $itemcode = $r['itemcode'];
                 $valAmount = isset($amounts[$itemcode]) ? floatval($amounts[$itemcode]) : 0;
                 $subHeadName = isset($subHeadMap[$r['sub_head']]) ? $subHeadMap[$r['sub_head']] : '';
-                $isActive = intval($r['active'] ?? 1);
+                $isActive = isset($r['active']) ? intval($r['active']) : 1;
                 ?>
                 <div class="card mb-2 item fee-item-card <?= ($isActive == 0) ? 'is-deactivated' : '' ?>" data-id="<?= $r['id']; ?>" draggable="true">
                     <div class="card-header p-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -335,7 +335,8 @@ function getFrequencyBadge($freq) {
                             if ($headQuery && $headQuery->num_rows > 0) {
                                 while ($head = $headQuery->fetch_assoc()) {
                                     $head_id = $head['id'];
-                                    echo '<optgroup label="' . htmlspecialchars($head['head_name']) . '">';
+                                    $headTitle = !empty($head['account_head']) ? $head['account_head'] : (!empty($head['head_name']) ? $head['head_name'] : ('Head #' . $head_id));
+                                    echo '<optgroup label="' . htmlspecialchars($headTitle) . '">';
                                     
                                     $subQuery = $conn->query("SELECT * FROM account_sub_head 
                                                               WHERE sccode = '$sccode' 
