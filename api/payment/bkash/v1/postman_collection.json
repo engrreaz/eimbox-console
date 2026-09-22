@@ -1,0 +1,150 @@
+{
+	"info": {
+		"_postman_id": "eimbox-bkash-paybill-v2",
+		"name": "EIMBox - bKash Pay Bill API v2.0",
+		"description": "Comprehensive Postman collection for testing bKash Pay Bill APIs with EIMBox Educational Institution Management System.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. CheckBill (POST JSON)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"{{bkash_user}}\",\n    \"password\": \"{{bkash_pass}}\",\n    \"ref_id\": \"{{student_ref_id}}\",\n    \"bill_month\": \"na\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/CheckBill",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"CheckBill"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "2. CheckBill (GET Query String)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/CheckBill?username={{bkash_user}}&password={{bkash_pass}}&ref_id={{student_ref_id}}&bill_month=na",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"CheckBill"
+					],
+					"query": [
+						{
+							"key": "username",
+							"value": "{{bkash_user}}"
+						},
+						{
+							"key": "password",
+							"value": "{{bkash_pass}}"
+						},
+						{
+							"key": "ref_id",
+							"value": "{{student_ref_id}}"
+						},
+						{
+							"key": "bill_month",
+							"value": "na"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "3. BillPayment (Confirm Payment)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"{{bkash_user}}\",\n    \"password\": \"{{bkash_pass}}\",\n    \"ref_id\": \"{{student_ref_id}}\",\n    \"bill_month\": \"na\",\n    \"amount\": 1283,\n    \"user_mobile_number\": \"01711000000\",\n    \"trxid\": \"BKASH_POSTMAN_{{$timestamp}}\",\n    \"paytime\": \"20260922\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/BillPayment",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"BillPayment"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "4. RecheckPayment (Inquire Status)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"{{bkash_user}}\",\n    \"password\": \"{{bkash_pass}}\",\n    \"trxid\": \"{{bkash_trxid}}\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/RecheckPayment",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"RecheckPayment"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost/eimbox-dashboard/eimbox-materio/api/payment/bkash/v1",
+			"type": "string"
+		},
+		{
+			"key": "bkash_user",
+			"value": "bKash00",
+			"type": "string"
+		},
+		{
+			"key": "bkash_pass",
+			"value": "bKash12321",
+			"type": "string"
+		},
+		{
+			"key": "student_ref_id",
+			"value": "1031870001",
+			"type": "string"
+		},
+		{
+			"key": "bkash_trxid",
+			"value": "BKASH_TXN_987654",
+			"type": "string"
+		}
+	]
+}

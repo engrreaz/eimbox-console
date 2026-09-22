@@ -1,0 +1,28 @@
+[2026-09-22 06:52:21] [CHECK_BILL_REQUEST] REQ: [] | RES: null
+[2026-09-22 06:52:21] [RESPONSE] REQ: "require" | RES: {"ErrorCode":"202","ErrorMsg":"Mandatory Field missing: ref_id is required"}
+[2026-09-22 06:52:56] [CHECK_BILL_REQUEST] REQ: {"username":"wrong_user","password":"wrong_pass","ref_id":"1031871630","sccode":"1031870"} | RES: null
+[2026-09-22 06:52:56] [RESPONSE] REQ: "validate_bkash_auth" | RES: {"ErrorCode":"201","ErrorMsg":"Authentication failed"}
+[2026-09-22 06:52:56] [CHECK_BILL_REQUEST] REQ: {"username":"bKash00","password":"bKash12321"} | RES: null
+[2026-09-22 06:52:56] [RESPONSE] REQ: "require" | RES: {"ErrorCode":"202","ErrorMsg":"Mandatory Field missing: ref_id is required"}
+[2026-09-22 06:52:56] [CHECK_BILL_REQUEST] REQ: {"username":"bKash00","password":"bKash12321","ref_id":"1031871630","sccode":"1031870","bill_month":"na"} | RES: null
+[2026-09-22 06:52:56] [RESPONSE] REQ: "require" | RES: {"ErrorCode":"205","ErrorMsg":"Data not found: Student record not found for given ID and Institution"}
+[2026-09-22 06:52:57] [CHECK_BILL_REQUEST] REQ: {"username":"demo3","password":"aaa","ref_id":"1031870-1031871630","bill_month":"na"} | RES: null
+[2026-09-22 06:52:57] [RESPONSE] REQ: "require" | RES: {"ErrorCode":"205","ErrorMsg":"Data not found: Student record not found for given ID and Institution"}
+[2026-09-22 06:52:57] [RECHECK_PAYMENT_REQUEST] REQ: {"username":"bKash00","password":"bKash12321","trxid":"NON_EXISTENT_TXN_999"} | RES: null
+[2026-09-22 06:52:57] [RESPONSE] REQ: "require" | RES: {"ErrorCode":"205","ErrorMsg":"Data not found: Transaction not found in EIMBox records","PreviousMessage":"Transaction not found"}
+[2026-09-22 06:55:32] [CHECK_BILL_REQUEST] REQ: {"username":"bKash00","password":"bKash12321","ref_id":"1031870001","sccode":"103187"} | RES: null
+[2026-09-22 06:55:32] [RESPONSE] REQ: "require" | RES: {"ErrorCode":"200","ErrorMsg":"Success","Consumer_Name":"Afruja Akter","Bill_month":"na","Bill_amount":"1283","Bill_due_date":"2026-09-30","Trxid":"CHK20260922065532383","Querytime":"20260922065532","Amount_Breakdown":"Class: Six (Tagor) | Roll: 1 | SC: 103187"}
+[2026-09-22 06:55:33] [CHECK_BILL_REQUEST] REQ: {"username":"demo3","password":"aaa","ref_id":"103187-1031870001","bill_month":"na"} | RES: null
+[2026-09-22 06:55:33] [RESPONSE] REQ: "require" | RES: {"ErrorCode":"200","ErrorMsg":"Success","Consumer_Name":"Afruja Akter","Bill_month":"na","Bill_amount":"1283","Bill_due_date":"2026-09-30","Trxid":"CHK20260922065533346","Querytime":"20260922065533","Amount_Breakdown":"Class: Six (Tagor) | Roll: 1 | SC: 103187"}
+[2026-09-22 06:55:49] [CHECK_BILL_REQUEST] REQ: {"username":"bKash00","password":"bKash12321","ref_id":"1031870001","sccode":"103187"} | RES: null
+[2026-09-22 06:55:49] [RESPONSE] REQ: "require" | RES: {"ErrorCode":"200","ErrorMsg":"Success","Consumer_Name":"Afruja Akter","Bill_month":"na","Bill_amount":"1283","Bill_due_date":"2026-09-30","Trxid":"CHK20260922065549555","Querytime":"20260922065549","Amount_Breakdown":"Class: Six (Tagor) | Roll: 1 | SC: 103187"}
+[2026-09-22 06:55:49] [RECHECK_PAYMENT_REQUEST] REQ: {"username":"bKash00","password":"bKash12321","trxid":"NON_EXISTENT_TXN"} | RES: null
+[2026-09-22 06:55:49] [RESPONSE] REQ: "require" | RES: {"ErrorCode":"205","ErrorMsg":"Data not found: Transaction not found in EIMBox records","PreviousMessage":"Transaction not found"}
+[2026-09-22 06:56:37] [CHECK_BILL_REQUEST] REQ: {"username":"bKash00","password":"bKash12321","ref_id":"1031870001","sccode":"103187","bill_month":"na"} | RES: null
+[2026-09-22 06:56:37] [RESPONSE] REQ: "require" | RES: {"ErrorCode":"200","ErrorMsg":"Success","Consumer_Name":"Afruja Akter","Bill_month":"na","Bill_amount":"1283","Bill_due_date":"2026-09-30","Trxid":"CHK20260922065637288","Querytime":"20260922065637","Amount_Breakdown":"Class: Six (Tagor) | Roll: 1 | SC: 103187"}
+[2026-09-22 06:56:37] [BILL_PAYMENT_REQUEST] REQ: {"username":"bKash00","password":"bKash12321","ref_id":"1031870001","sccode":"103187","bill_month":"na","amount":"1283","user_mobile_number":"01711000000","trxid":"BKASH_TEST_1790038596","paytime":"20260922025637"} | RES: null
+[2026-09-22 06:56:37] [RESPONSE] REQ: "require" | RES: {"ErrorCode":"200","ErrorMsg":"Success","Consumer_Name":"Afruja Akter","Total_amount":"1283","Trxid":"BKASH_TEST_1790038596","Paytime":"20260922025637","Amount_Breakdown":"Class: Six | Roll: 1 | PR: 25000101"}
+[2026-09-22 06:56:37] [BILL_PAYMENT_REQUEST] REQ: {"username":"bKash00","password":"bKash12321","ref_id":"1031870001","sccode":"103187","bill_month":"na","amount":"1283","user_mobile_number":"01711000000","trxid":"BKASH_TEST_1790038596","paytime":"20260922025637"} | RES: null
+[2026-09-22 06:56:37] [RESPONSE] REQ: "require" | RES: {"ErrorCode":"200","ErrorMsg":"Success","Consumer_Name":"Student #1031870001","Total_amount":"1283","Trxid":"BKASH_TEST_1790038596","Paytime":"20260922025637","Amount_Breakdown":"Already Processed | PR: 25000101"}
+[2026-09-22 06:56:37] [RECHECK_PAYMENT_REQUEST] REQ: {"username":"bKash00","password":"bKash12321","trxid":"BKASH_TEST_1790038596"} | RES: null
+[2026-09-22 06:56:37] [RESPONSE] REQ: "require" | RES: {"ErrorCode":"200","ErrorMsg":"Success","PreviousMessage":"Payment Information Updated Successfully. PR: 25000101 | Amount: 1283 BDT"}

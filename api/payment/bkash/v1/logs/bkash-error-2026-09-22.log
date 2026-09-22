@@ -1,0 +1,19 @@
+[22-Sep-2026 06:51:06 Asia/Dhaka] PHP Fatal error:  Uncaught Error: Call to a member function prepare() on null in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\api\payment\bkash\v1\bootstrap.php:196
+Stack trace:
+#0 D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\api\payment\bkash\v1\CheckBill.php(36): validate_bkash_auth(Array, 1031870)
+#1 C:\Users\engrr\.gemini\antigravity-ide\brain\758f24c6-9b89-4552-9768-96d9234da676\scratch\run_simulation.php(19): include('D:\\XAMPP\\htdocs...')
+#2 C:\Users\engrr\.gemini\antigravity-ide\brain\758f24c6-9b89-4552-9768-96d9234da676\scratch\run_simulation.php(25): test_api('d:/XAMPP/htdocs...', 'POST', Array)
+#3 {main}
+  thrown in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\api\payment\bkash\v1\bootstrap.php on line 196
+[22-Sep-2026 06:53:26 Asia/Dhaka] PHP Fatal error:  Uncaught mysqli_sql_exception: Expression #3 of SELECT list is not in GROUP BY clause and contains nonaggregated column 'secure_auth.stfinance.sessionyear' which is not functionally dependent on columns in GROUP BY clause; this is incompatible with sql_mode=only_full_group_by in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\core\db.php:19
+Stack trace:
+#0 D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\core\db.php(19): mysqli->query('SELECT sccode, ...', 0)
+#1 C:\Users\engrr\.gemini\antigravity-ide\brain\758f24c6-9b89-4552-9768-96d9234da676\scratch\check_dues.php(4): MyDB->query('SELECT sccode, ...')
+#2 {main}
+  thrown in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\core\db.php on line 19
+[22-Sep-2026 06:54:53 Asia/Dhaka] PHP Fatal error:  Uncaught mysqli_sql_exception: Expression #3 of SELECT list is not in GROUP BY clause and contains nonaggregated column 'secure_auth.s.stnameeng' which is not functionally dependent on columns in GROUP BY clause; this is incompatible with sql_mode=only_full_group_by in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\core\db.php:19
+Stack trace:
+#0 D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\core\db.php(19): mysqli->query('SELECT f.sccode...', 0)
+#1 C:\Users\engrr\.gemini\antigravity-ide\brain\758f24c6-9b89-4552-9768-96d9234da676\scratch\check_dues_103187.php(4): MyDB->query('SELECT f.sccode...')
+#2 {main}
+  thrown in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\core\db.php on line 19
