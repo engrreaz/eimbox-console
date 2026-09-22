@@ -23,11 +23,12 @@ $filter_type = $_GET['filter_type'] ?? 'all';
 if (isset($_POST['save_voucher'])) {
     $entry_id = intval($_POST['entry_id'] ?? 0);
     $date = trim($_POST['date'] ?? date('Y-m-d'));
+    $slots = trim($_POST['slots'] ?? '');
     $partid = intval($_POST['partid'] ?? 0); // account_sub_head.id
     $head_id = intval($_POST['head_code'] ?? 0); // account_head.id
     $particulars = trim($_POST['particulars'] ?? '');
     $amount = floatval($_POST['amount'] ?? 0);
-    $type = ($_POST['type'] === 'Income') ? 'Income' : 'Expenditure';
+    $type = (isset($_POST['type']) && $_POST['type'] === 'Income') ? 'Income' : 'Expenditure';
     $memono = intval($_POST['memono'] ?? 0);
     $entryby = $usr ?? 'Admin';
 
@@ -35,14 +36,19 @@ if (isset($_POST['save_voucher'])) {
     $year = intval(date('Y', strtotime($date)));
     $target_session = $sessionyear ?? date('Y');
 
-    // যদি head_id ফাঁকা থাকে তবে sub_head থেকে বের করা
-    if ($head_id <= 0 && $partid > 0) {
-        $chk_h = $conn->prepare("SELECT account_head_id FROM account_sub_head WHERE id = ? LIMIT 1");
+    // যদি head_id বা type অস্পষ্ট থাকে তবে sub_head থেকে বের করা
+    if ($partid > 0) {
+        $chk_h = $conn->prepare("SELECT account_head_id, income, expenditure FROM account_sub_head WHERE id = ? LIMIT 1");
         $chk_h->bind_param("i", $partid);
         $chk_h->execute();
         $res_h = $chk_h->get_result();
-        if ($res_h && $res_h->num_rows > 0) {
-            $head_id = intval($res_h->fetch_assoc()['account_head_id']);
+        if ($res_h && $r_sub = $res_h->fetch_assoc()) {
+            if ($head_id <= 0) {
+                $head_id = intval($r_sub['account_head_id']);
+            }
+            if (!isset($_POST['type']) || $_POST['type'] === '') {
+                $type = (intval($r_sub['income']) === 1 && intval($r_sub['expenditure']) === 0) ? 'Income' : 'Expenditure';
+            }
         }
     }
 
@@ -51,9 +57,10 @@ if (isset($_POST['save_voucher'])) {
 
     if ($amount > 0) {
         if ($entry_id > 0) {
-            // Update
+            // Update (কেবলমাত্র আনলকড এন্ট্রি আপডেট করা যাবে)
             $stmt = $conn->prepare("UPDATE cashbook SET 
                 date = ?, 
+                slots = ?, 
                 account_head = ?, 
                 account_sub_head = ?, 
                 partid = ?, 
@@ -66,10 +73,10 @@ if (isset($_POST['save_voucher'])) {
                 month = ?, 
                 year = ?, 
                 modifieddate = NOW() 
-                WHERE id = ? AND (sccode = ? OR sccode = ?)");
+                WHERE id = ? AND (sccode = ? OR sccode = ?) AND (is_locked IS NULL OR is_locked = 0)");
             $sc_sanctioned = $sccode;
             $sc_pending = $sccode * 10;
-            $stmt->bind_param("siiisddssiiiiii", $date, $head_id, $partid, $partid, $particulars, $amount, $inc_val, $exp_val, $type, $memono, $month, $year, $entry_id, $sc_sanctioned, $sc_pending);
+            $stmt->bind_param("ssiiisdddsiiiiii", $date, $slots, $head_id, $partid, $partid, $particulars, $amount, $inc_val, $exp_val, $type, $memono, $month, $year, $entry_id, $sc_sanctioned, $sc_pending);
             if ($stmt->execute()) {
                 $alert_msg = "Voucher #$entry_id updated successfully.";
                 $alert_type = "success";
@@ -77,9 +84,9 @@ if (isset($_POST['save_voucher'])) {
         } else {
             // New Insert (সরাসরি Sanctioned হিসেবে সেভ হবে)
             $stmt = $conn->prepare("INSERT INTO cashbook 
-                (sccode, sessionyear, month, year, date, account_head, account_sub_head, partid, particulars, amount, income, expenditure, type, memono, entryby, entrytime) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
-            $stmt->bind_param("isiisiisddssiis", $sccode, $target_session, $month, $year, $date, $head_id, $partid, $partid, $particulars, $amount, $inc_val, $exp_val, $type, $memono, $entryby);
+                (sccode, sessionyear, month, year, date, slots, account_head, account_sub_head, partid, particulars, amount, income, expenditure, type, memono, entryby, entrytime, status) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 1)");
+            $stmt->bind_param("isiissiiisdddsis", $sccode, $target_session, $month, $year, $date, $slots, $head_id, $partid, $partid, $particulars, $amount, $inc_val, $exp_val, $type, $memono, $entryby);
             if ($stmt->execute()) {
                 $alert_msg = "New transaction voucher recorded successfully.";
                 $alert_type = "success";
@@ -88,30 +95,44 @@ if (isset($_POST['save_voucher'])) {
     }
 }
 
-// ২.২ ডিলিট অপারেশন
-if (isset($_GET['delete_id'])) {
-    $del_id = intval($_GET['delete_id']);
+// ২.২ ডিলিট অপারেশন (POST & GET - কেবল আনলকড এন্ট্রি মুছে ফেলা যাবে)
+if (isset($_POST['delete_id']) || isset($_GET['delete_id'])) {
+    $del_id = intval($_POST['delete_id'] ?? $_GET['delete_id']);
     if ($del_id > 0) {
-        $stmt = $conn->prepare("DELETE FROM cashbook WHERE id = ? AND (sccode = ? OR sccode = ?)");
+        $stmt = $conn->prepare("DELETE FROM cashbook WHERE id = ? AND (sccode = ? OR sccode = ?) AND (is_locked IS NULL OR is_locked = 0)");
         $sc_pen = $sccode * 10;
         $stmt->bind_param("iii", $del_id, $sccode, $sc_pen);
         if ($stmt->execute()) {
-            $alert_msg = "Transaction record deleted.";
+            $alert_msg = "Transaction record deleted successfully.";
             $alert_type = "danger";
         }
     }
 }
 
-// ২.৩ পেন্ডিং ভাউচার অনুমোদন / প্রত্যাখ্যান
-if (isset($_GET['approve_id'])) {
-    $app_id = intval($_GET['approve_id']);
+// ২.৩ পেন্ডিং ভাউচার অনুমোদন / স্যাঙ্কশন (POST & GET)
+if (isset($_POST['approve_id']) || isset($_GET['approve_id'])) {
+    $app_id = intval($_POST['approve_id'] ?? $_GET['approve_id']);
     if ($app_id > 0) {
-        $stmt = $conn->prepare("UPDATE cashbook SET sccode = ?, approved_by = ?, modifieddate = NOW() WHERE id = ? AND sccode = ?");
+        $stmt = $conn->prepare("UPDATE cashbook SET status = 1, sccode = ?, modifieddate = NOW() WHERE id = ? AND (sccode = ? OR sccode = ?) AND (is_locked IS NULL OR is_locked = 0)");
         $sc_pen = $sccode * 10;
-        $stmt->bind_param("isii", $sccode, $usr, $app_id, $sc_pen);
+        $stmt->bind_param("iiii", $sccode, $app_id, $sccode, $sc_pen);
         if ($stmt->execute()) {
-            $alert_msg = "Voucher #$app_id approved and sanctioned.";
+            $alert_msg = "Voucher #$app_id approved and sanctioned successfully.";
             $alert_type = "success";
+        }
+    }
+}
+
+// ২.৪ অনুমোদিত ভাউচারকে পেন্ডিং করা (Revert / Hold to Pending - POST & GET)
+if (isset($_POST['unapprove_id']) || isset($_GET['unapprove_id'])) {
+    $unapp_id = intval($_POST['unapprove_id'] ?? $_GET['unapprove_id']);
+    if ($unapp_id > 0) {
+        $stmt = $conn->prepare("UPDATE cashbook SET status = 0, modifieddate = NOW() WHERE id = ? AND (sccode = ? OR sccode = ?) AND (is_locked IS NULL OR is_locked = 0)");
+        $sc_pen = $sccode * 10;
+        $stmt->bind_param("iii", $unapp_id, $sccode, $sc_pen);
+        if ($stmt->execute()) {
+            $alert_msg = "Voucher #$unapp_id reverted to Pending status.";
+            $alert_type = "warning";
         }
     }
 }
@@ -119,6 +140,15 @@ if (isset($_GET['approve_id'])) {
 // ==========================================
 // 3. MASTER DATA FOR DROPDOWNS & FILTER
 // ==========================================
+// সব স্লট তালিকা
+$slots_res = $conn->query("SELECT slotname FROM slots WHERE sccode = '$sccode' AND slotname IS NOT NULL AND slotname != '' ORDER BY id ASC");
+$slots_list = [];
+if ($slots_res) {
+    while ($sl = $slots_res->fetch_assoc()) {
+        $slots_list[] = $sl['slotname'];
+    }
+}
+
 // সব অ্যাকাউন্ট হেড
 $heads_res = $conn->query("SELECT id, account_head FROM account_head WHERE sccode = '$sccode' ORDER BY account_head ASC");
 $heads_list = [];
@@ -142,11 +172,12 @@ if ($sub_heads_res) {
 }
 
 // ==========================================
-// 4. CASHBOOK LEDGER FETCH & SUMMARY CALCULATION
+// 4. CASHBOOK LEDGER FETCH & SUMMARY CALCULATION (EXCLUDE LOCKED ITEMS)
 // ==========================================
 $where_clauses = [
     "(c.sccode = '$sccode' OR c.sccode = '" . ($sccode * 10) . "')",
-    "c.date BETWEEN '$date_from' AND '$date_to'"
+    "c.date BETWEEN '$date_from' AND '$date_to'",
+    "(c.is_locked IS NULL OR c.is_locked = 0)"
 ];
 
 if ($filter_head > 0) {
@@ -176,7 +207,10 @@ $total_expense = 0;
 
 if ($res_main) {
     while ($row = $res_main->fetch_assoc()) {
-        if ($row['sccode'] == $sccode) {
+        $st = isset($row['status']) ? intval($row['status']) : 1;
+        $is_pending = ($st === 0 || $row['sccode'] == ($sccode * 10));
+
+        if (!$is_pending) {
             $sanctioned_vouchers[] = $row;
             if ($row['type'] === 'Income') {
                 $total_income += floatval($row['amount']);
@@ -285,6 +319,16 @@ $net_balance = $total_income - $total_expense;
         color: #ffffff;
     }
 
+    .action-hold {
+        background: rgba(255, 193, 7, 0.15);
+        color: #ffc107;
+    }
+
+    .action-hold:hover {
+        background: #ffc107;
+        color: #000000;
+    }
+
     /* Floating Action Button */
     .cb-fab-btn {
         position: fixed;
@@ -359,8 +403,23 @@ $net_balance = $total_income - $total_expense;
         </div>
     </div>
 
-    <!-- Alert Message -->
+    <!-- Alert Message with SweetAlert Integration -->
     <?php if ($alert_msg): ?>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: '<?= ($alert_type === 'danger') ? 'error' : htmlspecialchars($alert_type) ?>',
+                        title: '<?= addslashes(htmlspecialchars($alert_msg)) ?>',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3500,
+                        timerProgressBar: true
+                    });
+                }
+            });
+        </script>
         <div class="alert alert-<?= $alert_type ?> alert-dismissible fade show shadow-sm" role="alert">
             <i class="bi bi-info-circle me-2"></i><?= htmlspecialchars($alert_msg) ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -426,11 +485,11 @@ $net_balance = $total_income - $total_expense;
     <div class="card shadow-sm border-0 mb-3">
         <div class="card-body p-3">
             <form method="GET" class="row g-2 align-items-end">
-                <div class="col-6 col-md-3">
+                <div class="col-6 col-md-2">
                     <label class="form-label small fw-bold mb-1">Date From</label>
                     <input type="date" name="date_from" class="form-control form-control-sm" value="<?= htmlspecialchars($date_from) ?>">
                 </div>
-                <div class="col-6 col-md-3">
+                <div class="col-6 col-md-2">
                     <label class="form-label small fw-bold mb-1">Date To</label>
                     <input type="date" name="date_to" class="form-control form-control-sm" value="<?= htmlspecialchars($date_to) ?>">
                 </div>
@@ -445,7 +504,15 @@ $net_balance = $total_income - $total_expense;
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="col-6 col-md-3 d-flex gap-2">
+                <div class="col-6 col-md-3">
+                    <label class="form-label small fw-bold mb-1">Account Type</label>
+                    <select name="filter_type" class="form-select form-select-sm">
+                        <option value="all" <?= ($filter_type === 'all') ? 'selected' : '' ?>>All Types (Income & Expense)</option>
+                        <option value="Income" <?= ($filter_type === 'Income') ? 'selected' : '' ?>>Income Only (আয়)</option>
+                        <option value="Expenditure" <?= ($filter_type === 'Expenditure') ? 'selected' : '' ?>>Expenditure Only (ব্যয়)</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-2 d-flex gap-2">
                     <button type="submit" class="btn btn-primary btn-sm flex-fill">
                         <i class="bi bi-funnel me-1"></i> Filter
                     </button>
@@ -555,15 +622,28 @@ $net_balance = $total_income - $total_expense;
                                                 <?= ($v['type'] === 'Expenditure') ? '৳' . number_format($v['amount'], 2) : '—' ?>
                                             </td>
                                             <td class="text-end pe-3">
-                                                <div class="d-inline-flex gap-1">
-                                                    <button class="action-btn action-edit" title="Edit Voucher"
-                                                        onclick='openEditVoucherModal(<?= json_encode($v) ?>)'>
-                                                        <i class="bi bi-pencil"></i>
+                                                <div class="dropdown">
+                                                    <button type="button" class="btn p-0 text-secondary dropdown-toggle hide-arrow" data-bs-toggle="dropdown" aria-expanded="false">
+                                                        <i class="bi bi-three-dots-vertical fs-5"></i>
                                                     </button>
-                                                    <button class="action-btn action-delete" title="Delete Voucher"
-                                                        onclick="confirmDeleteVoucher(<?= $v['id'] ?>)">
-                                                        <i class="bi bi-trash3"></i>
-                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                                        <li>
+                                                            <a class="dropdown-item" href="javascript:void(0);" onclick='openEditVoucherModal(<?= json_encode($v) ?>)'>
+                                                                <i class="bi bi-pencil me-2 text-primary"></i> Edit Voucher
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item text-warning" href="javascript:void(0);" onclick="confirmUnapproveVoucher(<?= $v['id'] ?>)">
+                                                                <i class="bi bi-clock-history me-2"></i> Revert to Pending
+                                                            </a>
+                                                        </li>
+                                                        <li><hr class="dropdown-divider my-1"></li>
+                                                        <li>
+                                                            <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="confirmDeleteVoucher(<?= $v['id'] ?>)">
+                                                                <i class="bi bi-trash3 me-2"></i> Delete Voucher
+                                                            </a>
+                                                        </li>
+                                                    </ul>
                                                 </div>
                                             </td>
                                         </tr>
@@ -611,15 +691,28 @@ $net_balance = $total_income - $total_expense;
                                         <h5 class="mb-1 fw-bold <?= ($v['type'] === 'Income') ? 'text-success' : 'text-danger' ?>">
                                             <?= ($v['type'] === 'Income') ? '+' : '-' ?>৳<?= number_format($v['amount'], 2) ?>
                                         </h5>
-                                        <div class="d-inline-flex gap-1">
-                                            <button class="action-btn action-edit" title="Edit"
-                                                onclick='openEditVoucherModal(<?= json_encode($v) ?>)'>
-                                                <i class="bi bi-pencil"></i>
+                                        <div class="dropdown d-inline-block">
+                                            <button type="button" class="btn p-0 text-secondary dropdown-toggle hide-arrow" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="bi bi-three-dots-vertical fs-5"></i>
                                             </button>
-                                            <button class="action-btn action-delete" title="Delete"
-                                                onclick="confirmDeleteVoucher(<?= $v['id'] ?>)">
-                                                <i class="bi bi-trash3"></i>
-                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                                <li>
+                                                    <a class="dropdown-item" href="javascript:void(0);" onclick='openEditVoucherModal(<?= json_encode($v) ?>)'>
+                                                        <i class="bi bi-pencil me-2 text-primary"></i> Edit Voucher
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item text-warning" href="javascript:void(0);" onclick="confirmUnapproveVoucher(<?= $v['id'] ?>)">
+                                                        <i class="bi bi-clock-history me-2"></i> Revert to Pending
+                                                    </a>
+                                                </li>
+                                                <li><hr class="dropdown-divider my-1"></li>
+                                                <li>
+                                                    <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="confirmDeleteVoucher(<?= $v['id'] ?>)">
+                                                        <i class="bi bi-trash3 me-2"></i> Delete Voucher
+                                                    </a>
+                                                </li>
+                                            </ul>
                                         </div>
                                     </div>
                                 </div>
@@ -661,13 +754,13 @@ $net_balance = $total_income - $total_expense;
                                 <div class="text-end">
                                     <h5 class="mb-2 fw-bold text-body">৳<?= number_format($v['amount'], 2) ?></h5>
                                     <div class="d-flex gap-2">
-                                        <a href="cash-book.php?approve_id=<?= $v['id'] ?>" class="btn btn-sm btn-success px-3">
+                                        <button type="button" class="btn btn-sm btn-success px-3" onclick="confirmApproveVoucher(<?= $v['id'] ?>)">
                                             <i class="bi bi-check-lg me-1"></i> Approve
-                                        </a>
-                                        <a href="cash-book.php?delete_id=<?= $v['id'] ?>" class="btn btn-sm btn-outline-danger px-3"
-                                           onclick="return confirm('Reject and delete this voucher?');">
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger px-3"
+                                           onclick="confirmDeleteVoucher(<?= $v['id'] ?>)">
                                             <i class="bi bi-x-lg me-1"></i> Reject
-                                        </a>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -703,16 +796,28 @@ $net_balance = $total_income - $total_expense;
                     <input type="hidden" name="entry_id" id="v_entry_id">
                     <input type="hidden" name="head_code" id="v_head_code">
 
-                    <!-- Date & Type -->
+                    <!-- Slot, Date & Type -->
                     <div class="row g-3 mb-3">
-                        <div class="col-6">
+                        <div class="col-md-4 col-12">
+                            <label class="form-label small fw-bold">SLOT</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text"><i class="bi bi-layers"></i></span>
+                                <select name="slots" id="v_slots" class="form-select">
+                                    <option value="">Select Slot</option>
+                                    <?php foreach ($slots_list as $sl): ?>
+                                        <option value="<?= htmlspecialchars($sl) ?>"><?= htmlspecialchars($sl) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-6">
                             <label class="form-label small fw-bold">TRANSACTION DATE</label>
                             <div class="input-group input-group-sm">
                                 <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
                                 <input type="date" name="date" id="v_date" class="form-control" value="<?= date('Y-m-d') ?>" required>
                             </div>
                         </div>
-                        <div class="col-6">
+                        <div class="col-md-4 col-6">
                             <label class="form-label small fw-bold">TRANSACTION TYPE</label>
                             <div class="input-group input-group-sm">
                                 <span class="input-group-text"><i class="bi bi-arrow-left-right"></i></span>
@@ -820,6 +925,7 @@ $net_balance = $total_income - $total_expense;
         document.getElementById('voucherModalTitle').innerHTML = '<i class="bi bi-receipt me-1"></i> New Transaction Voucher';
         document.getElementById('v_entry_id').value = '';
         document.getElementById('voucherForm').reset();
+        document.getElementById('v_slots').value = '';
         document.getElementById('v_date').value = '<?= date('Y-m-d') ?>';
         document.getElementById('v_type').value = 'Expenditure';
         document.getElementById('v_head_code').value = '';
@@ -831,6 +937,7 @@ $net_balance = $total_income - $total_expense;
     function openEditVoucherModal(v) {
         document.getElementById('voucherModalTitle').innerHTML = '<i class="bi bi-pencil-square me-1"></i> Edit Transaction Voucher #' + v.id;
         document.getElementById('v_entry_id').value = v.id || '';
+        document.getElementById('v_slots').value = v.slots || '';
         document.getElementById('v_date').value = v.date || '<?= date('Y-m-d') ?>';
         document.getElementById('v_particulars').value = v.particulars || '';
         document.getElementById('v_amount').value = v.amount || '';
@@ -877,29 +984,105 @@ $net_balance = $total_income - $total_expense;
 
     document.getElementById('v_partid')?.addEventListener('change', function() {
         const chosen = this.options[this.selectedIndex];
-        if (chosen) {
+        if (chosen && chosen.value) {
             document.getElementById('v_head_code').value = chosen.getAttribute('data-head') || '';
+            const isInc = chosen.getAttribute('data-income') === '1';
+            const isExp = chosen.getAttribute('data-expense') === '1';
+            if (isInc && !isExp) {
+                document.getElementById('v_type').value = 'Income';
+            } else if (isExp && !isInc) {
+                document.getElementById('v_type').value = 'Expenditure';
+            }
         }
     });
+
+    function postVoucherAction(paramName, paramValue) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = window.location.pathname;
+
+        // Preserve URL filters (date_from, date_to, filter_head)
+        const urlParams = new URLSearchParams(window.location.search);
+        for (const [key, value] of urlParams.entries()) {
+            if (key !== 'delete_id' && key !== 'approve_id' && key !== 'unapprove_id') {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = value;
+                form.appendChild(input);
+            }
+        }
+
+        const actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = paramName;
+        actionInput.value = paramValue;
+        form.appendChild(actionInput);
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    function confirmApproveVoucher(id) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Approve Voucher?',
+                text: "Approve and sanction voucher #" + id + " into official ledger?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#198754',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Approve'
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    postVoucherAction('approve_id', id);
+                }
+            });
+        } else {
+            postVoucherAction('approve_id', id);
+        }
+    }
+
+    function confirmUnapproveVoucher(id) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Revert to Pending?',
+                text: "Revert voucher #" + id + " back to Pending approval list?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ffc107',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Revert'
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    postVoucherAction('unapprove_id', id);
+                }
+            });
+        } else {
+            if (confirm('Revert voucher #' + id + ' back to Pending approval?')) {
+                postVoucherAction('unapprove_id', id);
+            }
+        }
+    }
 
     function confirmDeleteVoucher(id) {
         if (typeof Swal !== 'undefined') {
             Swal.fire({
                 title: 'Delete this voucher?',
                 text: "This transaction will be permanently removed.",
-                icon: 'warning',
+                icon: 'error',
                 showCancelButton: true,
                 confirmButtonColor: '#dc3545',
                 cancelButtonColor: '#6c757d',
                 confirmButtonText: 'Yes, Delete'
             }).then((res) => {
                 if (res.isConfirmed) {
-                    window.location.href = 'cash-book.php?delete_id=' + id;
+                    postVoucherAction('delete_id', id);
                 }
             });
         } else {
             if (confirm('Delete this transaction permanently?')) {
-                window.location.href = 'cash-book.php?delete_id=' + id;
+                postVoucherAction('delete_id', id);
             }
         }
     }

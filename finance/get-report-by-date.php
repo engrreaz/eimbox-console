@@ -12,15 +12,38 @@ $session = trim($_POST['session'] ?? '');
 $date_from = trim($_POST['date_from'] ?? '');
 $date_to = trim($_POST['date_to'] ?? '');
 
-if (!$date_from || !$date_to) {
-    echo "<div class='alert alert-danger shadow-sm'><i class='bi bi-exclamation-triangle me-2'></i>Invalid date range selected.</div>";
-    exit;
-}
+$filter_basis = trim($_POST['filter_basis'] ?? 'month_year');
+$month_param = trim($_POST['month_param'] ?? date('Y-m'));
 
 $date_from = mysqli_real_escape_string($conn, $date_from);
 $date_to = mysqli_real_escape_string($conn, $date_to);
 $slot = mysqli_real_escape_string($conn, $slot);
 $session = mysqli_real_escape_string($conn, $session);
+
+// Determine Period Where Clause based on Filter Basis
+$filter_month = 0;
+$filter_year = 0;
+if ($month_param && strpos($month_param, '-') !== false) {
+    $m_parts = explode('-', $month_param);
+    $filter_year = intval($m_parts[0]);
+    $filter_month = intval($m_parts[1]);
+} else {
+    $filter_month = intval(date('n'));
+    $filter_year = intval(date('Y'));
+}
+
+if ($filter_basis === 'month_year' && $filter_month > 0 && $filter_year > 0) {
+    $period_where = "( (c.month = '$filter_month' AND c.year = '$filter_year') OR ((c.month IS NULL OR c.month = 0) AND MONTH(c.date) = '$filter_month' AND YEAR(c.date) = '$filter_year') )";
+    $month_name = date('F', mktime(0, 0, 0, $filter_month, 1));
+    $period_display_label = "Final Bill Month: <strong>$month_name $filter_year</strong>";
+    if (empty($date_from) || empty($date_to)) {
+        $date_from = sprintf('%04d-%02d-01', $filter_year, $filter_month);
+        $date_to = date('Y-m-t', strtotime($date_from));
+    }
+} else {
+    $period_where = "c.date BETWEEN '$date_from' AND '$date_to'";
+    $period_display_label = "Period: <strong>" . date('d M, Y', strtotime($date_from)) . "</strong> to <strong>" . date('d M, Y', strtotime($date_to)) . "</strong>";
+}
 
 // ==========================================
 // 1. RECALCULATION & SYNC FROM STFINANCE
@@ -112,12 +135,12 @@ $conn->query("UPDATE cashbook SET income = amount, expenditure = 0 WHERE sccode 
 $conn->query("UPDATE cashbook SET expenditure = amount, income = 0 WHERE sccode = '$sccode' AND date BETWEEN '$date_from' AND '$date_to' AND type = 'Expenditure'");
 
 // ==========================================
-// 2. REPORT QUERIES BY REPORT TYPE
+// 2. REPORT QUERIES BY REPORT TYPE (SANCTIONED ITEMS ONLY)
 // ==========================================
 $slot_filter = ($slot !== '' && $slot !== 'All') ? " AND (c.slots = '$slot' OR c.slots IS NULL OR c.slots = '')" : "";
 
 if ($type === 1) {
-    // টাইপ ১: Detailed Transaction Ledger View
+    // টাইপ ১: Detailed Transaction Ledger View (Sanctioned Vouchers Only)
     $sql_rep = "SELECT c.*, 
                        COALESCE(h.account_head, 'Unassigned') AS main_head_name,
                        COALESCE(s.sub_head, c.particulars, 'General') AS sub_head_name
@@ -125,10 +148,11 @@ if ($type === 1) {
                 LEFT JOIN account_sub_head s ON (c.account_sub_head = s.id OR c.partid = s.id)
                 LEFT JOIN account_head h ON (c.account_head = h.id OR s.account_head_id = h.id)
                 WHERE c.sccode = '$sccode' 
-                AND c.date BETWEEN '$date_from' AND '$date_to' $slot_filter
+                AND c.status = 1 
+                AND $period_where $slot_filter
                 ORDER BY c.date ASC, c.id ASC";
 } elseif ($type === 0) {
-    // টাইপ ০: Head-wise & Sub-Head Summary View
+    // টাইপ ০: Head-wise & Sub-Head Summary View (Sanctioned Vouchers Only)
     $sql_rep = "SELECT COALESCE(h.id, 0) AS head_id,
                        COALESCE(h.account_head, 'General / Unassigned') AS main_head_name,
                        COALESCE(s.sub_head, 'General Items') AS sub_head_name,
@@ -140,11 +164,12 @@ if ($type === 1) {
                 LEFT JOIN account_sub_head s ON (c.account_sub_head = s.id OR c.partid = s.id)
                 LEFT JOIN account_head h ON (c.account_head = h.id OR s.account_head_id = h.id)
                 WHERE c.sccode = '$sccode' 
-                AND c.date BETWEEN '$date_from' AND '$date_to' $slot_filter
+                AND c.status = 1 
+                AND $period_where $slot_filter
                 GROUP BY h.id, h.account_head, s.id, s.sub_head
                 ORDER BY main_head_name ASC, sub_head_name ASC";
 } else {
-    // টাইপ ২: Date-wise Daily Summary View
+    // টাইপ ২: Date-wise Daily Summary View (Sanctioned Vouchers Only)
     $sql_rep = "SELECT c.date,
                        SUM(c.income) AS total_income,
                        SUM(c.expenditure) AS total_expense,
@@ -152,7 +177,8 @@ if ($type === 1) {
                        COUNT(c.id) AS voucher_count
                 FROM cashbook c
                 WHERE c.sccode = '$sccode' 
-                AND c.date BETWEEN '$date_from' AND '$date_to' $slot_filter
+                AND c.status = 1 
+                AND $period_where $slot_filter
                 GROUP BY c.date
                 ORDER BY c.date ASC";
 }
@@ -186,14 +212,19 @@ $net_balance = $total_income - $total_expense;
             <h5 class="mb-0 fw-bold text-primary">
                 <i class="bi bi-file-earmark-spreadsheet me-2"></i>
                 <?php 
-                if ($type === 1) echo "Detailed Cash Book Ledger";
-                elseif ($type === 0) echo "Account Head-wise Summary Report";
-                else echo "Date-wise Daily Cash Flow Summary";
+                if ($type === 1) echo "Detailed Cash Book Ledger (Sanctioned)";
+                elseif ($type === 0) echo "Account Head-wise Summary Report (Sanctioned)";
+                else echo "Date-wise Daily Cash Flow Summary (Sanctioned)";
                 ?>
             </h5>
-            <small class="text-muted">Period: <strong><?= date('d M, Y', strtotime($date_from)) ?></strong> to <strong><?= date('d M, Y', strtotime($date_to)) ?></strong></small>
+            <small class="text-muted"><?= $period_display_label ?></small>
         </div>
         <div class="d-flex align-items-center gap-2 d-print-none">
+            <?php if ($type === 1): ?>
+                <button type="button" class="btn btn-sm btn-success px-3 shadow-sm fw-bold" onclick="openBindModal()">
+                    <i class="bi bi-file-earmark-check me-1"></i> Bind / Final Bill Pass
+                </button>
+            <?php endif; ?>
             <button class="btn btn-sm btn-primary px-3 shadow-sm" onclick="window.print()">
                 <i class="bi bi-printer me-1"></i> Print Report
             </button>
@@ -206,9 +237,13 @@ $net_balance = $total_income - $total_expense;
                 <thead class="table-light">
                     <?php if ($type === 1): ?>
                         <tr class="small text-uppercase">
+                            <th style="width: 40px;" class="text-center d-print-none">
+                                <input type="checkbox" id="selectAllReportVouchers" class="form-check-input mt-0" onclick="toggleSelectAllReportVouchers(this)" style="cursor: pointer;" title="Select All Sanctioned">
+                            </th>
                             <th style="width: 45px;">#</th>
                             <th>Date</th>
-                            <th>Memo</th>
+                            <th>Status</th>
+                            <th>Memo / Ref</th>
                             <th>Account Head</th>
                             <th>Sector (Sub-Head)</th>
                             <th>Particulars / Description</th>
@@ -239,22 +274,42 @@ $net_balance = $total_income - $total_expense;
                 <tbody>
                     <?php if (count($rows) === 0): ?>
                         <tr>
-                            <td colspan="8" class="text-center py-5 text-muted">
+                            <td colspan="<?= ($type === 1) ? '10' : (($type === 0) ? '7' : '6') ?>" class="text-center py-5 text-muted">
                                 <i class="bi bi-inbox fs-2 d-block mb-1"></i>
-                                No transactions found for the selected period.
+                                No sanctioned transactions found for the selected period.
                             </td>
                         </tr>
                     <?php else: ?>
                         <?php 
                         $sl = 1;
                         foreach ($rows as $r): 
+                            $is_item_locked = (intval($r['is_locked'] ?? 0) === 1);
                         ?>
-                            <tr>
-                                <td class="text-muted small fw-bold text-center"><?= $sl++ ?></td>
-
+                            <tr class="<?= $is_item_locked ? 'table-secondary opacity-75' : '' ?>">
                                 <?php if ($type === 1): ?>
+                                    <td class="text-center d-print-none">
+                                        <input type="checkbox" class="report-voucher-cb form-check-input" value="<?= $r['id'] ?>" <?= $is_item_locked ? 'disabled title="Locked"' : 'style="cursor: pointer;"' ?>>
+                                    </td>
+                                    <td class="text-muted small fw-bold text-center"><?= $sl++ ?></td>
                                     <td class="text-nowrap fw-semibold"><?= date('d M, Y', strtotime($r['date'])) ?></td>
-                                    <td><?= $r['memono'] ? '#' . htmlspecialchars($r['memono']) : '<span class="text-muted">—</span>' ?></td>
+                                    <td>
+                                        <?php if ($is_item_locked): ?>
+                                            <span class="badge bg-secondary-subtle text-secondary border border-secondary"><i class="bi bi-lock-fill me-1"></i>Locked</span>
+                                        <?php else: ?>
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-check-circle me-1"></i>Sanctioned</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <?php if ($r['memono']): ?>
+                                            <span class="badge bg-label-secondary">#<?= htmlspecialchars($r['memono']) ?></span>
+                                        <?php endif; ?>
+                                        <?php if (!empty($r['refno']) && $r['refno'] !== '0'): ?>
+                                            <span class="badge bg-label-info ms-1"><i class="bi bi-bookmark me-1"></i><?= htmlspecialchars($r['refno']) ?></span>
+                                        <?php endif; ?>
+                                        <?php if (!$r['memono'] && (empty($r['refno']) || $r['refno'] === '0')): ?>
+                                            <span class="text-muted">—</span>
+                                        <?php endif; ?>
+                                    </td>
                                     <td>
                                         <span class="badge bg-label-primary"><i class="bi bi-folder2 me-1"></i><?= htmlspecialchars($r['main_head_name']) ?></span>
                                     </td>
@@ -268,6 +323,7 @@ $net_balance = $total_income - $total_expense;
                                     </td>
 
                                 <?php elseif ($type === 0): ?>
+                                    <td class="text-muted small fw-bold text-center"><?= $sl++ ?></td>
                                     <td class="fw-bold text-primary">
                                         <i class="bi bi-folder-fill me-1"></i><?= htmlspecialchars($r['main_head_name']) ?>
                                     </td>
@@ -284,6 +340,7 @@ $net_balance = $total_income - $total_expense;
                                     </td>
 
                                 <?php else: ?>
+                                    <td class="text-muted small fw-bold text-center"><?= $sl++ ?></td>
                                     <td class="fw-bold"><?= date('d M, Y (l)', strtotime($r['date'])) ?></td>
                                     <td class="text-center"><span class="badge bg-label-secondary"><?= $r['voucher_count'] ?></span></td>
                                     <td class="text-end fw-bold text-success">
@@ -301,7 +358,7 @@ $net_balance = $total_income - $total_expense;
 
                         <!-- Grand Total Row -->
                         <tr class="table-light fw-bold">
-                            <td colspan="<?= ($type === 1) ? '6' : (($type === 0) ? '4' : '3') ?>" class="text-end text-uppercase pe-3">
+                            <td colspan="<?= ($type === 1) ? '8' : (($type === 0) ? '4' : '3') ?>" class="text-end text-uppercase pe-3">
                                 Grand Total:
                             </td>
                             <td class="text-end text-success fs-6">
@@ -319,7 +376,7 @@ $net_balance = $total_income - $total_expense;
 
                         <!-- Net Closing Balance Banner -->
                         <tr class="table-primary fw-bold text-center">
-                            <td colspan="<?= ($type === 1) ? '8' : '7' ?>" class="py-2">
+                            <td colspan="<?= ($type === 1) ? '10' : '7' ?>" class="py-2">
                                 <span class="me-3">Net Closing Balance (Total Inflow - Total Outflow):</span>
                                 <span class="fs-5 fw-bold <?= ($net_balance >= 0) ? 'text-primary' : 'text-danger' ?>">
                                     ৳<?= number_format($net_balance, 2) ?>

@@ -16,6 +16,15 @@ $recalc = $_COOKIE['cashbook_report_recalculation'] ?? '1';
     <div class="card-body p-3">
       <div class="row g-2 align-items-end">
         
+        <!-- Filter Basis Selector -->
+        <div class="col-6 col-md-2">
+          <label class="form-label small fw-bold mb-1">Filter Basis (ভিত্তি)</label>
+          <select id="filter-basis-main" name="filter_basis" class="form-select form-select-sm fw-bold text-primary">
+            <option value="month_year" selected>Month & Year (বিল মাস)</option>
+            <option value="date_range">Date Range (তারিখের ভিত্তি)</option>
+          </select>
+        </div>
+
         <!-- Slot Selector -->
         <div class="col-6 col-md-2">
           <label class="form-label small fw-bold mb-1">Slot / Unit</label>
@@ -51,7 +60,7 @@ $recalc = $_COOKIE['cashbook_report_recalculation'] ?? '1';
 
         <!-- Quick Month Selector -->
         <div class="col-6 col-md-2">
-          <label class="form-label small fw-bold mb-1">Quick Month</label>
+          <label class="form-label small fw-bold mb-1">Billing Month</label>
           <input type="month" class="form-control form-control-sm" name="month" id="month" value="<?= date('Y-m') ?>">
         </div>
 
@@ -109,10 +118,74 @@ $recalc = $_COOKIE['cashbook_report_recalculation'] ?? '1';
 
 </div>
 
+<!-- Modal: Bind & Final Bill Pass -->
+<div class="modal fade" id="bindBillModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content shadow-lg border-0" style="border-radius: 16px;">
+      <div class="modal-header border-bottom py-3">
+        <h5 class="modal-title fw-bold text-success" id="bindBillModalTitle">
+          <i class="bi bi-file-earmark-check me-2"></i>Final Bill Pass & Bind Vouchers
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="bindBillForm">
+        <div class="modal-body p-4">
+          <div class="alert alert-info py-2 small shadow-sm mb-3">
+            <i class="bi bi-info-circle-fill me-1"></i>
+            Selected <strong id="bindSelectedCount">0</strong> voucher(s) will be fixed for the target Month/Year and permanently locked against any future modification, deletion, or reversion.
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label small fw-bold">TARGET MONTH</label>
+              <select name="target_month" id="bind_target_month" class="form-select form-select-sm" required>
+                <option value="1">01 - January (জানুয়ারি)</option>
+                <option value="2">02 - February (ফেব্রুয়ারি)</option>
+                <option value="3">03 - March (মার্চ)</option>
+                <option value="4">04 - April (এপ্রিল)</option>
+                <option value="5">05 - May (মে)</option>
+                <option value="6">06 - June (জুন)</option>
+                <option value="7">07 - July (জুলাই)</option>
+                <option value="8">08 - August (আগস্ট)</option>
+                <option value="9">09 - September (সেপ্টেম্বর)</option>
+                <option value="10">10 - October (অক্টোবর)</option>
+                <option value="11">11 - November (নভেম্বর)</option>
+                <option value="12">12 - December (ডিসেম্বর)</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-bold">TARGET YEAR</label>
+              <input type="number" name="target_year" id="bind_target_year" class="form-control form-control-sm" value="<?= date('Y') ?>" min="2000" max="2100" required>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-bold">REFERENCE NO / FINAL BILL MEMO</label>
+            <div class="input-group input-group-sm">
+              <span class="input-group-text"><i class="bi bi-bookmark"></i></span>
+              <input type="text" name="refno" id="bind_refno" class="form-control" placeholder="e.g. REF-2026-SEP-01">
+            </div>
+            <small class="text-muted">Enter a reference or sanction memo number for this batch</small>
+          </div>
+        </div>
+
+        <div class="modal-footer border-top py-3">
+          <button type="button" class="btn btn-light btn-sm px-3" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-success btn-sm px-4 shadow-sm fw-bold">
+            <i class="bi bi-lock-fill me-1"></i> Confirm & Lock Vouchers
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <?php require_once 'footer.php'; ?>
 
 <script>
   let recalculation = <?= ($recalc === '1') ? '1' : '0' ?>;
+  let selectedVoucherIds = [];
+  let currentReportType = 1;
 
   function toggleRecalculation(el) {
     recalculation = recalculation ? 0 : 1;
@@ -123,6 +196,139 @@ $recalc = $_COOKIE['cashbook_report_recalculation'] ?? '1';
       checkEl.className = recalculation ? "badge bg-primary" : "badge bg-secondary";
     }
   }
+
+  // Select All Report Vouchers
+  function toggleSelectAllReportVouchers(masterCb) {
+    const checkboxes = document.querySelectorAll('.report-voucher-cb:not(:disabled)');
+    checkboxes.forEach(cb => cb.checked = masterCb.checked);
+  }
+
+  // Open Bind Modal
+  function openBindModal() {
+    const checkedCbs = document.querySelectorAll('.report-voucher-cb:checked:not(:disabled)');
+    if (checkedCbs.length === 0) {
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({
+          icon: 'warning',
+          title: 'No Vouchers Selected',
+          text: 'Please select at least one sanctioned voucher to bind and pass final bill.',
+          confirmButtonColor: '#0d6efd'
+        });
+      } else {
+        alert('Please select at least one sanctioned voucher to bind.');
+      }
+      return;
+    }
+
+    selectedVoucherIds = Array.from(checkedCbs).map(cb => cb.value);
+    document.getElementById('bindSelectedCount').innerText = selectedVoucherIds.length;
+
+    // Set default month & year from month filter or current date
+    const monthInput = document.getElementById('month').value; // YYYY-MM
+    if (monthInput) {
+      const parts = monthInput.split('-');
+      if (parts.length === 2) {
+        document.getElementById('bind_target_year').value = parts[0];
+        document.getElementById('bind_target_month').value = parseInt(parts[1], 10);
+      }
+    } else {
+      const now = new Date();
+      document.getElementById('bind_target_month').value = now.getMonth() + 1;
+      document.getElementById('bind_target_year').value = now.getFullYear();
+    }
+
+    const bindModal = new bootstrap.Modal(document.getElementById('bindBillModal'));
+    bindModal.show();
+  }
+
+  // Handle Bind Form Submission
+  document.getElementById('bindBillForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    if (selectedVoucherIds.length === 0) return;
+
+    const month = document.getElementById('bind_target_month').value;
+    const year = document.getElementById('bind_target_year').value;
+    const refno = document.getElementById('bind_refno').value;
+
+    const btn = this.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Processing...';
+
+    fetch('finance/bind-cashbook-vouchers.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: 'voucher_ids=' + encodeURIComponent(selectedVoucherIds.join(',')) +
+            '&target_month=' + encodeURIComponent(month) +
+            '&target_year=' + encodeURIComponent(year) +
+            '&refno=' + encodeURIComponent(refno)
+    })
+    .then(res => res.json())
+    .then(data => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-lock-fill me-1"></i> Confirm & Lock Vouchers';
+
+      const modalEl = document.getElementById('bindBillModal');
+      const modalInstance = bootstrap.Modal.getInstance(modalEl);
+      if (modalInstance) modalInstance.hide();
+
+      if (data.status === 'success') {
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({
+            icon: 'success',
+            title: 'Final Bill Passed!',
+            text: data.message,
+            timer: 3000,
+            showConfirmButton: false
+          });
+        } else {
+          alert(data.message);
+        }
+        get_report(currentReportType);
+      } else {
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({ icon: 'error', title: 'Error', text: data.message });
+        } else {
+          alert(data.message);
+        }
+      }
+    })
+    .catch(err => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-lock-fill me-1"></i> Confirm & Lock Vouchers';
+      console.error('Binding Error:', err);
+      alert('Failed to bind vouchers: ' + err.message);
+    });
+  });
+
+  // Dynamic input enable/disable based on Filter Basis
+  function updateFilterBasisUI() {
+    const basis = document.getElementById('filter-basis-main').value;
+    const monthEl = document.getElementById('month');
+    const dateFromEl = document.getElementById('date-from-main');
+    const dateToEl = document.getElementById('date-to-main');
+
+    if (!monthEl || !dateFromEl || !dateToEl) return;
+
+    if (basis === 'month_year') {
+      monthEl.disabled = false;
+      dateFromEl.disabled = true;
+      dateToEl.disabled = true;
+      monthEl.classList.remove('bg-light');
+      dateFromEl.classList.add('bg-light');
+      dateToEl.classList.add('bg-light');
+    } else {
+      monthEl.disabled = true;
+      dateFromEl.disabled = false;
+      dateToEl.disabled = false;
+      monthEl.classList.add('bg-light');
+      dateFromEl.classList.remove('bg-light');
+      dateToEl.classList.remove('bg-light');
+    }
+  }
+
+  document.getElementById('filter-basis-main')?.addEventListener('change', updateFilterBasisUI);
 
   // Quick Month Selector to auto-set Date From & Date To
   document.getElementById('month')?.addEventListener('change', function () {
@@ -143,15 +349,13 @@ $recalc = $_COOKIE['cashbook_report_recalculation'] ?? '1';
   });
 
   function get_report(type = 1) {
+    currentReportType = type;
+    let basis = document.getElementById('filter-basis-main').value;
     let slot = document.getElementById('slot-main').value;
     let session = document.getElementById('session-main').value;
+    let monthParam = document.getElementById('month').value;
     let from = document.getElementById('date-from-main').value;
     let to = document.getElementById('date-to-main').value;
-
-    if (!from || !to) {
-      alert("Please select a valid date range.");
-      return;
-    }
 
     const reportBlock = document.getElementById("report-block");
     reportBlock.innerHTML = `
@@ -166,7 +370,9 @@ $recalc = $_COOKIE['cashbook_report_recalculation'] ?? '1';
         "Content-Type": "application/x-www-form-urlencoded"
       },
       body:
-        "date_from=" + encodeURIComponent(from) +
+        "filter_basis=" + encodeURIComponent(basis) +
+        "&month_param=" + encodeURIComponent(monthParam) +
+        "&date_from=" + encodeURIComponent(from) +
         "&date_to=" + encodeURIComponent(to) +
         "&slot=" + encodeURIComponent(slot) +
         "&session=" + encodeURIComponent(session) +
@@ -193,6 +399,7 @@ $recalc = $_COOKIE['cashbook_report_recalculation'] ?? '1';
 
   // Auto-generate report on page load with default dates
   document.addEventListener('DOMContentLoaded', function() {
+    updateFilterBasisUI();
     get_report(1);
   });
 </script>
