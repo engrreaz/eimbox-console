@@ -67,7 +67,7 @@ $sl = 1; ?>
                             WHERE sccode='$sccode'
                             ORDER BY sessionyear DESC
                         ");
-
+ 
                         while ($sessionRow = mysqli_fetch_assoc($sessionQuery)) {
                             $selected = (@$_GET['sessionyear'] == $sessionRow['sessionyear']) ? 'selected' : '';
                             echo '<option value="' . $sessionRow['sessionyear'] . '" ' . $selected . '>' . $sessionRow['sessionyear'] . '</option>';
