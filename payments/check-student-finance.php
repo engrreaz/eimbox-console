@@ -39,8 +39,7 @@ if ($stid) {
     $where .= " AND classname='$cls'";
 }
 
-$sqlStudents = "SELECT id, stid, classname, sectionname, rollno, rate, sessionyear, 
-                       COALESCE(new_admi, 0) AS new_admi
+$sqlStudents = "SELECT id, stid, classname, sectionname, rollno, rate, sessionyear 
                 FROM sessioninfo
                 WHERE $where
                 ORDER BY id ASC
@@ -58,6 +57,7 @@ $studentIds = [];
 $sessionInfoIds = [];
 
 while ($row = $resStudents->fetch_assoc()) {
+    $row['new_admi'] = isset($row['new_admi']) ? intval($row['new_admi']) : 0;
     $students[] = $row;
     $studentIds[] = "'" . $conn->real_escape_string($row['stid']) . "'";
     $sessionInfoIds[] = intval($row['id']);
@@ -103,7 +103,7 @@ try {
     }
 
     // B. Fetch all Active Master Fee Items
-    $setupWhere = "sccode='$sccode' AND sessionyear LIKE '%$sy%' AND COALESCE(active, 1) = 1";
+    $setupWhere = "sccode='$sccode' AND sessionyear LIKE '%$sy%'";
     if ($part === 'icode' && $icode) {
         $setupWhere .= " AND itemcode='$icode'";
     }
@@ -119,7 +119,10 @@ try {
     $resSetup = $conn->query($sqlSetup);
     if ($resSetup && $resSetup->num_rows > 0) {
         while ($r = $resSetup->fetch_assoc()) {
-            $finSetup[] = $r;
+            $isActive = isset($r['active']) ? intval($r['active']) : 1;
+            if ($isActive == 1) {
+                $finSetup[] = $r;
+            }
         }
     }
 
