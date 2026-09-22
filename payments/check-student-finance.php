@@ -163,7 +163,7 @@ try {
         if ($rule === 33) return [3, 6, 9, 11];
         if ($rule === 44 || $rule === 442) return [4, 8, 11];
         if ($rule === 66 || $rule === 662) return [1, 11];
-        if ($rule === 67 ) return [6, 11];
+        if ($rule === 67 ) return [6, 11]; 
         return [$rule];
     }
 
