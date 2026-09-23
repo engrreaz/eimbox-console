@@ -3,6 +3,7 @@
 
 
 1.  academic-calendar.php (Tools -> Academic Calendar)
+    [ ] re-factor script with class, work settings in modal/popup . 
 
 2.  academics-classes.php (Academic -> Classes & Sections)
 
