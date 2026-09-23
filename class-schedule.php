@@ -89,9 +89,9 @@ $result = $conn->query($sql);
     ?>
 
     <div class="card mb-4 border-0 shadow-sm">
-        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
             <h6 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2"></i>Live Class Timeline</h6>
-            <span id="live-clock" class="badge "></span>
+            <span id="live-clock" class="badge bg-dark"></span>
         </div>
         <div class="card-body">
             <div class="position-relative" style="height: 20px;">
