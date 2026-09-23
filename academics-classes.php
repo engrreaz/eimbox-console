@@ -429,7 +429,7 @@
                             <small>
                             <img src="${r.photourl}" style="height:24px; width:24px; border-radius:50%; object-fit:cover; margin-right:10px; margin-top:6px;" />
                         <span style="padding-top:10px;">
-                            ${r.classteacher ?? '-'} | 👥 ${r.student_count}
+                            ${r.teacher_name ? r.teacher_name : (r.classteacher && r.classteacher != '0' ? r.classteacher : '-')} | 👥 ${r.student_count}
                         </span>    
                         
                             
@@ -519,7 +519,7 @@
             $('[name=subarea]').val(r.subarea);
             $('[name=slot]').val(r.slot);
             $('[name=sessionyear]').val(r.sessionyear);
-            $('[name=teacher]').val(r.classteacher);
+            $('[name=teacher]').val(r.classteacher || '');
             areaModal.show();
         }, 'json');
     });
