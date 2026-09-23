@@ -177,15 +177,24 @@ $result = $conn->query($sql);
                                 <td><?= ($row['duration']) ?> Mins</td>
                                 <td><?= $row['shift'] ?: 'N/A' ?></td>
                                 <td class="text-center">
-                                    <button class="btn btn-sm btn-icon btn-outline-primary me-1"
-                                        onclick='editSchedule(<?= json_encode($row) ?>)'>
-                                        <i class="bi bi-pencil"></i>
-                                    </button>
-                                    <a href="?delete=<?= $row['id'] ?>&session=<?= $sessionyear ?>&slot=<?= $slots ?>"
-                                        class="btn btn-sm btn-icon btn-outline-danger"
-                                        onclick="return confirm('Are you sure to delete this period?')">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-icon btn-light rounded-circle dropdown-toggle hide-arrow shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="bi bi-three-dots-vertical fs-6"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                            <li>
+                                                <a class="dropdown-item py-2" href="javascript:void(0)" onclick='editSchedule(<?= json_encode($row) ?>)'>
+                                                    <i class="bi bi-pencil-square text-info me-2"></i> Edit Period
+                                                </a>
+                                            </li>
+                                            <li><hr class="dropdown-divider my-1"></li>
+                                            <li>
+                                                <a class="dropdown-item py-2 text-danger" href="javascript:void(0)" onclick="confirmDeletePeriod(<?= $row['id'] ?>)">
+                                                    <i class="bi bi-trash text-danger me-2"></i> Delete Period
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </td>
                             </tr>
                         <?php endwhile; ?>
@@ -284,6 +293,23 @@ $result = $conn->query($sql);
         document.getElementById('m_end').value = data.timeend;
         document.getElementById('m_shift').value = data.shift;
         sModal.show();
+    }
+
+    function confirmDeletePeriod(id) {
+        Swal.fire({
+            title: 'Delete Period?',
+            text: 'Are you sure you want to delete this period schedule?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, Delete',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = `?delete=${id}&session=<?= $sessionyear ?>&slot=<?= $slots ?>`;
+            }
+        });
     }
 </script>
 <script>

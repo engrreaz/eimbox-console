@@ -38,10 +38,10 @@
 12. cashbook-report.php (Finance -> Cashbook Report)
 
 13. class-routine.php (Academics -> Class Routine)
-    [ ] Re-design, refactor this module that user setup their class routine easily. You may build this in grid system Day - Period (Colurm-row) system. users will set subject & teacher with one click. can fillout nextday routine in one click.
+    [x] Re-design, refactor this module that user setup their class routine easily. You may build this in grid system Day - Period (Colurm-row) system. users will set subject & teacher with one click. can fillout nextday routine in one click.
 
 14. class-schedule.php (Academics -> Class Schedule)
-    [ ] drop down action button 
+    [x] drop down action button 
 
 15. customize-settings-progress-report.php (Settings -> Progress Report)
 
