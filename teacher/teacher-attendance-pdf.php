@@ -30,7 +30,10 @@ while($row = $a_res->fetch_assoc()) {
 $html = '
 <style>
     body { font-family: "nikosh", sans-serif; }
-    .letterhead { text-align: center; border-bottom: 2px solid #333; margin-bottom: 10px; }
+    .letterhead { text-align: center; border-bottom: 2px solid #333; margin-bottom: 10px; padding-bottom: 6px; }
+    .letterhead h2 { margin: 0 0 4px 0; font-size: 18px; color: #111; }
+    .letterhead p { margin: 0 0 2px 0; font-size: 11px; color: #444; }
+    .report-title { font-size: 12px; font-weight: bold; margin-top: 4px; color: #222; }
     table { width: 100%; border-collapse: collapse; }
     th, td { border: 1px solid #444; text-align: center; padding: 2px; }
     .t-info { text-align: left; font-size: 9px; width: 120px; }
@@ -42,8 +45,10 @@ $html = '
 </style>
 
 <div class="letterhead">
-    <h2>EIMBox School & College</h2>
-    <p>Monthly Teacher Attendance & Time Log: '.date('F, Y', mktime(0,0,0,$month,1)).'</p>
+    <h2>' . htmlspecialchars($scname) . '</h2>
+    <p>' . htmlspecialchars($scaddress) . '</p>
+    <p>Mobile: ' . htmlspecialchars($scmobile) . ($scmail ? ' | Email: ' . htmlspecialchars($scmail) : '') . '</p>
+    <div class="report-title">Monthly Teacher Attendance &amp; Time Register &mdash; ' . date('F, Y', mktime(0, 0, 0, (int)$month, 1, (int)$year)) . '</div>
 </div>
 
 <table>

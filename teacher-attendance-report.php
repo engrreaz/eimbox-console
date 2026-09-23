@@ -224,13 +224,13 @@ while ($r = $lr->fetch_assoc()) {
 
     <div class="d-print-block card border-0 bg-white">
 
-        <div class="d-none d-print-block text-center mb-4">
-            <h3 class="mb-1 fw-bold" style="color:#000;">EIMBox Model School & College</h3>
-            <p class="mb-0" style="font-size:12px;">প্রতিষ্ঠানের ঠিকানা, থানা, জেলা।</p>
-            <p class="mb-1" style="font-size:12px;">Teacher Attendance & Time Register -
-                <?= date('F, Y', mktime(0, 0, 0, $month, 1, $year)) ?>
-            </p>
-            <div style="border-top: 2px solid #000; margin-top: 5px;"></div>
+        <div class="d-none d-print-block mb-3">
+            <?php include __DIR__ . '/templete/letter-head-01.php'; ?>
+            <div class="text-center mt-2">
+                <h5 class="mb-1 fw-bold text-dark" style="font-size: 14px;">Teacher Attendance &amp; Time Register</h5>
+                <p class="mb-1 text-muted" style="font-size: 12px;"><?= date('F, Y', mktime(0, 0, 0, $month, 1, $year)) ?></p>
+            </div>
+            <div style="border-top: 2px solid #000; margin-top: 5px; margin-bottom: 10px;"></div>
         </div>
 
 
@@ -319,7 +319,12 @@ while ($r = $lr->fetch_assoc()) {
             </table>
         </div>
 
-    </div>
-</div>
+<script>
+function exportPDF() {
+    const month = document.querySelector('select[name="month"]').value;
+    const year = document.querySelector('select[name="year"]').value;
+    window.open('teacher/teacher-attendance-pdf.php?month=' + encodeURIComponent(month) + '&year=' + encodeURIComponent(year), '_blank');
+}
+</script>
 
 <?php require_once 'footer.php'; ?>

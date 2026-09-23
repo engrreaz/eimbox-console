@@ -97,7 +97,7 @@ $result = $conn->query($sql);
             <div class="position-relative" style="height: 20px;">
 
                 <div class="progress-stacked"
-                    style="height: 100%; border-radius: 8px; overflow: hidden; ">
+                    style="height: 100%; border-radius: 8px; overflow: hidden; "> 
                     <?php
                     $last_time = $global_start;
                     foreach ($periods as $index => $row):

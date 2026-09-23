@@ -881,6 +881,11 @@ if ($monitorPanel === true) { ?>
         removeBackdrop();
     });
 
+    // DOM ready হলে দ্রুত backdrop সরাও
+    document.addEventListener('DOMContentLoaded', function () {
+        removeBackdrop();
+    });
+
     // JS error হলে
     window.addEventListener('error', function () {
         removeBackdrop();
@@ -890,6 +895,9 @@ if ($monitorPanel === true) { ?>
     window.addEventListener('unhandledrejection', function () {
         removeBackdrop();
     });
+
+    // Fallback timer যাতে কোনো স্লো রিমোট এসেটের জন্য লোডার আটকে না থাকে
+    setTimeout(removeBackdrop, 1200);
 </script>
 
 

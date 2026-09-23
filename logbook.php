@@ -29,9 +29,10 @@ echo " -- Max Limit: " . $row['Value'];
 // echo " -- Full Process: " . $row['Value'];
 // --------------- mySQL Connection -------------------------
 
+$log_entrytime = (isset($cur) && is_string($cur)) ? $cur : date('Y-m-d H:i:s');
 $stmt = $conn->prepare("INSERT INTO logbook (email, sccode, pagename, ipaddr, platform, browser, entrytime) 
 VALUES (?, ?, ?, ?, ?, ?, ?)");
-$stmt->bind_param("sisssss", $usr, $sccode, $currentFile, $ipaddr, $platform, $browser, $cur);
+$stmt->bind_param("sisssss", $usr, $sccode, $currentFile, $ipaddr, $platform, $browser, $log_entrytime);
 $stmt->execute();
 $log_id = $stmt->insert_id;
 ?>

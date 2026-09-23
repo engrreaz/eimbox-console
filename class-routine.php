@@ -1,5 +1,6 @@
 <?php
-require_once 'header.php';
+ob_start();
+require_once 'core/init.php';
 
 // প্যারামিটার
 $cls = $_COOKIE['chain-class'] ?? $_GET['cls'] ?? '';
@@ -17,20 +18,21 @@ $days = [
     7 => 'Friday'
 ];
 
-// Weekends resolution
+// Weekends resolution from settings table (setting_title = 'weekends', dot-separated)
 $weekendDays = [];
-if (isset($sett) && is_array($sett)) {
-    foreach ($sett as $row) {
-        if ($row['setting_title'] == 'Weekends') {
-            $weekendDays = array_map('trim', explode(',', trim($row['settings_value'])));
-        }
+$wStmt = $conn->query("SELECT settings_value FROM settings WHERE (sccode = '$sccode' OR sccode = 0) AND LOWER(setting_title) = 'weekends' ORDER BY (sccode = '$sccode') DESC LIMIT 1");
+if ($wStmt && $wStmt->num_rows > 0) {
+    $wRow = $wStmt->fetch_assoc();
+    $rawVal = trim($wRow['settings_value'] ?? '');
+    if (!empty($rawVal)) {
+        $weekendDays = array_values(array_filter(array_map('trim', preg_split('/[\.,]+/', $rawVal))));
     }
 }
-if (empty($weekendDays)) {
-    $wStmt = $conn->query("SELECT settings_value FROM settings WHERE (sccode = '$sccode' OR sccode = 0) AND setting_title = 'Weekends' LIMIT 1");
-    if ($wStmt && $wStmt->num_rows > 0) {
-        $wRow = $wStmt->fetch_assoc();
-        $weekendDays = array_map('trim', explode(',', trim($wRow['settings_value'] ?? '')));
+if (empty($weekendDays) && isset($sett) && is_array($sett)) {
+    foreach ($sett as $row) {
+        if (strtolower($row['setting_title'] ?? '') == 'weekends') {
+            $weekendDays = array_values(array_filter(array_map('trim', preg_split('/[\.,]+/', trim($row['settings_value'] ?? '')))));
+        }
     }
 }
 if (empty($weekendDays)) {
@@ -45,6 +47,9 @@ $today_wday = ($jd === 6) ? 1 : ($jd + 2); // 1 (Sat) to 7 (Fri)
 // AJAX ACTION HANDLER
 // ==========================================
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_action'])) {
+    while (ob_get_level()) {
+        ob_end_clean();
+    }
     header('Content-Type: application/json; charset=utf-8');
     $ajax_action = $_POST['ajax_action'];
 
@@ -54,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_action'])) {
         $period  = intval($_POST['period'] ?? 0);
         $wday    = intval($_POST['wday'] ?? 0);
         $subcode = intval($_POST['subcode'] ?? 0);
-        $tid     = intval($_POST['tid'] ?? 0);
+        $tid     = trim($_POST['tid'] ?? '0');
         $c_cls   = trim($_POST['cls'] ?? $cls);
         $c_sec   = trim($_POST['sec'] ?? $sec);
         $c_year  = trim($_POST['year'] ?? $year);
@@ -63,19 +68,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_action'])) {
         $dayName = $days[$wday] ?? 'Saturday';
 
         if (!$period || !$wday || !$c_cls || !$c_sec) {
-            echo json_encode(['status' => 'error', 'message' => 'Missing required parameters.']);
+            echo json_encode(['status' => 'error', 'message' => 'Missing required parameters.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        if (in_array($dayName, $weekendDays)) {
+            echo json_encode(['status' => 'error', 'message' => "Cannot assign periods on $dayName because it is configured as a weekend."], JSON_UNESCAPED_UNICODE);
             exit;
         }
 
         // Clash check for teacher
         $clashInfo = null;
-        if ($tid > 0) {
+        if (!empty($tid) && $tid != '0') {
             $cstmt = $conn->prepare("SELECT r.classname, r.sectionname, t.tname 
                                     FROM clsroutine r 
                                     LEFT JOIN teacher t ON (t.tid = r.tid AND t.sccode = r.sccode)
                                     WHERE r.sccode = ? AND r.sessionyear = ? AND r.wday = ? AND r.period = ? AND r.tid = ? 
                                     AND NOT (r.classname = ? AND r.sectionname = ?)");
-            $cstmt->bind_param("isiiiss", $sccode, $c_year, $wday, $period, $tid, $c_cls, $c_sec);
+            $cstmt->bind_param("isisiss", $sccode, $c_year, $wday, $period, $tid, $c_cls, $c_sec);
             $cstmt->execute();
             $cres = $cstmt->get_result();
             if ($crow = $cres->fetch_assoc()) {
@@ -87,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_action'])) {
 
         if ($rid > 0) {
             $stmt = $conn->prepare("UPDATE clsroutine SET period=?, wday=?, day=?, subcode=?, tid=?, modifieddate=NOW() WHERE id=? AND sccode=?");
-            $stmt->bind_param("iisiiii", $period, $wday, $dayName, $subcode, $tid, $rid, $sccode);
+            $stmt->bind_param("iisisii", $period, $wday, $dayName, $subcode, $tid, $rid, $sccode);
             $stmt->execute();
             $stmt->close();
             $targetId = $rid;
@@ -99,24 +109,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_action'])) {
             $del->close();
 
             $stmt = $conn->prepare("INSERT INTO clsroutine (sccode, sessionyear, classname, sectionname, period, wday, day, subcode, tid, entryby, modifieddate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
-            $stmt->bind_param("isssiisiss", $sccode, $c_year, $c_cls, $c_sec, $period, $wday, $dayName, $subcode, $tid, $entryby);
+            $stmt->bind_param("isssiissis", $sccode, $c_year, $c_cls, $c_sec, $period, $wday, $dayName, $subcode, $tid, $entryby);
             $stmt->execute();
             $targetId = $conn->insert_id;
             $stmt->close();
+
+            if (!$targetId) {
+                $chk = $conn->prepare("SELECT id FROM clsroutine WHERE sccode=? AND sessionyear=? AND classname=? AND sectionname=? AND period=? AND wday=? ORDER BY id DESC LIMIT 1");
+                $chk->bind_param("isssii", $sccode, $c_year, $c_cls, $c_sec, $period, $wday);
+                $chk->execute();
+                $chkRes = $chk->get_result();
+                if ($chkRow = $chkRes->fetch_assoc()) {
+                    $targetId = intval($chkRow['id']);
+                }
+                $chk->close();
+            }
         }
 
         // Fetch subject and teacher names for live update
         $subname = "Subject #$subcode";
-        $subq = $conn->query("SELECT subject FROM subjects WHERE (sccode='$sccode' OR sccode=0) AND subcode='$subcode' AND (sccategory='$sctype' OR sccategory='' OR sccategory IS NULL) ORDER BY sccode DESC LIMIT 1");
+        $subq = $conn->query("SELECT subject, subben FROM subjects WHERE (sccode='$sccode' OR sccode=0) AND subcode='$subcode' AND (sccategory='$sctype' OR sccategory='' OR sccategory IS NULL) ORDER BY (sccode='$sccode') DESC, id DESC LIMIT 1");
         if ($subq && $subq->num_rows > 0) {
-            $subname = $subq->fetch_assoc()['subject'];
+            $srow = $subq->fetch_assoc();
+            $subname = $srow['subject'] ?: ($srow['subben'] ?: "Subject #$subcode");
         }
 
         $tname = "Not Assigned";
-        if ($tid > 0) {
+        if (!empty($tid) && $tid != '0') {
             $tq = $conn->query("SELECT tname FROM teacher WHERE sccode='$sccode' AND tid='$tid' LIMIT 1");
             if ($tq && $tq->num_rows > 0) {
-                $tname = $tq->fetch_assoc()['tname'];
+                $tname = $tq->fetch_assoc()['tname'] ?: "Teacher #$tid";
             }
         }
 
@@ -132,7 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_action'])) {
             'tname' => $tname,
             'clash' => $clashInfo ? true : false,
             'clash_message' => $clashInfo
-        ]);
+        ], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
@@ -157,7 +179,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_action'])) {
             $stmt->close();
         }
 
-        echo json_encode(['status' => 'success', 'message' => 'Period assignment removed.']);
+        echo json_encode(['status' => 'success', 'message' => 'Period assignment removed.'], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
@@ -172,7 +194,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_action'])) {
         $tgtDayName = $days[$tgt_wday] ?? 'Sunday';
 
         if (!$src_wday || !$tgt_wday || !$c_cls || !$c_sec) {
-            echo json_encode(['status' => 'error', 'message' => 'Invalid parameters for day copy.']);
+            echo json_encode(['status' => 'error', 'message' => 'Invalid parameters for day copy.'], JSON_UNESCAPED_UNICODE);
             exit;
         }
 
@@ -188,7 +210,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_action'])) {
         $src_q->close();
 
         if (empty($rows)) {
-            echo json_encode(['status' => 'error', 'message' => "Source day ({$days[$src_wday]}) has no routine entries to copy."]);
+            echo json_encode(['status' => 'error', 'message' => "Source day ({$days[$src_wday]}) has no routine entries to copy."], JSON_UNESCAPED_UNICODE);
             exit;
         }
 
@@ -202,7 +224,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_action'])) {
         $ins = $conn->prepare("INSERT INTO clsroutine (sccode, sessionyear, classname, sectionname, period, wday, day, subcode, tid, entryby, modifieddate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
         $copied = 0;
         foreach ($rows as $row) {
-            $ins->bind_param("isssiisiss", $sccode, $c_year, $c_cls, $c_sec, $row['period'], $tgt_wday, $tgtDayName, $row['subcode'], $row['tid'], $entryby);
+            $ins->bind_param("isssiissis", $sccode, $c_year, $c_cls, $c_sec, $row['period'], $tgt_wday, $tgtDayName, $row['subcode'], $row['tid'], $entryby);
             $ins->execute();
             $copied++;
         }
@@ -212,7 +234,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_action'])) {
             'status' => 'success',
             'message' => "Successfully copied $copied period(s) from {$days[$src_wday]} to $tgtDayName.",
             'copied_count' => $copied
-        ]);
+        ], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
@@ -225,7 +247,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_action'])) {
         $entryby  = $usr ?? 'admin';
 
         if (!$src_wday || !$c_cls || !$c_sec) {
-            echo json_encode(['status' => 'error', 'message' => 'Invalid parameters.']);
+            echo json_encode(['status' => 'error', 'message' => 'Invalid parameters.'], JSON_UNESCAPED_UNICODE);
             exit;
         }
 
@@ -241,7 +263,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_action'])) {
         $src_q->close();
 
         if (empty($rows)) {
-            echo json_encode(['status' => 'error', 'message' => "Source day ({$days[$src_wday]}) has no routine entries to duplicate."]);
+            echo json_encode(['status' => 'error', 'message' => "Source day ({$days[$src_wday]}) has no routine entries to duplicate."], JSON_UNESCAPED_UNICODE);
             exit;
         }
 
@@ -260,7 +282,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_action'])) {
 
             $ins = $conn->prepare("INSERT INTO clsroutine (sccode, sessionyear, classname, sectionname, period, wday, day, subcode, tid, entryby, modifieddate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
             foreach ($rows as $row) {
-                $ins->bind_param("isssiisiss", $sccode, $c_year, $c_cls, $c_sec, $row['period'], $wIndex, $wName, $row['subcode'], $row['tid'], $entryby);
+                $ins->bind_param("isssiissis", $sccode, $c_year, $c_cls, $c_sec, $row['period'], $wIndex, $wName, $row['subcode'], $row['tid'], $entryby);
                 $ins->execute();
                 $totalCopied++;
             }
@@ -271,7 +293,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_action'])) {
             'status' => 'success',
             'message' => "Duplicated {$days[$src_wday]}'s routine to " . implode(', ', $targetNames) . " ($totalCopied period assignments).",
             'total_copied' => $totalCopied
-        ]);
+        ], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
@@ -288,10 +310,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_action'])) {
         $affected = $del->affected_rows;
         $del->close();
 
-        echo json_encode(['status' => 'success', 'message' => "Cleared $affected period(s) for {$days[$wday]}."]);
+        echo json_encode(['status' => 'success', 'message' => "Cleared $affected period(s) for {$days[$wday]}."], JSON_UNESCAPED_UNICODE);
         exit;
     }
 }
+
+require_once 'header.php';
 
 // ==========================================
 // DATA FETCHING FOR GRID VIEW
@@ -315,7 +339,7 @@ if ($cls && $sec) {
     $res = $conn->query("SELECT r.*, t.tname, s.subject as subname, s.subben as subname_bn, s.subshname as shortname 
                         FROM clsroutine r 
                         LEFT JOIN teacher t ON (r.tid = t.tid AND t.sccode = r.sccode) 
-                        LEFT JOIN subjects s ON (r.subcode = s.subcode AND (s.sccode = r.sccode OR s.sccode = 0)) 
+                        LEFT JOIN subjects s ON (r.subcode = s.subcode AND (s.sccode = r.sccode OR s.sccode = 0) AND (s.sccategory = '$sctype' OR s.sccategory = '' OR s.sccategory IS NULL)) 
                         WHERE r.sccode='$sccode' AND r.classname='$cls' AND r.sectionname='$sec' AND r.sessionyear='$year'
                         ORDER BY r.wday ASC, r.period ASC");
     if ($res) {
@@ -325,13 +349,13 @@ if ($cls && $sec) {
     }
 }
 
-// 3. Subjects list for Class/Section (subsetup join with default teacher mapping)
+// 3. Subjects list for Class/Section (subsetup join with default teacher mapping and sccategory filter)
 $subjectOptions = [];
 $subjectTeacherMap = [];
 if ($cls && $sec) {
     $sql_subs = "SELECT ss.subject as subcode, ss.tid, s.subject as subname, s.subshname as shortname, t.tname as default_teacher 
                  FROM subsetup ss 
-                 LEFT JOIN subjects s ON (s.subcode = ss.subject AND (s.sccode = ss.sccode OR s.sccode = 0))
+                 LEFT JOIN subjects s ON (s.subcode = ss.subject AND (s.sccode = ss.sccode OR s.sccode = 0) AND (s.sccategory = '$sctype' OR s.sccategory = '' OR s.sccategory IS NULL))
                  LEFT JOIN teacher t ON (t.tid = ss.tid AND t.sccode = ss.sccode)
                  WHERE ss.sccode = '$sccode' 
                    AND ss.sessionyear = '$year' 
@@ -353,7 +377,7 @@ if ($cls && $sec) {
 }
 if (empty($subjectOptions)) {
     // Fallback if subsetup is not set yet
-    $fallback_res = $conn->query("SELECT subcode, subject as subname, subshname as shortname FROM subjects WHERE (sccode='$sccode' OR sccode=0) AND (sccategory='$sctype' OR sccategory='' OR sccategory IS NULL) ORDER BY subcode ASC");
+    $fallback_res = $conn->query("SELECT subcode, subject as subname, subshname as shortname FROM subjects WHERE (sccode='$sccode' OR sccode=0) AND (sccategory='$sctype' OR sccategory='' OR sccategory IS NULL) ORDER BY (sccode='$sccode') DESC, subcode ASC");
     if ($fallback_res) {
         while ($s = $fallback_res->fetch_assoc()) {
             $s['tid'] = '';
@@ -421,7 +445,22 @@ if ($ts) {
         background: rgba(105, 108, 255, 0.05);
     }
     .day-row-weekend {
-        background-color: #fafafc !important;
+        background-color: #fcfcfd !important;
+    }
+    .routine-cell-weekend {
+        background-color: #f8f9fa !important;
+        cursor: not-allowed !important;
+    }
+    .weekend-disabled-placeholder {
+        border: 1px dashed #d9dee3;
+        border-radius: 8px;
+        color: #a1acb8;
+        font-size: 11px;
+        padding: 14px 8px;
+        text-align: center;
+        background: rgba(0, 0, 0, 0.02);
+        user-select: none;
+        cursor: not-allowed;
     }
     .day-row-today {
         background-color: #fff9ea !important;
@@ -561,8 +600,13 @@ if ($ts) {
                                     $cell = $routine[$wIndex][$p_num] ?? null;
                                     $cell_id = "cell-{$wIndex}-{$p_num}";
                                 ?>
-                                    <td class="routine-cell" id="<?= $cell_id ?>">
-                                        <?php if ($cell): ?>
+                                    <td class="routine-cell <?= $is_weekend ? 'routine-cell-weekend' : '' ?>" id="<?= $cell_id ?>">
+                                        <?php if ($is_weekend): ?>
+                                            <div class="weekend-disabled-placeholder" title="Weekend — Class setting disabled">
+                                                <i class="bi bi-slash-circle me-1 text-muted"></i>
+                                                <span class="d-none d-md-inline">Weekend</span>
+                                            </div>
+                                        <?php elseif ($cell): ?>
                                             <div class="routine-card" onclick='openCellModal(<?= $wIndex ?>, <?= $p_num ?>, <?= htmlspecialchars(json_encode($cell), ENT_QUOTES, 'UTF-8') ?>)' title="Click to edit Period <?= $p_num ?>">
                                                 <div class="d-flex justify-content-between align-items-start">
                                                     <div class="fw-bold text-primary text-truncate" style="max-width: 110px;">
@@ -584,29 +628,35 @@ if ($ts) {
 
                                 <!-- Day Level Action Column -->
                                 <td class="text-center no-print">
-                                    <div class="dropdown">
-                                        <button class="btn btn-sm btn-icon btn-light rounded-circle dropdown-toggle hide-arrow shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="bi bi-three-dots-vertical fs-6"></i>
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
-                                            <li>
-                                                <a class="dropdown-item py-2 text-primary" href="javascript:void(0)" onclick="quickCopyNextDay(<?= $wIndex ?>, <?= $next_wday ?>)">
-                                                    <i class="bi bi-arrow-right-circle text-primary me-2"></i> Copy to <?= $nextDayName ?>
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a class="dropdown-item py-2 text-info" href="javascript:void(0)" onclick="copyToAllWorkingDays(<?= $wIndex ?>)">
-                                                    <i class="bi bi-copy text-info me-2"></i> Duplicate to All Days
-                                                </a>
-                                            </li>
-                                            <li><hr class="dropdown-divider my-1"></li>
-                                            <li>
-                                                <a class="dropdown-item py-2 text-danger" href="javascript:void(0)" onclick="clearDayRoutine(<?= $wIndex ?>)">
-                                                    <i class="bi bi-trash text-danger me-2"></i> Clear <?= $wName ?>
-                                                </a>
-                                            </li>
-                                        </ul>
-                                    </div>
+                                    <?php if ($is_weekend): ?>
+                                        <span class="badge bg-label-secondary text-muted" style="font-size: 11px;">
+                                            <i class="bi bi-slash-circle me-1"></i>Off Day
+                                        </span>
+                                    <?php else: ?>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-icon btn-light rounded-circle dropdown-toggle hide-arrow shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="bi bi-three-dots-vertical fs-6"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                                <li>
+                                                    <a class="dropdown-item py-2 text-primary" href="javascript:void(0)" onclick="quickCopyNextDay(<?= $wIndex ?>, <?= $next_wday ?>)">
+                                                        <i class="bi bi-arrow-right-circle text-primary me-2"></i> Copy to <?= $nextDayName ?>
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item py-2 text-info" href="javascript:void(0)" onclick="copyToAllWorkingDays(<?= $wIndex ?>)">
+                                                        <i class="bi bi-copy text-info me-2"></i> Duplicate to All Days
+                                                    </a>
+                                                </li>
+                                                <li><hr class="dropdown-divider my-1"></li>
+                                                <li>
+                                                    <a class="dropdown-item py-2 text-danger" href="javascript:void(0)" onclick="clearDayRoutine(<?= $wIndex ?>)">
+                                                        <i class="bi bi-trash text-danger me-2"></i> Clear <?= $wName ?>
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -681,6 +731,7 @@ if ($ts) {
 <!-- ================= JAVASCRIPT ================= -->
 <script>
     const daysMap = <?= json_encode($days) ?>;
+    const weekendDays = <?= json_encode($weekendDays) ?>;
     const subjectTeacherMap = <?= json_encode($subjectTeacherMap) ?>;
     const currentCls  = <?= json_encode($cls) ?>;
     const currentSec  = <?= json_encode($sec) ?>;
@@ -716,11 +767,20 @@ if ($ts) {
 
     // Open Modal for Add or Edit
     function openCellModal(wday, period, data = null) {
+        const dayName = daysMap[wday] || 'Day ' + wday;
+        if (weekendDays && weekendDays.includes(dayName)) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Weekend',
+                text: `${dayName} is configured as a weekend. Class periods cannot be scheduled on weekends.`
+            });
+            return;
+        }
+
         document.getElementById('modal_wday').value   = wday;
         document.getElementById('modal_period').value = period;
         document.getElementById('modalAlert').innerHTML = '';
 
-        const dayName = daysMap[wday] || 'Day ' + wday;
         document.getElementById('cellModalSubtitle').innerText = `${dayName} — Period ${period}`;
 
         const btnDelete = document.getElementById('btnModalDelete');
@@ -836,10 +896,25 @@ if ($ts) {
                     text: res.message || 'Could not save routine period.'
                 });
             }
-        }, 'json').fail(function() {
+        }, 'json').fail(function(xhr, status, error) {
+            console.error("AJAX Save Cell Error:", status, error, xhr.responseText);
             btnSave.disabled = false;
             btnSave.innerHTML = '<i class="bi bi-check-lg me-1"></i> Save';
-            Swal.fire({ icon: 'error', title: 'Network Error', text: 'Server communication failed.' });
+            if (xhr.responseText) {
+                try {
+                    const parsed = JSON.parse(xhr.responseText);
+                    if (parsed && parsed.status === 'success') {
+                        cellModalInstance?.hide();
+                        location.reload();
+                        return;
+                    }
+                } catch(e) {}
+            }
+            Swal.fire({ 
+                icon: 'error', 
+                title: 'Network Error', 
+                text: 'Server communication failed.' 
+            });
         });
     }
 
