@@ -40,37 +40,38 @@ if ($list && $list->num_rows > 0) {
 $sub_list = '';
 $sub_list_ex = '';
 
-if ($global) {
-    $q = "SELECT id, subject, tid, slno
-          FROM subsetup
-          WHERE sccode=0 and sessionyear='$yr' AND classname='$cl' AND sectionname='$se'
-          ORDER BY slno";
-
-    $check = $conn->query($q);
-    if (!$check->num_rows) {
-        $q = "SELECT id, subject, tid, slno
-          FROM subsetup
-          WHERE sccode=0 and sessionyear='$yr' AND classname='$cl'
-          ORDER BY slno";
+if ($global == '1') {
+    if (!$year) {
+        exit('<div class="text-secondary">Select source year to preview subjects...</div>');
     }
 
+    $q = "SELECT id, subject, tid, slno
+          FROM subsetup
+          WHERE sccode=0 AND sessionyear='$year'";
 
+    if ($cls != '') {
+        $q .= " AND classname='$cls'";
+    }
+    if ($sec != '') {
+        $q .= " AND sectionname='$sec'";
+    }
+    $q .= " ORDER BY slno";
 
 } else {
     if (!$year || !$cls) {
-        exit('Invalid source');
+        exit('<div class="text-secondary">Select source class to preview subjects...</div>');
     }
 
     if ($sec == '') {
         $q = "SELECT id, subject, tid, slno
           FROM subsetup
-          WHERE sessionyear='$year'
+          WHERE sccode='$sccode' AND sessionyear='$year'
           AND classname='$cls'
           ORDER BY slno";
     } else {
         $q = "SELECT id, subject, tid, slno
           FROM subsetup
-          WHERE sessionyear='$year'
+          WHERE sccode='$sccode' AND sessionyear='$year'
           AND classname='$cls'
           AND sectionname='$sec'
           ORDER BY slno";

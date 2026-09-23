@@ -327,7 +327,7 @@
                 if (msg === 'OK') {
                     location.reload();
                 } else {
-                    alert(msg);
+                    Swal.fire({ icon: 'error', title: 'Reorder Failed', text: msg });
                 }
             });
     }
@@ -348,7 +348,7 @@
             if (msg === 'OK') {
                 location.reload();
             } else {
-                alert(msg);
+                Swal.fire({ icon: 'error', title: 'Save Failed', text: msg });
             }
         });
 
@@ -373,7 +373,7 @@
                 if (msg === 'OK') {
                     location.reload();
                 } else {
-                    alert(msg);
+                    Swal.fire({ icon: 'error', title: 'Delete Failed', text: msg });
                 }
             });
     }
@@ -426,30 +426,50 @@
             fetch('subject/get-clone-tree.php')
                 .then(r => r.json())
                 .then(data => {
-                    // years এর ক্ষেত্রে খালি অপশন
-                    let yearOptions = '<option value="">Select Year</option>'; // খালি option
-                    yearOptions += data.years; // সার্ভার থেকে আসা সব year option
-                    // yearOptions += '<option value="' + data.years + '">' + data.years + '</option>';
+                    let yearOptions = '<option value="">Select Year</option>';
+                    yearOptions += data.years || '';
                     d_year.innerHTML = yearOptions;
+                    d_global.value = '';
                     d_cls.innerHTML = '<option value="">Select Class</option>';
                     d_sec.innerHTML = '<option value="">Select Section</option>';
+                    $('#previewList').html('Select source to preview subjects...');
                 });
         });
 
-    d_year.onchange = function () {
-        fetch('subject/get-clone-tree.php?year=' + this.value)
+    function loadCloneClasses() {
+        const yr = d_year.value;
+        const gl = d_global.value;
+        if (!yr) {
+            d_cls.innerHTML = '<option value="">Select Class</option>';
+            d_sec.innerHTML = '<option value="">Select Section</option>';
+            return;
+        }
+        fetch('subject/get-clone-tree.php?year=' + yr + '&global=' + gl)
             .then(r => r.json())
             .then(data => {
-                d_cls.innerHTML = '<option value="">Select Class</option>' + data.classes;
+                d_cls.innerHTML = '<option value="">Select Class</option>' + (data.classes || '');
                 d_sec.innerHTML = '<option value="">Select Section</option>';
             });
+    }
+
+    d_year.onchange = function () {
+        loadCloneClasses();
+        loadPreview();
+    };
+
+    d_global.onchange = function () {
+        loadCloneClasses();
+        loadPreview();
     };
 
     d_cls.onchange = function () {
-        fetch('subject/get-clone-tree.php?year=' + d_year.value + '&cls=' + this.value)
+        const yr = d_year.value;
+        const gl = d_global.value;
+        fetch('subject/get-clone-tree.php?year=' + yr + '&global=' + gl + '&cls=' + encodeURIComponent(this.value))
             .then(r => r.json())
             .then(data => {
-                d_sec.innerHTML = '<option value="">Select Section</option>' + data.sections;
+                d_sec.innerHTML = '<option value="">Select Section</option>' + (data.sections || '');
+                loadPreview();
             });
     };
 </script>

@@ -8,6 +8,8 @@
     - Don't change any logic that I edit/write manually.
     - admin means admin >0 (usersapp table), who is actually developer, super administraotr, technical team member, support desk team.
     - core/functions.php files holds some functions like, login, teacher photo, student photo, result/grade calculation etc.
+    - Subject Name are depend on sccategory, becasue same subject code has differnt subject name for differnt sccategory.
+   - 'components/slot-tree-ui.php' is a UI component for slot tree structure, I have used it in many places, So, never modify or remove this line if it have in any script. It is a cascade chain selection tool.
 
 
 1.  academic-calendar.php (Tools -> Academic Calendar)
@@ -36,8 +38,10 @@
 12. cashbook-report.php (Finance -> Cashbook Report)
 
 13. class-routine.php (Academics -> Class Routine)
+    [ ] Re-design, refactor this module that user setup their class routine easily. You may build this in grid system Day - Period (Colurm-row) system. users will set subject & teacher with one click. can fillout nextday routine in one click.
 
 14. class-schedule.php (Academics -> Class Schedule)
+    [ ] drop down action button 
 
 15. customize-settings-progress-report.php (Settings -> Progress Report)
 
@@ -111,13 +115,13 @@
 48. students-payment.php (Payment -> Students Collection)
 
 49. subject-manager.php (Academics -> Subject Manager)
-    [ ] ‍default subject
-
+    [x] ‍Clone Default Subject List পপআপে ক্লাস ও সেকশনের ড্রপডাউনে সিলেক্ট ড্রপডাউন গুলো ক্রম এভাবে হবে : Session,  Global Default, Class, section . Global Defalul Yes/Default Subject list হলে class, section হবে, session, ‍sccode=0 দিয়ে subsetup টেবিল থেকে। নতুবা, শুধুমাত্র areas টেবিল থেকে sccode, ‍sessionyear অনুযায়ী class ও section দেখানো হবে। 
+ 
 50. subjects-list.php (Academics -> Subjects List)
-    [ ] custom subject (institute itselt) code range 401-800
-    [ ] set 3 dot dropdown menu for action buttons in table.
-    [ ] hide ‍subject code >1000 for users (NOT ADMIN)
-    [ ] admin ছাড়া add subject কাজ করছে না
+    [x] custom subject (institute itselt) code range 401-800
+    [x] set 3 dot dropdown menu for action buttons in table.
+    [x] hide ‍subject code >1000 for users (NOT ADMIN)
+    [x] admin ছাড়া add subject কাজ করছে না
 
 
 51. sync-payments.php (Payment -> Sync Payment)
