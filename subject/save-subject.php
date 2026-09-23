@@ -29,7 +29,7 @@ $dup = $conn->query("
 ");
 
 if ($dup->num_rows && $id == 0) {
-  exit('Subject already exists');
+  // exit('Subject already exists');
 }
 
 if ($id == 0) {

@@ -103,6 +103,7 @@
 48. students-payment.php (Payment -> Students Collection)
 
 49. subject-manager.php (Academics -> Subject Manager)
+    [ ] ‍সাবজেক্ট ক্লোন বা ডিফল্ট সেটআপ করার পরিকল্পনা রি-ফ্যাক্টর করতে হবে। 
 
 50. subjects-list.php (Academics -> Subjects List)
 
@@ -117,6 +118,7 @@
 55. teacher-view.php (Teacher -> Profile View)
 
 56. teachers-list.php (Teacher -> Teachers List)
+    [ ] aDD teacher popup এ new tid জেনারেট ভুল হচ্ছে। 
 
 57. user-profile.php (Core -> My Profile)
 
