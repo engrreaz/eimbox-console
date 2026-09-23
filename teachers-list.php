@@ -23,7 +23,7 @@ $result = $conn->query($sql);
 
 <?php if (isset($_GET['msg']) && $_GET['msg'] == 'success'): ?>
     <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <strong>সফল হয়েছে!</strong> নতুন শিক্ষক তালিকাভুক্ত করা হয়েছে।
+        <strong>Success!</strong> New teacher added successfully.
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 <?php endif; ?>
@@ -313,20 +313,20 @@ $result = $conn->query($sql);
                     if (typeof Swal !== 'undefined') {
                         Swal.fire({
                             icon: 'success',
-                            title: 'সফল হয়েছে!',
-                            text: 'নতুন শিক্ষক তথ্য সফলভাবে সেভ হয়েছে।',
+                            title: 'Success!',
+                            text: 'New teacher added successfully.',
                             timer: 1500,
                             showConfirmButton: false
                         }).then(() => location.reload());
                     } else {
-                        alert('সফলভাবে সেভ হয়েছে!');
+                        alert('New teacher added successfully.');
                         location.reload();
                     }
                 } else {
                     if (typeof Swal !== 'undefined') {
-                        Swal.fire('এরর', data.message || 'ভুল হয়েছে', 'error');
+                        Swal.fire('Error', data.message || 'Failed to save teacher', 'error');
                     } else {
-                        alert('ভুল হয়েছে: ' + data.message);
+                        alert('Error: ' + data.message);
                     }
                     saveBtn.disabled = false;
                     saveBtn.innerHTML = 'Save Teacher';
@@ -335,9 +335,9 @@ $result = $conn->query($sql);
             .catch(error => {
                 console.error('Error:', error);
                 if (typeof Swal !== 'undefined') {
-                    Swal.fire('এরর', 'সার্ভারে সমস্যা হচ্ছে। আবার চেষ্টা করুন।', 'error');
+                    Swal.fire('Error', 'Server error occurred. Please try again.', 'error');
                 } else {
-                    alert('সার্ভারে সমস্যা হচ্ছে। আবার চেষ্টা করুন।');
+                    alert('Server error occurred. Please try again.');
                 }
                 saveBtn.disabled = false;
                 saveBtn.innerHTML = 'Save Teacher';
