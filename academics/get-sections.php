@@ -21,10 +21,13 @@ if ($sc_q) {
 }
 
 $tea_data = [];
-$tea_q = mysqli_query($conn, "SELECT tid, tname, position FROM teacher WHERE sccode='$sccode'");
+$tea_q = mysqli_query($conn, "SELECT id, tid, tname, position FROM teacher WHERE sccode='$sccode'");
 if ($tea_q) {
     while ($r = mysqli_fetch_assoc($tea_q)) {
-        $tea_data[$r['tid']] = $r['tname'];
+        if (!empty($r['tid']) && $r['tid'] !== '0') {
+            $tea_data[$r['tid']] = $r['tname'];
+        }
+        $tea_data[$r['id']] = $r['tname'];
     }
 }
 

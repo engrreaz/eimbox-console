@@ -141,27 +141,25 @@
                 <div class="mb-2">
                     <label>Class Teacher</label>
                     <?php
-                    $query = "SELECT tid, tname FROM teacher WHERE sccode = ?";
+                    $query = "SELECT id, tid, tname FROM teacher WHERE sccode = ? ORDER BY tname ASC";
                     $stmt = $conn->prepare($query);
                     $stmt->bind_param("s", $sccode);
                     $stmt->execute();
                     $result = $stmt->get_result();
                     $teachers = $result->fetch_all(MYSQLI_ASSOC);
+                    $stmt->close();
                     ?>
 
                     <select name="teacher" class="form-control form-control-sm">
                         <option value="">Select a teacher</option>
-                        <?php foreach ($teachers as $teacher): ?>
-                            <option value="<?= htmlspecialchars($teacher['tid']) ?>">
-                                <?= htmlspecialchars($teacher['tid']) ?> | <?= htmlspecialchars($teacher['tname']) ?>
+                        <?php foreach ($teachers as $teacher): 
+                            $teacher_id = (!empty($teacher['tid']) && $teacher['tid'] !== '0') ? $teacher['tid'] : $teacher['id'];
+                        ?>
+                            <option value="<?= htmlspecialchars($teacher_id) ?>">
+                                <?= htmlspecialchars($teacher_id) ?> | <?= htmlspecialchars($teacher['tname']) ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
-
-                    <?php
-                    // Close statement and result
-                    $stmt->close();
-                    ?>
                 </div>
             </div>
 
