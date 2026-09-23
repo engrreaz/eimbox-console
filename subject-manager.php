@@ -205,6 +205,14 @@
                     </div>
 
                     <div class="col-md-3">
+                        <label>Or Global Default</label>
+                        <select id="d_global" class="form-select form-select-sm">
+                            <option value="">No</option>
+                            <option value="1">Default Subject List</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-3">
                         <label>Source Class</label>
                         <select id="d_cls" class="form-select form-select-sm"></select>
                     </div>
@@ -214,13 +222,7 @@
                         <select id="d_sec" class="form-select form-select-sm"></select>
                     </div>
 
-                    <div class="col-md-3">
-                        <label>Or Global Default</label>
-                        <select id="d_global" class="form-select form-select-sm">
-                            <option value="">No</option>
-                            <option value="1">Default Subject List</option>
-                        </select>
-                    </div>
+                    
 
                 </div>
 
