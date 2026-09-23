@@ -1,7 +1,10 @@
 <?php
-require_once 'db_config.php'; 
+session_start();
+require_once '../core/config.php';
+require_once '../core/db.php';
+require_once '../core/global_values.php';
 
-header('Content-Type: application/json'); // JSON ফরম্যাট সেট করা
+header('Content-Type: application/json');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['tid'])) {
     

@@ -143,7 +143,7 @@ $result = $conn->query($sql);
                 <h5 class="modal-title">Add New Teacher/Staff</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form action="save-teacher.php" method="POST">
+            <form id="newTeacherForm" action="teacher/save-teacher.php" method="POST">
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Generated Teacher ID</label>
@@ -164,7 +164,7 @@ $result = $conn->query($sql);
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Save Teacher</button>
+                    <button type="submit" id="saveBtn" class="btn btn-primary">Save Teacher</button>
                 </div>
             </form>
         </div>
