@@ -261,13 +261,34 @@ $result = $conn->query($sql);
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    alert('Photo updated successfully!');
-                    location.reload();
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: 'Photo updated successfully!',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => location.reload());
+                    } else {
+                        alert('Photo updated successfully!');
+                        location.reload();
+                    }
                 } else {
-                    alert('Error: ' + data.message);
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire('Error', data.message || 'Error updating photo', 'error');
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
                 }
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                console.error('Error:', error);
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('Error', 'Server error occurred while uploading photo.', 'error');
+                } else {
+                    alert('Server error occurred.');
+                }
+            });
     };
 </script>
 
@@ -289,17 +310,35 @@ $result = $conn->query($sql);
             .then(response => response.json()) // আমরা PHP থেকে JSON রেসপন্স আশা করছি
             .then(data => {
                 if (data.status === 'success') {
-                    alert('সফলভাবে সেভ হয়েছে!');
-                    location.reload(); // ডাটা দেখানোর জন্য পেজ রিলোড
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'সফল হয়েছে!',
+                            text: 'নতুন শিক্ষক তথ্য সফলভাবে সেভ হয়েছে।',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => location.reload());
+                    } else {
+                        alert('সফলভাবে সেভ হয়েছে!');
+                        location.reload();
+                    }
                 } else {
-                    alert('ভুল হয়েছে: ' + data.message);
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire('এরর', data.message || 'ভুল হয়েছে', 'error');
+                    } else {
+                        alert('ভুল হয়েছে: ' + data.message);
+                    }
                     saveBtn.disabled = false;
                     saveBtn.innerHTML = 'Save Teacher';
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('সার্ভারে সমস্যা হচ্ছে। আবার চেষ্টা করুন।');
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('এরর', 'সার্ভারে সমস্যা হচ্ছে। আবার চেষ্টা করুন।', 'error');
+                } else {
+                    alert('সার্ভারে সমস্যা হচ্ছে। আবার চেষ্টা করুন।');
+                }
                 saveBtn.disabled = false;
                 saveBtn.innerHTML = 'Save Teacher';
             });
@@ -340,7 +379,11 @@ $result = $conn->query($sql);
                 console.log('Serial updated successfully');
                 showToast('info', 'Serial updated successfully', 'Reorder List');
             } else {
-                alert('Update failed: ' + data.message);
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('Error', data.message || 'Update failed', 'error');
+                } else {
+                    alert('Update failed: ' + data.message);
+                }
             }
         })
         .catch(error => console.error('Error:', error));
