@@ -166,7 +166,7 @@
                 <button class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <input type="text" id="mid">
+                <input type="text" id="mid" hidden>
 
                 <div class="mb-2">
                     <label>Subject</label>

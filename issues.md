@@ -1,5 +1,13 @@
+# EIMBox Web Portal Application Issues for fix & Refactor
 
-
+##  Important Instructions :
+    - Always user sweetalert for any alert message
+    - table schema is located in sql/ folder.
+    - All php file should be utf-8 encoded
+    - Essencial cdn, js files are included in header.php, footer.php
+    - Don't change any logic that I edit/write manually.
+    - admin means admin >0 (usersapp table), who is actually developer, super administraotr, technical team member, support desk team.
+    - core/functions.php files holds some functions like, login, teacher photo, student photo, result/grade calculation etc.
 
 
 1.  academic-calendar.php (Tools -> Academic Calendar)
@@ -103,9 +111,14 @@
 48. students-payment.php (Payment -> Students Collection)
 
 49. subject-manager.php (Academics -> Subject Manager)
-    [ ] ‍সাবজেক্ট ক্লোন বা ডিফল্ট সেটআপ করার পরিকল্পনা রি-ফ্যাক্টর করতে হবে। 
+    [ ] ‍default subject
 
 50. subjects-list.php (Academics -> Subjects List)
+    [ ] custom subject (institute itselt) code range 401-800
+    [ ] set 3 dot dropdown menu for action buttons in table.
+    [ ] hide ‍subject code >1000 for users (NOT ADMIN)
+    [ ] admin ছাড়া add subject কাজ করছে না
+
 
 51. sync-payments.php (Payment -> Sync Payment)
 
