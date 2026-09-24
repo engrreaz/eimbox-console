@@ -393,8 +393,7 @@ if ($sccode == '134579' && $slot != 'School') {
                                     $ff = 1;
                             }
 
-                            $isDark = ($theme === 'dark');
-                            $cllr = ($tt == 0) ? ($isDark ? 'black' : '#fff') : (($gp == 0) ? 'red' : (($gp == 5) ? '#33a04e' : ($isDark ? '#fff' : 'black')));
+                            $cllr = ($tt == 0) ? 'transparent' : (($gp == 0) ? 'red' : (($gp == 5) ? '#33a04e' : 'var(--bs-heading-color, #000)'));
 
 
                             if ($sing != 1000 && $sing != ''):
