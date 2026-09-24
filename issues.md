@@ -13,7 +13,7 @@
     - in all CRUD (create, update) operations, allways update modifieddate coloum with current timestamp. It's very important.
     - always try to keep existing table structure. Tables are connected with other platforms, app etc.
 
-SELECT * FROM `tabulatingsheet` WHERE `sessionyear` LIKE '2026' AND `sccode` = 103187 AND `classname` LIKE 'ten' AND `sectionname` LIKE 'Science'
+
 
 
 
