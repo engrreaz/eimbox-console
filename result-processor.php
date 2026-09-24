@@ -508,7 +508,7 @@ $sttime = microtime(true); ?>
 
         // 1. Process Raw Subjects for tabulatingsheet (sub_1..15)
         foreach ($sublist_arr as $idx => $code) {
-            $sub_index = $idx + 1;
+            $sub_index = $slotMap[$code] ?? ($idx + 1);
             $is_fourth = ($fourth_sub > 0 && $code == $fourth_sub);
             $meta = $subsetupmap[$code] ?? [
                 'fullmarks' => 100, 'pass_algorithm' => 1, 'subj' => 70, 'obj' => 30, 'pra' => 0, 'ca' => 0
