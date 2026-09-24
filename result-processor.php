@@ -301,7 +301,7 @@ $sttime = microtime(true); ?>
         WHERE (sccode='$sccode' OR sccode = '0') 
         AND (slot IS NULL OR slot = '$slot')
         AND gp<=$gpa
-        ORDER BY  sccode DESC, slot DESC LIMIT 1
+        ORDER BY sccode DESC, gp DESC, slot DESC LIMIT 1
         ");
         return ($q && $q->num_rows) ? $q->fetch_assoc() : ['gl' => 'F'];
     }
@@ -595,27 +595,24 @@ $sttime = microtime(true); ?>
         }
 
         // ---------- TOTAL ----------
-        $gpa = $subject_taken ? round($total_gp / $subject_taken, 2) : 0;
-        $glrow = '-'; // grade_from_gpa_table($conn, $gpa * 20, $slot, $sccode);
-
-        $gl = $fail_count ? 'F' : $glrow['gl'];
-        if ($fail_count)
+        if ($fail_count > 0) {
             $gpa = 0;
+            $gla = 'F';
+            $gl = 'F';
+        } else {
+            $gpa = $subject_taken ? round($total_gp / $subject_taken, 2) : 0;
+            $gla_r = grade_from_gpa($conn, $gpa);
+            $gla = is_array($gla_r) ? ($gla_r['gl'] ?? 'F') : 'F';
+            $gl = $gla;
+        }
+
         $failsub = implode('.', $fail_list) . '.';
         $sublist_string = implode('.', $sublist_arr);
-        if ($total_marks > 0) {
-            $avgrate = $total_marks * 100 / $st_full_marks;
+        if ($total_marks > 0 && $st_full_marks > 0) {
+            $avgrate = round($total_marks * 100 / $st_full_marks, 2);
         } else {
             $avgrate = 0;
         }
-        if ($total_gp > 0) {
-            $gpa = $total_gp / $subject_taken;
-        } else {
-            $gpa = 0;
-        }
-
-        $gla_r = grade_from_gpa($conn, $gpa);
-        $gla = $gla_r['gl'];
 
         $sub_arr = array_values(array_unique(
             array_filter(
