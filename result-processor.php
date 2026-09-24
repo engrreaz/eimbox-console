@@ -533,23 +533,9 @@ $sttime = microtime(true); ?>
                 $total = isset($m['markobt']) ? (float)$m['markobt'] : ($subj + $obj + $pra + $ca);
                 $on100 = $fullmark > 0 ? ($total * 100 / $fullmark) : $total;
 
-                $passed_component = true;
-                if ($pass_algorithm == 1) {
-                    if ($subj_fm > 0 && ceil(($subj * 100) / $subj_fm) < 33) $passed_component = false;
-                    if ($obj_fm > 0 && ceil(($obj * 100) / $obj_fm) < 33) $passed_component = false;
-                    if ($pra_fm > 0 && ceil(($pra * 100) / $pra_fm) < 33) $passed_component = false;
-                } else {
-                    if ($on100 < 33) $passed_component = false;
-                }
-
-                if ($passed_component) {
-                    $grade_info = get_GP_GL_val($total, $fullmark, $slot, $decimal);
-                    $gp = (float)$grade_info['gp'];
-                    $gl = $grade_info['gl'];
-                } else {
-                    $gp = 0.00;
-                    $gl = 'F';
-                }
+                // Take GP and GL directly from stmark table
+                $gp = isset($m['gp']) ? (float)$m['gp'] : 0.00;
+                $gl = (isset($m['gl']) && $m['gl'] !== '' && $m['gl'] !== '0') ? $m['gl'] : ($gp > 0 ? get_grade_letter_for_gpa_score($gp) : 'F');
 
                 $raw_entries_array[] = [(string)$code, (string)(int)$subj, (string)(int)$obj, (string)(int)$pra];
             }
