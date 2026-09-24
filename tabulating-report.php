@@ -39,6 +39,7 @@ $sessionyear = $_GET['session'] ?? $_COOKIE['chain-session'] ?? '';
 $cn = $_GET['classname'] ?? $_COOKIE['chain-class'] ?? '';
 $secname = $_GET['sectionname'] ?? $_COOKIE['chain-section'] ?? '';
 $exam = $_GET['exam'] ?? $_COOKIE['chain-exam'] ?? '';
+$theme = $_COOKIE['site_theme'] ?? $_COOKIE['templateCustomizer-vertical-menu-template--Theme'] ?? 'light';
 
 if (!$sessionyear || !$cn || !$exam) {
     echo "<script>window.location.href='result-report-manager.php';</script>";
@@ -392,7 +393,9 @@ if ($sccode == '134579' && $slot != 'School') {
                                     $ff = 1;
                             }
 
-                            $cllr = ($tt == 0) ? '#fff' : (($gp == 0) ? 'red' : (($gp == 5) ? '#33a04e' : 'black'));
+                            $isDark = ($theme === 'dark');
+                            $cllr = ($tt == 0) ? ($isDark ? 'black' : '#fff') : (($gp == 0) ? 'red' : (($gp == 5) ? '#33a04e' : ($isDark ? '#fff' : 'black')));
+
 
                             if ($sing != 1000 && $sing != ''):
                                 ?>
