@@ -95,7 +95,7 @@ $rsn = $ev['date'] ?? '';
 ======================= */
 $rowSub = fetchRow($conn, "SELECT allsubject FROM tabulatingsheet
     WHERE classname='$cn' AND sectionname='$secname'
-    AND sessionyear LIKE '%$sy%'
+    AND sessionyear LIKE '%$sessionyear%'
     AND sccode='$sccode' AND exam='$exam'
     ORDER BY rollno ASC LIMIT 1");
 
@@ -107,7 +107,7 @@ $subcnt = count($allsub);
 ======================= */
 $cntRow = fetchRow($conn, "SELECT COUNT(*) tts FROM subsetup
     WHERE classname='$cn' AND sectionname='$secname'
-    AND sessionyear LIKE '%$sy%' AND sccode='$sccode'");
+    AND sessionyear LIKE '%$sessionyear%' AND sccode='$sccode'");
 
 $tts = $cntRow['tts'] ?? 0;
 
@@ -268,7 +268,7 @@ if ($sccode == '134579' && $slot != 'School') {
                                     Class : <b style="color:blue"><?= $cn ?></b> |
                                     Section : <b style="color:blue"><?= $secname ?></b><br>
                                     <b><?= $exam ?> Examination</b> |
-                                    Session : <b><?= $sy ?></b>
+                                    Session : <b><?= $sessionyear ?></b>
                                 </td>
                             </tr>
                         </table>
