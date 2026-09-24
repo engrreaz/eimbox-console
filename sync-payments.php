@@ -48,7 +48,7 @@ if ($qAll && $rowAll = $qAll->fetch_assoc()) {
         <div class="card-body p-3">
             <div class="row align-items-end g-2">
                 <?php
-                $chain_param = '-c 10 -t Choose Values -u -r -b View Students';
+                $chain_param = '-c 7 -t Choose Slot & Session -u -r -h class -b Set Session';
                 include 'components/slot-tree-ui.php';
                 ?>
             </div>
@@ -206,6 +206,38 @@ if ($qAll && $rowAll = $qAll->fetch_assoc()) {
         });
     }
 
+    // Dynamic Filter Control: Enable / Disable according to selection sequence
+    function updateFilterFields() {
+        let type = $('#type-main').val();
+        let cls = $('#class-main').val();
+
+        // Enable all by default
+        $('#icode-main, #part-main, #student-main, #class-main, #section-main').prop('disabled', false);
+
+        if (type === '') {
+            // Overall / All
+            $('#icode-main, #student-main, #class-main, #section-main').prop('disabled', true);
+        } else if (type === 'item') {
+            // Specific Item
+            $('#student-main').prop('disabled', true);
+            if (!cls) {
+                $('#section-main').prop('disabled', true);
+            }
+        } else if (type === 'student') {
+            // Specific Student
+            $('#class-main, #section-main').prop('disabled', true);
+        } else if (type === 'class') {
+            // Specific Class
+            $('#section-main, #student-main').prop('disabled', true);
+        } else if (type === 'section') {
+            // Specific Section
+            $('#student-main').prop('disabled', true);
+            if (!cls) {
+                $('#section-main').prop('disabled', true);
+            }
+        }
+    }
+
     // Set defaults into main dropdowns
     $(document).ready(function() {
         let slotVal = '<?= addslashes($slot) ?>';
@@ -220,13 +252,7 @@ if ($qAll && $rowAll = $qAll->fetch_assoc()) {
         $('#student-main').val('<?= addslashes($stid) ?>');
         $('#class-main').val('<?= addslashes($cls) ?>');
 
-        let secVal = '<?= addslashes($sec) ?>';
-        if ($('#class-main').val()) {
-            $.post('payments/get-sections.php', { cls: $('#class-main').val() }, function (res) {
-                $('#section-main').html(res);
-                if (secVal) $('#section-main').val(secVal);
-            });
-        }
+        updateFilterFields();
 
         // Automatic run if reset param is set
         if (<?= $reset ?> === 1) {
@@ -239,12 +265,28 @@ if ($qAll && $rowAll = $qAll->fetch_assoc()) {
         }
     });
 
+    // On Type Change
+    $('#type-main').on('change', function () {
+        updateFilterFields();
+        if ($(this).val() === 'student') {
+            $('#student-main').focus();
+        }
+    });
+
     // Cascading Class to Section
     $('#class-main').on('change', function () {
         let cls = $(this).val();
+        let sessionVal = $('#session-main').val() || '<?= addslashes($sy) ?>';
+        updateFilterFields();
+
+        if (!cls) {
+            $('#section-main').html('<option value="">-- All Sections --</option>');
+            return;
+        }
         $('#section-main').html('<option value="">Loading...</option>');
-        $.post('payments/get-sections.php', { cls: cls }, function (res) {
+        $.post('payments/get-sections.php', { cls: cls, session: sessionVal }, function (res) {
             $('#section-main').html(res);
+            updateFilterFields();
         });
     });
 
@@ -253,10 +295,10 @@ if ($qAll && $rowAll = $qAll->fetch_assoc()) {
         let params = {
             type: $('#type-main').val(),
             part: $('#part-main').val(),
-            icode: $('#icode-main').val(),
-            stid: $('#student-main').val(),
-            cls: $('#class-main').val(),
-            sec: $('#section-main').val(),
+            icode: $('#icode-main').is(':enabled') ? $('#icode-main').val() : '',
+            stid: $('#student-main').is(':enabled') ? $('#student-main').val() : '',
+            cls: $('#class-main').is(':enabled') ? $('#class-main').val() : '',
+            sec: $('#section-main').is(':enabled') ? $('#section-main').val() : '',
             slot: $('#slot-main').val(),
             session: $('#session-main').val()
         };

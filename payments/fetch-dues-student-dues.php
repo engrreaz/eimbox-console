@@ -58,8 +58,17 @@ WHERE
     AND si.classname = ?
     AND si.sectionname = ?
 
-GROUP BY si.stid
-ORDER BY si.rollno
+GROUP BY 
+    si.stid,
+    si.classname,
+    si.sectionname,
+    si.rollno,
+    si.lastpr,
+    st.stnameeng,
+    st.stnameben,
+    st.previll,
+    st.guarmobile
+ORDER BY si.rollno ASC
 ";
 
 

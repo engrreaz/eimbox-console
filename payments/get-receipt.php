@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             LEFT JOIN sessioninfo si ON si.stid = r.stid AND si.sccode = r.sccode AND si.sessionyear LIKE '%$session%'
             WHERE r.stid='$stid' AND r.prno='$prno' AND r.prdate='$prdate' AND r.sessionyear LIKE '%$session%'
             order by r.id DESC LIMIT 1";
-    echo $sql;
+    // echo $sql;
     $res = mysqli_query($conn, $sql);
     if ($res && mysqli_num_rows($res) > 0) {
         $row = mysqli_fetch_assoc($res);

@@ -66,7 +66,7 @@ switch ($type) {
             exit;
         }
 
-        $stmt = $conn->prepare("SELECT DISTINCT areaname FROM areas WHERE sccode = ? AND sessionyear = ? AND slot = ? ORDER BY idno");
+        $stmt = $conn->prepare("SELECT areaname FROM areas WHERE sccode = ? AND sessionyear = ? AND slot = ? GROUP BY areaname ORDER BY MIN(idno) ASC, areaname ASC");
         $stmt->bind_param("sss", $sccode, $sessionyear, $slot);
         $stmt->execute();
         $result = $stmt->get_result();

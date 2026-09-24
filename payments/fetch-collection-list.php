@@ -67,11 +67,18 @@ $sql .= "
 GROUP BY 
     sp.stid,
     sp.prno,
-    sp.prdate
+    sp.prdate,
+    sp.amount,
+    sp.entryby,
+    sp.entrytime,
+    si.rollno,
+    si.classname,
+    si.sectionname,
+    st.stnameeng,
+    st.stnameben
 
 ORDER BY sp.entrytime DESC
 ";
-echo $sql;
 $stmt = $conn->prepare($sql);
 $likeSy = "%$session%";
 $params = [$likeSy, $sccode, $likeSy, $datefrom, $dateto];

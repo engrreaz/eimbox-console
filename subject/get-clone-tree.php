@@ -26,7 +26,7 @@ if(!$cls){
   if($global == '1') {
     $q="SELECT DISTINCT classname FROM subsetup WHERE sccode=0 AND sessionyear='$year' ORDER BY classname";
   } else {
-    $q="SELECT DISTINCT areaname AS classname FROM areas WHERE sccode='$sccode' AND sessionyear='$year' ORDER BY idno, areaname";
+    $q="SELECT areaname AS classname FROM areas WHERE sccode='$sccode' AND sessionyear='$year' AND areaname IS NOT NULL AND areaname != '' GROUP BY areaname ORDER BY MIN(idno) ASC, areaname ASC";
   }
   $r=$conn->query($q);
   $opt='';

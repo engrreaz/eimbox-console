@@ -31,7 +31,7 @@
 7.  analytics-exam.php (Reports -> Exam Analytics)
 
 8.  attendance-register.php (Attendance -> Attendance Register)
-    [ ] attendance grid এ বর্তমানে weekends গুলো মার্ক করা আছে। এতে ইভেন্টসগুলোও মার্ক করতে চাই।  events.sql টেবিল থেকে ডেটা নিতে হবে। 
+    [x] attendance grid এ বর্তমানে weekends গুলো মার্ক করা আছে। এতে ইভেন্টসগুলোও মার্ক করতে চাই।  events.sql টেবিল থেকে ডেটা নিতে হবে। 
 
 9.  bank-account.php (Finance -> Bank Account)
     ------ Next ----------------------
