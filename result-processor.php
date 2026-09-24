@@ -471,9 +471,9 @@ $sttime = microtime(true); ?>
             $sub_cols["sub_{$i}_pra"] = 'NULL';
             $sub_cols["sub_{$i}_ca"] = 'NULL';
             $sub_cols["sub_{$i}_total"] = 'NULL';
-            $sub_cols["sub_{$i}_ct"] = 'NULL';
-            $sub_cols["sub_{$i}_mt"] = 'NULL';
-            $sub_cols["sub_{$i}_100"] = 'NULL';
+            $sub_cols["sub_{$i}_ct"] = '0';
+            $sub_cols["sub_{$i}_mt"] = '0';
+            $sub_cols["sub_{$i}_100"] = '0';
             $sub_cols["sub_{$i}_gp"] = 'NULL';
             $sub_cols["sub_{$i}_gl"] = 'NULL';
         }
@@ -564,8 +564,8 @@ $sttime = microtime(true); ?>
                 $sub_cols["sub_{$sub_index}_pra"] = $pra;
                 $sub_cols["sub_{$sub_index}_ca"] = sprintf("%.2f", $ca);
                 $sub_cols["sub_{$sub_index}_total"] = sprintf("%.2f", $total);
-                $sub_cols["sub_{$sub_index}_ct"] = $ctest > 0 ? $ctest : 'NULL';
-                $sub_cols["sub_{$sub_index}_mt"] = $mtest > 0 ? $mtest : 'NULL';
+                $sub_cols["sub_{$sub_index}_ct"] = $ctest;
+                $sub_cols["sub_{$sub_index}_mt"] = $mtest;
                 $sub_cols["sub_{$sub_index}_100"] = round($on100);
                 $sub_cols["sub_{$sub_index}_gp"] = sprintf("%.2f", $gp);
                 $sub_cols["sub_{$sub_index}_gl"] = "'$gl'";
@@ -694,7 +694,7 @@ $sttime = microtime(true); ?>
         $fourth_gp_val = (float)($ex_cols['fourth_gp'] ?? 0);
         $total_gp_overall = $total_gp_sum + $fourth_gp_val;
 
-        // Build consolidated sublist string e.g. "1101.1107.109.111.126.136.137.138.150.154."
+        // Build consolidated sublist string e.g. "1101.1107.109.111.136.137.138.150.154.126."
         $sublist_parts = [];
         foreach ($sublist_arr as $sc) {
             if ($sc == 101 || $sc == 102) {
@@ -757,6 +757,10 @@ $sttime = microtime(true); ?>
         $tab_updates[] = "gpa='" . sprintf("%.2f", $final_gpa) . "'";
         $tab_updates[] = "gpaadd='" . sprintf("%.2f", $gpa_add) . "'";
         $tab_updates[] = "gla='$final_gla'";
+        $tab_updates[] = "attnd='0'";
+        $tab_updates[] = "twday='0'";
+        $tab_updates[] = "prevexam='0'";
+        $tab_updates[] = "thisexam='0'";
         $tab_updates[] = "totalfail='$total_fail_count'";
         $tab_updates[] = "totalgp='" . sprintf("%.2f", $total_gp_overall) . "'";
         $tab_updates[] = "totalsubject='$mandatory_subject_count'";
@@ -800,6 +804,8 @@ $sttime = microtime(true); ?>
                     "allsubject='$all_subject_seq'",
                     "allfourth='$allfourth_str'",
                     "failsub='$failsub_str'",
+                    "prevexam='0'",
+                    "thisexam='0'",
                     "fourth_subj=" . $ex_cols['fourth_subj'],
                     "fourth_obj=" . $ex_cols['fourth_obj'],
                     "fourth_pra=" . $ex_cols['fourth_pra'],
@@ -846,7 +852,7 @@ $sttime = microtime(true); ?>
                     'sub_10_sub', 'sub_10_obj', 'sub_10_pra', 'sub_10_ca', 'sub_10_total', 'sub_10_gp', 'sub_10_gl',
                     'fourth_subj', 'fourth_obj', 'fourth_pra', 'fourth_ca', 'fourth_total', 'fourth_gp', 'fourth_gl', 'add_gp',
                     'totalmarks', 'full_marks', 'avgrate', 'gpa', 'gla', 'totalfail', 'totalgp', 'totalsubject', 'gender',
-                    'allsubject', 'allfourth', 'failsub', 'modifieddate'
+                    'allsubject', 'allfourth', 'failsub', 'prevexam', 'thisexam', 'modifieddate'
                 ];
 
                 $ex_insert_vals = [
@@ -869,7 +875,7 @@ $sttime = microtime(true); ?>
                     $ex_cols['sub_10_sub'], $ex_cols['sub_10_obj'], $ex_cols['sub_10_pra'], $ex_cols['sub_10_ca'], $ex_cols['sub_10_total'], $ex_cols['sub_10_gp'], $ex_cols['sub_10_gl'],
                     $ex_cols['fourth_subj'], $ex_cols['fourth_obj'], $ex_cols['fourth_pra'], $ex_cols['fourth_ca'], $ex_cols['fourth_total'], $ex_cols['fourth_gp'], $ex_cols['fourth_gl'], "'" . sprintf("%.2f", $add_gp) . "'",
                     "'" . sprintf("%.2f", $total_marks_obtained) . "'", "'$total_full_marks'", "'" . sprintf("%.2f", $avg_rate) . "'", "'" . sprintf("%.2f", $final_gpa) . "'", "'$final_gla'", "'$total_fail_count'", "'" . sprintf("%.2f", $total_gp_overall) . "'", "'$mandatory_subject_count'", "'$gender'",
-                    "'$all_subject_seq'", "'$allfourth_str'", "'$failsub_str'", "NOW()"
+                    "'$all_subject_seq'", "'$allfourth_str'", "'$failsub_str'", "'0'", "'0'", "NOW()"
                 ];
 
                 $conn->query("INSERT INTO tabulatingsheetex (" . implode(',', $ex_insert_cols) . ") VALUES (" . implode(',', $ex_insert_vals) . ")");
@@ -899,6 +905,12 @@ $sttime = microtime(true); ?>
         }
     }
 
+    $merit_lookup = [];
+    $ml_res = $conn->query("SELECT numplace, meritplace FROM meritlist");
+    while ($ml_res && $ml_row = $ml_res->fetch_assoc()) {
+        $merit_lookup[(int)$ml_row['numplace']] = $ml_row['meritplace'];
+    }
+
     // 1. Fetch all processed rows for this class/exam to compute exact ranks
     $merit_rows = [];
     $mr_res = $conn->query("
@@ -917,7 +929,7 @@ $sttime = microtime(true); ?>
     foreach ($merit_rows as $mr) {
         $comb_map[$mr['id']] = [
             'num' => $comb_rank,
-            'place' => get_ordinal_suffix($comb_rank)
+            'place' => $merit_lookup[$comb_rank] ?? get_ordinal_suffix($comb_rank)
         ];
         $comb_rank++;
     }
@@ -934,7 +946,7 @@ $sttime = microtime(true); ?>
         foreach ($srows as $sr) {
             $sec_map[$sr['id']] = [
                 'num' => $srank,
-                'place' => get_ordinal_suffix($srank)
+                'place' => $merit_lookup[$srank] ?? get_ordinal_suffix($srank)
             ];
             $srank++;
         }
@@ -952,7 +964,7 @@ $sttime = microtime(true); ?>
         foreach ($grows as $gr) {
             $gender_map[$gr['id']] = [
                 'num' => $grank,
-                'place' => get_ordinal_suffix($grank)
+                'place' => $merit_lookup[$grank] ?? get_ordinal_suffix($grank)
             ];
             $grank++;
         }
