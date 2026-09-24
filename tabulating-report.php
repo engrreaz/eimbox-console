@@ -122,18 +122,23 @@ if ($sccode == '134579' && $slot != 'School') {
 ?>
 
 <script>
-    (function () {
+    function syncReportTheme() {
         try {
-            const theme = localStorage.getItem("templateCustomizer-vertical-menu-template--Theme");
+            var theme = localStorage.getItem("templateCustomizer-vertical-menu-template--Theme");
             if (theme === "dark") {
                 document.documentElement.classList.add("dark-style");
+                document.documentElement.classList.remove("light-style");
                 document.documentElement.setAttribute("data-bs-theme", "dark");
-            } else if (theme === "light") {
+            } else {
                 document.documentElement.classList.remove("dark-style");
+                document.documentElement.classList.add("light-style");
                 document.documentElement.setAttribute("data-bs-theme", "light");
             }
         } catch (e) { }
-    })();
+    }
+    syncReportTheme();
+    document.addEventListener("DOMContentLoaded", syncReportTheme);
+    window.addEventListener("storage", syncReportTheme);
 </script>
 
 <style>
@@ -166,31 +171,38 @@ if ($sccode == '134579' && $slot != 'School') {
 
     .chip-fail {
         color: red !important;
+        font-weight: bold;
     }
 
     .chip-aplus {
         color: #33a04e !important;
+        font-weight: bold;
     }
 
-    .chip-pass {
-        color: #000 !important;
+    /* Light Mode (Explicit Black) */
+    .chip-pass,
+    html.light-style .chip-pass,
+    html:not(.dark-style) .chip-pass,
+    [data-bs-theme="light"] .chip-pass {
+        color: #000000 !important;
     }
 
-    /* Dark Mode Text Inversion */
+    /* Dark Mode (Explicit White) */
     html.dark-style .chip-pass,
     [data-bs-theme="dark"] .chip-pass,
-    .dark-style .chip-pass,
+    body.dark-style .chip-pass,
     body.dark-mode .chip-pass {
-        color: #fff !important;
+        color: #ffffff !important;
     }
 
     @media print {
         * {
             print-color-adjust: exact !important;
+            -webkit-print-color-adjust: exact !important;
         }
 
         .chip-pass {
-            color: #000 !important;
+            color: #000000 !important;
         }
 
         .noprint {
