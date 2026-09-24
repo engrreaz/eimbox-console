@@ -72,11 +72,11 @@ if (mysqli_num_rows($q) > 0) {
             <label class="fs-tiny m-0 p-0 text-center">Full Marks</label>
         </div>
         <div class="col-md-auto text-center">
-            <h5 id="camax" class="m-0 p-0 text-center"> <?=  $row['pass_algorithm'] ?></h5>
+            <h5 id="camax" class="m-0 p-0 text-center"> <?=  $row['pass_algorithm'] == 0 ? 'Combind' : 'Individual' ?></h5>
             <label class="fs-tiny m-0 p-0 text-center">Pass Method</label>
         </div>
         <div class="col-md-auto text-center">
-            <h5 id="camax" class="m-0 p-0 text-center"> <?= $row['fourth'] ?></h5>
+            <h5 id="camax" class="m-0 p-0 text-center"> <?= $row['fourth'] == 0 ? 'No' : 'Yes' ?> </h5>
             <label class="fs-tiny m-0 p-0 text-center">Optional</label>
         </div>
     </div>

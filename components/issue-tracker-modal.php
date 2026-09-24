@@ -9,8 +9,40 @@ if ($isAdminUser <= 0) {
 }
 $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
 ?>
+<style>
+.eimbox-floating-wrap {
+    position: fixed;
+    bottom: 42px;
+    right: 20px;
+    z-index: 99998;
+}
+@media print {
+    .eimbox-floating-wrap,
+    #eimbox-issue-tracker-floating,
+    #eimbox-issue-tracker-floating *,
+    #eimboxIssueTrackerModal,
+    #eimboxIssueTrackerModal *,
+    .eimbox-issue-tracker-backdrop,
+    #eimbox-floating-trigger-btn,
+    #eimbox-floating-trigger-btn * {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        position: absolute !important;
+        left: -9999px !important;
+        top: -9999px !important;
+        width: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important;
+        clip-path: inset(50%) !important;
+        pointer-events: none !important;
+    }
+}
+</style>
+
 <!-- Issue Tracker Floating Trigger: Circular Bar Only (No pill) -->
-<div id="eimbox-issue-tracker-floating" style="position: fixed; bottom: 42px; right: 20px; z-index: 99998;">
+<div id="eimbox-issue-tracker-floating" class="d-print-none no-print eimbox-floating-wrap">
     <button type="button" class="btn btn-dark shadow-lg rounded-circle p-0 position-relative d-flex align-items-center justify-content-center" 
             onclick="eimboxOpenIssueModal()" 
             id="eimbox-floating-trigger-btn"
@@ -1050,4 +1082,17 @@ function eimboxDeleteIssue(id) {
     })
     .catch(err => console.error('Delete issue error:', err));
 }
+
+// Ensure complete suppression in print mode across all browsers
+window.addEventListener('beforeprint', function () {
+    const el = document.getElementById('eimbox-issue-tracker-floating');
+    if (el) el.style.setProperty('display', 'none', 'important');
+    const modal = document.getElementById('eimboxIssueTrackerModal');
+    if (modal) modal.style.setProperty('display', 'none', 'important');
+});
+
+window.addEventListener('afterprint', function () {
+    const el = document.getElementById('eimbox-issue-tracker-floating');
+    if (el) el.style.removeProperty('display');
+});
 </script>

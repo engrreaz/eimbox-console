@@ -62,7 +62,11 @@ if (!empty($class) && !empty($sessionyear)) {
                     <i class="bi bi-people me-2 text-primary"></i>
                     Student List: <?= "$class ($section) - $sessionyear" ?>
                 </h5>
-                <span class="badge bg-label-primary rounded-pill me-4">Total: <?= count($students_list) ?></span>
+                <span class="badge bg-label-primary rounded-pill me-3">Total: <?= count($students_list) ?></span>
+                
+                <a href="students-archived.php" class="btn btn-sm btn-outline-warning me-3" title="View Archived Students">
+                    <i class="bi bi-archive me-1"></i> Archived Students
+                </a>
 
                 <div class="dropdown">
                     <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
@@ -159,6 +163,9 @@ if (!empty($class) && !empty($sessionyear)) {
                                         } else if ($status_card == "x") {
                                             $icon = 'x-lg';
                                             $color = 'danger';
+                                        } else {
+                                            $icon = 'person-badge';
+                                            $color = 'secondary';
                                         }
                                         ?>
                                         <i class="bi bi-<?= $icon ?> text-<?= $color ?> fs-4 me-2"></i>
@@ -167,28 +174,36 @@ if (!empty($class) && !empty($sessionyear)) {
                                             <i class="bi bi-three-dots-vertical fs-5"></i>
                                         </button>
                                         <div class="dropdown-menu dropdown-menu-end">
-                                            <a class="dropdown-item" href="student-view-profile.php?stid=<?= $st['stid'] ?>"
+                                            <a class="dropdown-item" href="student-view-profile.php?stid=<?= $st['stid'] ?>&year=<?= $sessionyear ?>"
                                                 target="_blank">
                                                 <i class="bi bi-eye me-2"></i> View Profile
                                             </a>
-                                            <a class="dropdown-item text-primary" href="#"
-                                                onclick="edit_st_profile('<?= $st['rollno'] ?>', '<?= $sessionyear ?>', '<?= $st['stid'] ?>');"
+                                            <a class="dropdown-item text-primary" href="enroll-students.php?stid=<?= $st['stid'] ?>&sy=<?= $sessionyear ?>"
                                                 target="_blank">
                                                 <i class="bi bi-pencil me-2"></i> Edit Profile
                                             </a>
-                                            <a class="dropdown-item text-info" href="student-idcard.php?stid=<?= $st['stid'] ?>"
-                                                target="_blank" disabled>
-                                                <i class="bi bi-card-heading me-2"></i> Print ID Card
+                                            <a class="dropdown-item text-muted disabled" href="javascript:void(0);"
+                                                style="pointer-events: none; opacity: 0.6;">
+                                                <i class="bi bi-card-heading me-2"></i> Print ID Card <small class="text-muted">(Disabled)</small>
                                             </a>
 
                                             <hr class="dropdown-divider">
-                                            <div class="dropdown-item text-danger fs-tiny">
-                                                Waiver, tc, bonafied, overall-report
-                                            </div>
+                                            <a class="dropdown-item text-warning" href="javascript:void(0);"
+                                                onclick="issueTC('<?= $st['stid'] ?>', '<?= htmlspecialchars(addslashes($st['stnameeng'] ?? ''), ENT_QUOTES) ?>')">
+                                                <i class="bi bi-file-earmark-arrow-right me-2"></i> Issue TC
+                                            </a>
+                                            <a class="dropdown-item text-info" href="student-bonafide.php?stid=<?= $st['stid'] ?>&year=<?= $sessionyear ?>"
+                                                target="_blank">
+                                                <i class="bi bi-award me-2"></i> Bonafide Certificate
+                                            </a>
+                                            <a class="dropdown-item text-secondary" href="student-overall-report.php?stid=<?= $st['stid'] ?>&year=<?= $sessionyear ?>"
+                                                target="_blank">
+                                                <i class="bi bi-file-earmark-person me-2"></i> Overall Report
+                                            </a>
                                             <hr class="dropdown-divider">
                                             <a class="dropdown-item text-danger" href="javascript:void(0);"
-                                                onclick="deleteStudent('<?= $st['stid'] ?>')">
-                                                <i class="bi bi-trash me-2"></i> Archive Student
+                                                onclick="deleteStudent('<?= $st['stid'] ?>', '<?= htmlspecialchars(addslashes($st['stnameeng'] ?? ''), ENT_QUOTES) ?>')">
+                                                <i class="bi bi-archive me-2"></i> Archive Student
                                             </a>
                                         </div>
                                     </div>
@@ -215,24 +230,27 @@ if (!empty($class) && !empty($sessionyear)) {
 
 <script>
     function chainBtnFunc() {
-        // এই ফাংশনটি ফিল্টার বাটন ক্লিক করলে রান হবে
         location.reload();
     }
 
+    function issueTC(stid, name) {
+        Swal.fire({
+            title: 'Issue TC (Transfer Certificate)',
+            html: `Transfer Certificate (TC) module for <strong>${name}</strong> (ID: ${stid}) is planned for an upcoming release.`,
+            icon: 'info',
+            confirmButtonText: 'OK'
+        });
+    }
 
-</script>
-
-
-<script>
-    function deleteStudent(stid) {
+    function deleteStudent(stid, name) {
         Swal.fire({
             title: 'Archive Student?',
-            text: "Student will be archived.",
+            html: `Are you sure you want to archive <strong>${name || ''}</strong> (ID: ${stid})?<br><small class="text-muted">Student will be moved to the Archived directory.</small>`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
             cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, archive',
+            confirmButtonText: '<i class="bi bi-archive me-1"></i> Yes, archive',
             cancelButtonText: 'Cancel'
         }).then((result) => {
             if (result.isConfirmed) {
@@ -241,19 +259,25 @@ if (!empty($class) && !empty($sessionyear)) {
                     headers: { "Content-Type": "application/x-www-form-urlencoded" },
                     body: "stid=" + encodeURIComponent(stid)
                 })
-                    .then(res => res.text())
-                    .then(msg => {
-                        showToast("warning", msg, "Archived");
-                        // setTimeout(() => location.reload(), 800);
+                .then(res => res.text())
+                .then(msg => {
+                    Swal.fire({
+                        title: 'Archived!',
+                        text: msg,
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
                     });
+                    setTimeout(() => location.reload(), 1200);
+                })
+                .catch(err => {
+                    Swal.fire('Error', 'Failed to archive student: ' + err, 'error');
+                });
             }
         });
     }
-</script>
 
-
-<script>
-    document.getElementById('checkAll').addEventListener('change', function () {
+    document.getElementById('checkAll')?.addEventListener('change', function () {
         document.querySelectorAll('.st-check').forEach(cb => {
             cb.checked = this.checked;
         });
@@ -261,14 +285,12 @@ if (!empty($class) && !empty($sessionyear)) {
 
     function printSelected() {
         let ids = [];
-
-
         document.querySelectorAll('.st-check:checked').forEach(cb => {
             ids.push(cb.value);
         });
 
         if (ids.length === 0) {
-            alert("Please select at least one student");
+            Swal.fire('Notice', 'Please select at least one student', 'info');
             return;
         }
 
@@ -278,30 +300,24 @@ if (!empty($class) && !empty($sessionyear)) {
 
     function printSelectedCompact() {
         let ids = [];
-
-
         document.querySelectorAll('.st-check:checked').forEach(cb => {
             ids.push(cb.value);
         });
 
         if (ids.length === 0) {
-            alert("Please select at least one student");
+            Swal.fire('Notice', 'Please select at least one student', 'info');
             return;
         }
 
         let url = "student-list-print-compact.php?ids=" + ids.join(',');
         window.open(url, '_blank');
     }
-</script>
 
-
-<script>
     function edit_st_profile(rollno, session, stid) {
         localStorage.setItem("enroll-students_rollno", rollno);
         localStorage.setItem("enroll-students_session", session);
-        window.location.href = "enroll-students.php?stid=" + stid + '&sy=' + session;
+        window.open("enroll-students.php?stid=" + stid + '&sy=' + session, '_blank');
     }
 </script>
 </body>
-
 </html>

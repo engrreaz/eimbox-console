@@ -924,14 +924,18 @@ function pass_validation(
     $decimal = 0
 ) {
 
+// echo 'A';
     // Full mark zero হলে অনিয়মিত (Fail)
     if ($fm <= 0) {
 
         return false;
     }
+    // echo $fm;
+    // echo 'B';
 
     // helper function: percentage calculation
     $calc = function ($got, $full, $decimal) {
+        // echo $got . '...' . $full . '...' . $decimal . '///';
         if ($full <= 0)
             return 0;
 
@@ -950,11 +954,13 @@ function pass_validation(
     $rate_chk = $calc($total_chk, $fm, $decimal);
     $rate = $calc($total, $fm, $decimal);
 
+    // echo 'c' . $alg;
     // ---------------- Algorithm 0 ----------------
     // Only total percentage check
     if ($alg == 0) {
+        // echo $rate_chk . '....' . $min . '//';
         return ($rate_chk >= $min);
-    }
+    } 
 
     // ---------------- Algorithm 1 ----------------
     // Individual (sub/obj/pra) mandatory pass + total pass
@@ -987,6 +993,7 @@ function pass_validation(
 
 function get_GP_GL($mark, $fullmark, $slot = 'School', $decimal = 0)
 {
+    // echo '.........' . $mark . '/' . $fullmark . '/' . $slot . '/' . $decimal . '///';
     global $conn, $sccode;
     if ($decimal == 0) {
         $mark = ceil(($mark) * 100 / $fullmark);

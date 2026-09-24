@@ -149,6 +149,24 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
         .swal2-container {
             z-index: 3000 !important;
         }
+
+        @media print {
+            #eimbox-issue-tracker-floating,
+            #eimbox-issue-tracker-floating *,
+            #eimboxIssueTrackerModal,
+            #eimboxIssueTrackerModal *,
+            .eimbox-issue-tracker-backdrop,
+            #eimbox-status-bar,
+            #eimbox-status-bar * {
+                display: none !important;
+                visibility: hidden !important;
+                opacity: 0 !important;
+                height: 0 !important;
+                width: 0 !important;
+                position: absolute !important;
+                left: -9999px !important;
+            }
+        }
     </style>
 
     <script>

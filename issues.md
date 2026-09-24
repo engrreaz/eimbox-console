@@ -31,14 +31,22 @@
 7.  analytics-exam.php (Reports -> Exam Analytics)
 
 8.  attendance-register.php (Attendance -> Attendance Register)
+    [ ] attendance grid এ বর্তমানে weekends গুলো মার্ক করা আছে। এতে ইভেন্টসগুলোও মার্ক করতে চাই।  events.sql টেবিল থেকে ডেটা নিতে হবে। 
 
 9.  bank-account.php (Finance -> Bank Account)
+    ------ Next ----------------------
 
 10. bank-manager.php (Finance -> Bank Manager)
+    [x] add/edit bank account popup ---- bank name dropdown list বানাও, ব্যাংক লিষ্ট banklist.sql থেকে আসবে। 
+    [x] প্রতিষ্ঠান নতুন ব্যাংক লিষ্টে নতুন নাম যুক্ত করার সুযোগ দাও। 
+    [x] অ্যাকাউন্ট ক্লোজ করার জন্য closingdate সেট করার ব্যবস্থা করো। 
+    [x] টেবিলে ক্লোজিং অ্যাকাউন্টগুলো একসাথে সবার নিচে দেখাও বা ফিল্টার করার সুযোগ দাও।
 
 11. cash-book.php (Finance -> Cash Book)
+    --------------------------------------
 
 12. cashbook-report.php (Finance -> Cashbook Report)
+    --------------------------------
 
 13. class-routine.php (Academics -> Class Routine)
     [x] Re-design, refactor this module that user setup their class routine easily. You may build this in grid system Day - Period (Colurm-row) system. users will set subject & teacher with one click. can fillout nextday routine in one click.
@@ -51,6 +59,7 @@
 15. customize-settings-progress-report.php (Settings -> Progress Report)
 
 16. daily-collection-summery.php (Payment -> Daily Collection Report)
+    ------------------------------------
 
 17. daily-reports.php (Reports  -> Daily Reports)
 
@@ -60,8 +69,12 @@
     ----------------------------------
 
 20. exam-manager.php (Examination -> Exam List)
+    [x] ‍actions buttons make 3 dot drop down.
+
 
 21. exam-routine.php (Examination -> Exam Routine)
+    [x] fix clone routine/import routine
+
 
 22. guest-student-panel-settings.php (Settings -> Guest Panel)
 
@@ -83,7 +96,9 @@
 
 31. payment-gateway.php (Payment -> Payment Gateway)
 
-32. payment-settings-individual.php (Payment -> Indivisual Setup)
+32. payment-settings-indivisual.php (Payment -> Indivisual Setup)
+    [x] sessionyear, students টেবিল থেকে সিলেক্টেড শ্রেণি/শাখার শিক্ষার্থীর তালিকা রোল হিসাবে ড্রপডাউনে দেখাও। 
+    [x] এটি কোন শিক্ষার্থীর ব্যক্তিগত কনসেসন সেটআপ।  আইটেমগুলোর ভ্যালু পরিবর্তন করা, আপডেট CRUD কনফার্ম করোা। 
 
 33. payment-settings.php (Payment -> Payment Setup)
 
@@ -117,8 +132,11 @@
 46. student-payable.php (Payment -> Self Payment [Student Payment])
 
 47. students-list.php (Student -> Students List)
-    [ ] action dropdown menu (view profile) : student-view-profile.php তে letter head templete ব্যবহার করো। একটা প্রিন্টেবল পুর্ণাঙ্গ প্রোফাইল তৈরী কর। students, sessioninfo টেবিল থেকে ডেটা আসবে। Edit Profile লিংক আলাদা ট্যবে ওপেন হবে। Id Card Menu টা আপাতত ডিসেবল করে রাখো। 
-    [ ] Waiver, tc, bonafied, overall-report মেনুগুলো মধ্যে waiver বাদ দাও। tc এর জন্য একটা পপআপ আসবে issues TC এর জন্র। এটা আমরা পরে পরিকল্পনা করবো। bonafied, overall-report  জন্র আলাদা টেমপ্লেট তৈরী করতে হবে, Letter head template ব্যবহার করে। ড্রপডাউনে মেনু সেট করতে হবে এগুলোর জন্য। Archive করলে কি হয়? আর্কাইভ করার পর, আর্কাইভড স্টুডেন্টদের ডেটা/তালিকা দেখার জন্য আলাদা স্ক্রিপ্ট চাই।   
+    [x] action dropdown menu (view profile) : student-view-profile.php তে letter head templete ব্যবহার করো। 
+    একটা প্রিন্টেবল পুর্ণাঙ্গ প্রোফাইল তৈরী কর। students, sessioninfo টেবিল থেকে ডেটা আসবে। 
+    Edit Profile লিংক আলাদা ট্যবে ওপেন হবে। 
+    Id Card Menu টা আপাতত ডিসেবল করে রাখো। 
+    [x] Waiver, tc, bonafied, overall-report মেনুগুলো মধ্যে waiver বাদ দাও। tc এর জন্য একটা পপআপ আসবে issues TC এর জন্র। এটা আমরা পরে পরিকল্পনা করবো। bonafied, overall-report  জন্র আলাদা টেমপ্লেট তৈরী করতে হবে, Letter head template ব্যবহার করে। ড্রপডাউনে মেনু সেট করতে হবে এগুলোর জন্য। Archive করলে কি হয়? আর্কাইভ করার পর, আর্কাইভড স্টুডেন্টদের ডেটা/তালিকা দেখার জন্য আলাদা স্ক্রিপ্ট চাই।   
 
 48. students-payment.php (Payment -> Students Collection)
 

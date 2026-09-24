@@ -251,7 +251,7 @@ if (isset($_POST['change_password'])) {
   }
 
   .tab-content {
-    border: 1px solid #eee;
+    // border: 1px solid #eee;
   }
 </style>
 

@@ -201,36 +201,77 @@
             let slot = $("#slot").val();
 
             $.post("result/save-gpa.php", $(this).serialize() + "&slot=" + slot, function (res) {
-                alert(res);
-                if (res == "OK") {
+                if (res.trim() == "OK") {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Saved Successfully',
+                        text: 'GPA grade configuration has been updated.',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
                     loadGPA(slot);
                     modal.hide();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Save Failed',
+                        text: res || 'An error occurred while saving GPA configuration.'
+                    });
                 }
+            }).fail(function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Network Error',
+                    text: 'Unable to communicate with the server.'
+                });
             });
         });
 
         $(document).on("click", ".delBtn", function () {
-            if (!confirm("Delete this record?")) return;
-
             let id = $(this).data("id");
             let slot = $("#slot").val();
 
-            $.post("result/delete-gpa.php", { id: id }, function (res) {
-                if (res == "OK") {
-                    loadGPA(slot);
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "Do you really want to delete this grade configuration?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post("result/delete-gpa.php", { id: id }, function (res) {
+                        if (res.trim() == "OK") {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Deleted!',
+                                text: 'Grade record has been deleted.',
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+                            loadGPA(slot);
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Delete Failed',
+                                text: res || 'Unable to delete the record.'
+                            });
+                        }
+                    }).fail(function () {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Network Error',
+                            text: 'Unable to communicate with the server.'
+                        });
+                    });
                 }
             });
         });
 
         loadGPA('');
     });
-
-</script>
-
-<script>
-
-
-
 
 </script>
 </body>
