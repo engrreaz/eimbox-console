@@ -883,56 +883,102 @@ $sttime = microtime(true); ?>
     }
     echo microtime(true) . '<br>';
 
-    // -------------------- MERIT RANKING (IN TABULATINGSHEET) --------------------
-    // 1. Section-wise Merit Ranking (meritnum, meritplace)
-    $conn->query("SET @r=0");
-    $conn->query("
-        UPDATE tabulatingsheet t
-        JOIN(
-            SELECT stid, (@r:=@r+1) AS rn
-            FROM tabulatingsheet
-            WHERE exam='$exam' AND slot='$slot' AND sessionyear='$sessionyear' AND classname='$classname' AND sectionname='$sectionname' AND sccode='$sccode'
-            ORDER BY totalfail ASC, totalmarks DESC, gpa DESC, rollno ASC
-        ) x USING(stid)
-        LEFT JOIN meritlist m ON m.numplace = x.rn
-        SET 
-            t.meritnum   = x.rn,
-            t.meritplace = IFNULL(m.meritplace, CONCAT(x.rn, CASE WHEN x.rn%100 BETWEEN 11 AND 13 THEN 'th' WHEN x.rn%10 = 1 THEN 'st' WHEN x.rn%10 = 2 THEN 'nd' WHEN x.rn%10 = 3 THEN 'rd' ELSE 'th' END))
-        WHERE t.exam='$exam' AND t.slot='$slot' AND t.sessionyear='$sessionyear' AND t.classname='$classname' AND t.sectionname='$sectionname' AND t.sccode='$sccode'
-    ");
+    // -------------------- MERIT RANKING (EXCLUSIVELY IN TABULATINGSHEET) --------------------
+    if (!function_exists('get_ordinal_suffix')) {
+        function get_ordinal_suffix($num) {
+            $n = (int)$num;
+            if ($n <= 0) return '';
+            $mod100 = $n % 100;
+            if ($mod100 >= 11 && $mod100 <= 13) return $n . 'th';
+            switch ($n % 10) {
+                case 1: return $n . 'st';
+                case 2: return $n . 'nd';
+                case 3: return $n . 'rd';
+                default: return $n . 'th';
+            }
+        }
+    }
 
-    // 2. Class Combined Merit Ranking across all sections (meritnumcomb, meritplacecomb)
-    $conn->query("SET @rc=0");
-    $conn->query("
-        UPDATE tabulatingsheet t
-        JOIN(
-            SELECT stid, (@rc:=@rc+1) AS rn
-            FROM tabulatingsheet
-            WHERE exam='$exam' AND slot='$slot' AND sessionyear='$sessionyear' AND classname='$classname' AND sccode='$sccode'
-            ORDER BY totalfail ASC, totalmarks DESC, gpa DESC, rollno ASC
-        ) x USING(stid)
-        LEFT JOIN meritlist m ON m.numplace = x.rn
-        SET 
-            t.meritnumcomb   = x.rn,
-            t.meritplacecomb = IFNULL(m.meritplace, CONCAT(x.rn, CASE WHEN x.rn%100 BETWEEN 11 AND 13 THEN 'th' WHEN x.rn%10 = 1 THEN 'st' WHEN x.rn%10 = 2 THEN 'nd' WHEN x.rn%10 = 3 THEN 'rd' ELSE 'th' END))
-        WHERE t.exam='$exam' AND t.slot='$slot' AND t.sessionyear='$sessionyear' AND t.classname='$classname' AND t.sccode='$sccode'
+    // 1. Fetch all processed rows for this class/exam to compute exact ranks
+    $merit_rows = [];
+    $mr_res = $conn->query("
+        SELECT id, stid, sectionname, gender, totalfail, totalmarks, gpa, rollno
+        FROM tabulatingsheet
+        WHERE exam='$exam' AND slot='$slot' AND sessionyear='$sessionyear' AND classname='$classname' AND sccode='$sccode'
+        ORDER BY totalfail ASC, totalmarks DESC, gpa DESC, rollno ASC
     ");
+    while ($mr_res && $mrow = $mr_res->fetch_assoc()) {
+        $merit_rows[] = $mrow;
+    }
 
-    // 3. Gender-wise Merit Ranking within section (meritnumgender, meritplacegender)
-    $conn->query("
-        UPDATE tabulatingsheet t
-        JOIN(
-            SELECT stid, 
-                   ROW_NUMBER() OVER (PARTITION BY gender ORDER BY totalfail ASC, totalmarks DESC, gpa DESC, rollno ASC) AS rn
-            FROM tabulatingsheet
-            WHERE exam='$exam' AND slot='$slot' AND sessionyear='$sessionyear' AND classname='$classname' AND sectionname='$sectionname' AND sccode='$sccode'
-        ) x USING(stid)
-        LEFT JOIN meritlist m ON m.numplace = x.rn
-        SET 
-            t.meritnumgender   = x.rn,
-            t.meritplacegender = IFNULL(m.meritplace, CONCAT(x.rn, CASE WHEN x.rn%100 BETWEEN 11 AND 13 THEN 'th' WHEN x.rn%10 = 1 THEN 'st' WHEN x.rn%10 = 2 THEN 'nd' WHEN x.rn%10 = 3 THEN 'rd' ELSE 'th' END))
-        WHERE t.exam='$exam' AND t.slot='$slot' AND t.sessionyear='$sessionyear' AND t.classname='$classname' AND t.sectionname='$sectionname' AND t.sccode='$sccode'
-    ");
+    // A. Class Combined Rank across all sections (meritnumcomb, meritplacecomb)
+    $comb_rank = 1;
+    $comb_map = [];
+    foreach ($merit_rows as $mr) {
+        $comb_map[$mr['id']] = [
+            'num' => $comb_rank,
+            'place' => get_ordinal_suffix($comb_rank)
+        ];
+        $comb_rank++;
+    }
+
+    // B. Section-wise Rank (meritnum, meritplace)
+    $section_groups = [];
+    foreach ($merit_rows as $mr) {
+        $sec = $mr['sectionname'];
+        $section_groups[$sec][] = $mr;
+    }
+    $sec_map = [];
+    foreach ($section_groups as $sec => $srows) {
+        $srank = 1;
+        foreach ($srows as $sr) {
+            $sec_map[$sr['id']] = [
+                'num' => $srank,
+                'place' => get_ordinal_suffix($srank)
+            ];
+            $srank++;
+        }
+    }
+
+    // C. Gender-wise Rank within section (meritnumgender, meritplacegender)
+    $gender_groups = [];
+    foreach ($merit_rows as $mr) {
+        $key = $mr['sectionname'] . '_' . ($mr['gender'] ?? '');
+        $gender_groups[$key][] = $mr;
+    }
+    $gender_map = [];
+    foreach ($gender_groups as $gkey => $grows) {
+        $grank = 1;
+        foreach ($grows as $gr) {
+            $gender_map[$gr['id']] = [
+                'num' => $grank,
+                'place' => get_ordinal_suffix($grank)
+            ];
+            $grank++;
+        }
+    }
+
+    // Apply all 6 merit fields directly to tabulatingsheet
+    foreach ($merit_rows as $mr) {
+        $mid = (int)$mr['id'];
+        $mnum = $sec_map[$mid]['num'] ?? 0;
+        $mplace = $sec_map[$mid]['place'] ?? '';
+        $mcnum = $comb_map[$mid]['num'] ?? 0;
+        $mcplace = $comb_map[$mid]['place'] ?? '';
+        $mgnum = $gender_map[$mid]['num'] ?? 0;
+        $mgplace = $gender_map[$mid]['place'] ?? '';
+
+        $conn->query("
+            UPDATE tabulatingsheet SET 
+                meritnum='$mnum',
+                meritplace='$mplace',
+                meritnumcomb='$mcnum',
+                meritplacecomb='$mcplace',
+                meritnumgender='$mgnum',
+                meritplacegender='$mgplace'
+            WHERE id='$mid'
+        ");
+    }
 
 
     // ************************************
