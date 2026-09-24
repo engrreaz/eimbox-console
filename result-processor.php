@@ -883,7 +883,8 @@ $sttime = microtime(true); ?>
     }
     echo microtime(true) . '<br>';
 
-    // -------------------- MERIT RANKING --------------------
+    // -------------------- MERIT RANKING (IN TABULATINGSHEET) --------------------
+    // 1. Section-wise Merit Ranking (meritnum, meritplace)
     $conn->query("SET @r=0");
     $conn->query("
         UPDATE tabulatingsheet t
@@ -900,12 +901,37 @@ $sttime = microtime(true); ?>
         WHERE t.exam='$exam' AND t.slot='$slot' AND t.sessionyear='$sessionyear' AND t.classname='$classname' AND t.sectionname='$sectionname' AND t.sccode='$sccode'
     ");
 
-    // Sync meritplace to tabulatingsheetex
+    // 2. Class Combined Merit Ranking across all sections (meritnumcomb, meritplacecomb)
+    $conn->query("SET @rc=0");
     $conn->query("
-        UPDATE tabulatingsheetex ex
-        JOIN tabulatingsheet t ON t.id = ex.tsheet_id
-        SET ex.meritplace = t.meritplace
-        WHERE ex.exam='$exam' AND ex.slot='$slot' AND ex.sessionyear='$sessionyear' AND ex.classname='$classname' AND ex.sectionname='$sectionname' AND ex.sccode='$sccode'
+        UPDATE tabulatingsheet t
+        JOIN(
+            SELECT stid, (@rc:=@rc+1) AS rn
+            FROM tabulatingsheet
+            WHERE exam='$exam' AND slot='$slot' AND sessionyear='$sessionyear' AND classname='$classname' AND sccode='$sccode'
+            ORDER BY totalfail ASC, totalmarks DESC, gpa DESC, rollno ASC
+        ) x USING(stid)
+        LEFT JOIN meritlist m ON m.numplace = x.rn
+        SET 
+            t.meritnumcomb   = x.rn,
+            t.meritplacecomb = IFNULL(m.meritplace, CONCAT(x.rn, CASE WHEN x.rn%100 BETWEEN 11 AND 13 THEN 'th' WHEN x.rn%10 = 1 THEN 'st' WHEN x.rn%10 = 2 THEN 'nd' WHEN x.rn%10 = 3 THEN 'rd' ELSE 'th' END))
+        WHERE t.exam='$exam' AND t.slot='$slot' AND t.sessionyear='$sessionyear' AND t.classname='$classname' AND t.sccode='$sccode'
+    ");
+
+    // 3. Gender-wise Merit Ranking within section (meritnumgender, meritplacegender)
+    $conn->query("
+        UPDATE tabulatingsheet t
+        JOIN(
+            SELECT stid, 
+                   ROW_NUMBER() OVER (PARTITION BY gender ORDER BY totalfail ASC, totalmarks DESC, gpa DESC, rollno ASC) AS rn
+            FROM tabulatingsheet
+            WHERE exam='$exam' AND slot='$slot' AND sessionyear='$sessionyear' AND classname='$classname' AND sectionname='$sectionname' AND sccode='$sccode'
+        ) x USING(stid)
+        LEFT JOIN meritlist m ON m.numplace = x.rn
+        SET 
+            t.meritnumgender   = x.rn,
+            t.meritplacegender = IFNULL(m.meritplace, CONCAT(x.rn, CASE WHEN x.rn%100 BETWEEN 11 AND 13 THEN 'th' WHEN x.rn%10 = 1 THEN 'st' WHEN x.rn%10 = 2 THEN 'nd' WHEN x.rn%10 = 3 THEN 'rd' ELSE 'th' END))
+        WHERE t.exam='$exam' AND t.slot='$slot' AND t.sessionyear='$sessionyear' AND t.classname='$classname' AND t.sectionname='$sectionname' AND t.sccode='$sccode'
     ");
 
 
