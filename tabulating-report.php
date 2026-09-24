@@ -121,6 +121,21 @@ if ($sccode == '134579' && $slot != 'School') {
 }
 ?>
 
+<script>
+    (function () {
+        try {
+            const theme = localStorage.getItem("templateCustomizer-vertical-menu-template--Theme");
+            if (theme === "dark") {
+                document.documentElement.classList.add("dark-style");
+                document.documentElement.setAttribute("data-bs-theme", "dark");
+            } else if (theme === "light") {
+                document.documentElement.classList.remove("dark-style");
+                document.documentElement.setAttribute("data-bs-theme", "light");
+            }
+        } catch (e) { }
+    })();
+</script>
+
 <style>
     @page {
         margin: 8mm;
@@ -142,16 +157,44 @@ if ($sccode == '134579' && $slot != 'School') {
     .chip {
         line-height: 11px;
         font-size: 9px;
-        padding: 3px !important
+        padding: 3px !important;
+    }
+
+    .chip-zero {
+        color: transparent !important;
+    }
+
+    .chip-fail {
+        color: red !important;
+    }
+
+    .chip-aplus {
+        color: #33a04e !important;
+    }
+
+    .chip-pass {
+        color: #000 !important;
+    }
+
+    /* Dark Mode Text Inversion */
+    html.dark-style .chip-pass,
+    [data-bs-theme="dark"] .chip-pass,
+    .dark-style .chip-pass,
+    body.dark-mode .chip-pass {
+        color: #fff !important;
     }
 
     @media print {
         * {
-            print-color-adjust: exact !important
+            print-color-adjust: exact !important;
+        }
+
+        .chip-pass {
+            color: #000 !important;
         }
 
         .noprint {
-            display: none
+            display: none;
         }
     }
 </style>
@@ -393,12 +436,11 @@ if ($sccode == '134579' && $slot != 'School') {
                                     $ff = 1;
                             }
 
-                            $cllr = ($tt == 0) ? 'transparent' : (($gp == 0) ? 'red' : (($gp == 5) ? '#33a04e' : 'var(--bs-heading-color, #000)'));
-
+                            $cllrClass = ($tt == 0) ? 'chip-zero' : (($gp == 0) ? 'chip-fail' : (($gp == 5) ? 'chip-aplus' : 'chip-pass'));
 
                             if ($sing != 1000 && $sing != ''):
                                 ?>
-                                <td class="chip" style="text-align:center;color:<?= $cllr ?>">
+                                <td class="chip <?= $cllrClass ?>" style="text-align:center;">
                                     <?= $mt ?><br><?= $ss ?><br><?= $oo ?><br><?= $pp ?><br><?= $cc ?><br>
                                     <b><?= $tt ?></b><br><?= $gp ?><br><?= $gl ?>
                                 </td>
