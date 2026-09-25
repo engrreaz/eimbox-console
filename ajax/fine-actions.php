@@ -1,20 +1,23 @@
 <?php
-require_once '../core/config.php';
-require_once '../core/db.php';
-require_once '../core/init.php';
+ob_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+require_once dirname(__DIR__) . '/core/config.php';
+require_once dirname(__DIR__) . '/core/db.php';
 
 header('Content-Type: application/json; charset=utf-8');
+ini_set('display_errors', 0);
+error_reporting(0);
 
-if (empty($_SESSION['user_id'])) {
-    echo json_encode(['status' => 'error', 'message' => 'Unauthorized access. Please login.']);
-    exit;
-}
-
-$sccode = (int)($_SESSION['sccode'] ?? $sccode ?? 0);
-if ($sccode <= 0) {
-    echo json_encode(['status' => 'error', 'message' => 'Invalid institution code.']);
-    exit;
-}
+try {
+    $sccode = (int)($_POST['sccode'] ?? $_SESSION['sccode'] ?? 0);
+    if ($sccode <= 0) {
+        ob_clean();
+        echo json_encode(['status' => 'error', 'message' => 'Session expired or invalid institution code. Please log in again.']);
+        exit;
+    }
 
 $action = trim($_POST['action'] ?? '');
 
@@ -342,5 +345,11 @@ if ($action === 'preview_fines' || $action === 'post_fines') {
     }
 }
 
-echo json_encode(['status' => 'error', 'message' => 'Unknown action request.']);
-exit;
+    echo json_encode(['status' => 'error', 'message' => 'Unknown action request.']);
+    exit;
+
+} catch (Throwable $e) {
+    ob_clean();
+    echo json_encode(['status' => 'error', 'message' => 'Error: ' . $e->getMessage()]);
+    exit;
+}

@@ -182,6 +182,7 @@ $evStmt->close();
             <!-- TAB 1: GLOBAL POLICY & SCHEDULER -->
             <div class="tab-pane fade show active" id="tab-global" role="tabpanel">
                 <form id="globalSettingsForm">
+                    <input type="hidden" name="sccode" value="<?= htmlspecialchars($sccode) ?>">
                     <input type="hidden" name="sessionyear" value="<?= htmlspecialchars($session) ?>">
                     <input type="hidden" name="slot" value="<?= htmlspecialchars($slot) ?>">
 
@@ -577,6 +578,7 @@ $evStmt->close();
             </div>
             <div class="modal-body">
                 <form id="formAddExemption">
+                    <input type="hidden" name="sccode" value="<?= htmlspecialchars($sccode) ?>">
                     <div class="mb-3">
                         <label class="form-label fw-bold">Exemption Title / Reason <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" name="title" placeholder="e.g. Severe Cold Wave / Heavy Rainfall Shutdown" required>
@@ -724,12 +726,24 @@ function saveSettings() {
             }
         },
         error: function(xhr, status, error) {
+            let errorMsg = error;
+            try {
+                if (xhr.responseText) {
+                    const parsed = JSON.parse(xhr.responseText);
+                    if (parsed.message) errorMsg = parsed.message;
+                }
+            } catch (e) {
+                if (xhr.responseText) {
+                    const plain = $('<div>').html(xhr.responseText).text().trim();
+                    if (plain) errorMsg = plain.substring(0, 150);
+                }
+            }
             Swal.fire({
                 icon: 'error',
-                title: 'Server Error',
-                text: `Server communication error: ${error}`
+                title: 'Save Failed',
+                text: errorMsg
             });
-            showAlert('danger', `<i class="bi bi-x-circle me-1"></i> Server communication error: ${error}`);
+            showAlert('danger', `<i class="bi bi-x-circle me-1"></i> ${errorMsg}`);
         }
     });
 }
@@ -801,7 +815,11 @@ function deleteExemption(eventId) {
             $.ajax({
                 url: 'ajax/fine-actions.php',
                 type: 'POST',
-                data: { action: 'delete_disaster_exemption', event_id: eventId },
+                data: { 
+                    action: 'delete_disaster_exemption', 
+                    sccode: '<?= htmlspecialchars($sccode) ?>',
+                    event_id: eventId 
+                },
                 dataType: 'json',
                 success: function(res) {
                     if (res.status === 'success') {
@@ -858,6 +876,7 @@ function previewFines() {
         type: 'POST',
         data: {
             action: 'preview_fines',
+            sccode: '<?= htmlspecialchars($sccode) ?>',
             sessionyear: sessionYear,
             slot: slot,
             from_date: fromDate,
@@ -955,6 +974,7 @@ function postFines() {
                 type: 'POST',
                 data: {
                     action: 'post_fines',
+                    sccode: '<?= htmlspecialchars($sccode) ?>',
                     sessionyear: sessionYear,
                     slot: slot,
                     from_date: fromDate,
