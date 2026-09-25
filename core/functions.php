@@ -705,82 +705,98 @@ function is_bengali_unicode($text)
 {
     return preg_match('/\p{Bengali}/u', $text) ? true : false;
 }
+
+/**
+ * Parse JSON SMS Settings with backward-compatibility for legacy pipe-separated values
+ */
+function get_sms_setting($raw_data, $type = 'gateway')
+{
+    if (empty($raw_data)) {
+        return [];
+    }
+
+    $json = json_decode($raw_data, true);
+    if (json_last_error() === JSON_ERROR_NONE && is_array($json)) {
+        return $json;
+    }
+
+    // Legacy pipe fallback
+    $p = explode(' | ', trim($raw_data));
+    if ($type === 'gateway') {
+        return [
+            'enabled'      => intval($p[0] ?? 0),
+            'api_key'      => $p[1] ?? '',
+            'secret_key'   => $p[2] ?? '',
+            'username'     => $p[3] ?? '',
+            'password'     => $p[4] ?? '',
+            'uri'          => $p[5] ?? '',
+            'provider'     => $p[6] ?? 'bulksmsbd',
+            'price'        => floatval($p[7] ?? 0.35),
+            'sandbox_mode' => 0,
+            'masking'      => 0
+        ];
+    }
+
+    return [
+        'enabled'       => intval($p[0] ?? 0),
+        'priority_1'    => $p[1] ?? '',
+        'priority_2'    => $p[2] ?? '',
+        'priority_3'    => $p[3] ?? '',
+        'fixed_time'    => $p[4] ?? '',
+        'template_text' => $p[5] ?? ''
+    ];
+}
+
 function sms_templete_2_text($msgText)
 {
     global $sms_hint, $sms_var, $sms_sample;
-
-    global $stnameeng, $stnameben, $guarname, $classname, $sectionname,
-    $dueamount, $paymentamount, $paymentdate, $intime, $outtime, $month, $cur;
-
-    $msgText = htmlspecialchars($msgText);
-    // $sms_var অ্যারের প্রতিটি ভ্যালুকে প্রপার মানে রূপান্তর
-    $values = [];
-    foreach ($sms_var as $vname) {
-        // $vname হলো '$stnameeng', '$classname' ইত্যাদি
-        // substring(1) করে $ চিহ্ন বাদ দিয়ে variable variable ব্যবহার
-        $varName = substr($vname, 1);
-        if (isset($$varName)) {
-            $values[] = $$varName; // ভ্যালু
-        } else {
-            $values[] = ""; // ডিফল্ট খালি স্ট্রিং
-        }
+    if (empty($sms_hint) || empty($sms_sample)) {
+        require_once __DIR__ . '/sms-var.php';
     }
 
-    // এখন replace করুন
     return str_replace($sms_hint, $sms_sample, $msgText);
 }
 
-
-function global_send_sms($mobile, $message, $campaign = 'Regular', $type = '', $stid = 0)
+/**
+ * Dispatch SMS to gateway with multi-provider and sandbox/simulation support
+ */
+function dispatch_gateway_curl($gateway_conf, $mobile, $message_original)
 {
-    global $sms_api_key, $sms_secret_key, $sms_username, $sms_password, $sms_url, $sms_provider, $sms_price;
-    global $sccode, $y_v2, $conn, $usr, $cur;
-
-    global $sms_hint, $sms_var;
-
-    global $stnameeng, $stnameben, $guarname, $classname, $sectionname,
-    $dueamount, $paymentamount, $paymentdate, $intime, $outtime, $month, $cur;
-
-    $msgText = $message;
-    // $msgText = htmlspecialchars($message);
-    // $sms_var অ্যারের প্রতিটি ভ্যালুকে প্রপার মানে রূপান্তর
-    $values = [];
-    foreach ($sms_var as $vname) {
-        // $vname হলো '$stnameeng', '$classname' ইত্যাদি
-        // substring(1) করে $ চিহ্ন বাদ দিয়ে variable variable ব্যবহার
-        $varName = substr($vname, 1);
-        if (isset($$varName)) {
-            $values[] = $$varName; // ভ্যালু
-        } else {
-            $values[] = ""; // ডিফল্ট খালি স্ট্রিং
-        }
+    // Sandbox / Simulation Mode Check (Zero cost testing)
+    if (!empty($gateway_conf['sandbox_mode']) && intval($gateway_conf['sandbox_mode']) === 1) {
+        return [
+            'status'          => 'success',
+            'response_code'   => 200,
+            'message_id'      => 'SIM_' . uniqid(),
+            'success_message' => 'Sandbox Simulated: SMS sent successfully (No balance deducted)',
+            'error_message'   => ''
+        ];
     }
 
-    // এখন replace করুন
-    $message = str_replace($sms_hint, $values, $msgText);
+    $sms_api_key = $gateway_conf['api_key'] ?? '';
+    $sms_secret_key = $gateway_conf['secret_key'] ?? '';
+    $sms_username = $gateway_conf['username'] ?? '';
+    $sms_url = $gateway_conf['uri'] ?? '';
 
-
-    $mobile = mysqli_real_escape_string($conn, $mobile);
-    // $message_original = $message;              // real message for length
-    $message_original = htmlspecialchars($message);              // real message for length
-    $message = urlencode($message);            // encoded for API
-
-    // -----------------------------------------
-    // 2. Default response values
-    // -----------------------------------------
     $response_code = '';
     $message_id = '';
     $success_message = '';
     $error_message = '';
-    $status = '';
+    $status = 'failed';
 
-    // echo 'ABC';
-    // echo $sms_url;
-    // -----------------------------------------
-    // 3. SMS Gateway: bulksmsbd.net
-    // -----------------------------------------
+    if (empty($sms_url)) {
+        return [
+            'status' => 'failed',
+            'response_code' => 400,
+            'message_id' => '',
+            'success_message' => '',
+            'error_message' => 'SMS Gateway URL is not configured'
+        ];
+    }
+
+    // 1. bulksmsbd.net API
     if (str_contains($sms_url, 'bulksmsbd.net')) {
-        $sms_url = "http://bulksmsbd.net/api/smsapi";
+        $url = "http://bulksmsbd.net/api/smsapi";
         $data = [
             "api_key" => $sms_api_key,
             "senderid" => $sms_username,
@@ -789,122 +805,164 @@ function global_send_sms($mobile, $message, $campaign = 'Regular', $type = '', $
         ];
 
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $sms_url);
+        curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
 
         $response_raw = curl_exec($ch);
-        // curl_close($ch);
-        $ch = null;
+        $curl_err = curl_error($ch);
+        curl_close($ch);
 
-        // JSON → associative array
-        $response = json_decode($response_raw, true);
-
-        $response_code = $response['response_code'] ?? '';
-        $message_id = $response['message_id'] ?? '';
-        $success_message = $response['success_message'] ?? '';
-        $error_message = $response['error_message'] ?? '';
-        $status = $response['status'] ?? '';
-
+        if ($curl_err) {
+            $error_message = $curl_err;
+        } else {
+            $response = json_decode($response_raw, true);
+            $response_code = $response['response_code'] ?? '';
+            $message_id = $response['message_id'] ?? '';
+            $success_message = $response['success_message'] ?? '';
+            $error_message = $response['error_message'] ?? '';
+            if ($response_code == 202 || $response_code == 200 || !empty($message_id)) {
+                $status = 'success';
+            }
+        }
     }
-
-    // -----------------------------------------
-    // 4. SMS Gateway: smsvaults.work
-    // -----------------------------------------
+    // 2. smsvaults.work API
     else if (str_contains($sms_url, 'cpanel.smsvaults.work')) {
-
-        $url = "http://cpanel.smsvaults.work/sendtext?apikey={$sms_api_key}&secretkey={$sms_secret_key}&callerID=01234567890&toUser={$mobile}&messageContent={$message}";
-        // $url = $sms_url;
+        $encoded_msg = urlencode($message_original);
+        $url = "http://cpanel.smsvaults.work/sendtext?apikey={$sms_api_key}&secretkey={$sms_secret_key}&callerID=01234567890&toUser={$mobile}&messageContent={$encoded_msg}";
 
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
 
         $response_raw = curl_exec($ch);
-        $ch = null;
+        $curl_err = curl_error($ch);
+        curl_close($ch);
 
-        $response = json_decode($response_raw, true);
-
-        $response_code = 0;
-        $status = $response['Status'] ?? '';
-        $message_id = $response['Message_ID'] ?? '';
-        $success_message = $response['Text'] ?? '';
-        $error_message = '';
-
+        if ($curl_err) {
+            $error_message = $curl_err;
+        } else {
+            $response = json_decode($response_raw, true);
+            $response_code = 200;
+            $stat = $response['Status'] ?? '';
+            $message_id = $response['Message_ID'] ?? '';
+            $success_message = $response['Text'] ?? '';
+            if ($stat == '0' || $stat == 'Success' || !empty($message_id)) {
+                $status = 'success';
+            }
+        }
     }
-
-    // -----------------------------------------
-    // 5. Unknown gateway
-    // -----------------------------------------
+    // 3. Generic GET/POST Endpoint
     else {
-        $response_code = '';
-        $message_id = '';
-        $success_message = '';
-        $error_message = '';
-        $status = '';
+        $encoded_msg = urlencode($message_original);
+        $url = str_replace(
+            ['{apikey}', '{secretkey}', '{senderid}', '{mobile}', '{message}'],
+            [$sms_api_key, $sms_secret_key, $sms_username, $mobile, $encoded_msg],
+            $sms_url
+        );
+
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+
+        $response_raw = curl_exec($ch);
+        $curl_err = curl_error($ch);
+        curl_close($ch);
+
+        if ($curl_err) {
+            $error_message = $curl_err;
+        } else {
+            $response_code = 200;
+            $success_message = substr($response_raw, 0, 100);
+            $status = 'success';
+        }
     }
 
-    // -----------------------------------------
-    // 6. SMS Count (real message)
-    // -----------------------------------------
+    return [
+        'status'          => $status,
+        'response_code'   => $response_code,
+        'message_id'      => $message_id,
+        'success_message' => $success_message,
+        'error_message'   => $error_message
+    ];
+}
 
+function global_send_sms($mobile, $message, $campaign = 'Regular', $type = '', $stid = 0)
+{
+    global $sccode, $y_v2, $conn, $usr, $cur;
+    global $sms_hint, $sms_var;
+    global $stnameeng, $stnameben, $guarname, $classname, $sectionname,
+           $dueamount, $paymentamount, $paymentdate, $intime, $outtime, $month, $cur;
 
+    if (empty($sms_hint) || empty($sms_var)) {
+        require_once __DIR__ . '/sms-var.php';
+    }
+
+    // Dynamic variable resolution
+    $values = [];
+    foreach ($sms_var as $vname) {
+        $varName = substr($vname, 1);
+        $values[] = isset($$varName) ? $$varName : "";
+    }
+    $message_original = str_replace($sms_hint, $values, $message);
+    $mobile = mysqli_real_escape_string($conn, $mobile);
+
+    // Calculate length & parts
     $msg_length = mb_strlen($message_original);
-    if (is_bengali_unicode($message_original)) {
-        $count = ceil($msg_length / 70);
-    } else {
-        $count = ceil($msg_length / 160);
-    }
+    $is_unicode = preg_match('/\p{Bengali}/u', $message_original) ? 1 : 0;
+    $count = $is_unicode ? ceil($msg_length / 70) : ceil($msg_length / 160);
 
+    // Fetch school SMS settings
+    $res = $conn->query("SELECT sms_gateway FROM scinfo WHERE sccode='$sccode' LIMIT 1");
+    $sc = $res ? $res->fetch_assoc() : null;
+    $gateway_conf = get_sms_setting($sc['sms_gateway'] ?? '', 'gateway');
 
+    // Cost calculation
+    $price = floatval($gateway_conf['price'] ?? 0.35);
+    $cost = ($gateway_conf['provider'] ?? '') != 'self' ? ($price * $count) : 0;
 
+    // Dispatch via gateway helper
+    $api_res = dispatch_gateway_curl($gateway_conf, $mobile, $message_original);
+    $status = ($api_res['status'] === 'success') ? 'sent' : 'failed';
 
-    // -----------------------------------------
-    // 7. Get session info for this student
-    // -----------------------------------------
-    $sql = "SELECT sessionyear, classname, sectionname, rollno 
-            FROM sessioninfo 
-            WHERE stid = '$stid' AND sessionyear LIKE '%$y_v2%' 
-            ORDER BY id DESC LIMIT 1";
-
-    $result = $conn->query($sql);
-
-    if ($result && $result->num_rows > 0) {
-        $row = $result->fetch_assoc();
-        $sessionyear = $row['sessionyear'];
-        $classname = $row['classname'];
-        $sectionname = $row['sectionname'];
-        $rollno = $row['rollno'];
-    } else {
-        $sessionyear = date('Y');
-        $classname = '';
-        $sectionname = '';
-        $rollno = 0;
-    }
-
-    // -----------------------------------------
-    // 8. Cost calculation
-    // -----------------------------------------
-    if ($sms_provider != 'self') {
-        $cost = $sms_price *= $count;
-    } else {
-        $cost = 0;
+    // Get session info for student if available
+    $sessionyear = $y_v2 ?? date('Y');
+    $cls = '';
+    $sec = '';
+    $roll = 0;
+    if ($stid) {
+        $sql = "SELECT sessionyear, classname, sectionname, rollno 
+                FROM sessioninfo 
+                WHERE stid = '$stid' AND sessionyear LIKE '%$y_v2%' 
+                ORDER BY id DESC LIMIT 1";
+        $result = $conn->query($sql);
+        if ($result && $result->num_rows > 0) {
+            $row = $result->fetch_assoc();
+            $sessionyear = $row['sessionyear'];
+            $cls = $row['classname'];
+            $sec = $row['sectionname'];
+            $roll = intval($row['rollno']);
+        }
     }
 
     $td = date('Y-m-d');
+    $provider = mysqli_real_escape_string($conn, $gateway_conf['provider'] ?? 'bulksmsbd');
+    $res_code = mysqli_real_escape_string($conn, (string)($api_res['response_code'] ?? ''));
+    $msg_id = mysqli_real_escape_string($conn, (string)($api_res['message_id'] ?? ''));
+    $succ_msg = mysqli_real_escape_string($conn, (string)($api_res['success_message'] ?? ''));
+    $err_msg = mysqli_real_escape_string($conn, (string)($api_res['error_message'] ?? ''));
+    $msg_esc = mysqli_real_escape_string($conn, $message_original);
 
-    // -----------------------------------------
-    // 9. Insert log into `sms` table
-    // -----------------------------------------
     $sqls = "INSERT INTO sms
-        (sccode, sessionyear, stid, date, campaign, sms_type, mobile_number, sms_text, sms_len, count, send_by, send_time, cost,
-        response_code, message_id, success_message, error_message, status, modifieddate)
+        (sccode, sessionyear, stid, recipient_type, recipient_id, classname, sectionname, rollno, date, campaign, sms_type, mobile_number, sms_text, sms_len, sms_parts, count, is_unicode, gateway_provider, send_by, send_time, cost, response_code, message_id, success_message, error_message, status, modifieddate)
         VALUES
-        ('$sccode', '$sessionyear', '$stid',  '$td', '$campaign', '$type', '$mobile', '$message_original', '$msg_length', '$count',
-         '$usr', '$cur', '$cost', '$response_code', '$message_id', '$success_message', '$error_message', '$status', '$cur')";
-    // echo $sqls;
+        ('$sccode', '$sessionyear', '$stid', 'guardian', '$stid', '$cls', '$sec', '$roll', '$td', '$campaign', '$type', '$mobile', '$msg_esc', '$msg_length', '$count', '$count', '$is_unicode', '$provider', '$usr', NOW(), '$cost', '$res_code', '$msg_id', '$succ_msg', '$err_msg', '$status', NOW())";
+
     $conn->query($sqls);
+    return $api_res;
 }
 
 
