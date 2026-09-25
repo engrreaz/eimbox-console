@@ -11,16 +11,12 @@ require_once dirname(__DIR__) . '/core/global_values.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
-$sccode = $sccode ?? ($_SESSION['sccode'] ?? '');
-if (empty($sccode)) {
-    ob_clean();
-    echo json_encode([
-        "draw" => intval($_POST['draw'] ?? 1),
-        "recordsTotal" => 0,
-        "recordsFiltered" => 0,
-        "data" => []
-    ], JSON_UNESCAPED_UNICODE);
-    exit;
+// Priority: POST sccode -> Global $sccode -> Session sccode
+$req_sccode = trim($_POST['sccode'] ?? '');
+if (!empty($req_sccode)) {
+    $sccode = $req_sccode;
+} else {
+    $sccode = $sccode ?? ($_SESSION['sccode'] ?? '');
 }
 
 $limit  = isset($_POST['length']) && intval($_POST['length']) > 0 ? intval($_POST['length']) : 25;
@@ -32,7 +28,22 @@ $type_filter = trim($_POST['sms_type'] ?? '');
 $from_date = trim($_POST['from'] ?? '');
 $to_date = trim($_POST['to'] ?? '');
 
-$where = "WHERE sccode='$sccode'";
+$where = "WHERE 1=1";
+
+if (!empty($sccode)) {
+    $sc_esc = mysqli_real_escape_string($conn, $sccode);
+    $where .= " AND sccode='$sc_esc'";
+} else if (empty($_SESSION['isadmin']) || $_SESSION['isadmin'] < 4) {
+    // If not admin and no school found in session, return empty safely
+    ob_clean();
+    echo json_encode([
+        "draw" => $draw,
+        "recordsTotal" => 0,
+        "recordsFiltered" => 0,
+        "data" => []
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 if (!empty($search)) {
     $search_esc = mysqli_real_escape_string($conn, $search);
@@ -48,13 +59,23 @@ if (!empty($search)) {
 }
 
 if (!empty($status_filter) && $status_filter !== 'all') {
-    $st_esc = mysqli_real_escape_string($conn, $status_filter);
-    $where .= " AND status='$st_esc'";
+    $st_esc = mysqli_real_escape_string($conn, strtolower($status_filter));
+    if ($st_esc === 'sent') {
+        $where .= " AND (LOWER(status)='sent' OR status='1' OR status='success' OR status='1000')";
+    } elseif ($st_esc === 'queued') {
+        $where .= " AND (LOWER(status)='queued' OR status='0')";
+    } elseif ($st_esc === 'sending') {
+        $where .= " AND (LOWER(status)='sending')";
+    } elseif ($st_esc === 'failed') {
+        $where .= " AND (LOWER(status)='failed' OR (status != '' AND status != '0' AND status != '1' AND LOWER(status) != 'sent' AND LOWER(status) != 'queued' AND LOWER(status) != 'sending'))";
+    } else {
+        $where .= " AND LOWER(status)='$st_esc'";
+    }
 }
 
 if (!empty($type_filter) && $type_filter !== 'all') {
-    $tp_esc = mysqli_real_escape_string($conn, $type_filter);
-    $where .= " AND sms_type='$tp_esc'";
+    $tp_esc = mysqli_real_escape_string($conn, strtolower($type_filter));
+    $where .= " AND (LOWER(sms_type) = '$tp_esc' OR LOWER(sms_type) LIKE '%$tp_esc%')";
 }
 
 if (!empty($from_date) && !empty($to_date)) {
@@ -69,7 +90,8 @@ if (!empty($from_date) && !empty($to_date)) {
     $where .= " AND date <= '$t_esc'";
 }
 
-$totalQ = mysqli_query($conn, "SELECT COUNT(*) AS c FROM sms WHERE sccode='$sccode'");
+$count_base = !empty($sccode) ? "WHERE sccode='" . mysqli_real_escape_string($conn, $sccode) . "'" : "WHERE 1=1";
+$totalQ = mysqli_query($conn, "SELECT COUNT(*) AS c FROM sms $count_base");
 $total  = ($totalQ && $row = mysqli_fetch_assoc($totalQ)) ? intval($row['c']) : 0;
 
 $filterQ = mysqli_query($conn, "SELECT COUNT(*) AS c FROM sms $where");
@@ -101,3 +123,4 @@ echo json_encode([
     "recordsFiltered" => $filtered,
     "data" => $data
 ], JSON_UNESCAPED_UNICODE);
+

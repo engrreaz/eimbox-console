@@ -3,9 +3,25 @@ require_once 'core/init.php';
 require_once 'core/sms-var.php';
 require_once 'header.php';
 
-$sccode = $sccode ?? ($_SESSION['sccode'] ?? '');
+$current_sccode = $sccode ?? ($_SESSION['sccode'] ?? '');
+if (isset($is_admin) && $is_admin >= 4 && !empty($_GET['sccode'])) {
+    $selected_sccode = trim($_GET['sccode']);
+} else {
+    $selected_sccode = $current_sccode;
+}
 
-// Fetch KPI metrics for current school
+// Fetch schools list for super administrators
+$schools = [];
+if (isset($is_admin) && $is_admin >= 4) {
+    $schoolsQ = $conn->query("SELECT sccode, scname FROM scinfo ORDER BY scname ASC");
+    if ($schoolsQ) {
+        while ($row = $schoolsQ->fetch_assoc()) {
+            $schools[] = $row;
+        }
+    }
+}
+
+// Fetch KPI metrics for selected school
 $today = date('Y-m-d');
 $kpi_total = 0;
 $kpi_sent = 0;
@@ -14,16 +30,17 @@ $kpi_failed = 0;
 $kpi_today = 0;
 $kpi_cost = 0.00;
 
+$kpi_where = !empty($selected_sccode) ? "WHERE sccode='" . mysqli_real_escape_string($conn, $selected_sccode) . "'" : "WHERE 1=1";
 $kpi_q = $conn->query("
     SELECT 
         COUNT(*) AS total_count,
-        SUM(CASE WHEN status='sent' THEN 1 ELSE 0 END) AS sent_count,
-        SUM(CASE WHEN status='queued' OR status='sending' THEN 1 ELSE 0 END) AS queued_count,
-        SUM(CASE WHEN status='failed' THEN 1 ELSE 0 END) AS failed_count,
+        SUM(CASE WHEN LOWER(status)='sent' OR status='1' OR status='success' OR status='1000' THEN 1 ELSE 0 END) AS sent_count,
+        SUM(CASE WHEN LOWER(status)='queued' OR status='0' OR LOWER(status)='sending' OR status='' THEN 1 ELSE 0 END) AS queued_count,
+        SUM(CASE WHEN LOWER(status)='failed' OR (status != '' AND status != '0' AND status != '1' AND LOWER(status) != 'sent' AND LOWER(status) != 'queued' AND LOWER(status) != 'sending') THEN 1 ELSE 0 END) AS failed_count,
         SUM(CASE WHEN date='$today' THEN 1 ELSE 0 END) AS today_count,
         SUM(cost) AS total_cost
     FROM sms 
-    WHERE sccode='$sccode'
+    $kpi_where
 ");
 
 if ($kpi_q && $kpi = $kpi_q->fetch_assoc()) {
@@ -59,6 +76,29 @@ if ($kpi_q && $kpi = $kpi_q->fetch_assoc()) {
             </a>
         </div>
     </div>
+
+    <!-- Super Admin Institution Switcher -->
+    <?php if (isset($is_admin) && $is_admin >= 4 && !empty($schools)): ?>
+        <div class="card shadow-sm border mb-3">
+            <div class="card-body py-2 px-3 d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-building text-primary"></i>
+                    <span class="small fw-semibold text-muted">Viewing Logs For Institution:</span>
+                </div>
+                <form method="get" class="d-flex align-items-center gap-2 m-0">
+                    <select name="sccode" id="admin_select_sccode" class="form-select form-select-sm" onchange="this.form.submit()" style="min-width: 250px;">
+                        <?php foreach ($schools as $sch): ?>
+                            <option value="<?= htmlspecialchars($sch['sccode']) ?>" <?= ($sch['sccode'] == $selected_sccode) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($sch['scname']) ?> (<?= htmlspecialchars($sch['sccode']) ?>)
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </form>
+            </div>
+        </div>
+    <?php endif; ?>
+
+    <input type="hidden" id="current_sccode" value="<?= htmlspecialchars($selected_sccode) ?>">
 
     <!-- Live KPI Summary Cards -->
     <div class="row g-3 mb-4">
@@ -143,10 +183,13 @@ if ($kpi_q && $kpi = $kpi_q->fetch_assoc()) {
                     <select id="filter_type" class="form-select form-select-sm">
                         <option value="all">All Types</option>
                         <option value="notice">General Notice</option>
+                        <option value="general">General Broadcast</option>
                         <option value="attendance">Attendance</option>
                         <option value="payment">Payment / Dues</option>
                         <option value="result">Exam Result</option>
                         <option value="meeting">Meeting / Event</option>
+                        <option value="otp">OTP / Verification</option>
+                        <option value="test">Test Message</option>
                     </select>
                 </div>
                 <div class="col-md-2 d-flex align-items-end gap-1">
@@ -166,11 +209,11 @@ if ($kpi_q && $kpi = $kpi_q->fetch_assoc()) {
                     <thead class="table-dark">
                         <tr>
                             <th style="width: 35px;" class="text-center">#</th>
-                            <th style="width: 110px;">Date & Time</th>
+                            <th style="width: 120px;">Date & Time</th>
                             <th>Recipient</th>
                             <th>Type & Campaign</th>
                             <th style="width: 100px;">Parts & Cost</th>
-                            <th style="width: 85px;" class="text-center">Status</th>
+                            <th style="width: 95px;" class="text-center">Status</th>
                             <th>Message Preview</th>
                             <th style="width: 80px;" class="text-center">Action</th>
                         </tr>
@@ -233,139 +276,208 @@ if ($kpi_q && $kpi = $kpi_q->fetch_assoc()) {
     </div>
 </div>
 
-<?php require_once 'footer.php'; ?>
-
 <script>
-$(document).ready(function () {
-    let smsModal = new bootstrap.Modal(document.getElementById('smsDetailModal'));
+document.addEventListener("DOMContentLoaded", function () {
+    console.log("DOM loaded. Initializing SMS DataTable...");
 
-    let table = $('#smsTable').DataTable({
+    var smsModalInstance = null;
+    function getSmsModal() {
+        if (!smsModalInstance) {
+            var el = document.getElementById('smsDetailModal');
+            if (el && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                smsModalInstance = new bootstrap.Modal(el);
+            }
+        }
+        return smsModalInstance;
+    }
+
+    var table = null;
+    var tableOptions = {
         processing: true,
         serverSide: true,
         searching: true,
         ordering: false,
         pageLength: 25,
         lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+        language: {
+            emptyTable: "<div class='text-center py-4 text-muted'><i class='bi bi-inbox fs-2 d-block mb-2 text-secondary'></i>No SMS delivery records found.</div>",
+            zeroRecords: "<div class='text-center py-4 text-muted'><i class='bi bi-search fs-2 d-block mb-2 text-secondary'></i>No matching SMS records found for your search/filter.</div>",
+            processing: "<div class='text-center py-2'><div class='spinner-border spinner-border-sm text-primary me-2'></div> Loading SMS records...</div>"
+        },
         ajax: {
             url: "ajax/sms-datatable.php",
             type: "POST",
             data: function (d) {
-                d.from = $('#from_date').val();
-                d.to = $('#to_date').val();
-                d.status = $('#filter_status').val();
-                d.sms_type = $('#filter_type').val();
+                var sc = document.getElementById('current_sccode');
+                var fd = document.getElementById('from_date');
+                var td = document.getElementById('to_date');
+                var st = document.getElementById('filter_status');
+                var tp = document.getElementById('filter_type');
+
+                d.sccode = sc ? sc.value : '';
+                d.from = fd ? fd.value : '';
+                d.to = td ? td.value : '';
+                d.status = st ? st.value : 'all';
+                d.sms_type = tp ? tp.value : 'all';
+                console.log("Sending SMS DataTable Request:", d);
             },
             error: function (xhr, error, thrown) {
-                console.error("DataTable AJAX Error:", xhr.responseText);
+                console.error("DataTable AJAX Error:", xhr.status, xhr.responseText);
             }
         },
         columns: [
             {
                 data: null,
+                defaultContent: '',
                 className: "text-center text-muted small",
                 render: function (data, type, row, meta) {
-                    return meta.row + meta.settings._iDisplayStart + 1;
+                    var start = (meta.settings && meta.settings._iDisplayStart !== undefined) ? meta.settings._iDisplayStart : 0;
+                    return (meta.row || 0) + start + 1;
                 }
             },
             {
                 data: "date",
+                defaultContent: '-',
                 render: function (d, type, row) {
-                    let time = row.send_time ? row.send_time.split(' ')[1] : '';
-                    return `<div class="fw-semibold small">${d}</div><div class="text-muted" style="font-size:11px;">${time}</div>`;
+                    var dt = d || (row && row.send_time ? row.send_time.split(' ')[0] : '-');
+                    var time = row && row.send_time ? (row.send_time.split(' ')[1] || '') : '';
+                    return '<div class="fw-semibold small">' + dt + '</div><div class="text-muted" style="font-size:11px;">' + time + '</div>';
                 }
             },
             {
                 data: "mobile_number",
+                defaultContent: '-',
                 render: function (d, type, row) {
-                    let name = row.recipient_name || 'Recipient';
-                    let meta = row.classname ? (row.classname + (row.sectionname ? '-' + row.sectionname : '') + (row.rollno ? ' | Roll: ' + row.rollno : '')) : (row.recipient_type || '');
-                    return `<div class="fw-bold text-dark">${name}</div><div class="small"><code>${d}</code> <span class="badge bg-light text-dark border ms-1" style="font-size:10px;">${meta}</span></div>`;
+                    var name = (row && row.recipient_name) ? row.recipient_name : 'Direct Recipient';
+                    var meta = (row && row.classname) ? (row.classname + (row.sectionname ? '-' + row.sectionname : '') + (row.rollno ? ' | Roll: ' + row.rollno : '')) : (row && row.recipient_type ? row.recipient_type : '');
+                    return '<div class="fw-bold text-dark">' + name + '</div><div class="small"><code>' + (d || '-') + '</code> ' + (meta ? '<span class="badge bg-light text-dark border ms-1" style="font-size:10px;">' + meta + '</span>' : '') + '</div>';
                 }
             },
             {
                 data: "sms_type",
+                defaultContent: 'Notice',
                 render: function (d, type, row) {
-                    let typeBadge = `<span class="badge bg-primary bg-opacity-10 text-primary border border-primary">${d || 'Notice'}</span>`;
-                    let camp = row.campaign ? `<div class="small text-muted text-truncate mt-1" style="max-width:140px;">${row.campaign}</div>` : '';
+                    var typeBadge = '<span class="badge bg-primary bg-opacity-10 text-primary border border-primary">' + (d || 'Notice') + '</span>';
+                    var camp = (row && row.campaign) ? '<div class="small text-muted text-truncate mt-1" style="max-width:140px;">' + row.campaign + '</div>' : '';
                     return typeBadge + camp;
                 }
             },
             {
                 data: "sms_parts",
+                defaultContent: '1',
                 render: function (d, type, row) {
-                    let parts = d || 1;
-                    let cost = parseFloat(row.cost || 0).toFixed(2);
-                    return `<span class="badge bg-light text-dark border">${parts} Part(s)</span><div class="small text-muted mt-1">৳${cost}</div>`;
+                    var parts = d || 1;
+                    var cost = parseFloat(row && row.cost ? row.cost : 0).toFixed(2);
+                    return '<span class="badge bg-light text-dark border">' + parts + ' Part(s)</span><div class="small text-muted mt-1">৳' + cost + '</div>';
                 }
             },
             {
                 data: "status",
+                defaultContent: 'queued',
                 className: "text-center",
                 render: function (d) {
-                    let st = (d || '').toLowerCase();
-                    if (st === 'sent' || st === '1' || st === 'success') return '<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Sent</span>';
-                    if (st === 'queued' || st === '0') return '<span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i>Queued</span>';
-                    if (st === 'sending') return '<span class="badge bg-info"><i class="bi bi-arrow-repeat me-1"></i>Sending</span>';
-                    return '<span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Failed</span>';
+                    var st = (d || '').toString().toLowerCase().trim();
+                    if (st === 'sent' || st === '1' || st === 'success' || st === '1000') {
+                        return '<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Sent</span>';
+                    }
+                    if (st === 'queued' || st === '0') {
+                        return '<span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i>Queued</span>';
+                    }
+                    if (st === 'sending') {
+                        return '<span class="badge bg-info"><i class="bi bi-arrow-repeat me-1"></i>Sending</span>';
+                    }
+                    if (st === '' || st === 'null' || st === 'undefined') {
+                        return '<span class="badge bg-secondary"><i class="bi bi-dash-circle me-1"></i>Processed</span>';
+                    }
+                    return '<span class="badge bg-danger" title="Status: ' + d + '"><i class="bi bi-x-circle me-1"></i>Failed</span>';
                 }
             },
             {
                 data: "sms_text",
+                defaultContent: '',
                 render: function (d) {
-                    let snippet = d ? (d.length > 55 ? d.substring(0, 55) + '...' : d) : '';
-                    return `<span class="small font-monospace text-muted">${snippet}</span>`;
+                    var snippet = d ? (d.length > 55 ? d.substring(0, 55) + '...' : d) : '';
+                    return '<span class="small font-monospace text-muted">' + (snippet || '-') + '</span>';
                 }
             },
             {
                 data: null,
+                defaultContent: '',
                 className: "text-center",
                 render: function (data, type, row) {
-                    let rowJson = encodeURIComponent(JSON.stringify(row));
-                    return `<button type="button" class="btn btn-xs btn-outline-primary py-1 px-2 btn_view_sms" data-row="${rowJson}">
-                        <i class="bi bi-eye me-1"></i> View
-                    </button>`;
+                    var rowJson = encodeURIComponent(JSON.stringify(row || {}));
+                    return '<button type="button" class="btn btn-xs btn-outline-primary py-1 px-2 btn_view_sms" data-row="' + rowJson + '">' +
+                        '<i class="bi bi-eye me-1"></i> View' +
+                    '</button>';
                 }
             }
         ]
-    });
+    };
+
+    try {
+        if (typeof DataTable !== 'undefined') {
+            table = new DataTable('#smsTable', tableOptions);
+        } else if (window.jQuery && $.fn.DataTable) {
+            table = $('#smsTable').DataTable(tableOptions);
+        }
+        console.log("SMS DataTable Initialized:", table);
+    } catch (e) {
+        console.error("Error initializing DataTable:", e);
+    }
 
     // Filter Change Handlers
-    $("#from_date, #to_date, #filter_status, #filter_type").on("change", function () {
-        table.ajax.reload();
-    });
+    function reloadTable() {
+        if (table) {
+            if (table.ajax && typeof table.ajax.reload === 'function') {
+                table.ajax.reload();
+            } else if (window.jQuery && $('#smsTable').DataTable) {
+                $('#smsTable').DataTable().ajax.reload();
+            }
+        }
+    }
 
-    $("#btn_refresh_table").on("click", function () {
-        table.ajax.reload();
-    });
+    if (window.jQuery) {
+        $("#from_date, #to_date, #filter_status, #filter_type").on("change", reloadTable);
+        $("#btn_refresh_table").on("click", reloadTable);
+        $("#btn_reset_filters").on("click", function () {
+            $("#from_date").val("");
+            $("#to_date").val("");
+            $("#filter_status").val("all");
+            $("#filter_type").val("all");
+            if (table && table.search) table.search("").ajax.reload();
+        });
 
-    $("#btn_reset_filters").on("click", function () {
-        $("#from_date").val("");
-        $("#to_date").val("");
-        $("#filter_status").val("all");
-        $("#filter_type").val("all");
-        table.search("").ajax.reload();
-    });
+        // View SMS Modal Handler
+        $(document).on("click", ".btn_view_sms", function () {
+            var row = JSON.parse(decodeURIComponent($(this).data("row")));
+            $("#modal_rec_name").text(row.recipient_name || "Direct Recipient");
+            $("#modal_rec_mobile").text(row.mobile_number || "-");
+            $("#modal_send_time").text(row.send_time || row.date || "-");
 
-    // View SMS Modal Handler
-    $(document).on("click", ".btn_view_sms", function () {
-        let row = JSON.parse(decodeURIComponent($(this).data("row")));
-        $("#modal_rec_name").text(row.recipient_name || "Direct Recipient");
-        $("#modal_rec_mobile").text(row.mobile_number || "-");
-        $("#modal_send_time").text(row.send_time || row.date || "-");
+            var st = (row.status || '').toString().toLowerCase().trim();
+            var statusHtml = '<span class="badge bg-danger">Failed</span>';
+            if (st === 'sent' || st === '1' || st === 'success' || st === '1000') {
+                statusHtml = '<span class="badge bg-success">Sent</span>';
+            } else if (st === 'queued' || st === '0') {
+                statusHtml = '<span class="badge bg-warning text-dark">Queued</span>';
+            } else if (st === 'sending') {
+                statusHtml = '<span class="badge bg-info">Sending</span>';
+            } else if (st === '') {
+                statusHtml = '<span class="badge bg-secondary">Processed</span>';
+            }
 
-        let statusHtml = '<span class="badge bg-danger">Failed</span>';
-        if (row.status === 'sent') statusHtml = '<span class="badge bg-success">Sent</span>';
-        else if (row.status === 'queued') statusHtml = '<span class="badge bg-warning text-dark">Queued</span>';
-        else if (row.status === 'sending') statusHtml = '<span class="badge bg-info">Sending</span>';
+            $("#modal_status").html(statusHtml);
+            $("#modal_sms_text").text(row.sms_text || "");
+            $("#modal_char_count").text(row.sms_len || (row.sms_text ? row.sms_text.length : 0));
+            $("#modal_parts_count").text(row.sms_parts || 1);
+            $("#modal_cost").text("৳" + parseFloat(row.cost || 0).toFixed(2));
+            $("#modal_gateway").text(row.gateway_provider || "bulksmsbd");
 
-        $("#modal_status").html(statusHtml);
-        $("#modal_sms_text").text(row.sms_text || "");
-        $("#modal_char_count").text(row.sms_len || (row.sms_text ? row.sms_text.length : 0));
-        $("#modal_parts_count").text(row.sms_parts || 1);
-        $("#modal_cost").text("৳" + parseFloat(row.cost || 0).toFixed(2));
-        $("#modal_gateway").text(row.gateway_provider || "bulksmsbd");
-
-        smsModal.show();
-    });
+            var modal = getSmsModal();
+            if (modal) modal.show();
+        });
+    }
 });
 </script>
+
+<?php require_once 'footer.php'; ?>
