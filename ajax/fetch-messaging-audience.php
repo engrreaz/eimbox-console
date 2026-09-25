@@ -81,19 +81,22 @@ try {
     }
     // 2. Teachers Audience
     else if ($audience === 'teachers') {
-        $sql = "SELECT tid, tname, mobile, designation FROM teacher WHERE sccode='$sccode' ORDER BY sl ASC, id ASC";
+        $sql = "SELECT tid, tname, tnameb, mobile, position FROM teacher WHERE sccode='$sccode' ORDER BY sl ASC, id ASC";
         $res = $conn->query($sql);
         if ($res) {
             while ($r = $res->fetch_assoc()) {
-                $mobile = trim($r['mobile'] ?? '');
-                if (empty($mobile)) continue;
+                $raw_mobile = $r['mobile'] ?? '';
+                $clean_mobile = preg_replace('/[^0-9]/', '', $raw_mobile);
+                if (empty($clean_mobile)) continue;
+
+                $t_name = !empty($r['tname']) ? $r['tname'] : (!empty($r['tnameb']) ? $r['tnameb'] : 'Teacher');
 
                 $recipients[] = [
                     'id' => $r['tid'] ?? '',
-                    'name' => $r['tname'] ?? 'Teacher',
-                    'mobile' => $mobile,
+                    'name' => $t_name,
+                    'mobile' => $clean_mobile,
                     'recipient_type' => 'teacher',
-                    'classname' => $r['designation'] ?? 'Teacher',
+                    'classname' => $r['position'] ?? 'Teacher',
                     'sectionname' => '',
                     'rollno' => 0
                 ];

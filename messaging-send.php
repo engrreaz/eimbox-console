@@ -560,7 +560,21 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
                         timer: 2000,
                         showConfirmButton: false
                     });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Fetch Error',
+                        text: res.message || 'Unable to load teachers.'
+                    });
                 }
+            },
+            error: function (xhr, status, error) {
+                btn.prop("disabled", false).html('<i class="bi bi-people me-1"></i> Fetch All Teachers & Staff');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Server Error',
+                    text: 'Failed to fetch teachers: ' + (xhr.responseText || status)
+                });
             }
         });
     });
@@ -587,7 +601,21 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
                         timer: 2000,
                         showConfirmButton: false
                     });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Fetch Error',
+                        text: res.message || 'Unable to load committee members.'
+                    });
                 }
+            },
+            error: function (xhr, status, error) {
+                btn.prop("disabled", false).html('<i class="bi bi-diagram-3 me-1"></i> Fetch All SMC Members');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Server Error',
+                    text: 'Failed to fetch committee members: ' + (xhr.responseText || status)
+                });
             }
         });
     });
@@ -595,7 +623,7 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
     // Parse Custom Numbers
     $("#btn_parse_custom").on("click", function () {
         let raw = $("#custom_numbers").val();
-        let list = raw.split(/[\n,;]+/).map(s => s.trim()).filter(s => s.length >= 10);
+        let list = raw.split(/[\n,;]+/).map(s => s.trim().replace(/[^0-9]/g, '')).filter(s => s.length >= 10);
 
         if (list.length === 0) {
             Swal.fire({
@@ -652,7 +680,7 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
         clearTimeout(searchTimeout);
         let kw = $("#picker_keyword").val().trim();
         let typeFilter = $("#picker_type_filter").val();
-        let sy = $("#st_sessionyear").val();
+        let sy = $("#st_sessionyear").val() || "";
 
         if (kw.length < 1) {
             $("#picker_results_container").html(`
@@ -682,6 +710,9 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
                     } else {
                         $("#picker_results_container").html(`<div class="alert alert-danger">${res.message}</div>`);
                     }
+                },
+                error: function (xhr, status, error) {
+                    $("#picker_results_container").html(`<div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-1"></i> Search failed: ${xhr.responseText || (status + ' - ' + error)}</div>`);
                 }
             });
         }, 300);

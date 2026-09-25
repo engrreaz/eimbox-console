@@ -29,9 +29,7 @@ $results = [];
 // 1. Search Students
 if ($type_filter === 'all' || $type_filter === 'students') {
     $where = "si.sccode='$sccode'";
-    if (!empty($sessionyear)) {
-        $where .= " AND si.sessionyear='$sessionyear'";
-    }
+    $order_sy = !empty($sessionyear) ? "(si.sessionyear = '$sessionyear') DESC, " : "";
 
     $sql = "SELECT si.stid, si.sessionyear, si.slot, si.classname, si.sectionname, si.rollno, 
                    s.stnameeng, s.stnameben, s.guarname,
@@ -48,7 +46,7 @@ if ($type_filter === 'all' || $type_filter === 'students') {
                 s.mobileself LIKE '%$query%' OR 
                 s.fmobile LIKE '%$query%'
               )
-            ORDER BY si.sessionyear DESC, si.classname ASC, CAST(si.rollno AS UNSIGNED) ASC
+            ORDER BY $order_sy si.sessionyear DESC, si.classname ASC, CAST(si.rollno AS UNSIGNED) ASC
             LIMIT 30";
 
     $res = $conn->query($sql);
@@ -75,26 +73,30 @@ if ($type_filter === 'all' || $type_filter === 'students') {
 
 // 2. Search Teachers
 if ($type_filter === 'all' || $type_filter === 'teachers') {
-    $sql = "SELECT tid, tname, mobile, designation 
+    $sql = "SELECT tid, tname, tnameb, mobile, position 
             FROM teacher 
             WHERE sccode='$sccode' 
-              AND (tid LIKE '%$query%' OR tname LIKE '%$query%' OR mobile LIKE '%$query%' OR designation LIKE '%$query%')
+              AND (tid LIKE '%$query%' OR tname LIKE '%$query%' OR tnameb LIKE '%$query%' OR mobile LIKE '%$query%' OR position LIKE '%$query%')
             ORDER BY sl ASC, id ASC 
             LIMIT 20";
     $res = $conn->query($sql);
     if ($res) {
         while ($r = $res->fetch_assoc()) {
+            $raw_mobile = $r['mobile'] ?? '';
+            $clean_mobile = preg_replace('/[^0-9]/', '', $raw_mobile);
+            $t_name = !empty($r['tname']) ? $r['tname'] : (!empty($r['tnameb']) ? $r['tnameb'] : 'Teacher');
+
             $results[] = [
                 'id' => $r['tid'] ?? '',
-                'name' => $r['tname'] ?? 'Teacher',
-                'mobile' => $r['mobile'] ?? '',
+                'name' => $t_name,
+                'mobile' => $clean_mobile,
                 'type' => 'teacher',
                 'type_label' => 'Teacher',
                 'sessionyear' => '',
-                'classname' => $r['designation'] ?? 'Teacher',
+                'classname' => $r['position'] ?? 'Teacher',
                 'sectionname' => '',
                 'rollno' => 0,
-                'meta' => ($r['designation'] ?? 'Faculty') . ($r['tid'] ? ' | ID: ' . $r['tid'] : '')
+                'meta' => ($r['position'] ?? 'Faculty') . ($r['tid'] ? ' | ID: ' . $r['tid'] : '')
             ];
         }
     }
@@ -113,10 +115,12 @@ if ($type_filter === 'all' || $type_filter === 'committee') {
         $res = $conn->query($sql);
         if ($res) {
             while ($r = $res->fetch_assoc()) {
+                $raw_mobile = $r['mobile'] ?? '';
+                $clean_mobile = preg_replace('/[^0-9]/', '', $raw_mobile);
                 $results[] = [
                     'id' => (string)$r['id'],
                     'name' => $r['member_name'] ?? 'Member',
-                    'mobile' => $r['mobile'] ?? '',
+                    'mobile' => $clean_mobile,
                     'type' => 'committee',
                     'type_label' => 'SMC Member',
                     'sessionyear' => '',
