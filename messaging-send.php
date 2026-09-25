@@ -78,8 +78,11 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
         <!-- Left Column: Audience Selection -->
         <div class="col-lg-5">
             <div class="card shadow-sm border h-100">
-                <div class="card-header bg-light py-3">
+                <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-people-fill text-primary me-2"></i> 1. Select Target Audience</h5>
+                    <button type="button" class="btn btn-sm btn-outline-success" id="btn_open_search_modal">
+                        <i class="bi bi-search me-1"></i> Search & Pick
+                    </button>
                 </div>
                 <div class="card-body">
                     <!-- Audience Type Tabs -->
@@ -152,34 +155,54 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
                                 </div>
                             </div>
 
-                            <button type="button" class="btn btn-outline-primary btn-sm w-100" id="btn_fetch_students">
-                                <i class="bi bi-funnel me-1"></i> Fetch Student List
-                            </button>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-outline-primary btn-sm w-100" id="btn_fetch_students">
+                                    <i class="bi bi-funnel me-1"></i> Fetch Class Students
+                                </button>
+                                <button type="button" class="btn btn-outline-success btn-sm w-100 searchTriggerBtn">
+                                    <i class="bi bi-person-search me-1"></i> Pick Single Student
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Panel: Teachers -->
                         <div class="tab-pane fade" id="panel-teachers">
                             <p class="small text-muted mb-2">Send notices or meeting invites to teachers and staff members.</p>
-                            <button type="button" class="btn btn-outline-primary btn-sm w-100" id="btn_fetch_teachers">
-                                <i class="bi bi-people me-1"></i> Fetch All Teachers & Staff
-                            </button>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-outline-primary btn-sm w-100" id="btn_fetch_teachers">
+                                    <i class="bi bi-people me-1"></i> Fetch All Teachers & Staff
+                                </button>
+                                <button type="button" class="btn btn-outline-success btn-sm w-100 searchTriggerBtn" data-filter="teachers">
+                                    <i class="bi bi-person-search me-1"></i> Pick Teacher
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Panel: Committee -->
                         <div class="tab-pane fade" id="panel-committee">
                             <p class="small text-muted mb-2">Send meeting alerts to Governing Body & SMC members.</p>
-                            <button type="button" class="btn btn-outline-primary btn-sm w-100" id="btn_fetch_committee">
-                                <i class="bi bi-diagram-3 me-1"></i> Fetch SMC Members
-                            </button>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-outline-primary btn-sm w-100" id="btn_fetch_committee">
+                                    <i class="bi bi-diagram-3 me-1"></i> Fetch All SMC Members
+                                </button>
+                                <button type="button" class="btn btn-outline-success btn-sm w-100 searchTriggerBtn" data-filter="committee">
+                                    <i class="bi bi-person-search me-1"></i> Pick Member
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Panel: Custom Numbers -->
                         <div class="tab-pane fade" id="panel-custom">
                             <label class="form-label small text-muted">Enter Numbers (Comma or Newline separated)</label>
                             <textarea id="custom_numbers" class="form-control form-control-sm" rows="4" placeholder="01711000000, 01811000000..."></textarea>
-                            <button type="button" class="btn btn-outline-primary btn-sm w-100 mt-2" id="btn_parse_custom">
-                                <i class="bi bi-check2-circle me-1"></i> Load Numbers
-                            </button>
+                            <div class="d-flex gap-2 mt-2">
+                                <button type="button" class="btn btn-outline-primary btn-sm w-100" id="btn_parse_custom">
+                                    <i class="bi bi-check2-circle me-1"></i> Load Numbers
+                                </button>
+                                <button type="button" class="btn btn-outline-success btn-sm w-100 searchTriggerBtn">
+                                    <i class="bi bi-search me-1"></i> Pick from Database
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -187,13 +210,18 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
 
                     <!-- Selected Recipients Summary -->
                     <div class="d-flex justify-content-between align-items-center">
-                        <span class="fw-semibold text-dark">Selected Recipients:</span>
-                        <span class="badge bg-primary fs-6" id="recipient_count_badge">0</span>
+                        <div>
+                            <span class="fw-semibold text-dark">Selected Recipients:</span>
+                            <span class="badge bg-primary ms-1" id="recipient_count_badge">0</span>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-link text-danger p-0 text-decoration-none" id="btn_clear_recipients" style="display:none;">
+                            <i class="bi bi-trash me-1"></i> Clear All
+                        </button>
                     </div>
 
                     <div class="mt-2" style="max-height: 220px; overflow-y: auto;">
                         <div id="recipient_list_preview" class="small text-muted text-center py-3 border rounded bg-light">
-                            No recipients selected yet. Use the filters above.
+                            No recipients selected yet. Use the filters or Search & Pick button.
                         </div>
                     </div>
                 </div>
@@ -276,7 +304,44 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
 
 <?php require_once 'footer.php'; ?>
 
-<!-- Modals -->
+<!-- Recipient Search & Picker Modal -->
+<div class="modal fade" id="searchPickerModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="max-height:85vh; overflow-y:auto;">
+            <div class="modal-header bg-light py-3">
+                <h5 class="modal-title"><i class="bi bi-search text-success me-2"></i> Search & Pick Recipient from Database</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-2 mb-3">
+                    <div class="col-md-8">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+                            <input type="text" id="picker_keyword" class="form-control" placeholder="Search by Student ID, Roll, Name, Mobile, or Teacher...">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <select id="picker_type_filter" class="form-select">
+                            <option value="all">All (Students, Teachers, SMC)</option>
+                            <option value="students">Students Only</option>
+                            <option value="teachers">Teachers Only</option>
+                            <option value="committee">Committee Only</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="picker_results_container" style="min-height: 200px;">
+                    <div class="text-center text-muted py-5">
+                        <i class="bi bi-keyboard fs-1 d-block mb-2 text-secondary"></i>
+                        Type name, ID, roll, or mobile number to search...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals (Templates & Variables) -->
 <div class="modal fade" id="smsTempModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content" style="max-height:85vh; overflow-y:auto;">
@@ -342,14 +407,12 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
             dataType: "json",
             success: function (res) {
                 if (res.status === 'success') {
-                    // Update classes dropdown
                     let classHtml = '<option value="">All Classes</option>';
                     res.classes.forEach(c => {
                         classHtml += `<option value="${c}">${c}</option>`;
                     });
                     $("#st_class").html(classHtml);
 
-                    // Update sections dropdown
                     let secHtml = '<option value="">All Sections</option>';
                     res.sections.forEach(s => {
                         secHtml += `<option value="${s}">${s}</option>`;
@@ -437,7 +500,7 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
             data: { audience: "students", sessionyear: sy, slot: slot, classname: cls, sectionname: sec },
             dataType: "json",
             success: function (res) {
-                btn.prop("disabled", false).html('<i class="bi bi-funnel me-1"></i> Fetch Student List');
+                btn.prop("disabled", false).html('<i class="bi bi-funnel me-1"></i> Fetch Class Students');
                 if (res.status === 'success') {
                     currentRecipients = res.data;
                     renderRecipientList();
@@ -464,8 +527,8 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
                     });
                 }
             },
-            error: function (xhr, status, error) {
-                btn.prop("disabled", false).html('<i class="bi bi-funnel me-1"></i> Fetch Student List');
+            error: function () {
+                btn.prop("disabled", false).html('<i class="bi bi-funnel me-1"></i> Fetch Class Students');
                 Swal.fire({
                     icon: 'error',
                     title: 'Server Error',
@@ -513,7 +576,7 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
             data: { audience: "committee" },
             dataType: "json",
             success: function (res) {
-                btn.prop("disabled", false).html('<i class="bi bi-diagram-3 me-1"></i> Fetch SMC Members');
+                btn.prop("disabled", false).html('<i class="bi bi-diagram-3 me-1"></i> Fetch All SMC Members');
                 if (res.status === 'success') {
                     currentRecipients = res.data;
                     renderRecipientList();
@@ -563,23 +626,193 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
         });
     });
 
-    function renderRecipientList() {
-        $("#recipient_count_badge").text(currentRecipients.length);
-        if (currentRecipients.length === 0) {
-            $("#recipient_list_preview").html("No recipients selected yet.");
+    // ----------------------------------------------------
+    // Search & Pick Recipient Modal Logic
+    // ----------------------------------------------------
+    let searchPickerModalInstance = null;
+    let searchTimeout = null;
+
+    $("#btn_open_search_modal, .searchTriggerBtn").on("click", function () {
+        let filter = $(this).data("filter") || "all";
+        $("#picker_type_filter").val(filter);
+        $("#picker_keyword").val("");
+        $("#picker_results_container").html(`
+            <div class="text-center text-muted py-5">
+                <i class="bi bi-keyboard fs-1 d-block mb-2 text-secondary"></i>
+                Type student name, ID, roll, teacher name, or mobile number...
+            </div>
+        `);
+
+        searchPickerModalInstance = new bootstrap.Modal(document.getElementById('searchPickerModal'));
+        searchPickerModalInstance.show();
+        setTimeout(() => $("#picker_keyword").focus(), 400);
+    });
+
+    $("#picker_keyword, #picker_type_filter").on("input change", function () {
+        clearTimeout(searchTimeout);
+        let kw = $("#picker_keyword").val().trim();
+        let typeFilter = $("#picker_type_filter").val();
+        let sy = $("#st_sessionyear").val();
+
+        if (kw.length < 1) {
+            $("#picker_results_container").html(`
+                <div class="text-center text-muted py-5">
+                    <i class="bi bi-keyboard fs-1 d-block mb-2 text-secondary"></i>
+                    Type name, ID, roll, or mobile number to search...
+                </div>
+            `);
             return;
         }
 
+        $("#picker_results_container").html(`
+            <div class="text-center py-4">
+                <span class="spinner-border text-primary spinner-border-sm me-1"></span> Searching database...
+            </div>
+        `);
+
+        searchTimeout = setTimeout(function () {
+            $.ajax({
+                url: "ajax/search-messaging-recipients.php",
+                type: "POST",
+                data: { keyword: kw, type_filter: typeFilter, sessionyear: sy },
+                dataType: "json",
+                success: function (res) {
+                    if (res.status === 'success') {
+                        renderSearchResults(res.data);
+                    } else {
+                        $("#picker_results_container").html(`<div class="alert alert-danger">${res.message}</div>`);
+                    }
+                }
+            });
+        }, 300);
+    });
+
+    function renderSearchResults(list) {
+        if (!list || list.length === 0) {
+            $("#picker_results_container").html(`
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-search fs-2 d-block mb-1 text-secondary"></i>
+                    No matching records found.
+                </div>
+            `);
+            return;
+        }
+
+        let html = `<div class="table-responsive">
+            <table class="table table-bordered table-hover table-sm align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Type</th>
+                        <th>Name</th>
+                        <th>Details</th>
+                        <th>Mobile Number</th>
+                        <th class="text-center" style="width:110px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+        list.forEach((item, idx) => {
+            let badgeClass = item.type === 'student' ? 'bg-primary' : (item.type === 'teacher' ? 'bg-info' : 'bg-warning text-dark');
+            let itemJson = encodeURIComponent(JSON.stringify(item));
+
+            html += `<tr>
+                <td><span class="badge ${badgeClass}">${item.type_label}</span></td>
+                <td class="fw-bold">${item.name}</td>
+                <td class="small text-muted">${item.meta || ''}</td>
+                <td><code>${item.mobile || 'No Mobile'}</code></td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-success py-1 px-2 btn_pick_single" data-item="${itemJson}">
+                        <i class="bi bi-plus-circle me-1"></i> Add
+                    </button>
+                </td>
+            </tr>`;
+        });
+
+        html += `</tbody></table></div>`;
+        $("#picker_results_container").html(html);
+    }
+
+    // Add picked item to recipient list
+    $(document).on("click", ".btn_pick_single", function () {
+        let item = JSON.parse(decodeURIComponent($(this).data("item")));
+        if (!item.mobile) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'No Mobile Number',
+                text: 'This person does not have a valid mobile number in the database.'
+            });
+            return;
+        }
+
+        // Check if already added
+        let exists = currentRecipients.some(r => r.mobile === item.mobile && r.id === item.id);
+        if (exists) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Already Added',
+                text: `${item.name} (${item.mobile}) is already in the recipient list.`
+            });
+            return;
+        }
+
+        currentRecipients.push({
+            id: item.id || "",
+            name: item.name || "Recipient",
+            mobile: item.mobile,
+            recipient_type: item.type === 'student' ? 'guardian' : item.type,
+            sessionyear: item.sessionyear || "",
+            classname: item.classname || "",
+            sectionname: item.sectionname || "",
+            rollno: item.rollno || 0,
+            dueamount: "0.00",
+            paymentamount: "0.00"
+        });
+
+        renderRecipientList();
+        Swal.fire({
+            icon: 'success',
+            title: 'Recipient Added',
+            text: `Added ${item.name} (${item.mobile}) to recipients.`,
+            timer: 1500,
+            showConfirmButton: false
+        });
+    });
+
+    // Remove single recipient
+    $(document).on("click", ".btn_remove_single", function () {
+        let index = $(this).data("index");
+        currentRecipients.splice(index, 1);
+        renderRecipientList();
+    });
+
+    // Clear all recipients
+    $("#btn_clear_recipients").on("click", function () {
+        currentRecipients = [];
+        renderRecipientList();
+    });
+
+    function renderRecipientList() {
+        $("#recipient_count_badge").text(currentRecipients.length);
+        if (currentRecipients.length === 0) {
+            $("#recipient_list_preview").html("No recipients selected yet. Use the filters or Search & Pick button.");
+            $("#btn_clear_recipients").hide();
+            return;
+        }
+
+        $("#btn_clear_recipients").show();
+
         let html = '<ul class="list-group list-group-flush">';
-        currentRecipients.slice(0, 10).forEach(r => {
+        currentRecipients.slice(0, 15).forEach((r, idx) => {
             let meta = r.classname ? (r.sessionyear ? r.sessionyear + ' | ' : '') + r.classname + (r.sectionname ? '-' + r.sectionname : '') : r.recipient_type;
             html += `<li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 small">
-                <span><b>${r.name || 'Recipient'}</b> <span class="text-muted">(${r.mobile})</span></span>
-                <span class="badge bg-light text-dark border">${meta}</span>
+                <span><b>${r.name || 'Recipient'}</b> <span class="text-muted">(${r.mobile})</span> <span class="badge bg-light text-dark border ms-1">${meta}</span></span>
+                <button type="button" class="btn btn-sm btn-link text-danger p-0 ms-2 btn_remove_single" data-index="${idx}" title="Remove">
+                    <i class="bi bi-x-circle-fill"></i>
+                </button>
             </li>`;
         });
-        if (currentRecipients.length > 10) {
-            html += `<li class="list-group-item text-center text-muted small py-1 bg-light">...and ${currentRecipients.length - 10} more recipients</li>`;
+        if (currentRecipients.length > 15) {
+            html += `<li class="list-group-item text-center text-muted small py-1 bg-light">...and ${currentRecipients.length - 15} more recipients</li>`;
         }
         html += '</ul>';
         $("#recipient_list_preview").html(html);
@@ -633,7 +866,7 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
             Swal.fire({
                 icon: 'warning',
                 title: 'No Recipients',
-                text: 'Please select or fetch your target audience first!'
+                text: 'Please select or search & pick target recipients first!'
             });
             return;
         }
@@ -649,8 +882,8 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
         }
 
         Swal.fire({
-            title: 'Send Bulk SMS?',
-            html: `You are about to queue <b>${currentRecipients.length}</b> personalized message(s).<br><small class="text-muted">The queue worker will dispatch these in the background.</small>`,
+            title: 'Send Message(s)?',
+            html: `You are about to send <b>${currentRecipients.length}</b> personalized message(s).<br><small class="text-muted">The queue engine will dispatch these in the background.</small>`,
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
@@ -682,6 +915,7 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
                         id: r.id || "",
                         name: r.name || "",
                         mobile: r.mobile || "",
+                        sessionyear: r.sessionyear || "",
                         classname: r.classname || "",
                         sectionname: r.sectionname || "",
                         rollno: r.rollno || 0,
@@ -690,15 +924,18 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
                     };
                 });
 
+                let queueData = {
+                    campaign: $("#campaign_name").val(),
+                    sms_type: $("#sms_type").val(),
+                    recipients: compiledRecipients
+                };
+
                 $.ajax({
                     url: "ajax/ajax-queue-sms.php",
                     type: "POST",
-                    contentType: "application/json; charset=utf-8",
-                    data: JSON.stringify({
-                        campaign: $("#campaign_name").val(),
-                        sms_type: $("#sms_type").val(),
-                        recipients: compiledRecipients
-                    }),
+                    data: {
+                        payload: JSON.stringify(queueData)
+                    },
                     dataType: "json",
                     success: function (res) {
                         btn.prop("disabled", false).html('<i class="bi bi-send-fill me-2"></i> Send Now (Instant Async Queue)');
@@ -706,7 +943,7 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
                             Swal.fire({
                                 icon: 'success',
                                 title: 'Dispatched to Queue!',
-                                html: `<b>${res.total_recipients}</b> messages successfully queued (Total parts: <b>${res.total_sms_parts}</b>).<br><small class="text-muted">Batch ID: <code>${res.batch_id}</code>.<br>You can safely close this page while messages are sent in the background.</small>`,
+                                html: `<b>${res.total_recipients}</b> message(s) successfully queued (Total parts: <b>${res.total_sms_parts}</b>).<br><small class="text-muted">Batch ID: <code>${res.batch_id}</code>.<br>You can safely close this page while messages are sent in the background.</small>`,
                                 confirmButtonText: 'Great!'
                             });
 
@@ -729,11 +966,11 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
                     },
                     error: function (xhr, status, error) {
                         btn.prop("disabled", false).html('<i class="bi bi-send-fill me-2"></i> Send Now (Instant Async Queue)');
-                        let errText = xhr.responseText ? xhr.responseText.substring(0, 200) : error;
+                        let errText = xhr.responseText ? xhr.responseText.substring(0, 200) : (status + ' - ' + error);
                         Swal.fire({
                             icon: 'error',
                             title: 'Network / Server Error',
-                            text: 'Failed to reach server while queueing messages: ' + errText
+                            text: 'Failed to reach server: ' + errText
                         });
                     }
                 });

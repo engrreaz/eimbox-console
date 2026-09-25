@@ -10,31 +10,50 @@ require_once dirname(__DIR__) . '/core/global_values.php';
 header('Content-Type: application/json; charset=utf-8');
 
 try {
-    // Read raw JSON payload or standard POST
-    $input_raw = file_get_contents('php://input');
-    $payload = json_decode($input_raw, true);
+    $payload = null;
 
-    if (json_last_error() === JSON_ERROR_NONE && is_array($payload)) {
-        $campaign_raw = $payload['campaign'] ?? 'Bulk Campaign';
-        $sms_type_raw = $payload['sms_type'] ?? 'notice';
-        $recipients = $payload['recipients'] ?? [];
-    } else {
-        $campaign_raw = $_POST['campaign'] ?? 'Bulk Campaign';
-        $sms_type_raw = $_POST['sms_type'] ?? 'notice';
-        $recipients = $_POST['recipients'] ?? [];
+    // 1. Try reading from POST payload field
+    if (!empty($_POST['payload'])) {
+        $payload = json_decode($_POST['payload'], true);
     }
+    // 2. Try reading from raw php://input
+    else {
+        $raw = file_get_contents('php://input');
+        if (!empty($raw)) {
+            $payload = json_decode($raw, true);
+        }
+    }
+
+    // 3. Fallback to direct POST fields
+    if (!is_array($payload)) {
+        $payload = [
+            'campaign' => $_POST['campaign'] ?? 'Bulk Campaign',
+            'sms_type' => $_POST['sms_type'] ?? 'notice',
+            'recipients' => $_POST['recipients'] ?? []
+        ];
+    }
+
+    $campaign_raw = $payload['campaign'] ?? 'Bulk Campaign';
+    $sms_type_raw = $payload['sms_type'] ?? 'notice';
+    $recipients = $payload['recipients'] ?? [];
 
     if (empty($sccode)) {
         $sccode = $_SESSION['sccode'] ?? '';
     }
 
     if (empty($sccode)) {
-        echo json_encode(['status' => 'error', 'message' => 'Institution code (sccode) session missing. Please re-login.']);
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Institution code (sccode) session missing. Please log in again.'
+        ]);
         exit;
     }
 
     if (empty($recipients) || !is_array($recipients)) {
-        echo json_encode(['status' => 'error', 'message' => 'No recipients selected to queue!']);
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'No recipients selected to queue!'
+        ]);
         exit;
     }
 
@@ -61,17 +80,21 @@ try {
         $sec_esc = mysqli_real_escape_string($conn, $r['sectionname'] ?? '');
         $roll = intval($r['rollno'] ?? 0);
         $rec_type_esc = mysqli_real_escape_string($conn, $r['recipient_type'] ?? 'guardian');
+        $s_year = !empty($r['sessionyear']) ? mysqli_real_escape_string($conn, $r['sessionyear']) : $sessionyear;
 
         $len = mb_strlen($text);
         $is_unicode = preg_match('/\p{Bengali}/u', $text) ? 1 : 0;
         $parts = $is_unicode ? ceil($len / 70) : ceil($len / 160);
         $total_parts += $parts;
 
-        $insert_rows[] = "('$sccode', '$sessionyear', '$rec_type_esc', '$rec_id_esc', '$name_esc', '$cls_esc', '$sec_esc', $roll, '$td', '$mobile_esc', '$sms_type', '$campaign', '$text_esc', $len, $parts, $parts, $is_unicode, 'queued', '$batch_id', '$usr_esc', NOW())";
+        $insert_rows[] = "('$sccode', '$s_year', '$rec_type_esc', '$rec_id_esc', '$name_esc', '$cls_esc', '$sec_esc', $roll, '$td', '$mobile_esc', '$sms_type', '$campaign', '$text_esc', $len, $parts, $parts, $is_unicode, 'queued', '$batch_id', '$usr_esc', NOW())";
     }
 
     if (empty($insert_rows)) {
-        echo json_encode(['status' => 'error', 'message' => 'No valid recipient numbers found to send!']);
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'No valid recipient phone numbers found in the list.'
+        ]);
         exit;
     }
 
@@ -85,12 +108,20 @@ try {
         $conn->query($sql);
     }
 
-    // Trigger background worker asynchronously (Zero browser wait)
-    $dispatcher_path = dirname(__DIR__) . '/cron-job/sms-dispatcher.php';
-    if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-        @pclose(popen("start /B php \"" . $dispatcher_path . "\" > NUL 2>&1", "r"));
-    } else {
-        @exec("php \"" . $dispatcher_path . "\" > /dev/null 2>&1 &");
+    // Trigger background worker asynchronously
+    try {
+        $dispatcher_path = dirname(__DIR__) . '/cron-job/sms-dispatcher.php';
+        $php_bin = defined('PHP_BINARY') && file_exists(PHP_BINARY) ? PHP_BINARY : 'php';
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            $cmd = 'start /B "" "' . $php_bin . '" "' . $dispatcher_path . '" > NUL 2>&1';
+            $h = @popen($cmd, "r");
+            if ($h) @pclose($h);
+        } else {
+            @exec('"' . $php_bin . '" "' . $dispatcher_path . '" > /dev/null 2>&1 &');
+        }
+    } catch (Exception $e) {
+        // Log background trigger failure without failing the user response
+        error_log("Background trigger error: " . $e->getMessage());
     }
 
     echo json_encode([
@@ -98,11 +129,11 @@ try {
         'batch_id' => $batch_id,
         'total_recipients' => count($insert_rows),
         'total_sms_parts' => $total_parts,
-        'message' => count($insert_rows) . ' টি মেসেজ কিউতে যুক্ত হয়েছে। ব্যাকগ্রাউন্ডে স্বয়ংক্রিয়ভাবে পাঠানো হচ্ছে।'
+        'message' => count($insert_rows) . ' টি মেসেজ সফলভাবে কিউতে যুক্ত হয়েছে। ব্যাকগ্রাউন্ডে স্বয়ংক্রিয়ভাবে প্রেরিত হচ্ছে।'
     ]);
 } catch (Exception $e) {
     echo json_encode([
         'status' => 'error',
-        'message' => 'Queue Exception: ' . $e->getMessage()
+        'message' => 'Queueing failed: ' . $e->getMessage()
     ]);
 }
