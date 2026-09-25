@@ -35,10 +35,10 @@ $section = $_COOKIE['chain-section'] ?? '';
         gap: 6px;
     }
     #studentDetailModal {
-        z-index: 1085 !important;
+        z-index: 1095 !important;
     }
     .modal-backdrop.student-detail-backdrop {
-        z-index: 1080 !important;
+        z-index: 1090 !important;
     }
 </style>
 
@@ -356,12 +356,23 @@ $section = $_COOKIE['chain-section'] ?? '';
         window.location.href = 'voter-info.php';
     }
 
+    // Append modals to body so they are not trapped inside template containers with transforms/overflow
+    $(document).ready(function () {
+        $('#nidAuditModal, #mobileAuditModal, #siblingPreviewModal, #studentDetailModal').appendTo('body');
+        loadVoterSummary();
+    });
+
     // Handle nested modal z-index stacking and scrolling
     $(document).on('show.bs.modal', '#studentDetailModal', function () {
-        var baseZ = 1080;
-        $(this).css('z-index', baseZ + 10);
+        var maxZ = 1050;
+        $('.modal.show').each(function () {
+            var z = parseInt($(this).css('z-index')) || 1050;
+            if (z > maxZ) maxZ = z;
+        });
+        var modalZ = Math.max(maxZ + 20, 1095);
+        $(this).css('z-index', modalZ);
         setTimeout(function () {
-            $('.modal-backdrop').not('.modal-stack').last().css('z-index', baseZ + 5).addClass('modal-stack student-detail-backdrop');
+            $('.modal-backdrop').not('.modal-stack').last().css('z-index', modalZ - 5).addClass('modal-stack student-detail-backdrop');
         }, 10);
     });
 
@@ -369,11 +380,6 @@ $section = $_COOKIE['chain-section'] ?? '';
         if ($('.modal.show').length > 0) {
             $('body').addClass('modal-open');
         }
-    });
-
-    // Load Overview Analytics on page load
-    $(document).ready(function () {
-        loadVoterSummary();
     });
 
     function loadVoterSummary() {
@@ -409,6 +415,9 @@ $section = $_COOKIE['chain-section'] ?? '';
     function viewStudentDetails(stid) {
         if (!stid) return;
         var modalEl = document.getElementById('studentDetailModal');
+        if (modalEl && modalEl.parentNode !== document.body) {
+            document.body.appendChild(modalEl);
+        }
         var myModal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
         
         $('#student-detail-modal-body').html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><div class="mt-2 text-muted small">Loading student profile...</div></div>');
