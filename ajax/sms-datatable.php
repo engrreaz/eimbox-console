@@ -83,6 +83,7 @@ $dataQ = mysqli_query($conn, "
     ORDER BY id DESC 
     LIMIT $start, $limit
 ");
+echo $dataQ;
 
 $data = [];
 if ($dataQ) {
