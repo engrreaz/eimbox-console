@@ -861,27 +861,46 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
         updateLivePreview();
     }
 
-    // Load Templates
-    $(document).on("click", ".loadTemp", function () {
+    // Load Templates Modal Handler
+    function fetchModalTemplates(category = "all") {
         $("#smsTempBody").html('<div class="text-center py-4"><span class="spinner-border text-primary"></span> Loading templates...</div>');
-        new bootstrap.Modal(document.getElementById('smsTempModal')).show();
-
         $.ajax({
             url: "ajax/load-sms-templates.php",
             type: "POST",
-            data: { cat: "general", block: "composer" },
+            data: { cat: category, block: "composer" },
             success: function (res) {
                 $("#smsTempBody").html(res);
+            },
+            error: function (xhr, status, error) {
+                $("#smsTempBody").html(`<div class="alert alert-danger">Error loading templates: ${xhr.responseText || status}</div>`);
             }
         });
+    }
+
+    $(document).on("click", ".loadTemp", function () {
+        let cat = $(this).data("cat") || "all";
+        fetchModalTemplates(cat);
+        new bootstrap.Modal(document.getElementById('smsTempModal')).show();
+    });
+
+    $(document).on("click", ".modalCatBtn", function () {
+        let cat = $(this).data("cat") || "all";
+        fetchModalTemplates(cat);
     });
 
     // Choose Template
     $(document).on("click", ".chooseTemp", function () {
-        let txt = $(this).data("text");
+        let txt = $(this).attr("data-text");
         $("#message_text").val(txt);
         bootstrap.Modal.getInstance(document.getElementById('smsTempModal')).hide();
         updateCounter();
+        Swal.fire({
+            icon: 'success',
+            title: 'Template Inserted',
+            text: 'Template loaded into message composer.',
+            timer: 1200,
+            showConfirmButton: false
+        });
     });
 
     // Variables Modal
