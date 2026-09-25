@@ -380,7 +380,7 @@ if (!$students) {
         position: fixed;
         right: 20px;
         bottom: 20px;
-        background: #ffffff;
+        /* background: #ffffff; */
         border-radius: 12px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, .2);
         padding: 10px;
