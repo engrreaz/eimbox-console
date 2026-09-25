@@ -11,7 +11,7 @@ $students_list = [];
 if (!empty($class) && !empty($sessionyear)) {
     $stmt = $conn->prepare("
         SELECT 
-           si.id, si.stid, si.rollno, si.icardst,
+           si.id, si.stid, si.rollno, si.icardst, si.voter_no,
             s.stnameeng, s.stnameben, s.fname, s.mname, 
             s.previll, s.prepo, s.preps, s.predist,
             s.fmobile, s.mmobile, s.fnid, s.mnid, s.guarmobile
@@ -87,70 +87,76 @@ if (!empty($class) && !empty($sessionyear)) {
 
 <div class="container-xxl flex-grow-1 container-p-y">
 
-    <div class="card no-print mb-4">
+    <div class="card no-print mb-4 shadow-sm border-0">
         <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center">
-                <h4 class="mb-0">Voter Information</h4>
-                <div>
-                    <a href="managing-voter-list.php" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Back to
-                        Selection</a>
-                    <button class="btn btn-primary" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <h4 class="mb-0 text-primary fw-bold"><i class="bi bi-person-lines-fill me-2"></i>শাখাভিত্তিক ভোটার তালিকা</h4>
+                <div class="d-flex gap-2">
+                    <a href="managing-voter-list.php" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i> সিলেকশন পেজ</a>
+                    <a href="voter-master-list.php" class="btn btn-outline-primary"><i class="bi bi-list-stars me-1"></i> মাস্টার ভোটার তালিকা</a>
+                    <button class="btn btn-primary" onclick="window.print()"><i class="bi bi-printer me-1"></i> প্রিন্ট</button>
                 </div>
             </div>
         </div>
     </div>
 
     <?php if (!empty($students_list)): ?>
-        <div class="card">
+        <div class="card shadow-sm border-0">
             <div class="card-body">
-                <div class="text-center mb-4">
-                    <h4><?= htmlspecialchars($scname) ?></h4>
-                    <p><?= htmlspecialchars($scaddress) ?></p>
-                    <h5>Voter List: <?= htmlspecialchars($class) ?> (<?= htmlspecialchars($section) ?>) -
-                        <?= htmlspecialchars($sessionyear) ?></h5>
+                <div class="text-center mb-4 pb-2 border-bottom">
+                    <h4 class="fw-bold mb-1"><?= htmlspecialchars($scname) ?></h4>
+                    <p class="text-muted mb-1"><?= htmlspecialchars($scaddress) ?></p>
+                    <h5 class="fw-bold mt-2">ম্যানেজিং কমিটি নির্বাচন — শ্রেণিভিত্তিক অভিভাবক ভোটার তালিকা</h5>
+                    <div class="text-secondary small">শ্রেণি: <strong><?= htmlspecialchars($class) ?></strong> | শাখা: <strong><?= htmlspecialchars($section) ?></strong> | সেশন: <strong><?= htmlspecialchars($sessionyear) ?></strong></div>
                 </div>
 
-                <table class="table table-bordered" id="main-table">
-                    <thead>
+                <table class="table table-bordered table-sm align-middle" id="main-table">
+                    <thead class="table-light">
                         <tr class="txt-right">
-                            <td>SL</td>
-                            <td>Student's Name</td>
-                            <td>Parents' Name</td>
-                            <td>Parents' NID</td>
-                            <td>Address</td>
-                            <td>Mobile No</td>
-                            <td>Signature</td>
+                            <td style="width: 5%;">রোল</td>
+                            <td style="width: 9%;">ভোটার নং</td>
+                            <td style="width: 20%;">শিক্ষার্থীর নাম</td>
+                            <td style="width: 20%;">পিতা/মাতার নাম</td>
+                            <td style="width: 15%;">অভিভাবকের NID</td>
+                            <td style="width: 13%;">ঠিকানা</td>
+                            <td style="width: 18%;">মোবাইল নম্বর</td>
                         </tr>
                     </thead>
                     <tbody>
                         <?php
-                        $sl = 1;
                         foreach ($students_list as $student):
+                            $vno = intval($student['voter_no'] ?? 0);
                             ?>
                             <tr>
-                                <td class="txt-right"><?= $sl++ ?></td>
+                                <td class="txt-right fw-bold"><?= htmlspecialchars($student['rollno']) ?></td>
+                                <td class="txt-right">
+                                    <?php if ($vno > 0): ?>
+                                        <span class="badge bg-label-primary fs-6 fw-bold"><?= str_pad($vno, 3, '0', STR_PAD_LEFT) ?></span>
+                                    <?php else: ?>
+                                        <span class="badge bg-label-secondary">নির্ধারিত হয়নি</span>
+                                    <?php endif; ?>
+                                </td>
                                 <td>
-                                    <div class="editable" data-stid="<?= $student['stid'] ?>" data-field="stnameeng"><?= htmlspecialchars($student['stnameeng']) ?></div>
-                                    <div class="editable" data-stid="<?= $student['stid'] ?>" data-field="stnameben"><?= htmlspecialchars($student['stnameben']) ?></div>
+                                    <div class="editable fw-semibold" data-stid="<?= $student['stid'] ?>" data-field="stnameeng"><?= htmlspecialchars($student['stnameeng']) ?></div>
+                                    <div class="editable text-muted small" data-stid="<?= $student['stid'] ?>" data-field="stnameben"><?= htmlspecialchars($student['stnameben']) ?></div>
                                 </td>
                                 <td>
                                     <div class="editable" data-stid="<?= $student['stid'] ?>" data-field="fname">F: <?= htmlspecialchars($student['fname']) ?></div>
-                                    <div class="editable" data-stid="<?= $student['stid'] ?>" data-field="mname">M: <?= htmlspecialchars($student['mname']) ?></div>
+                                    <div class="editable text-muted small" data-stid="<?= $student['stid'] ?>" data-field="mname">M: <?= htmlspecialchars($student['mname']) ?></div>
                                 </td>
                                 <td>
-                                    <div class="editable" data-stid="<?= $student['stid'] ?>" data-field="fnid">F: <?= htmlspecialchars($student['fnid']) ?></div>
-                                    <div class="editable" data-stid="<?= $student['stid'] ?>" data-field="mnid">M: <?= htmlspecialchars($student['mnid']) ?></div>
+                                    <div class="editable small" data-stid="<?= $student['stid'] ?>" data-field="fnid">F: <?= htmlspecialchars($student['fnid']) ?></div>
+                                    <div class="editable small text-muted" data-stid="<?= $student['stid'] ?>" data-field="mnid">M: <?= htmlspecialchars($student['mnid']) ?></div>
                                 </td>
                                 <td>
-                                    <div class="editable" data-stid="<?= $student['stid'] ?>" data-field="previll">Vill: <?= htmlspecialchars($student['previll']) ?></div>
-                                    <div class="editable" data-stid="<?= $student['stid'] ?>" data-field="prepo">PO: <?= htmlspecialchars($student['prepo']) ?></div>
+                                    <div class="editable small" data-stid="<?= $student['stid'] ?>" data-field="previll">Vill: <?= htmlspecialchars($student['previll']) ?></div>
+                                    <div class="editable small text-muted" data-stid="<?= $student['stid'] ?>" data-field="prepo">PO: <?= htmlspecialchars($student['prepo']) ?></div>
                                 </td>
                                 <td>
-                                    <div class="editable" data-stid="<?= $student['stid'] ?>" data-field="fmobile">F: <?= htmlspecialchars($student['fmobile']) ?></div>
-                                    <div class="editable" data-stid="<?= $student['stid'] ?>" data-field="mmobile">M: <?= htmlspecialchars($student['mmobile']) ?></div> 
-                                    <div class="editable" data-stid="<?= $student['stid'] ?>" data-field="guarmobile">G: <?= htmlspecialchars($student['guarmobile']) ?></div>
+                                    <div class="editable small fw-semibold" data-stid="<?= $student['stid'] ?>" data-field="fmobile">F: <?= htmlspecialchars($student['fmobile']) ?></div>
+                                    <div class="editable small text-muted" data-stid="<?= $student['stid'] ?>" data-field="mmobile">M: <?= htmlspecialchars($student['mmobile']) ?></div> 
+                                    <div class="editable small text-secondary" data-stid="<?= $student['stid'] ?>" data-field="guarmobile">G: <?= htmlspecialchars($student['guarmobile']) ?></div>
                                 </td>
-                                <td style="height: 50px;"></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
