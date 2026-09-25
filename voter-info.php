@@ -1,7 +1,7 @@
 <?php
 require_once 'header.php';
 
-// কুকি থেকে ফিল্টার প্যারামিটার গ্রহণ
+// Filter parameters from cookies / session
 $slot = $_COOKIE['chain-slot'] ?? '';
 $sessionyear = $_COOKIE['chain-session'] ?? '';
 $class = $_COOKIE['chain-class'] ?? '';
@@ -90,11 +90,11 @@ if (!empty($class) && !empty($sessionyear)) {
     <div class="card no-print mb-4 shadow-sm border-0">
         <div class="card-body">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-                <h4 class="mb-0 text-primary fw-bold"><i class="bi bi-person-lines-fill me-2"></i>শাখাভিত্তিক ভোটার তালিকা</h4>
+                <h4 class="mb-0 text-primary fw-bold"><i class="bi bi-person-lines-fill me-2"></i>Section-Wise Voter Roll</h4>
                 <div class="d-flex gap-2">
-                    <a href="managing-voter-list.php" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i> সিলেকশন পেজ</a>
-                    <a href="voter-master-list.php" class="btn btn-outline-primary"><i class="bi bi-list-stars me-1"></i> মাস্টার ভোটার তালিকা</a>
-                    <button class="btn btn-primary" onclick="window.print()"><i class="bi bi-printer me-1"></i> প্রিন্ট</button>
+                    <a href="managing-voter-list.php" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i> Selection Criteria</a>
+                    <a href="voter-master-list.php" class="btn btn-outline-primary"><i class="bi bi-list-stars me-1"></i> Master Voter List</a>
+                    <button class="btn btn-primary" onclick="window.print()"><i class="bi bi-printer me-1"></i> Print</button>
                 </div>
             </div>
         </div>
@@ -106,20 +106,20 @@ if (!empty($class) && !empty($sessionyear)) {
                 <div class="text-center mb-4 pb-2 border-bottom">
                     <h4 class="fw-bold mb-1"><?= htmlspecialchars($scname) ?></h4>
                     <p class="text-muted mb-1"><?= htmlspecialchars($scaddress) ?></p>
-                    <h5 class="fw-bold mt-2">ম্যানেজিং কমিটি নির্বাচন — শ্রেণিভিত্তিক অভিভাবক ভোটার তালিকা</h5>
-                    <div class="text-secondary small">শ্রেণি: <strong><?= htmlspecialchars($class) ?></strong> | শাখা: <strong><?= htmlspecialchars($section) ?></strong> | সেশন: <strong><?= htmlspecialchars($sessionyear) ?></strong></div>
+                    <h5 class="fw-bold mt-2">Managing Committee Election &mdash; Section-Wise Guardian Voter List</h5>
+                    <div class="text-secondary small">Class: <strong><?= htmlspecialchars($class) ?></strong> | Section: <strong><?= htmlspecialchars($section) ?></strong> | Session: <strong><?= htmlspecialchars($sessionyear) ?></strong></div>
                 </div>
 
                 <table class="table table-bordered table-sm align-middle" id="main-table">
                     <thead class="table-light">
                         <tr class="txt-right">
-                            <td style="width: 5%;">রোল</td>
-                            <td style="width: 9%;">ভোটার নং</td>
-                            <td style="width: 20%;">শিক্ষার্থীর নাম</td>
-                            <td style="width: 20%;">পিতা/মাতার নাম</td>
-                            <td style="width: 15%;">অভিভাবকের NID</td>
-                            <td style="width: 13%;">ঠিকানা</td>
-                            <td style="width: 18%;">মোবাইল নম্বর</td>
+                            <td style="width: 5%;">Roll</td>
+                            <td style="width: 10%;">Voter No.</td>
+                            <td style="width: 20%;">Student's Name</td>
+                            <td style="width: 20%;">Parents' Name</td>
+                            <td style="width: 15%;">Parents' NID</td>
+                            <td style="width: 14%;">Address</td>
+                            <td style="width: 16%;">Mobile No.</td>
                         </tr>
                     </thead>
                     <tbody>
@@ -133,7 +133,7 @@ if (!empty($class) && !empty($sessionyear)) {
                                     <?php if ($vno > 0): ?>
                                         <span class="badge bg-label-primary fs-6 fw-bold"><?= str_pad($vno, 3, '0', STR_PAD_LEFT) ?></span>
                                     <?php else: ?>
-                                        <span class="badge bg-label-secondary">নির্ধারিত হয়নি</span>
+                                        <span class="badge bg-label-secondary">Not Set</span>
                                     <?php endif; ?>
                                 </td>
                                 <td>
@@ -177,7 +177,6 @@ if (!empty($class) && !empty($sessionyear)) {
     $(document).on('click', '.editable', function () {
         var cell = $(this);
 
-        // যদি সেলটি ইতিমধ্যে ইনপুট মোডে থাকে, তাহলে কিছু করবেনা
         if (cell.find('input').length) {
             return;
         }
@@ -186,7 +185,6 @@ if (!empty($class) && !empty($sessionyear)) {
         var stid = cell.data('stid');
         var field = cell.data('field');
 
-        // প্রিফিক্স (যেমন "F: ") বাদ দিয়ে শুধুমাত্র মূল টেক্সট নেওয়া
         var contentToEdit = originalText;
         if (originalText.startsWith('F: ') || originalText.startsWith('M: ')  || originalText.startsWith('G: ') ) {
             contentToEdit = originalText.substring(3);
@@ -196,25 +194,20 @@ if (!empty($class) && !empty($sessionyear)) {
             contentToEdit = originalText.substring(4);
         }
 
-        // ইনপুট ফিল্ড তৈরি করা
         var input = $('<input type="text" class="form-control form-control-sm" />');
         input.val(contentToEdit);
 
-        // সেল কন্টেন্ট ইনপুট দিয়ে পরিবর্তন করা
         cell.html(input);
         input.focus();
 
-        // ইনপুট থেকে ফোকাস সরে গেলে (blur) ডেটা সেভ হবে
         input.on('blur', function () {
             var newValue = $(this).val().trim();
 
-            // যদি ডেটা পরিবর্তন না হয়, তাহলে আগের অবস্থায় ফিরে যাবে
             if (newValue === contentToEdit) {
                 cell.text(originalText);
                 return;
             }
 
-            // AJAX এর মাধ্যমে ডেটা সেভ করা
             $.ajax({
                 url: 'backend/update_voter_info.php',
                 method: 'POST',
@@ -229,7 +222,6 @@ if (!empty($class) && !empty($sessionyear)) {
                 },
                 success: function (response) {
                     if (response.status === 'success') {
-                        // সফল হলে প্রিফিক্সসহ নতুন টেক্সট দেখানো
                         var newDisplayText = newValue;
                         if (originalText.startsWith('F: ')) {
                             newDisplayText = 'F: ' + newValue;
@@ -245,7 +237,7 @@ if (!empty($class) && !empty($sessionyear)) {
                         cell.text(newDisplayText);
                         showToast('success', 'Information updated successfully.', 'Updated');
                     } else {
-                        cell.text(originalText); // ব্যর্থ হলে আগের ডেটা ফিরিয়ে আনা
+                        cell.text(originalText);
                         showToast('danger', response.message || 'Update failed!', 'Error');
                     }
                 },
@@ -256,7 +248,6 @@ if (!empty($class) && !empty($sessionyear)) {
             });
         });
 
-        // Enter চাপলেও blur ট্রিগার হবে
         input.on('keypress', function (e) {
             if (e.which === 13) {
                 $(this).blur();

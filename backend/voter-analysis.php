@@ -22,9 +22,8 @@ $sessionyear = $_GET['sessionyear'] ?? $_POST['sessionyear'] ?? ($_COOKIE['chain
 function clean_phone($phone) {
     if (!$phone) return '';
     $digits = preg_replace('/\D/', '', $phone);
-    if (strlen($digits) == 11 && str_starts_with($digits, '01')) {
-        return $digits;
-    } elseif (strlen($digits) == 13 && str_starts_with($digits, '8801')) {
+    if (empty($digits)) return '';
+    if (strlen($digits) == 13 && str_starts_with($digits, '8801')) {
         return substr($digits, 2);
     }
     return $digits;
@@ -39,7 +38,7 @@ function clean_nid($nid) {
     return '';
 }
 
-// Fetch all active students for this session
+// Fetch active students strictly for Classes Six to Ten
 $query = "
     SELECT 
         si.id as sessioninfo_id, si.stid, si.classname, si.sectionname, si.rollno, si.voter_no, si.slot,
@@ -49,23 +48,20 @@ $query = "
     FROM sessioninfo si
     JOIN students s ON si.stid = s.stid AND si.sccode = s.sccode
     WHERE si.sccode = ? AND si.sessionyear = ? AND si.status = 1
+    AND (
+        LOWER(TRIM(si.classname)) IN ('six', '6', 'class 6', 'class six')
+        OR LOWER(TRIM(si.classname)) IN ('seven', '7', 'class 7', 'class seven')
+        OR LOWER(TRIM(si.classname)) IN ('eight', '8', 'class 8', 'class eight')
+        OR LOWER(TRIM(si.classname)) IN ('nine', '9', 'class 9', 'class nine')
+        OR LOWER(TRIM(si.classname)) IN ('ten', '10', 'class 10', 'class ten')
+    )
     ORDER BY 
       CASE 
-        WHEN LOWER(TRIM(si.classname)) = 'play' THEN 1
-        WHEN LOWER(TRIM(si.classname)) = 'nursery' THEN 2
-        WHEN LOWER(TRIM(si.classname)) = 'kg' THEN 3
-        WHEN LOWER(TRIM(si.classname)) IN ('one', '1', 'class 1', 'class one') THEN 4
-        WHEN LOWER(TRIM(si.classname)) IN ('two', '2', 'class 2', 'class two') THEN 5
-        WHEN LOWER(TRIM(si.classname)) IN ('three', '3', 'class 3', 'class three') THEN 6
-        WHEN LOWER(TRIM(si.classname)) IN ('four', '4', 'class 4', 'class four') THEN 7
-        WHEN LOWER(TRIM(si.classname)) IN ('five', '5', 'class 5', 'class five') THEN 8
-        WHEN LOWER(TRIM(si.classname)) IN ('six', '6', 'class 6', 'class six') THEN 9
-        WHEN LOWER(TRIM(si.classname)) IN ('seven', '7', 'class 7', 'class seven') THEN 10
-        WHEN LOWER(TRIM(si.classname)) IN ('eight', '8', 'class 8', 'class eight') THEN 11
-        WHEN LOWER(TRIM(si.classname)) IN ('nine', '9', 'class 9', 'class nine') THEN 12
-        WHEN LOWER(TRIM(si.classname)) IN ('ten', '10', 'class 10', 'class ten') THEN 13
-        WHEN LOWER(TRIM(si.classname)) IN ('eleven', '11', 'class 11', 'class eleven') THEN 14
-        WHEN LOWER(TRIM(si.classname)) IN ('twelve', '12', 'class 12', 'class twelve') THEN 15
+        WHEN LOWER(TRIM(si.classname)) IN ('six', '6', 'class 6', 'class six') THEN 1
+        WHEN LOWER(TRIM(si.classname)) IN ('seven', '7', 'class 7', 'class seven') THEN 2
+        WHEN LOWER(TRIM(si.classname)) IN ('eight', '8', 'class 8', 'class eight') THEN 3
+        WHEN LOWER(TRIM(si.classname)) IN ('nine', '9', 'class 9', 'class nine') THEN 4
+        WHEN LOWER(TRIM(si.classname)) IN ('ten', '10', 'class 10', 'class ten') THEN 5
         ELSE 99
       END ASC,
       si.classname ASC,

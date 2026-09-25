@@ -13,24 +13,21 @@ $query = "
     FROM sessioninfo si
     JOIN students s ON si.stid = s.stid AND si.sccode = s.sccode
     WHERE si.sccode = ? AND si.sessionyear = ? AND si.status = 1
+    AND (
+        LOWER(TRIM(si.classname)) IN ('six', '6', 'class 6', 'class six')
+        OR LOWER(TRIM(si.classname)) IN ('seven', '7', 'class 7', 'class seven')
+        OR LOWER(TRIM(si.classname)) IN ('eight', '8', 'class 8', 'class eight')
+        OR LOWER(TRIM(si.classname)) IN ('nine', '9', 'class 9', 'class nine')
+        OR LOWER(TRIM(si.classname)) IN ('ten', '10', 'class 10', 'class ten')
+    )
     ORDER BY 
       CASE WHEN si.voter_no IS NULL OR si.voter_no = 0 THEN 999999 ELSE si.voter_no END ASC,
       CASE 
-        WHEN LOWER(TRIM(si.classname)) = 'play' THEN 1
-        WHEN LOWER(TRIM(si.classname)) = 'nursery' THEN 2
-        WHEN LOWER(TRIM(si.classname)) = 'kg' THEN 3
-        WHEN LOWER(TRIM(si.classname)) IN ('one', '1', 'class 1', 'class one') THEN 4
-        WHEN LOWER(TRIM(si.classname)) IN ('two', '2', 'class 2', 'class two') THEN 5
-        WHEN LOWER(TRIM(si.classname)) IN ('three', '3', 'class 3', 'class three') THEN 6
-        WHEN LOWER(TRIM(si.classname)) IN ('four', '4', 'class 4', 'class four') THEN 7
-        WHEN LOWER(TRIM(si.classname)) IN ('five', '5', 'class 5', 'class five') THEN 8
-        WHEN LOWER(TRIM(si.classname)) IN ('six', '6', 'class 6', 'class six') THEN 9
-        WHEN LOWER(TRIM(si.classname)) IN ('seven', '7', 'class 7', 'class seven') THEN 10
-        WHEN LOWER(TRIM(si.classname)) IN ('eight', '8', 'class 8', 'class eight') THEN 11
-        WHEN LOWER(TRIM(si.classname)) IN ('nine', '9', 'class 9', 'class nine') THEN 12
-        WHEN LOWER(TRIM(si.classname)) IN ('ten', '10', 'class 10', 'class ten') THEN 13
-        WHEN LOWER(TRIM(si.classname)) IN ('eleven', '11', 'class 11', 'class eleven') THEN 14
-        WHEN LOWER(TRIM(si.classname)) IN ('twelve', '12', 'class 12', 'class twelve') THEN 15
+        WHEN LOWER(TRIM(si.classname)) IN ('six', '6', 'class 6', 'class six') THEN 1
+        WHEN LOWER(TRIM(si.classname)) IN ('seven', '7', 'class 7', 'class seven') THEN 2
+        WHEN LOWER(TRIM(si.classname)) IN ('eight', '8', 'class 8', 'class eight') THEN 3
+        WHEN LOWER(TRIM(si.classname)) IN ('nine', '9', 'class 9', 'class nine') THEN 4
+        WHEN LOWER(TRIM(si.classname)) IN ('ten', '10', 'class 10', 'class ten') THEN 5
         ELSE 99
       END ASC,
       si.classname ASC,
@@ -146,18 +143,18 @@ $stmt->close();
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <div>
                     <h4 class="mb-1 text-primary fw-bold">
-                        <i class="bi bi-person-lines-fill me-2"></i>মাস্টার ভোটার তালিকা (Electoral Roll)
+                        <i class="bi bi-person-lines-fill me-2"></i>Master Electoral Roll (Guardian Voter List)
                     </h4>
                     <p class="text-muted mb-0 small">
-                        সেশন: <strong><?= htmlspecialchars($sessionyear) ?></strong> | মোট ভোটার: <strong><?= count($voter_clusters) ?> জন</strong>
+                        Academic Session: <strong><?= htmlspecialchars($sessionyear) ?></strong> | Total Unique Voters: <strong><?= count($voter_clusters) ?></strong>
                     </p>
                 </div>
                 <div class="d-flex gap-2">
                     <a href="managing-voter-list.php" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-left me-1"></i> ভোটার কন্ট্রোল প্যানেল
+                        <i class="bi bi-arrow-left me-1"></i> Voter Control Panel
                     </a>
                     <button class="btn btn-primary" onclick="window.print()">
-                        <i class="bi bi-printer me-1"></i> প্রিন্ট ভোটার তালিকা
+                        <i class="bi bi-printer me-1"></i> Print Voter List
                     </button>
                 </div>
             </div>
@@ -173,9 +170,9 @@ $stmt->close();
                 <h3 class="fw-bold mb-1" style="color: #1a237e;"><?= htmlspecialchars($scname ?? 'Educational Institution') ?></h3>
                 <p class="text-muted mb-1"><?= htmlspecialchars($scaddress ?? '') ?></p>
                 <h5 class="fw-bold mt-2 mb-1 text-dark">
-                    ম্যানেজিং কমিটি নির্বাচন — চূড়ান্ত অভিভাবক ভোটার তালিকা
+                    Managing Committee Election &mdash; Final Guardian Electoral Roll
                 </h5>
-                <span class="badge bg-label-primary px-3 py-1">শিক্ষাবর্ষ: <?= htmlspecialchars($sessionyear) ?></span>
+                <span class="badge bg-label-primary px-3 py-1">Academic Session: <?= htmlspecialchars($sessionyear) ?></span>
             </div>
 
             <?php if (!empty($voter_clusters)): ?>
@@ -183,11 +180,11 @@ $stmt->close();
                     <table class="table table-bordered table-voter table-print align-middle mb-0">
                         <thead>
                             <tr>
-                                <th style="width: 8%;" class="text-center">ভোটার নং</th>
-                                <th style="width: 26%;">অভিভাবকের নাম ও NID</th>
-                                <th style="width: 20%;">মোবাইল ও ঠিকানা</th>
-                                <th style="width: 32%;">সন্তান/সিবলিংসের বিবরণ</th>
-                                <th style="width: 14%;" class="text-center">স্বাক্ষর</th>
+                                <th style="width: 8%;" class="text-center">Voter No.</th>
+                                <th style="width: 26%;">Guardian Name & NID</th>
+                                <th style="width: 20%;">Mobile & Address</th>
+                                <th style="width: 32%;">Enrolled Children / Siblings Details</th>
+                                <th style="width: 14%;" class="text-center">Signature</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -201,12 +198,12 @@ $stmt->close();
                                             <?= htmlspecialchars($voter['fname'] ?: ($voter['mname'] ?: $voter['guarname'])) ?>
                                         </div>
                                         <?php if (!empty($voter['mname']) && $voter['mname'] !== $voter['fname']): ?>
-                                            <div class="text-muted small">মাতা: <?= htmlspecialchars($voter['mname']) ?></div>
+                                            <div class="text-muted small">Mother: <?= htmlspecialchars($voter['mname']) ?></div>
                                         <?php endif; ?>
                                         <?php if (!empty($voter['fnid'])): ?>
-                                            <div class="small text-secondary"><i class="bi bi-card-text me-1"></i>NID (পিতা): <?= htmlspecialchars($voter['fnid']) ?></div>
+                                            <div class="small text-secondary"><i class="bi bi-card-text me-1"></i>Father NID: <?= htmlspecialchars($voter['fnid']) ?></div>
                                         <?php elseif (!empty($voter['mnid'])): ?>
-                                            <div class="small text-secondary"><i class="bi bi-card-text me-1"></i>NID (মাতা): <?= htmlspecialchars($voter['mnid']) ?></div>
+                                            <div class="small text-secondary"><i class="bi bi-card-text me-1"></i>Mother NID: <?= htmlspecialchars($voter['mnid']) ?></div>
                                         <?php endif; ?>
                                     </td>
                                     <td>
@@ -214,16 +211,16 @@ $stmt->close();
                                             <div class="fw-semibold text-dark"><i class="bi bi-telephone me-1"></i><?= htmlspecialchars($voter['mobile']) ?></div>
                                         <?php endif; ?>
                                         <div class="text-muted small">
-                                            <?= htmlspecialchars(trim($voter['village'] . ($voter['post'] ? ', পো: ' . $voter['post'] : ''), ', ')) ?>
+                                            <?= htmlspecialchars(trim($voter['village'] . ($voter['post'] ? ', PO: ' . $voter['post'] : ''), ', ')) ?>
                                         </div>
                                     </td>
                                     <td>
                                         <?php foreach ($voter['children'] as $idx => $child): ?>
                                             <div class="child-badge w-100 mb-1">
                                                 <strong><?= ($idx + 1) ?>. <?= htmlspecialchars($child['name']) ?></strong> &mdash; 
-                                                <span class="text-muted">শ্রেণি:</span> <strong><?= htmlspecialchars($child['classname']) ?></strong>, 
-                                                <span class="text-muted">শাখা:</span> <?= htmlspecialchars($child['sectionname']) ?>, 
-                                                <span class="text-muted">রোল:</span> <strong><?= htmlspecialchars($child['rollno']) ?></strong>
+                                                <span class="text-muted">Class:</span> <strong><?= htmlspecialchars($child['classname']) ?></strong>, 
+                                                <span class="text-muted">Sec:</span> <?= htmlspecialchars($child['sectionname']) ?>, 
+                                                <span class="text-muted">Roll:</span> <strong><?= htmlspecialchars($child['rollno']) ?></strong>
                                             </div>
                                         <?php endforeach; ?>
                                     </td>
@@ -237,17 +234,17 @@ $stmt->close();
                 <!-- Footer Summary / Signature section for print -->
                 <div class="mt-5 pt-4 d-flex justify-content-between text-center d-none d-print-flex">
                     <div style="width: 200px; border-top: 1px dashed #333; padding-top: 5px;">
-                        সদস্য সচিব / প্রধান শিক্ষক
+                        Member Secretary / Head Teacher
                     </div>
                     <div style="width: 200px; border-top: 1px dashed #333; padding-top: 5px;">
-                        প্রিজাইডিং অফিসার / রিটার্নিং কর্মকর্তা
+                        Presiding Officer / Returning Officer
                     </div>
                 </div>
 
             <?php else: ?>
                 <div class="alert alert-warning text-center my-4">
                     <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
-                    কোনো ভোটার নম্বর জেনারেট করা হয়নি। অনুগ্রহ করে <a href="managing-voter-list.php" class="alert-link fw-bold">ভোটার কন্ট্রোল প্যানেলে</a> গিয়ে <strong>"Generate Voter List"</strong> বাটনে ক্লিক করে ভোটার নম্বর তৈরি করুন।
+                    No voter numbers have been generated yet. Please navigate to the <a href="managing-voter-list.php" class="alert-link fw-bold">Voter Control Panel</a> and click <strong>"Generate Voter Numbers"</strong>.
                 </div>
             <?php endif; ?>
 

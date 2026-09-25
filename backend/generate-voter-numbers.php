@@ -23,9 +23,8 @@ $slot = $_POST['slot'] ?? ($_COOKIE['chain-slot'] ?? '');
 function clean_phone_val($phone) {
     if (!$phone) return '';
     $digits = preg_replace('/\D/', '', $phone);
-    if (strlen($digits) == 11 && str_starts_with($digits, '01')) {
-        return $digits;
-    } elseif (strlen($digits) == 13 && str_starts_with($digits, '8801')) {
+    if (empty($digits)) return '';
+    if (strlen($digits) == 13 && str_starts_with($digits, '8801')) {
         return substr($digits, 2);
     }
     return $digits;
@@ -53,20 +52,20 @@ if ($action === 'reset') {
 
         echo json_encode([
             'status' => 'success',
-            'message' => 'সকল ভোটার নম্বর সফলভাবে রিসেট করা হয়েছে।'
+            'message' => 'All voter numbers have been successfully reset.'
         ]);
     } else {
         echo json_encode([
             'status' => 'error',
-            'message' => 'ভোটার নম্বর রিসেট করতে ব্যর্থ হয়েছে: ' . $stmt->error
+            'message' => 'Failed to reset voter numbers: ' . $stmt->error
         ]);
     }
     exit;
 }
 
 if ($action === 'generate') {
-    // Fetch all active students sorted by standard class hierarchy:
-    // Six -> Seven -> Eight -> Nine -> Ten (and others) -> Section -> Roll
+    // Fetch all active students strictly from Class Six to Ten sorted hierarchically:
+    // Six -> Seven -> Eight -> Nine -> Ten -> Section -> Roll
     $sql = "
         SELECT 
             si.id as sessioninfo_id, si.stid, si.classname, si.sectionname, si.rollno, si.slot,
@@ -74,23 +73,20 @@ if ($action === 'generate') {
         FROM sessioninfo si
         JOIN students s ON si.stid = s.stid AND si.sccode = s.sccode
         WHERE si.sccode = ? AND si.sessionyear = ? AND si.status = 1
+        AND (
+            LOWER(TRIM(si.classname)) IN ('six', '6', 'class 6', 'class six')
+            OR LOWER(TRIM(si.classname)) IN ('seven', '7', 'class 7', 'class seven')
+            OR LOWER(TRIM(si.classname)) IN ('eight', '8', 'class 8', 'class eight')
+            OR LOWER(TRIM(si.classname)) IN ('nine', '9', 'class 9', 'class nine')
+            OR LOWER(TRIM(si.classname)) IN ('ten', '10', 'class 10', 'class ten')
+        )
         ORDER BY 
           CASE 
-            WHEN LOWER(TRIM(si.classname)) = 'play' THEN 1
-            WHEN LOWER(TRIM(si.classname)) = 'nursery' THEN 2
-            WHEN LOWER(TRIM(si.classname)) = 'kg' THEN 3
-            WHEN LOWER(TRIM(si.classname)) IN ('one', '1', 'class 1', 'class one') THEN 4
-            WHEN LOWER(TRIM(si.classname)) IN ('two', '2', 'class 2', 'class two') THEN 5
-            WHEN LOWER(TRIM(si.classname)) IN ('three', '3', 'class 3', 'class three') THEN 6
-            WHEN LOWER(TRIM(si.classname)) IN ('four', '4', 'class 4', 'class four') THEN 7
-            WHEN LOWER(TRIM(si.classname)) IN ('five', '5', 'class 5', 'class five') THEN 8
-            WHEN LOWER(TRIM(si.classname)) IN ('six', '6', 'class 6', 'class six') THEN 9
-            WHEN LOWER(TRIM(si.classname)) IN ('seven', '7', 'class 7', 'class seven') THEN 10
-            WHEN LOWER(TRIM(si.classname)) IN ('eight', '8', 'class 8', 'class eight') THEN 11
-            WHEN LOWER(TRIM(si.classname)) IN ('nine', '9', 'class 9', 'class nine') THEN 12
-            WHEN LOWER(TRIM(si.classname)) IN ('ten', '10', 'class 10', 'class ten') THEN 13
-            WHEN LOWER(TRIM(si.classname)) IN ('eleven', '11', 'class 11', 'class eleven') THEN 14
-            WHEN LOWER(TRIM(si.classname)) IN ('twelve', '12', 'class 12', 'class twelve') THEN 15
+            WHEN LOWER(TRIM(si.classname)) IN ('six', '6', 'class 6', 'class six') THEN 1
+            WHEN LOWER(TRIM(si.classname)) IN ('seven', '7', 'class 7', 'class seven') THEN 2
+            WHEN LOWER(TRIM(si.classname)) IN ('eight', '8', 'class 8', 'class eight') THEN 3
+            WHEN LOWER(TRIM(si.classname)) IN ('nine', '9', 'class 9', 'class nine') THEN 4
+            WHEN LOWER(TRIM(si.classname)) IN ('ten', '10', 'class 10', 'class ten') THEN 5
             ELSE 99
           END ASC,
           si.classname ASC,
@@ -113,7 +109,7 @@ if ($action === 'generate') {
     if ($total_students === 0) {
         echo json_encode([
             'status' => 'error',
-            'message' => 'নির্বাচিত সেশনে কোনো সক্রিয় শিক্ষার্থী পাওয়া যায়নি।'
+            'message' => 'No active student records found for the selected session.'
         ]);
         exit;
     }
@@ -244,7 +240,7 @@ if ($action === 'generate') {
 
         echo json_encode([
             'status' => 'success',
-            'message' => 'ভোটার নম্বর সফলভাবে জেনারেট ও সংরক্ষণ করা হয়েছে!',
+            'message' => 'Voter numbers generated and assigned successfully!',
             'data' => [
                 'total_students' => $total_students,
                 'total_unique_voters' => $total_unique_voters,
@@ -256,7 +252,7 @@ if ($action === 'generate') {
         $conn->rollback();
         echo json_encode([
             'status' => 'error',
-            'message' => 'ডাটাবেজে ভোটার নম্বর সংরক্ষণ করতে সমস্যা হয়েছে: ' . $e->getMessage()
+            'message' => 'Failed to save voter numbers to database: ' . $e->getMessage()
         ]);
     }
     exit;
