@@ -1,4 +1,3 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/eimbox/public_html/console/
