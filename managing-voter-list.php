@@ -792,60 +792,132 @@ $section = $_COOKIE['chain-section'] ?? '';
     }
 
     function generateVoterList() {
-        if (!confirm('Are you sure you want to generate sequential voter numbers for all active students starting hierarchically from Class Six?')) {
-            return;
-        }
+        Swal.fire({
+            title: 'Generate Voter Numbers?',
+            text: 'Are you sure you want to generate sequential voter numbers (1, 2, 3...) for all active students from Class Six to Twelve?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: '<i class="bi bi-lightning-charge-fill me-1"></i> Yes, Generate',
+            cancelButtonText: 'Cancel',
+            customClass: {
+                confirmButton: 'btn btn-primary me-2',
+                cancelButton: 'btn btn-label-secondary'
+            },
+            buttonsStyling: false
+        }).then(function (result) {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Generating Voter Numbers...',
+                    text: 'Clustering siblings and assigning sequential electoral roll numbers.',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
 
-        $.ajax({
-            url: 'backend/generate-voter-numbers.php',
-            method: 'POST',
-            data: { action: 'generate' },
-            dataType: 'json',
-            beforeSend: function () {
-                showToast('info', 'Generating voter numbers, please wait...', 'Processing');
-            },
-            success: function (res) {
-                if (res.status === 'success') {
-                    showToast('success', res.message, 'Success');
-                    loadVoterSummary();
-                    
-                    // Hide any opened modal
-                    var sibModalEl = document.getElementById('siblingPreviewModal');
-                    var sibModal = bootstrap.Modal.getInstance(sibModalEl);
-                    if (sibModal) sibModal.hide();
-                } else {
-                    showToast('danger', res.message || 'Failed to generate voter numbers.', 'Error');
-                }
-            },
-            error: function () {
-                showToast('danger', 'Unable to connect to server.', 'Server Error');
+                $.ajax({
+                    url: 'backend/generate-voter-numbers.php',
+                    method: 'POST',
+                    data: { action: 'generate' },
+                    dataType: 'json',
+                    success: function (res) {
+                        if (res.status === 'success') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Generated Successfully!',
+                                text: res.message,
+                                customClass: { confirmButton: 'btn btn-primary' },
+                                buttonsStyling: false
+                            });
+                            loadVoterSummary();
+                            
+                            // Hide any opened preview modal
+                            var sibModalEl = document.getElementById('siblingPreviewModal');
+                            var sibModal = bootstrap.Modal.getInstance(sibModalEl);
+                            if (sibModal) sibModal.hide();
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Generation Failed',
+                                text: res.message || 'Failed to generate voter numbers.',
+                                customClass: { confirmButton: 'btn btn-danger' },
+                                buttonsStyling: false
+                            });
+                        }
+                    },
+                    error: function () {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Server Error',
+                            text: 'Unable to connect to the server.',
+                            customClass: { confirmButton: 'btn btn-danger' },
+                            buttonsStyling: false
+                        });
+                    }
+                });
             }
         });
     }
 
     function resetVoterList() {
-        if (!confirm('Warning: Are you sure you want to reset (clear) all voter numbers for this academic session?')) {
-            return;
-        }
+        Swal.fire({
+            title: 'Reset Voter Numbers?',
+            text: 'Warning: This will clear all assigned voter numbers for this academic session. Are you sure you want to proceed?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: '<i class="bi bi-trash3-fill me-1"></i> Yes, Reset All',
+            cancelButtonText: 'Cancel',
+            customClass: {
+                confirmButton: 'btn btn-danger me-2',
+                cancelButton: 'btn btn-label-secondary'
+            },
+            buttonsStyling: false
+        }).then(function (result) {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Resetting Voter Numbers...',
+                    text: 'Clearing assigned electoral roll numbers.',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
 
-        $.ajax({
-            url: 'backend/generate-voter-numbers.php',
-            method: 'POST',
-            data: { action: 'reset' },
-            dataType: 'json',
-            beforeSend: function () {
-                showToast('warning', 'Resetting voter numbers...', 'Resetting');
-            },
-            success: function (res) {
-                if (res.status === 'success') {
-                    showToast('success', res.message, 'Success');
-                    loadVoterSummary();
-                } else {
-                    showToast('danger', res.message || 'Failed to reset voter numbers.', 'Error');
-                }
-            },
-            error: function () {
-                showToast('danger', 'Unable to connect to server.', 'Server Error');
+                $.ajax({
+                    url: 'backend/generate-voter-numbers.php',
+                    method: 'POST',
+                    data: { action: 'reset' },
+                    dataType: 'json',
+                    success: function (res) {
+                        if (res.status === 'success') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Reset Successful!',
+                                text: res.message,
+                                customClass: { confirmButton: 'btn btn-primary' },
+                                buttonsStyling: false
+                            });
+                            loadVoterSummary();
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Reset Failed',
+                                text: res.message || 'Failed to reset voter numbers.',
+                                customClass: { confirmButton: 'btn btn-danger' },
+                                buttonsStyling: false
+                            });
+                        }
+                    },
+                    error: function () {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Server Error',
+                            text: 'Unable to connect to the server.',
+                            customClass: { confirmButton: 'btn btn-danger' },
+                            buttonsStyling: false
+                        });
+                    }
+                });
             }
         });
     }
