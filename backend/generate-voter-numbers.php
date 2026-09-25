@@ -5,6 +5,10 @@ require_once '../core/global_values.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
+// Prevent script execution timeout on large student datasets
+@set_time_limit(180);
+@ini_set('memory_limit', '256M');
+
 if (!isset($_SESSION['user_id'])) {
     echo json_encode(['status' => 'error', 'message' => 'Authentication required.']);
     exit;
@@ -53,7 +57,10 @@ if ($action === 'reset') {
         $stmt->close();
         
         // Also reset in students table if voter_no column exists
-        @$conn->query("UPDATE students SET voter_no = 0 WHERE sccode = $sccode");
+        $col_check = $conn->query("SHOW COLUMNS FROM students LIKE 'voter_no'");
+        if ($col_check && $col_check->num_rows > 0) {
+            @$conn->query("UPDATE students SET voter_no = 0 WHERE sccode = $sccode");
+        }
 
         echo json_encode([
             'status' => 'success',
@@ -174,15 +181,15 @@ if ($action === 'generate') {
         $first = $indices[0];
         for ($k = 1; $k < count($indices); $k++) {
             $curr = $indices[$k];
-            $f1 = strtolower(trim($students[$first]['fname'] ?? ''));
-            $f2 = strtolower(trim($students[$curr]['fname'] ?? ''));
+            $f1 = substr(strtolower(trim($students[$first]['fname'] ?? '')), 0, 100);
+            $f2 = substr(strtolower(trim($students[$curr]['fname'] ?? '')), 0, 100);
             $v1 = strtolower(trim($students[$first]['previll'] ?? ''));
             $v2 = strtolower(trim($students[$curr]['previll'] ?? ''));
 
-            $name_match = (empty($f1) || empty($f2) || soundex($f1) == soundex($f2) || levenshtein($f1, $f2) <= 4 || str_contains($f1, $f2) || str_contains($f2, $f1));
-            $village_match = (empty($v1) || empty($v2) || $v1 === $v2);
+            $name_match = (!empty($f1) && !empty($f2) && (soundex($f1) == soundex($f2) || levenshtein($f1, $f2) <= 4 || str_contains($f1, $f2) || str_contains($f2, $f1)));
+            $village_match = (!empty($v1) && !empty($v2) && $v1 === $v2);
 
-            if ($name_match || $village_match) {
+            if ($name_match || $village_match || empty($f1) || empty($f2) || empty($v1) || empty($v2)) {
                 union_sets_gen($parent, $first, $curr);
             }
         }
@@ -222,34 +229,51 @@ if ($action === 'generate') {
 
     $total_unique_voters = $voter_counter - 1;
 
-    // Batch update sessioninfo table using prepared statement
-    $conn->begin_transaction();
+    // High-performance bulk update for sessioninfo table in chunks
     try {
-        $update_stmt = $conn->prepare("UPDATE sessioninfo SET voter_no = ? WHERE id = ? AND sccode = ?");
-        $update_st_stmt = $conn->prepare("UPDATE students SET voter_no = ? WHERE stid = ? AND sccode = ?");
-
-        foreach ($student_voter_assignments as $item) {
-            $vno = $item['voter_no'];
-            $si_id = $item['sessioninfo_id'];
-            $stid = $item['stid'];
-
-            $update_stmt->bind_param("iii", $vno, $si_id, $sccode);
-            $update_stmt->execute();
-
-            if ($update_st_stmt) {
-                $update_st_stmt->bind_param("isi", $vno, $stid, $sccode);
-                $update_st_stmt->execute();
+        $chunks = array_chunk($student_voter_assignments, 200);
+        foreach ($chunks as $chunk) {
+            $cases = [];
+            $ids = [];
+            foreach ($chunk as $item) {
+                $si_id = intval($item['sessioninfo_id']);
+                $vno = intval($item['voter_no']);
+                $cases[] = "WHEN $si_id THEN $vno";
+                $ids[] = $si_id;
+            }
+            if (!empty($ids)) {
+                $id_list = implode(',', $ids);
+                $case_sql = implode(' ', $cases);
+                $bulk_sql = "UPDATE sessioninfo SET voter_no = CASE id $case_sql ELSE voter_no END WHERE sccode = $sccode AND id IN ($id_list)";
+                $conn->query($bulk_sql);
             }
         }
 
-        $update_stmt->close();
-        if ($update_st_stmt) $update_st_stmt->close();
-
-        $conn->commit();
+        // Also update students table if voter_no column exists
+        $col_check = $conn->query("SHOW COLUMNS FROM students LIKE 'voter_no'");
+        if ($col_check && $col_check->num_rows > 0) {
+            $st_chunks = array_chunk($student_voter_assignments, 200);
+            foreach ($st_chunks as $chunk) {
+                $cases = [];
+                $stids = [];
+                foreach ($chunk as $item) {
+                    $stid_esc = "'" . $conn->real_escape_string($item['stid']) . "'";
+                    $vno = intval($item['voter_no']);
+                    $cases[] = "WHEN $stid_esc THEN $vno";
+                    $stids[] = $stid_esc;
+                }
+                if (!empty($stids)) {
+                    $stid_list = implode(',', $stids);
+                    $case_sql = implode(' ', $cases);
+                    $bulk_st_sql = "UPDATE students SET voter_no = CASE stid $case_sql ELSE voter_no END WHERE sccode = $sccode AND stid IN ($stid_list)";
+                    $conn->query($bulk_st_sql);
+                }
+            }
+        }
 
         echo json_encode([
             'status' => 'success',
-            'message' => 'Voter numbers generated and assigned successfully!',
+            'message' => "Successfully generated and assigned $total_unique_voters unique voter numbers for $total_students active students across Class Six to Twelve.",
             'data' => [
                 'total_students' => $total_students,
                 'total_unique_voters' => $total_unique_voters,
@@ -258,14 +282,14 @@ if ($action === 'generate') {
                 'session_pattern' => $session_pattern
             ]
         ]);
-    } catch (Exception $e) {
-        $conn->rollback();
+    } catch (Throwable $e) {
         echo json_encode([
             'status' => 'error',
-            'message' => 'Failed to save voter numbers to database: ' . $e->getMessage()
+            'message' => 'Failed to save voter numbers: ' . $e->getMessage()
         ]);
     }
     exit;
 }
 
 echo json_encode(['status' => 'error', 'message' => 'Invalid action request.']);
+

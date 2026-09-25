@@ -845,11 +845,20 @@ $section = $_COOKIE['chain-section'] ?? '';
                             });
                         }
                     },
-                    error: function () {
+                    error: function (xhr) {
+                        console.error('Generate Error:', xhr.responseText);
+                        var errMsg = 'Unable to connect to the server.';
+                        try {
+                            var json = JSON.parse(xhr.responseText);
+                            if (json && json.message) errMsg = json.message;
+                        } catch (e) {
+                            if (xhr.status === 500) errMsg = 'Internal Server Error (500). Please check error log.';
+                            else if (xhr.status === 504) errMsg = 'Gateway Timeout (504). Operation took too long.';
+                        }
                         Swal.fire({
                             icon: 'error',
                             title: 'Server Error',
-                            text: 'Unable to connect to the server.',
+                            text: errMsg,
                             customClass: { confirmButton: 'btn btn-danger' },
                             buttonsStyling: false
                         });
@@ -908,11 +917,17 @@ $section = $_COOKIE['chain-section'] ?? '';
                             });
                         }
                     },
-                    error: function () {
+                    error: function (xhr) {
+                        console.error('Reset Error:', xhr.responseText);
+                        var errMsg = 'Unable to connect to the server.';
+                        try {
+                            var json = JSON.parse(xhr.responseText);
+                            if (json && json.message) errMsg = json.message;
+                        } catch (e) {}
                         Swal.fire({
                             icon: 'error',
                             title: 'Server Error',
-                            text: 'Unable to connect to the server.',
+                            text: errMsg,
                             customClass: { confirmButton: 'btn btn-danger' },
                             buttonsStyling: false
                         });
