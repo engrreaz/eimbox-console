@@ -693,11 +693,12 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
                 $.ajax({
                     url: "ajax/ajax-queue-sms.php",
                     type: "POST",
-                    data: {
+                    contentType: "application/json; charset=utf-8",
+                    data: JSON.stringify({
                         campaign: $("#campaign_name").val(),
                         sms_type: $("#sms_type").val(),
                         recipients: compiledRecipients
-                    },
+                    }),
                     dataType: "json",
                     success: function (res) {
                         btn.prop("disabled", false).html('<i class="bi bi-send-fill me-2"></i> Send Now (Instant Async Queue)');
@@ -726,12 +727,13 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
                             });
                         }
                     },
-                    error: function () {
+                    error: function (xhr, status, error) {
                         btn.prop("disabled", false).html('<i class="bi bi-send-fill me-2"></i> Send Now (Instant Async Queue)');
+                        let errText = xhr.responseText ? xhr.responseText.substring(0, 200) : error;
                         Swal.fire({
                             icon: 'error',
-                            title: 'Network Error',
-                            text: 'Failed to reach server while queueing messages.'
+                            title: 'Network / Server Error',
+                            text: 'Failed to reach server while queueing messages: ' + errText
                         });
                     }
                 });
