@@ -1,4 +1,6 @@
 <?php
+ob_start();
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -11,12 +13,13 @@ header('Content-Type: application/json; charset=utf-8');
 
 $sccode = $sccode ?? ($_SESSION['sccode'] ?? '');
 if (empty($sccode)) {
+    ob_clean();
     echo json_encode([
         "draw" => intval($_POST['draw'] ?? 1),
         "recordsTotal" => 0,
         "recordsFiltered" => 0,
         "data" => []
-    ]);
+    ], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
@@ -83,7 +86,6 @@ $dataQ = mysqli_query($conn, "
     ORDER BY id DESC 
     LIMIT $start, $limit
 ");
-echo $dataQ;
 
 $data = [];
 if ($dataQ) {
@@ -92,6 +94,7 @@ if ($dataQ) {
     }
 }
 
+ob_clean();
 echo json_encode([
     "draw" => $draw,
     "recordsTotal" => $total,

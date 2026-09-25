@@ -254,6 +254,9 @@ $(document).ready(function () {
                 d.to = $('#to_date').val();
                 d.status = $('#filter_status').val();
                 d.sms_type = $('#filter_type').val();
+            },
+            error: function (xhr, error, thrown) {
+                console.error("DataTable AJAX Error:", xhr.responseText);
             }
         },
         columns: [
@@ -299,9 +302,10 @@ $(document).ready(function () {
                 data: "status",
                 className: "text-center",
                 render: function (d) {
-                    if (d === 'sent') return '<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Sent</span>';
-                    if (d === 'queued') return '<span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i>Queued</span>';
-                    if (d === 'sending') return '<span class="badge bg-info"><i class="bi bi-arrow-repeat me-1"></i>Sending</span>';
+                    let st = (d || '').toLowerCase();
+                    if (st === 'sent' || st === '1' || st === 'success') return '<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Sent</span>';
+                    if (st === 'queued' || st === '0') return '<span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i>Queued</span>';
+                    if (st === 'sending') return '<span class="badge bg-info"><i class="bi bi-arrow-repeat me-1"></i>Sending</span>';
                     return '<span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Failed</span>';
                 }
             },
