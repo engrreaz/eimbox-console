@@ -22,13 +22,13 @@ $action = trim($_POST['action'] ?? '');
 // ACTION: ADD DISASTER / WEATHER EXEMPTION EVENT
 // -------------------------------------------------------------
 if ($action === 'add_disaster_exemption') {
-    $title = trim($_POST['title'] ?? 'প্রাকৃতিক দুর্যোগ / বিশেষ ছাড়');
+    $title = trim($_POST['title'] ?? 'Natural Disaster / Special Exemption');
     $start_date = trim($_POST['start_date'] ?? date('Y-m-d'));
     $end_date = trim($_POST['end_date'] ?? $start_date);
     $user_id = (int)($_SESSION['user_id'] ?? 0);
 
     if (empty($title) || empty($start_date)) {
-        echo json_encode(['status' => 'error', 'message' => 'শিরোনাম ও তারিখ প্রদান আবশ্যক।']);
+        echo json_encode(['status' => 'error', 'message' => 'Title and start date are required.']);
         exit;
     }
 
@@ -41,9 +41,9 @@ if ($action === 'add_disaster_exemption') {
     $stmt->bind_param('iisssss', $sccode, $user_id, $title, $start_dt, $end_dt, $color, $event_type);
     
     if ($stmt->execute()) {
-        echo json_encode(['status' => 'success', 'message' => 'দুর্যোগ / বিশেষ ছুটির দিন সফলভাবে সংরক্ষিত হয়েছে।']);
+        echo json_encode(['status' => 'success', 'message' => 'Disaster / special exemption date saved successfully.']);
     } else {
-        echo json_encode(['status' => 'error', 'message' => 'ইভেন্ট সংরক্ষণ করা যায়নি: ' . $conn->error]);
+        echo json_encode(['status' => 'error', 'message' => 'Failed to save event: ' . $conn->error]);
     }
     $stmt->close();
     exit;
@@ -55,16 +55,16 @@ if ($action === 'add_disaster_exemption') {
 if ($action === 'delete_disaster_exemption') {
     $event_id = intval($_POST['event_id'] ?? 0);
     if ($event_id <= 0) {
-        echo json_encode(['status' => 'error', 'message' => 'ভুল ইভেন্ট আইডি।']);
+        echo json_encode(['status' => 'error', 'message' => 'Invalid event ID.']);
         exit;
     }
 
     $stmt = $conn->prepare("DELETE FROM events WHERE id = ? AND sccode = ?");
     $stmt->bind_param('ii', $event_id, $sccode);
     if ($stmt->execute()) {
-        echo json_encode(['status' => 'success', 'message' => 'ছাড়ের রেকর্ড সফলভাবে মুছে ফেলা হয়েছে।']);
+        echo json_encode(['status' => 'success', 'message' => 'Exemption record deleted successfully.']);
     } else {
-        echo json_encode(['status' => 'error', 'message' => 'রেকর্ড মোছা সম্ভব হয়নি।']);
+        echo json_encode(['status' => 'error', 'message' => 'Failed to delete record.']);
     }
     $stmt->close();
     exit;
@@ -92,7 +92,7 @@ if ($action === 'preview_fines' || $action === 'post_fines') {
         'bunk_rule_type' => 'flat_daily',
         'itemcode' => 'FINE01',
         'particulareng' => 'Absence / Bunk Fine',
-        'particularben' => 'অনুপস্থিতি ও বাঙ্ক জরিমানা'
+        'particularben' => 'Absence / Bunk Fine'
     ];
     $classSettings = [];
 
@@ -125,7 +125,7 @@ if ($action === 'preview_fines' || $action === 'post_fines') {
     $evStmt->close();
 
     // 3. Fetch Approved Leaves from student_leave_app (if table exists)
-    $approvedLeaves = []; // [stid => [date => true]]
+    $approvedLeaves = [];
     $hasLeaveTable = $conn->query("SHOW TABLES LIKE 'student_leave_app'")->num_rows > 0;
     if ($hasLeaveTable) {
         $lvStmt = $conn->prepare("SELECT stid, from_date, to_date FROM student_leave_app WHERE sccode = ? AND sessionyear = ? AND status = 'approved' AND ((from_date <= ? AND to_date >= ?))");
@@ -178,12 +178,12 @@ if ($action === 'preview_fines' || $action === 'post_fines') {
 
         // Check if date is exempt due to holiday/disaster
         if (!empty($exemptDates[$aDate])) {
-            continue; // Skip holiday/disaster
+            continue;
         }
 
         // Check if student has approved leave on this date
         if (!empty($approvedLeaves[$sId][$aDate])) {
-            continue; // Skip approved leave
+            continue;
         }
 
         // Determine rate
@@ -252,7 +252,7 @@ if ($action === 'preview_fines' || $action === 'post_fines') {
         }
     }
 
-    // If action is preview only, return preview results
+    // Preview
     if ($action === 'preview_fines') {
         echo json_encode([
             'status' => 'success',
@@ -262,10 +262,10 @@ if ($action === 'preview_fines' || $action === 'post_fines') {
                 'total_bunk_days' => $totalBunkCount,
                 'total_fine_amount' => round($totalFineAmount, 2),
                 'exempt_days_found' => count($exemptDates),
-                'date_range' => "$from_date হতে $to_date"
+                'date_range' => "$from_date to $to_date"
             ],
             'class_breakdown' => array_values($classBreakdown),
-            'student_preview' => array_slice(array_values($studentSummary), 0, 100) // Top 100 for fast rendering
+            'student_preview' => array_slice(array_values($studentSummary), 0, 100)
         ]);
         exit;
     }
@@ -275,13 +275,13 @@ if ($action === 'preview_fines' || $action === 'post_fines') {
     // -------------------------------------------------------------
     if ($action === 'post_fines') {
         if (empty($studentSummary)) {
-            echo json_encode(['status' => 'error', 'message' => 'পোস্ট করার মতো কোনো জরিমানা হিসাব পাওয়া যায়নি।']);
+            echo json_encode(['status' => 'error', 'message' => 'No fine calculation found to post.']);
             exit;
         }
 
-        $itemcode = $globalSetting['itemcode'] ?: 'FINE01';
+        $itemcode = (!empty($globalSetting['itemcode']) && $globalSetting['itemcode'] !== 'FINE01') ? $globalSetting['itemcode'] : uniqid();
         $particulareng = $globalSetting['particulareng'] ?: 'Absence / Bunk Fine';
-        $particularben = $globalSetting['particularben'] ?: 'অনুপস্থিতি ও বাঙ্ক জরিমানা';
+        $particularben = $globalSetting['particularben'] ?: 'Absence / Bunk Fine';
         $curMonth = intval(date('m', strtotime($to_date)));
         $setupby = $_SESSION['user_id'] ?? 'Admin Fine Generator';
 
@@ -305,7 +305,6 @@ if ($action === 'preview_fines' || $action === 'post_fines') {
             $finRes = $chkFin->get_result();
 
             if ($fRow = $finRes->fetch_assoc()) {
-                // If paid > 0, don't overwrite paid amount, adjust payableamt & dues
                 $paid = intval($fRow['paid']);
                 $newPayable = $fineAmt;
                 $newDues = max(0, $newPayable - $paid);
@@ -318,7 +317,6 @@ if ($action === 'preview_fines' || $action === 'post_fines') {
                 $upFin->close();
                 $updatedCount++;
             } else {
-                // Insert new fine entry
                 $inFin = $conn->prepare("INSERT INTO stfinance 
                     (sccode, sessionyear, classname, sectionname, stid, rollno, itemcode, particulareng, particularben, amount, payableamt, dues, month, idmon, setupdate, setupby)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)");
@@ -338,11 +336,11 @@ if ($action === 'preview_fines' || $action === 'post_fines') {
 
         echo json_encode([
             'status' => 'success',
-            'message' => "মোট " . count($studentSummary) . " জন শিক্ষার্থীর জরিমানা সফলভাবে stfinance লেজারে পোস্ট করা হয়েছে। (নতুন: $postedCount, আপডেট: $updatedCount)"
+            'message' => "Fines for " . count($studentSummary) . " students successfully posted to stfinance ledger. (New: $postedCount, Updated: $updatedCount)"
         ]);
         exit;
     }
 }
 
-echo json_encode(['status' => 'error', 'message' => 'অজ্ঞাত অ্যাকশন অনুরোধ।']);
+echo json_encode(['status' => 'error', 'message' => 'Unknown action request.']);
 exit;

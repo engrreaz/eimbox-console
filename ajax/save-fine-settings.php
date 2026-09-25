@@ -24,10 +24,13 @@ $bunk_rule_type = in_array($_POST['bunk_rule_type'] ?? '', ['flat_daily', 'per_p
 $posting_mode = in_array($_POST['posting_mode'] ?? '', ['daily', 'monthly', 'manual']) ? $_POST['posting_mode'] : 'manual';
 $daily_run_time = trim($_POST['daily_run_time'] ?? '18:00:00');
 $monthly_run_day = max(1, min(28, intval($_POST['monthly_run_day'] ?? 1)));
-$itemcode = trim($_POST['itemcode'] ?? 'FINE01');
+$itemcode = trim($_POST['itemcode'] ?? '');
+if (empty($itemcode) || $itemcode === 'FINE01') {
+    $itemcode = uniqid();
+}
 $particulareng = trim($_POST['particulareng'] ?? 'Absence / Bunk Fine');
-$particularben = trim($_POST['particularben'] ?? 'অনুপস্থিতি ও বাঙ্ক জরিমানা');
-$class_rates = $_POST['class_rates'] ?? []; // Array of ['classname' => ['enabled' => 1/0, 'absent_rate' => x, 'bunk_rate' => y]]
+$particularben = trim($_POST['particularben'] ?? 'Absence / Bunk Fine');
+$class_rates = $_POST['class_rates'] ?? [];
 
 $updated_by = $_SESSION['user_id'] ?? 'Admin';
 
@@ -47,7 +50,7 @@ $conn->query("CREATE TABLE IF NOT EXISTS `fine_settings` (
   `monthly_run_day` tinyint(2) DEFAULT 1,
   `itemcode` varchar(30) DEFAULT 'FINE01',
   `particulareng` varchar(150) DEFAULT 'Absence / Bunk Fine',
-  `particularben` varchar(200) DEFAULT 'অনুপস্থিতি ও বাঙ্ক জরিমানা',
+  `particularben` varchar(200) DEFAULT 'Absence / Bunk Fine',
   `status` tinyint(1) NOT NULL DEFAULT 1,
   `last_generated_date` date DEFAULT NULL,
   `updated_by` varchar(100) DEFAULT NULL,
@@ -99,7 +102,6 @@ if (is_array($class_rates)) {
         $cBunk = floatval($cData['bunk_rate'] ?? 0);
 
         if ($isCustom === 1) {
-            // Upsert class override
             $cChk = $conn->prepare("SELECT id FROM fine_settings WHERE sccode = ? AND sessionyear = ? AND slot = ? AND scope = 'class' AND classname = ? LIMIT 1");
             $cChk->bind_param('isss', $sccode, $sessionyear, $slot, $cName);
             $cChk->execute();
@@ -120,7 +122,6 @@ if (is_array($class_rates)) {
             }
             $cChk->close();
         } else {
-            // Deactivate or delete custom override so it falls back to global
             $delStmt = $conn->prepare("DELETE FROM fine_settings WHERE sccode = ? AND sessionyear = ? AND slot = ? AND scope = 'class' AND classname = ?");
             $delStmt->bind_param('isss', $sccode, $sessionyear, $slot, $cName);
             $delStmt->execute();
@@ -131,6 +132,6 @@ if (is_array($class_rates)) {
 
 echo json_encode([
     'status' => 'success',
-    'message' => 'জরিমানা পলিসি ও সেটিংস সফলভাবে সংরক্ষিত হয়েছে।'
+    'message' => 'Fine policy and settings have been saved successfully.'
 ]);
 exit;

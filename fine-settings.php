@@ -17,7 +17,7 @@ $conn->query("CREATE TABLE IF NOT EXISTS `fine_settings` (
   `monthly_run_day` tinyint(2) DEFAULT 1,
   `itemcode` varchar(30) DEFAULT 'FINE01',
   `particulareng` varchar(150) DEFAULT 'Absence / Bunk Fine',
-  `particularben` varchar(200) DEFAULT 'অনুপস্থিতি ও বাঙ্ক জরিমানা',
+  `particularben` varchar(200) DEFAULT 'Absence / Bunk Fine',
   `status` tinyint(1) NOT NULL DEFAULT 1,
   `last_generated_date` date DEFAULT NULL,
   `updated_by` varchar(100) DEFAULT NULL,
@@ -70,11 +70,13 @@ $global = $global_res->fetch_assoc() ?: [
     'posting_mode' => 'manual',
     'daily_run_time' => '18:00:00',
     'monthly_run_day' => 1,
-    'itemcode' => 'FINE01',
+    'itemcode' => uniqid(),
     'particulareng' => 'Absence / Bunk Fine',
-    'particularben' => 'অনুপস্থিতি ও বাঙ্ক জরিমানা'
+    'particularben' => 'Absence / Bunk Fine'
 ];
 $global_stmt->close();
+
+$fine_itemcode = (!empty($global['itemcode']) && $global['itemcode'] !== 'FINE01') ? $global['itemcode'] : uniqid();
 
 // 2. Fetch Class Overrides
 $class_rates = [];
@@ -116,16 +118,16 @@ $evStmt->close();
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
         <div>
             <h4 class="fw-bold mb-1">
-                <i class="bi bi-shield-slash-fill text-danger me-2"></i> শিক্ষার্থী জরিমানা সেটিংস ও অটোমেশন
+                <i class="bi bi-shield-slash-fill text-danger me-2"></i> Student Fine Settings & Automation
             </h4>
-            <span class="text-muted">অনুপস্থিতি ও বাঙ্ক (পলায়ন) জরিমানার হার, পোস্টিং শিডিউল এবং দুর্যোগ/ছুটি ছাড় কনফিগারেশন</span>
+            <span class="text-muted">Configure absence and bunk (fleeing) fine rates, auto-posting schedules, and exemption rules</span>
         </div>
         <div class="d-flex gap-2">
             <a href="sync-payments.php" class="btn btn-outline-primary btn-sm">
-                <i class="bi bi-cash-stack me-1"></i> পেমেন্ট সিঙ্ক
+                <i class="bi bi-cash-stack me-1"></i> Payment Sync
             </a>
             <button type="button" class="btn btn-primary btn-sm" onclick="saveSettings()">
-                <i class="bi bi-check2-circle me-1"></i> সেটিংস সংরক্ষণ করুন
+                <i class="bi bi-check2-circle me-1"></i> Save Settings
             </button>
         </div>
     </div>
@@ -135,7 +137,7 @@ $evStmt->close();
         <div class="card-body p-3">
             <div class="row align-items-end g-2">
                 <?php
-                $chain_param = '-c 10 -t নির্বাচন করুন -u -r -b সেটিংস দেখুন -h class exam';
+                $chain_param = '-c 10 -t Choose Values -u -r -b View Settings -h class exam';
                 include 'components/slot-tree-ui.php';
                 ?>
             </div>
@@ -153,24 +155,24 @@ $evStmt->close();
         <ul class="nav nav-tabs nav-fill" role="tablist">
             <li class="nav-item">
                 <button type="button" class="nav-link active" role="tab" data-bs-toggle="tab" data-bs-target="#tab-global">
-                    <i class="bi bi-sliders2 me-1"></i> গ্লোবাল পলিসি ও শিডিউলার
+                    <i class="bi bi-sliders2 me-1"></i> Global Policy & Scheduler
                 </button>
             </li>
             <li class="nav-item">
                 <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#tab-classes">
-                    <i class="bi bi-diagram-3 me-1"></i> শ্রেণিভিত্তিক কাস্টম রেট 
+                    <i class="bi bi-diagram-3 me-1"></i> Class-wise Custom Rates 
                     <span class="badge rounded-pill bg-label-primary ms-1"><?= count($classes) ?></span>
                 </button>
             </li>
             <li class="nav-item">
                 <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#tab-exemptions">
-                    <i class="bi bi-cloud-sun me-1"></i> দুর্যোগ ও ছুটির ছাড়
+                    <i class="bi bi-cloud-sun me-1"></i> Disaster & Holiday Exemptions
                     <span class="badge rounded-pill bg-label-warning ms-1"><?= count($exemptEvents) ?></span>
                 </button>
             </li>
             <li class="nav-item">
                 <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#tab-generator">
-                    <i class="bi bi-play-circle me-1"></i> তাৎক্ষণিক জরিমানা জেনারেশন
+                    <i class="bi bi-play-circle me-1"></i> Instant Fine Generator
                 </button>
             </li>
         </ul>
@@ -188,34 +190,34 @@ $evStmt->close();
                         <div class="col-md-6">
                             <div class="card border shadow-none h-100">
                                 <div class="card-header border-bottom bg-light py-2">
-                                    <h6 class="mb-0 fw-bold"><i class="bi bi-currency-dollar text-primary me-2"></i>ডিফল্ট জরিমানা রেট</h6>
+                                    <h6 class="mb-0 fw-bold"><i class="bi bi-currency-dollar text-primary me-2"></i>Default Fine Rates</h6>
                                 </div>
                                 <div class="card-body pt-3">
                                     <div class="mb-3">
-                                        <label class="form-label fw-bold">অনুপস্থিতি জরিমানা (প্রতিদিন) <span class="text-danger">*</span></label>
+                                        <label class="form-label fw-bold">Absence Fine Rate (Per Day) <span class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <span class="input-group-text">৳</span>
                                             <input type="number" step="0.5" class="form-control" name="absent_rate" id="absent_rate" value="<?= htmlspecialchars($global['absent_rate']) ?>" required>
-                                            <span class="input-group-text">টাকা</span>
+                                            <span class="input-group-text">BDT</span>
                                         </div>
-                                        <small class="text-muted">শিক্ষার্থী উপস্থিত না থাকলে (yn = 0) এই রেটে জরিমানা ধার্য হবে।</small>
+                                        <small class="text-muted">Charged per day when student is absent (yn = 0).</small>
                                     </div>
 
                                     <div class="mb-3">
-                                        <label class="form-label fw-bold">বাঙ্ক / পলায়ন জরিমানা <span class="text-danger">*</span></label>
+                                        <label class="form-label fw-bold">Bunk / Fleeing Fine Rate <span class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <span class="input-group-text">৳</span>
                                             <input type="number" step="0.5" class="form-control" name="bunk_rate" id="bunk_rate" value="<?= htmlspecialchars($global['bunk_rate']) ?>" required>
-                                            <span class="input-group-text">টাকা</span>
+                                            <span class="input-group-text">BDT</span>
                                         </div>
-                                        <small class="text-muted">ক্লাস চলাকালীন পলায়ন (bunk = 1) করলে ধার্যকৃত জরিমানা।</small>
+                                        <small class="text-muted">Charged when student bunks/flees during class hours (bunk = 1).</small>
                                     </div>
 
                                     <div class="mb-0">
-                                        <label class="form-label fw-bold">বাঙ্ক জরিমানা গণনা পদ্ধতি</label>
+                                        <label class="form-label fw-bold">Bunk Calculation Condition</label>
                                         <select class="form-select" name="bunk_rule_type" id="bunk_rule_type">
-                                            <option value="flat_daily" <?= $global['bunk_rule_type'] === 'flat_daily' ? 'selected' : '' ?>>দিনে একবার নির্দিষ্ট রেট (Flat Daily Rate)</option>
-                                            <option value="per_period" <?= $global['bunk_rule_type'] === 'per_period' ? 'selected' : '' ?>>প্রতি পিরিয়ড বাঙ্কের জন্য আলাদা (Per Period)</option>
+                                            <option value="flat_daily" <?= $global['bunk_rule_type'] === 'flat_daily' ? 'selected' : '' ?>>Flat Daily Rate (Once Per Day)</option>
+                                            <option value="per_period" <?= $global['bunk_rule_type'] === 'per_period' ? 'selected' : '' ?>>Per Period Bunked (Separately calculated)</option>
                                         </select>
                                     </div>
                                 </div>
@@ -226,47 +228,47 @@ $evStmt->close();
                         <div class="col-md-6">
                             <div class="card border shadow-none h-100">
                                 <div class="card-header border-bottom bg-light py-2">
-                                    <h6 class="mb-0 fw-bold"><i class="bi bi-clock-history text-info me-2"></i>পোস্টিং ও অটোমেশন শিডিউল</h6>
+                                    <h6 class="mb-0 fw-bold"><i class="bi bi-clock-history text-info me-2"></i>Posting & Automation Schedule</h6>
                                 </div>
                                 <div class="card-body pt-3">
                                     <div class="mb-3">
-                                        <label class="form-label fw-bold">জরিমানা পোস্টিং মেকানিজম</label>
+                                        <label class="form-label fw-bold">Fine Posting Mechanism</label>
                                         <div class="form-check mb-2">
                                             <input class="form-check-input" type="radio" name="posting_mode" id="mode_manual" value="manual" <?= $global['posting_mode'] === 'manual' ? 'checked' : '' ?> onchange="togglePostingOptions()">
                                             <label class="form-check-label" for="mode_manual">
-                                                <strong>শুধুমাত্র ম্যানুয়াল (Manual Only)</strong>
-                                                <div class="text-muted small">অ্যাডমিন যখন 'তাৎক্ষণিক জরিমানা জেনারেশন' থেকে রান করবেন তখনই লেজারে পোস্ট হবে।</div>
+                                                <strong>Manual Only</strong>
+                                                <div class="text-muted small">Admin manually triggers posting from the 'Instant Fine Generator' tab.</div>
                                             </label>
                                         </div>
                                         <div class="form-check mb-2">
                                             <input class="form-check-input" type="radio" name="posting_mode" id="mode_daily" value="daily" <?= $global['posting_mode'] === 'daily' ? 'checked' : '' ?> onchange="togglePostingOptions()">
                                             <label class="form-check-label" for="mode_daily">
-                                                <strong>দৈনিক স্বয়ংক্রিয় পোস্টিং (Daily Auto-Posting)</strong>
-                                                <div class="text-muted small">প্রতিদিন নির্দিষ্ট সময়ে স্বয়ংক্রিয়ভাবে শিক্ষার্থীদের অ্যাকাউন্টে ফাইন যুক্ত হবে।</div>
+                                                <strong>Daily Auto-Posting</strong>
+                                                <div class="text-muted small">System automatically posts fines daily at the specified time.</div>
                                             </label>
                                         </div>
                                         <div class="form-check">
                                             <input class="form-check-input" type="radio" name="posting_mode" id="mode_monthly" value="monthly" <?= $global['posting_mode'] === 'monthly' ? 'checked' : '' ?> onchange="togglePostingOptions()">
                                             <label class="form-check-label" for="mode_monthly">
-                                                <strong>মাসিক এককালীন পোস্টিং (Monthly Consolidated)</strong>
-                                                <div class="text-muted small">পুরো মাসের পুঞ্জীভূত জরিমানা মাসের নির্দিষ্ট তারিখে এককালীন ধার্য হবে।</div>
+                                                <strong>Monthly Consolidated Posting</strong>
+                                                <div class="text-muted small">Consolidated fine for the entire month is posted on a specific day of the month.</div>
                                             </label>
                                         </div>
                                     </div>
 
                                     <!-- Daily Options -->
                                     <div id="dailyOptionBox" class="mb-3 <?= $global['posting_mode'] === 'daily' ? '' : 'd-none' ?>">
-                                        <label class="form-label fw-bold">প্রতিদিন কয়টায় পোস্টিং রান হবে?</label>
+                                        <label class="form-label fw-bold">Daily Run Time</label>
                                         <input type="time" class="form-control" name="daily_run_time" id="daily_run_time" value="<?= htmlspecialchars($global['daily_run_time']) ?>">
                                     </div>
 
                                     <!-- Monthly Options -->
                                     <div id="monthlyOptionBox" class="mb-3 <?= $global['posting_mode'] === 'monthly' ? '' : 'd-none' ?>">
-                                        <label class="form-label fw-bold">মাসের কত তারিখে রান হবে?</label>
+                                        <label class="form-label fw-bold">Monthly Run Day</label>
                                         <div class="input-group">
-                                            <span class="input-group-text">প্রতি মাসের</span>
+                                            <span class="input-group-text">Day</span>
                                             <input type="number" min="1" max="28" class="form-control" name="monthly_run_day" id="monthly_run_day" value="<?= htmlspecialchars($global['monthly_run_day']) ?>">
-                                            <span class="input-group-text">তারিখে</span>
+                                            <span class="input-group-text">of every month</span>
                                         </div>
                                     </div>
                                 </div>
@@ -277,21 +279,26 @@ $evStmt->close();
                         <div class="col-12">
                             <div class="card border shadow-none">
                                 <div class="card-header border-bottom bg-light py-2">
-                                    <h6 class="mb-0 fw-bold"><i class="bi bi-wallet2 text-success me-2"></i>স্টুডেন্ট ফাইন্যান্স লেজার ম্যাপিং (`stfinance`)</h6>
+                                    <h6 class="mb-0 fw-bold"><i class="bi bi-wallet2 text-success me-2"></i>Student Finance Ledger Mapping (`stfinance`)</h6>
                                 </div>
                                 <div class="card-body pt-3">
                                     <div class="row g-3">
                                         <div class="col-md-3">
-                                            <label class="form-label fw-bold">ফি আইটেম কোড (Item Code)</label>
-                                            <input type="text" class="form-control" name="itemcode" id="itemcode" value="<?= htmlspecialchars($global['itemcode']) ?>" required>
-                                            <small class="text-muted">উদাঃ FINE01</small>
+                                            <label class="form-label fw-bold">Fee Item Code</label>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" name="itemcode" id="itemcode" value="<?= htmlspecialchars($fine_itemcode) ?>" required>
+                                                <button class="btn btn-outline-secondary" type="button" onclick="regenerateItemCode()" title="Generate New Unique Code">
+                                                    <i class="bi bi-arrow-repeat"></i>
+                                                </button>
+                                            </div>
+                                            <small class="text-muted">Unique finance identifier</small>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label fw-bold">ইংরেজি বিবরণ (Particular Eng)</label>
+                                            <label class="form-label fw-bold">Particular Title (English)</label>
                                             <input type="text" class="form-control" name="particulareng" id="particulareng" value="<?= htmlspecialchars($global['particulareng']) ?>" required>
                                         </div>
                                         <div class="col-md-5">
-                                            <label class="form-label fw-bold">বাংলা বিবরণ (Particular Ben)</label>
+                                            <label class="form-label fw-bold">Particular Title (Secondary)</label>
                                             <input type="text" class="form-control" name="particularben" id="particularben" value="<?= htmlspecialchars($global['particularben']) ?>" required>
                                         </div>
                                     </div>
@@ -302,7 +309,7 @@ $evStmt->close();
 
                     <div class="mt-4 text-end">
                         <button type="button" class="btn btn-primary px-4" onclick="saveSettings()">
-                            <i class="bi bi-save me-1"></i> সেটিংস সংরক্ষণ করুন
+                            <i class="bi bi-save me-1"></i> Save Settings
                         </button>
                     </div>
                 </form>
@@ -311,7 +318,7 @@ $evStmt->close();
             <!-- TAB 2: CLASS-WISE CUSTOM RATES -->
             <div class="tab-pane fade" id="tab-classes" role="tabpanel">
                 <div class="alert alert-info py-2 mb-3">
-                    <i class="bi bi-info-circle me-1"></i> যেসকল শ্রেণির জন্য পৃথক কাস্টম রেট প্রয়োজন, কেবল সেগুলোতে <strong>"কাস্টম রেট"</strong> সুইচ অন করুন। অন্যথায় ঐ শ্রেণির জন্য গ্লোবাল ডিফল্ট রেট স্বয়ংক্রিয়ভাবে প্রযোজ্য হবে।
+                    <i class="bi bi-info-circle me-1"></i> Enable <strong>"Custom Rate"</strong> only for classes that require specific rates. Otherwise, the global default rates will automatically apply.
                 </div>
 
                 <div class="table-responsive border rounded">
@@ -319,11 +326,11 @@ $evStmt->close();
                         <thead class="table-light">
                             <tr>
                                 <th style="width: 50px;">#</th>
-                                <th>শ্রেণির নাম</th>
-                                <th style="width: 180px;">পলিসি মোড</th>
-                                <th style="width: 200px;">অনুপস্থিতি জরিমানা (৳)</th>
-                                <th style="width: 200px;">বাঙ্ক জরিমানা (৳)</th>
-                                <th style="width: 140px;">স্ট্যাটাস</th>
+                                <th>Class Name</th>
+                                <th style="width: 180px;">Policy Mode</th>
+                                <th style="width: 200px;">Absence Fine (৳)</th>
+                                <th style="width: 200px;">Bunk Fine (৳)</th>
+                                <th style="width: 140px;">Status</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -331,7 +338,7 @@ $evStmt->close();
                                 <tr>
                                     <td colspan="6" class="text-center text-muted py-4">
                                         <i class="bi bi-inbox fs-2 d-block mb-1"></i>
-                                        চলতি সেশন ও শিফটে কোনো শ্রেণি পাওয়া যায়নি।
+                                        No classes found for the active session and shift.
                                     </td>
                                 </tr>
                             <?php else: ?>
@@ -352,7 +359,7 @@ $evStmt->close();
                                                        onchange="toggleClassCustom('<?= htmlspecialchars($cName) ?>', this.checked)">
                                                 <label class="form-check-label" for="toggle_<?= $idx ?>">
                                                     <span id="label_<?= htmlspecialchars($cName) ?>" class="badge <?= $isCustom ? 'bg-label-primary' : 'bg-label-secondary' ?>">
-                                                        <?= $isCustom ? 'কাস্টম রেট' : 'গ্লোবাল ডিফল্ট' ?>
+                                                        <?= $isCustom ? 'Custom Rate' : 'Global Default' ?>
                                                     </span>
                                                 </label>
                                             </div>
@@ -377,9 +384,9 @@ $evStmt->close();
                                         </td>
                                         <td>
                                             <?php if ($isCustom): ?>
-                                                <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>সক্রিয় ওভাররাইড</span>
+                                                <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Active Override</span>
                                             <?php else: ?>
-                                                <span class="badge bg-label-secondary"><i class="bi bi-dash-circle me-1"></i>ডিফল্ট রেট</span>
+                                                <span class="badge bg-label-secondary"><i class="bi bi-dash-circle me-1"></i>Default Rate</span>
                                             <?php endif; ?>
                                         </td>
                                     </tr>
@@ -391,7 +398,7 @@ $evStmt->close();
 
                 <div class="mt-4 text-end">
                     <button type="button" class="btn btn-primary px-4" onclick="saveSettings()">
-                        <i class="bi bi-save me-1"></i> সকল রেট সংরক্ষণ করুন
+                        <i class="bi bi-save me-1"></i> Save All Rates
                     </button>
                 </div>
             </div>
@@ -400,11 +407,11 @@ $evStmt->close();
             <div class="tab-pane fade" id="tab-exemptions" role="tabpanel">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
-                        <h6 class="mb-0 fw-bold"><i class="bi bi-shield-check text-success me-1"></i> দুর্যোগ ও সংরক্ষিত ছুটিসমূহ</h6>
-                        <small class="text-muted">এই তালিকাভুক্ত দিনগুলোতে স্বয়ংক্রিয়ভাবে শিক্ষার্থীদের কোনো অনুপস্থিতি বা বাঙ্ক জরিমানা হবে না।</small>
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-shield-check text-success me-1"></i> Disaster & Holiday Exemptions</h6>
+                        <small class="text-muted">On these listed dates, no student absence or bunk fines will be applied automatically.</small>
                     </div>
                     <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#addExemptionModal">
-                        <i class="bi bi-plus-circle me-1"></i> নতুন দুর্যোগ / ছাড় যুক্ত করুন
+                        <i class="bi bi-plus-circle me-1"></i> Add Disaster / Special Exemption
                     </button>
                 </div>
 
@@ -413,11 +420,11 @@ $evStmt->close();
                         <thead class="table-light">
                             <tr>
                                 <th style="width: 50px;">#</th>
-                                <th>ছুটি / দুর্যোগের কারণ ও শিরোনাম</th>
-                                <th style="width: 150px;">শুরুর তারিখ</th>
-                                <th style="width: 150px;">শেষ তারিখ</th>
-                                <th style="width: 130px;">প্রভাব</th>
-                                <th style="width: 100px;" class="text-center">অ্যাকশন</th>
+                                <th>Reason / Exemption Title</th>
+                                <th style="width: 150px;">Start Date</th>
+                                <th style="width: 150px;">End Date</th>
+                                <th style="width: 140px;">Effect</th>
+                                <th style="width: 100px;" class="text-center">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -425,7 +432,7 @@ $evStmt->close();
                                 <tr>
                                     <td colspan="6" class="text-center text-muted py-4">
                                         <i class="bi bi-calendar-x fs-2 d-block mb-1"></i>
-                                        কোনো বিশেষ দুর্যোগ বা সংরক্ষিত ছুটির রেকর্ড পাওয়া যায়নি।
+                                        No disaster or holiday exemptions recorded yet.
                                     </td>
                                 </tr>
                             <?php else: ?>
@@ -440,11 +447,11 @@ $evStmt->close();
                                         <td><?= $ev['end'] ? date('d M, Y', strtotime($ev['end'])) : date('d M, Y', strtotime($ev['start'])) ?></td>
                                         <td>
                                             <span class="badge bg-label-success">
-                                                <i class="bi bi-check2-all me-1"></i> জরিমানা মওকুফ
+                                                <i class="bi bi-check2-all me-1"></i> Fine Exempted
                                             </span>
                                         </td>
                                         <td class="text-center">
-                                            <button type="button" class="btn btn-outline-danger btn-sm p-1" onclick="deleteExemption(<?= $ev['id'] ?>)" title="মুছে ফেলুন">
+                                            <button type="button" class="btn btn-outline-danger btn-sm p-1" onclick="deleteExemption(<?= $ev['id'] ?>)" title="Delete">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </td>
@@ -460,22 +467,22 @@ $evStmt->close();
             <div class="tab-pane fade" id="tab-generator" role="tabpanel">
                 <div class="card border shadow-none mb-4">
                     <div class="card-header border-bottom bg-light py-2">
-                        <h6 class="mb-0 fw-bold"><i class="bi bi-gear-wide-connected text-primary me-2"></i>জরিমানা গণনা ও সিঙ্ক কনসোল</h6>
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-gear-wide-connected text-primary me-2"></i>Fine Calculation & Sync Console</h6>
                     </div>
                     <div class="card-body pt-3">
                         <div class="row g-3 align-items-end">
                             <div class="col-md-3">
-                                <label class="form-label fw-bold">শুরুর তারিখ <span class="text-danger">*</span></label>
+                                <label class="form-label fw-bold">Start Date <span class="text-danger">*</span></label>
                                 <input type="date" class="form-control" id="gen_from_date" value="<?= date('Y-m-01') ?>">
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label fw-bold">শেষ তারিখ <span class="text-danger">*</span></label>
+                                <label class="form-label fw-bold">End Date <span class="text-danger">*</span></label>
                                 <input type="date" class="form-control" id="gen_to_date" value="<?= date('Y-m-d') ?>">
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label fw-bold">শ্রেণি ফিল্টার</label>
+                                <label class="form-label fw-bold">Class Filter</label>
                                 <select class="form-select" id="gen_class">
-                                    <option value="all">সকল শ্রেণি (All Classes)</option>
+                                    <option value="all">All Classes</option>
                                     <?php foreach ($classes as $c): ?>
                                         <option value="<?= htmlspecialchars($c) ?>"><?= htmlspecialchars($c) ?></option>
                                     <?php endforeach; ?>
@@ -483,7 +490,7 @@ $evStmt->close();
                             </div>
                             <div class="col-md-3">
                                 <button type="button" class="btn btn-info w-100" id="btnPreviewFines" onclick="previewFines()">
-                                    <i class="bi bi-search me-1"></i> হিসাব প্রিভিউ করুন
+                                    <i class="bi bi-search me-1"></i> Preview Calculation
                                 </button>
                             </div>
                         </div>
@@ -495,25 +502,25 @@ $evStmt->close();
                     <div class="row g-3">
                         <div class="col-sm-6 col-lg-3">
                             <div class="card border shadow-none p-3 text-center">
-                                <div class="text-muted small">মোট জরিমানাভুক্ত শিক্ষার্থী</div>
+                                <div class="text-muted small">Total Fined Students</div>
                                 <h4 class="mb-0 text-primary fw-bold" id="kpiStudents">0</h4>
                             </div>
                         </div>
                         <div class="col-sm-6 col-lg-3">
                             <div class="card border shadow-none p-3 text-center">
-                                <div class="text-muted small">অনুপস্থিত দিন সংখ্যা</div>
+                                <div class="text-muted small">Absent Days Count</div>
                                 <h4 class="mb-0 text-warning fw-bold" id="kpiAbsentDays">0</h4>
                             </div>
                         </div>
                         <div class="col-sm-6 col-lg-3">
                             <div class="card border shadow-none p-3 text-center">
-                                <div class="text-muted small">বাঙ্ক (পলায়ন) সংখ্যা</div>
+                                <div class="text-muted small">Bunk Days Count</div>
                                 <h4 class="mb-0 text-danger fw-bold" id="kpiBunkDays">0</h4>
                             </div>
                         </div>
                         <div class="col-sm-6 col-lg-3">
                             <div class="card border shadow-none p-3 text-center">
-                                <div class="text-muted small">মোট জরিমানা পরিমাণ</div>
+                                <div class="text-muted small">Total Fine Amount</div>
                                 <h4 class="mb-0 text-success fw-bold">৳ <span id="kpiTotalFine">0.00</span></h4>
                             </div>
                         </div>
@@ -523,25 +530,25 @@ $evStmt->close();
                     <div class="d-flex justify-content-between align-items-center mt-3 p-3 bg-light rounded border">
                         <div>
                             <span class="fw-bold text-dark" id="previewRangeLabel"></span>
-                            <div class="text-muted small">হিসাব সঠিক থাকলে সরাসরি শিক্ষার্থীদের লেজারে পোস্ট করতে নিচের বাটনটি চাপুন।</div>
+                            <div class="text-muted small">If the calculation looks accurate, click the button to post directly to student accounts.</div>
                         </div>
                         <button type="button" class="btn btn-success px-4" id="btnPostFines" onclick="postFines()">
-                            <i class="bi bi-send-check me-1"></i> stfinance এ পোস্ট করুন
+                            <i class="bi bi-send-check me-1"></i> Post to stfinance Ledger
                         </button>
                     </div>
 
                     <!-- Breakdown Table -->
                     <div class="mt-4">
-                        <h6 class="fw-bold mb-2"><i class="bi bi-list-check me-1"></i> শ্রেণিভিত্তিক সারসংক্ষেপ</h6>
+                        <h6 class="fw-bold mb-2"><i class="bi bi-list-check me-1"></i> Class-wise Summary</h6>
                         <div class="table-responsive border rounded">
                             <table class="table table-sm table-striped align-middle mb-0" id="previewBreakdownTable">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>শ্রেণি</th>
-                                        <th class="text-center">শিক্ষার্থী সংখ্যা</th>
-                                        <th class="text-center">অনুপস্থিত দিন</th>
-                                        <th class="text-center">বাঙ্ক দিন</th>
-                                        <th class="text-end">মোট জরিমানা</th>
+                                        <th>Class Name</th>
+                                        <th class="text-center">Students</th>
+                                        <th class="text-center">Absent Days</th>
+                                        <th class="text-center">Bunk Days</th>
+                                        <th class="text-end">Total Fine</th>
                                     </tr>
                                 </thead>
                                 <tbody></tbody>
@@ -552,7 +559,7 @@ $evStmt->close();
 
                 <div id="previewLoader" class="text-center py-5 d-none">
                     <div class="spinner-border text-primary" role="status"></div>
-                    <div class="mt-2 text-muted">উপস্থিতি ডাটা যাচাই ও জরিমানা হিসাব করা হচ্ছে...</div>
+                    <div class="mt-2 text-muted">Checking attendance records and computing fines...</div>
                 </div>
             </div>
 
@@ -565,33 +572,33 @@ $evStmt->close();
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-warning text-white">
-                <h5 class="modal-title text-white"><i class="bi bi-cloud-lightning-rain me-1"></i> দুর্যোগ / বিশেষ ছাড় যুক্ত করুন</h5>
+                <h5 class="modal-title text-white"><i class="bi bi-cloud-lightning-rain me-1"></i> Add Disaster / Special Exemption</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="formAddExemption">
                     <div class="mb-3">
-                        <label class="form-label fw-bold">ছাড়ের কারণ বা শিরোনাম <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="title" placeholder="উদাঃ তীব্র শৈত্যপ্রবাহ / অতিবৃষ্টির কারণে ছুটি" required>
+                        <label class="form-label fw-bold">Exemption Title / Reason <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="title" placeholder="e.g. Severe Cold Wave / Heavy Rainfall Shutdown" required>
                     </div>
                     <div class="row g-2 mb-3">
                         <div class="col-6">
-                            <label class="form-label fw-bold">শুরুর তারিখ <span class="text-danger">*</span></label>
+                            <label class="form-label fw-bold">Start Date <span class="text-danger">*</span></label>
                             <input type="date" class="form-control" name="start_date" value="<?= date('Y-m-d') ?>" required>
                         </div>
                         <div class="col-6">
-                            <label class="form-label fw-bold">শেষ তারিখ <span class="text-danger">*</span></label>
+                            <label class="form-label fw-bold">End Date <span class="text-danger">*</span></label>
                             <input type="date" class="form-control" name="end_date" value="<?= date('Y-m-d') ?>" required>
                         </div>
                     </div>
                     <div class="alert alert-warning py-2 mb-0 small">
-                        <i class="bi bi-info-circle me-1"></i> এই তারিখগুলোতে শিক্ষার্থীদের কোনো অনুপস্থিতি বা বাঙ্ক জরিমানা স্বয়ংক্রিয়ভাবে বাতিল থাকবে।
+                        <i class="bi bi-info-circle me-1"></i> On these dates, all student absence and bunk fines will be waived automatically.
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">বন্ধ করুন</button>
-                <button type="button" class="btn btn-primary" onclick="submitExemption()">সংরক্ষণ করুন</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitExemption()">Save Exemption</button>
             </div>
         </div>
     </div>
@@ -599,7 +606,32 @@ $evStmt->close();
 
 <?php include 'footer.php'; ?>
 
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
+// Configure SweetAlert Toast for quick status notifications
+const Toast = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true,
+    didOpen: (toast) => {
+        toast.addEventListener('mouseenter', Swal.stopTimer);
+        toast.addEventListener('mouseleave', Swal.resumeTimer);
+    }
+});
+
+function regenerateItemCode() {
+    const newCode = Math.floor(Date.now() / 1000).toString(16) + Math.random().toString(16).substring(2, 7);
+    $('#itemcode').val(newCode);
+    Toast.fire({
+        icon: 'info',
+        title: 'New Item Code Generated: ' + newCode
+    });
+}
+
 function togglePostingOptions() {
     const mode = $('input[name="posting_mode"]:checked').val();
     if (mode === 'daily') {
@@ -622,11 +654,11 @@ function toggleClassCustom(className, isChecked) {
     if (isChecked) {
         inputAbsent.prop('disabled', false);
         inputBunk.prop('disabled', false);
-        label.removeClass('bg-label-secondary').addClass('bg-label-primary').text('কাস্টম রেট');
+        label.removeClass('bg-label-secondary').addClass('bg-label-primary').text('Custom Rate');
     } else {
         inputAbsent.prop('disabled', true).val($('#absent_rate').val());
         inputBunk.prop('disabled', true).val($('#bunk_rate').val());
-        label.removeClass('bg-label-primary').addClass('bg-label-secondary').text('গ্লোবাল ডিফল্ট');
+        label.removeClass('bg-label-primary').addClass('bg-label-secondary').text('Global Default');
     }
 }
 
@@ -635,7 +667,11 @@ function showAlert(type, message) {
     alertBox.removeClass('d-none alert-success alert-danger alert-warning alert-info')
             .addClass(`alert-${type}`);
     $('#statusAlertText').html(message);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    Toast.fire({
+        icon: type === 'danger' ? 'error' : (type === 'success' ? 'success' : 'info'),
+        title: message.replace(/<[^>]*>?/gm, '')
+    });
 }
 
 function saveSettings() {
@@ -654,6 +690,15 @@ function saveSettings() {
         formData.push({ name: `class_rates[${cName}][bunk_rate]`, value: bunkRate });
     });
 
+    Swal.fire({
+        title: 'Saving Settings...',
+        text: 'Please wait while fine policy is being updated.',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
     $.ajax({
         url: 'ajax/save-fine-settings.php',
         type: 'POST',
@@ -661,19 +706,46 @@ function saveSettings() {
         dataType: 'json',
         success: function(res) {
             if (res.status === 'success') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Saved Successfully',
+                    text: res.message,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
                 showAlert('success', `<i class="bi bi-check-circle me-1"></i> ${res.message}`);
             } else {
-                showAlert('danger', `<i class="bi bi-exclamation-triangle me-1"></i> ${res.message || 'সেটিংস সংরক্ষণে ত্রুটি হয়েছে।'}`);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Save Failed',
+                    text: res.message || 'Error occurred while saving settings.'
+                });
+                showAlert('danger', `<i class="bi bi-exclamation-triangle me-1"></i> ${res.message || 'Error occurred while saving settings.'}`);
             }
         },
         error: function(xhr, status, error) {
-            showAlert('danger', `<i class="bi bi-x-circle me-1"></i> সার্ভারের সাথে সংযোগে ত্রুটি: ${error}`);
+            Swal.fire({
+                icon: 'error',
+                title: 'Server Error',
+                text: `Server communication error: ${error}`
+            });
+            showAlert('danger', `<i class="bi bi-x-circle me-1"></i> Server communication error: ${error}`);
         }
     });
 }
 
 function submitExemption() {
     const form = $('#formAddExemption');
+    const title = form.find('input[name="title"]').val().trim();
+    if (!title) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Required Field',
+            text: 'Please provide a title or reason for the exemption.'
+        });
+        return;
+    }
+
     const data = form.serialize() + '&action=add_disaster_exemption';
 
     $.ajax({
@@ -684,33 +756,80 @@ function submitExemption() {
         success: function(res) {
             if (res.status === 'success') {
                 $('#addExemptionModal').modal('hide');
-                showAlert('success', `<i class="bi bi-check-circle me-1"></i> ${res.message}`);
-                setTimeout(() => location.reload(), 1000);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Exemption Added',
+                    text: res.message,
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    location.reload();
+                });
             } else {
-                alert(res.message || 'ত্রুটি হয়েছে।');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: res.message || 'Failed to add exemption.'
+                });
             }
         },
         error: function() {
-            alert('সার্ভার রেসপন্স পাওয়া যায়নি।');
+            Swal.fire({
+                icon: 'error',
+                title: 'Connection Error',
+                text: 'Failed to connect to the server.'
+            });
         }
     });
 }
 
 function deleteExemption(eventId) {
-    if (!confirm('আপনি কি নিশ্চিত যে এই ছাড়ের রেকর্ডটি মুছে ফেলতে চান?')) return;
-
-    $.ajax({
-        url: 'ajax/fine-actions.php',
-        type: 'POST',
-        data: { action: 'delete_disaster_exemption', event_id: eventId },
-        dataType: 'json',
-        success: function(res) {
-            if (res.status === 'success') {
-                showAlert('success', `<i class="bi bi-check-circle me-1"></i> ${res.message}`);
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                showAlert('danger', res.message);
-            }
+    Swal.fire({
+        title: 'Delete Exemption?',
+        text: 'Are you sure you want to remove this exemption record? Fines may apply on this date.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Delete',
+        cancelButtonText: 'Cancel',
+        customClass: {
+            confirmButton: 'btn btn-danger me-2',
+            cancelButton: 'btn btn-secondary'
+        },
+        buttonsStyling: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: 'ajax/fine-actions.php',
+                type: 'POST',
+                data: { action: 'delete_disaster_exemption', event_id: eventId },
+                dataType: 'json',
+                success: function(res) {
+                    if (res.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Deleted',
+                            text: res.message,
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Delete Failed',
+                            text: res.message
+                        });
+                    }
+                },
+                error: function() {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Server communication error during delete.'
+                    });
+                }
+            });
         }
     });
 }
@@ -723,7 +842,11 @@ function previewFines() {
     const slot = '<?= htmlspecialchars($slot) ?>';
 
     if (!fromDate || !toDate) {
-        alert('শুরুর ও শেষ তারিখ নির্বাচন করুন।');
+        Swal.fire({
+            icon: 'warning',
+            title: 'Missing Dates',
+            text: 'Please select both start and end dates to compute fines.'
+        });
         return;
     }
 
@@ -750,13 +873,13 @@ function previewFines() {
                 $('#kpiAbsentDays').text(res.summary.total_absent_days);
                 $('#kpiBunkDays').text(res.summary.total_bunk_days);
                 $('#kpiTotalFine').text(Number(res.summary.total_fine_amount).toFixed(2));
-                $('#previewRangeLabel').text(`হিসাবকৃত সময়সীমা: ${res.summary.date_range} (ছুটি/দুর্যোগ দিন: ${res.summary.exempt_days_found} টি)`);
+                $('#previewRangeLabel').text(`Calculated Range: ${res.summary.date_range} (Exempted Dates: ${res.summary.exempt_days_found})`);
 
                 // Render breakdown table
                 const tbody = $('#previewBreakdownTable tbody');
                 tbody.empty();
                 if (res.class_breakdown.length === 0) {
-                    tbody.append('<tr><td colspan="5" class="text-center text-muted py-2">কোনো জরিমানা হিসাব পাওয়া যায়নি।</td></tr>');
+                    tbody.append('<tr><td colspan="5" class="text-center text-muted py-2">No fine records found for this period.</td></tr>');
                 } else {
                     res.class_breakdown.forEach(item => {
                         tbody.append(`
@@ -770,54 +893,104 @@ function previewFines() {
                         `);
                     });
                 }
+
+                Toast.fire({
+                    icon: 'success',
+                    title: `Calculation complete: ${res.summary.total_students} student(s) found.`
+                });
             } else {
-                showAlert('danger', res.message || 'প্রিভিউ তৈরিতে সমস্যা হয়েছে।');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Preview Failed',
+                    text: res.message || 'Error occurred while generating preview.'
+                });
             }
         },
         error: function() {
             $('#previewLoader').addClass('d-none');
-            showAlert('danger', 'সার্ভারের সাথে সংযোগ স্থাপন করা সম্ভব হয়নি।');
+            Swal.fire({
+                icon: 'error',
+                title: 'Connection Error',
+                text: 'Unable to communicate with the server.'
+            });
         }
     });
 }
 
 function postFines() {
-    if (!confirm('আপনি কি নিশ্চিত যে এই জরিমানা শিক্ষার্থীদের stfinance লেজারে পোস্ট করতে চান?')) return;
-
     const fromDate = $('#gen_from_date').val();
     const toDate = $('#gen_to_date').val();
     const className = $('#gen_class').val();
     const sessionYear = '<?= htmlspecialchars($session) ?>';
     const slot = '<?= htmlspecialchars($slot) ?>';
 
-    const btn = $('#btnPostFines');
-    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> পোস্ট হচ্ছে...');
+    Swal.fire({
+        title: 'Confirm Fine Posting',
+        html: `Are you sure you want to post these calculated fines to students' <strong>stfinance</strong> accounts?<br><small class="text-muted">This will update student ledgers for ${fromDate} to ${toDate}.</small>`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Post Now',
+        cancelButtonText: 'Cancel',
+        customClass: {
+            confirmButton: 'btn btn-success me-2',
+            cancelButton: 'btn btn-secondary'
+        },
+        buttonsStyling: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const btn = $('#btnPostFines');
+            btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Posting in progress...');
 
-    $.ajax({
-        url: 'ajax/fine-actions.php',
-        type: 'POST',
-        data: {
-            action: 'post_fines',
-            sessionyear: sessionYear,
-            slot: slot,
-            from_date: fromDate,
-            to_date: toDate,
-            classname: className
-        },
-        dataType: 'json',
-        success: function(res) {
-            btn.prop('disabled', false).html('<i class="bi bi-send-check me-1"></i> stfinance এ পোস্ট করুন');
-            if (res.status === 'success') {
-                showAlert('success', `<i class="bi bi-check-circle me-1"></i> ${res.message}`);
-                $('#previewSummaryBox').addClass('d-none');
-            } else {
-                showAlert('danger', res.message || 'পোস্টিং সম্পন্ন হয়নি।');
-            }
-        },
-        error: function() {
-            btn.prop('disabled', false).html('<i class="bi bi-send-check me-1"></i> stfinance এ পোস্ট করুন');
-            showAlert('danger', 'পোস্টিংয়ের সময় সংযোগ বিচ্ছিন্ন হয়েছে।');
+            Swal.fire({
+                title: 'Posting Fines...',
+                text: 'Updating student finance ledgers, please wait.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            $.ajax({
+                url: 'ajax/fine-actions.php',
+                type: 'POST',
+                data: {
+                    action: 'post_fines',
+                    sessionyear: sessionYear,
+                    slot: slot,
+                    from_date: fromDate,
+                    to_date: toDate,
+                    classname: className
+                },
+                dataType: 'json',
+                success: function(res) {
+                    btn.prop('disabled', false).html('<i class="bi bi-send-check me-1"></i> Post to stfinance Ledger');
+                    if (res.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Posting Completed',
+                            text: res.message
+                        });
+                        showAlert('success', `<i class="bi bi-check-circle me-1"></i> ${res.message}`);
+                        $('#previewSummaryBox').addClass('d-none');
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Posting Failed',
+                            text: res.message || 'Posting could not be completed.'
+                        });
+                    }
+                },
+                error: function() {
+                    btn.prop('disabled', false).html('<i class="bi bi-send-check me-1"></i> Post to stfinance Ledger');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Connection Error',
+                        text: 'Connection was interrupted during posting.'
+                    });
+                }
+            });
         }
     });
 }
 </script>
+
