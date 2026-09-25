@@ -19,6 +19,11 @@ if (!$sccode) {
 $action = $_GET['action'] ?? $_POST['action'] ?? 'get_summary';
 $sessionyear = $_GET['sessionyear'] ?? $_POST['sessionyear'] ?? ($_COOKIE['chain-session'] ?? date('Y'));
 
+// Extract 2 digit year pattern (e.g., '26' matches 2026, 2025-26, 2026-27)
+$yr_digits = preg_replace('/\D/', '', $sessionyear);
+$yr_last2 = substr($yr_digits, -2);
+$session_pattern = !empty($yr_last2) ? ('%' . $yr_last2 . '%') : ('%' . date('y') . '%');
+
 function clean_phone($phone) {
     if (!$phone) return '';
     $digits = preg_replace('/\D/', '', $phone);
@@ -38,22 +43,24 @@ function clean_nid($nid) {
     return '';
 }
 
-// Fetch active students strictly for Classes Six to Ten
+// Fetch active students strictly for Classes Six to Twelve with matching Session pattern
 $query = "
     SELECT 
-        si.id as sessioninfo_id, si.stid, si.classname, si.sectionname, si.rollno, si.voter_no, si.slot,
+        si.id as sessioninfo_id, si.stid, si.sessionyear, si.classname, si.sectionname, si.rollno, si.voter_no, si.slot,
         s.stnameeng, s.stnameben, s.fname, s.fnameben, s.mname, s.mnameben,
         s.fnid, s.mnid, s.fmobile, s.mmobile, s.guarmobile, s.guarname,
         s.previll, s.prepo, s.preps, s.predist
     FROM sessioninfo si
     JOIN students s ON si.stid = s.stid AND si.sccode = s.sccode
-    WHERE si.sccode = ? AND si.sessionyear = ? AND si.status = 1
+    WHERE si.sccode = ? AND si.sessionyear LIKE ? AND si.status = 1
     AND (
         LOWER(TRIM(si.classname)) IN ('six', '6', 'class 6', 'class six')
         OR LOWER(TRIM(si.classname)) IN ('seven', '7', 'class 7', 'class seven')
         OR LOWER(TRIM(si.classname)) IN ('eight', '8', 'class 8', 'class eight')
         OR LOWER(TRIM(si.classname)) IN ('nine', '9', 'class 9', 'class nine')
         OR LOWER(TRIM(si.classname)) IN ('ten', '10', 'class 10', 'class ten')
+        OR LOWER(TRIM(si.classname)) IN ('eleven', '11', 'class 11', 'class eleven', 'xi')
+        OR LOWER(TRIM(si.classname)) IN ('twelve', '12', 'class 12', 'class twelve', 'xii')
     )
     ORDER BY 
       CASE 
@@ -62,6 +69,8 @@ $query = "
         WHEN LOWER(TRIM(si.classname)) IN ('eight', '8', 'class 8', 'class eight') THEN 3
         WHEN LOWER(TRIM(si.classname)) IN ('nine', '9', 'class 9', 'class nine') THEN 4
         WHEN LOWER(TRIM(si.classname)) IN ('ten', '10', 'class 10', 'class ten') THEN 5
+        WHEN LOWER(TRIM(si.classname)) IN ('eleven', '11', 'class 11', 'class eleven', 'xi') THEN 6
+        WHEN LOWER(TRIM(si.classname)) IN ('twelve', '12', 'class 12', 'class twelve', 'xii') THEN 7
         ELSE 99
       END ASC,
       si.classname ASC,
@@ -70,7 +79,7 @@ $query = "
 ";
 
 $stmt = $conn->prepare($query);
-$stmt->bind_param("is", $sccode, $sessionyear);
+$stmt->bind_param("is", $sccode, $session_pattern);
 $stmt->execute();
 $res = $stmt->get_result();
 
@@ -151,7 +160,8 @@ if ($action === 'get_summary') {
             'total_unique_voters' => count($unique_voters),
             'sibling_clusters_by_nid' => $sibling_clusters_by_nid,
             'sibling_clusters_by_mobile' => $sibling_clusters_by_mobile,
-            'sessionyear' => $sessionyear
+            'sessionyear' => $sessionyear,
+            'session_pattern' => $session_pattern
         ]
     ]);
     exit;
@@ -175,6 +185,7 @@ if ($action === 'check_nid') {
                 'class' => $st['classname'],
                 'section' => $st['sectionname'],
                 'roll' => $st['rollno'],
+                'sessionyear' => $st['sessionyear'],
                 'father' => $st['fname'],
                 'mother' => $st['mname'],
                 'mobile' => $st['fmobile'] ?: $st['mmobile']
@@ -188,7 +199,9 @@ if ($action === 'check_nid') {
                 'type' => 'Father NID',
                 'raw_nid' => $fnid_raw,
                 'class' => $st['classname'],
-                'roll' => $st['rollno']
+                'section' => $st['sectionname'],
+                'roll' => $st['rollno'],
+                'sessionyear' => $st['sessionyear']
             ];
         }
 
@@ -199,7 +212,9 @@ if ($action === 'check_nid') {
                 'type' => 'Mother NID',
                 'raw_nid' => $mnid_raw,
                 'class' => $st['classname'],
-                'roll' => $st['rollno']
+                'section' => $st['sectionname'],
+                'roll' => $st['rollno'],
+                'sessionyear' => $st['sessionyear']
             ];
         }
 
@@ -211,7 +226,8 @@ if ($action === 'check_nid') {
                 'name' => $st['stnameeng'] ?: $st['stnameben'],
                 'class' => $st['classname'],
                 'section' => $st['sectionname'],
-                'roll' => $st['rollno']
+                'roll' => $st['rollno'],
+                'sessionyear' => $st['sessionyear']
             ];
         }
     }
@@ -264,6 +280,7 @@ if ($action === 'check_mobile') {
                 'class' => $st['classname'],
                 'section' => $st['sectionname'],
                 'roll' => $st['rollno'],
+                'sessionyear' => $st['sessionyear'],
                 'father' => $st['fname']
             ];
         }
@@ -275,7 +292,9 @@ if ($action === 'check_mobile') {
                 'type' => 'Father Mobile',
                 'raw_mobile' => $fm_raw,
                 'class' => $st['classname'],
-                'roll' => $st['rollno']
+                'section' => $st['sectionname'],
+                'roll' => $st['rollno'],
+                'sessionyear' => $st['sessionyear']
             ];
         }
 
@@ -289,6 +308,7 @@ if ($action === 'check_mobile') {
                 'class' => $st['classname'],
                 'section' => $st['sectionname'],
                 'roll' => $st['rollno'],
+                'sessionyear' => $st['sessionyear'],
                 'father' => $st['fname']
             ];
         }
@@ -411,6 +431,7 @@ if ($action === 'preview_siblings') {
                         'class' => $m['classname'],
                         'section' => $m['sectionname'],
                         'roll' => $m['rollno'],
+                        'sessionyear' => $m['sessionyear'],
                         'current_voter_no' => $m['voter_no']
                     ];
                 }, $members)

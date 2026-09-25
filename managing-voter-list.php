@@ -47,7 +47,7 @@ $section = $_COOKIE['chain-section'] ?? '';
                         <i class="bi bi-person-check-fill me-2"></i>Managing Committee Election &mdash; Guardian Electoral Roll Management
                     </h4>
                     <p class="text-muted mb-0">
-                        Profile auditing, sibling clustering, and automated voter number assignment for active students in <strong>Class Six to Ten</strong> (Session: <strong><?= htmlspecialchars($sessionyear) ?></strong>).
+                        Profile auditing, sibling clustering, and automated voter number assignment for active students in <strong>Class Six to Twelve</strong> (Session matching <strong><?= htmlspecialchars($sessionyear) ?></strong>).
                     </p>
                 </div>
                 <div class="d-flex flex-wrap gap-2">
@@ -377,14 +377,14 @@ $section = $_COOKIE['chain-section'] ?? '';
                     // Siblings tab
                     if (d.multiple_nid_groups.length > 0) {
                         var h = '<div class="table-responsive"><table class="table table-bordered table-sm align-middle">';
-                        h += '<thead class="table-light"><tr><th>NID & Guardian</th><th>Children Count</th><th>Students Details (Class, Section, Roll)</th></tr></thead><tbody>';
+                        h += '<thead class="table-light"><tr><th>NID & Guardian</th><th>Children Count</th><th>Students Details (ID, Class, Sec, Roll, Session)</th></tr></thead><tbody>';
                         d.multiple_nid_groups.forEach(function(g) {
                             h += '<tr>';
                             h += '<td><strong>' + g.nid + '</strong><br/><small class="text-muted">' + g.guardian_name + '</small></td>';
                             h += '<td class="text-center"><span class="badge bg-label-primary">' + g.count + ' Students</span></td>';
                             h += '<td>';
                             g.students.forEach(function(st, idx) {
-                                h += '<div class="small mb-1">' + (idx+1) + '. <strong>' + st.name + '</strong> (' + st.class + ', Sec: ' + st.section + ', Roll: ' + st.roll + ')</div>';
+                                h += '<div class="small mb-1">' + (idx+1) + '. <strong>' + st.name + '</strong> <span class="text-primary fw-semibold">[ID: ' + st.stid + ']</span> (' + st.class + ', Sec: ' + st.section + ', Roll: ' + st.roll + ', <span class="badge bg-label-info py-0 px-1">Session: ' + (st.sessionyear || '—') + '</span>)</div>';
                             });
                             h += '</td></tr>';
                         });
@@ -397,11 +397,11 @@ $section = $_COOKIE['chain-section'] ?? '';
                     // Invalid NID
                     if (d.invalid_nid_list.length > 0) {
                         var h2 = '<div class="table-responsive"><table class="table table-bordered table-sm align-middle">';
-                        h2 += '<thead class="table-light"><tr><th>Student Name</th><th>Class & Roll</th><th>NID Type</th><th>Given NID (Invalid)</th></tr></thead><tbody>';
+                        h2 += '<thead class="table-light"><tr><th>Student ID & Name</th><th>Class, Roll & Session</th><th>NID Type</th><th>Given NID (Invalid)</th></tr></thead><tbody>';
                         d.invalid_nid_list.forEach(function(st) {
                             h2 += '<tr>';
-                            h2 += '<td>' + st.name + '</td>';
-                            h2 += '<td>' + st.class + ' (Roll: ' + st.roll + ')</td>';
+                            h2 += '<td><strong>' + st.name + '</strong><br/><small class="text-muted">ID: ' + st.stid + '</small></td>';
+                            h2 += '<td>' + st.class + ' (Roll: ' + st.roll + ')<br/><small class="text-muted">Session: ' + (st.sessionyear || '—') + '</small></td>';
                             h2 += '<td>' + st.type + '</td>';
                             h2 += '<td class="text-danger fw-bold">' + st.raw_nid + '</td>';
                             h2 += '</tr>';
@@ -415,11 +415,11 @@ $section = $_COOKIE['chain-section'] ?? '';
                     // Missing NID
                     if (d.missing_nid_list.length > 0) {
                         var h3 = '<div class="table-responsive"><table class="table table-bordered table-sm align-middle">';
-                        h3 += '<thead class="table-light"><tr><th>Student Name</th><th>Class & Roll</th><th>Parents</th><th>Mobile</th></tr></thead><tbody>';
+                        h3 += '<thead class="table-light"><tr><th>Student ID & Name</th><th>Class, Sec, Roll & Session</th><th>Parents</th><th>Mobile</th></tr></thead><tbody>';
                         d.missing_nid_list.forEach(function(st) {
                             h3 += '<tr>';
-                            h3 += '<td>' + st.name + '</td>';
-                            h3 += '<td>' + st.class + ' (Sec: ' + st.section + ', Roll: ' + st.roll + ')</td>';
+                            h3 += '<td><strong>' + st.name + '</strong><br/><small class="text-primary fw-semibold">ID: ' + st.stid + '</small></td>';
+                            h3 += '<td>' + st.class + ' (Sec: ' + st.section + ', Roll: ' + st.roll + ')<br/><span class="badge bg-label-secondary py-0 px-1">Session: ' + (st.sessionyear || '—') + '</span></td>';
                             h3 += '<td>F: ' + (st.father || '—') + '<br/>M: ' + (st.mother || '—') + '</td>';
                             h3 += '<td>' + (st.mobile || '—') + '</td>';
                             h3 += '</tr>';
@@ -460,7 +460,7 @@ $section = $_COOKIE['chain-section'] ?? '';
                             h += '<td class="text-center"><span class="badge bg-label-info">' + g.count + ' Students</span></td>';
                             h += '<td>';
                             g.students.forEach(function(st, idx) {
-                                h += '<div class="small mb-1">' + (idx+1) + '. <strong>' + st.name + '</strong> (' + st.class + ', Sec: ' + st.section + ', Roll: ' + st.roll + ')</div>';
+                                h += '<div class="small mb-1">' + (idx+1) + '. <strong>' + st.name + '</strong> <span class="text-primary fw-semibold">[ID: ' + st.stid + ']</span> (' + st.class + ', Sec: ' + st.section + ', Roll: ' + st.roll + ', <span class="badge bg-label-info py-0 px-1">Session: ' + (st.sessionyear || '—') + '</span>)</div>';
                             });
                             h += '</td></tr>';
                         });
@@ -473,11 +473,11 @@ $section = $_COOKIE['chain-section'] ?? '';
                     // Invalid mobile
                     if (d.invalid_mobile_list.length > 0) {
                         var h2 = '<div class="table-responsive"><table class="table table-bordered table-sm align-middle">';
-                        h2 += '<thead class="table-light"><tr><th>Student Name</th><th>Class & Roll</th><th>Mobile No. (Invalid)</th></tr></thead><tbody>';
+                        h2 += '<thead class="table-light"><tr><th>Student ID & Name</th><th>Class, Roll & Session</th><th>Mobile No. (Invalid)</th></tr></thead><tbody>';
                         d.invalid_mobile_list.forEach(function(st) {
                             h2 += '<tr>';
-                            h2 += '<td>' + st.name + '</td>';
-                            h2 += '<td>' + st.class + ' (Roll: ' + st.roll + ')</td>';
+                            h2 += '<td><strong>' + st.name + '</strong><br/><small class="text-muted">ID: ' + st.stid + '</small></td>';
+                            h2 += '<td>' + st.class + ' (Roll: ' + st.roll + ')<br/><small class="text-muted">Session: ' + (st.sessionyear || '—') + '</small></td>';
                             h2 += '<td class="text-danger fw-bold">' + st.raw_mobile + '</td>';
                             h2 += '</tr>';
                         });
@@ -490,11 +490,11 @@ $section = $_COOKIE['chain-section'] ?? '';
                     // Missing mobile
                     if (d.missing_mobile_list.length > 0) {
                         var h3 = '<div class="table-responsive"><table class="table table-bordered table-sm align-middle">';
-                        h3 += '<thead class="table-light"><tr><th>Student Name</th><th>Class & Roll</th><th>Father</th></tr></thead><tbody>';
+                        h3 += '<thead class="table-light"><tr><th>Student ID & Name</th><th>Class, Sec, Roll & Session</th><th>Father</th></tr></thead><tbody>';
                         d.missing_mobile_list.forEach(function(st) {
                             h3 += '<tr>';
-                            h3 += '<td>' + st.name + '</td>';
-                            h3 += '<td>' + st.class + ' (Sec: ' + st.section + ', Roll: ' + st.roll + ')</td>';
+                            h3 += '<td><strong>' + st.name + '</strong><br/><small class="text-primary fw-semibold">ID: ' + st.stid + '</small></td>';
+                            h3 += '<td>' + st.class + ' (Sec: ' + st.section + ', Roll: ' + st.roll + ')<br/><span class="badge bg-label-secondary py-0 px-1">Session: ' + (st.sessionyear || '—') + '</span></td>';
                             h3 += '<td>' + (st.father || '—') + '</td>';
                             h3 += '</tr>';
                         });
@@ -522,7 +522,7 @@ $section = $_COOKIE['chain-section'] ?? '';
                     var list = res.data.sibling_groups;
                     if (list.length > 0) {
                         var h = '<div class="table-responsive"><table class="table table-bordered table-hover align-middle">';
-                        h += '<thead class="table-light"><tr><th style="width: 50px;">SL</th><th>Guardian Name & Address</th><th>NID & Mobile</th><th>Sibling Students (Children)</th></tr></thead><tbody>';
+                        h += '<thead class="table-light"><tr><th style="width: 50px;">SL</th><th>Guardian Name & Address</th><th>NID & Mobile</th><th>Sibling Students / Children (with ID & Session)</th></tr></thead><tbody>';
                         list.forEach(function(g, idx) {
                             h += '<tr>';
                             h += '<td class="text-center fw-bold">' + (idx+1) + '</td>';
@@ -531,7 +531,7 @@ $section = $_COOKIE['chain-section'] ?? '';
                             h += '<td>';
                             g.children.forEach(function(c, cidx) {
                                 h += '<div class="p-1 border-bottom d-flex justify-content-between align-items-center">';
-                                h += '<span>' + (cidx+1) + '. <strong>' + c.name + '</strong> &mdash; ' + c.class + ' (' + c.section + '), Roll: ' + c.roll + '</span>';
+                                h += '<span>' + (cidx+1) + '. <strong>' + c.name + '</strong> <span class="text-primary fw-semibold">[ID: ' + c.stid + ']</span> &mdash; ' + c.class + ' (' + c.section + '), Roll: <strong>' + c.roll + '</strong>, <span class="badge bg-label-info py-0 px-1">Session: ' + (c.sessionyear || '—') + '</span></span>';
                                 if (c.current_voter_no > 0) {
                                     h += '<span class="badge bg-primary">Voter No: ' + c.current_voter_no + '</span>';
                                 }

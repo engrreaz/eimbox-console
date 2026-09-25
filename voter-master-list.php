@@ -4,21 +4,28 @@ require_once 'header.php';
 $slot = $_COOKIE['chain-slot'] ?? ($_GET['slot'] ?? '');
 $sessionyear = $_COOKIE['chain-session'] ?? ($_GET['sessionyear'] ?? date('Y'));
 
+// Extract 2 digit year pattern (e.g., '26' matches 2026, 2025-26, 2026-27)
+$yr_digits = preg_replace('/\D/', '', $sessionyear);
+$yr_last2 = substr($yr_digits, -2);
+$session_pattern = !empty($yr_last2) ? ('%' . $yr_last2 . '%') : ('%' . date('y') . '%');
+
 $query = "
     SELECT 
-        si.id, si.stid, si.classname, si.sectionname, si.rollno, si.voter_no,
+        si.id, si.stid, si.sessionyear, si.classname, si.sectionname, si.rollno, si.voter_no,
         s.stnameeng, s.stnameben, s.fname, s.fnameben, s.mname, s.mnameben,
         s.fnid, s.mnid, s.fmobile, s.mmobile, s.guarmobile, s.guarname,
         s.previll, s.prepo, s.preps, s.predist
     FROM sessioninfo si
     JOIN students s ON si.stid = s.stid AND si.sccode = s.sccode
-    WHERE si.sccode = ? AND si.sessionyear = ? AND si.status = 1
+    WHERE si.sccode = ? AND si.sessionyear LIKE ? AND si.status = 1
     AND (
         LOWER(TRIM(si.classname)) IN ('six', '6', 'class 6', 'class six')
         OR LOWER(TRIM(si.classname)) IN ('seven', '7', 'class 7', 'class seven')
         OR LOWER(TRIM(si.classname)) IN ('eight', '8', 'class 8', 'class eight')
         OR LOWER(TRIM(si.classname)) IN ('nine', '9', 'class 9', 'class nine')
         OR LOWER(TRIM(si.classname)) IN ('ten', '10', 'class 10', 'class ten')
+        OR LOWER(TRIM(si.classname)) IN ('eleven', '11', 'class 11', 'class eleven', 'xi')
+        OR LOWER(TRIM(si.classname)) IN ('twelve', '12', 'class 12', 'class twelve', 'xii')
     )
     ORDER BY 
       CASE WHEN si.voter_no IS NULL OR si.voter_no = 0 THEN 999999 ELSE si.voter_no END ASC,
@@ -28,6 +35,8 @@ $query = "
         WHEN LOWER(TRIM(si.classname)) IN ('eight', '8', 'class 8', 'class eight') THEN 3
         WHEN LOWER(TRIM(si.classname)) IN ('nine', '9', 'class 9', 'class nine') THEN 4
         WHEN LOWER(TRIM(si.classname)) IN ('ten', '10', 'class 10', 'class ten') THEN 5
+        WHEN LOWER(TRIM(si.classname)) IN ('eleven', '11', 'class 11', 'class eleven', 'xi') THEN 6
+        WHEN LOWER(TRIM(si.classname)) IN ('twelve', '12', 'class 12', 'class twelve', 'xii') THEN 7
         ELSE 99
       END ASC,
       si.classname ASC,
@@ -36,7 +45,7 @@ $query = "
 ";
 
 $stmt = $conn->prepare($query);
-$stmt->bind_param("is", $sccode, $sessionyear);
+$stmt->bind_param("is", $sccode, $session_pattern);
 $stmt->execute();
 $result = $stmt->get_result();
 
@@ -65,7 +74,8 @@ while ($row = $result->fetch_assoc()) {
             'name' => $row['stnameeng'] ?: $row['stnameben'],
             'classname' => $row['classname'],
             'sectionname' => $row['sectionname'],
-            'rollno' => $row['rollno']
+            'rollno' => $row['rollno'],
+            'sessionyear' => $row['sessionyear']
         ];
     } else {
         $unassigned_students[] = $row;
@@ -129,7 +139,7 @@ $stmt->close();
         background: #f1f3f5;
         border: 1px solid #ced4da;
         border-radius: 4px;
-        padding: 2px 6px;
+        padding: 3px 6px;
         margin: 2px 0;
         font-size: 11.5px;
     }
@@ -146,7 +156,7 @@ $stmt->close();
                         <i class="bi bi-person-lines-fill me-2"></i>Master Electoral Roll (Guardian Voter List)
                     </h4>
                     <p class="text-muted mb-0 small">
-                        Academic Session: <strong><?= htmlspecialchars($sessionyear) ?></strong> | Total Unique Voters: <strong><?= count($voter_clusters) ?></strong>
+                        Class Scope: <strong>Six &ndash; Twelve</strong> | Target Session Pattern: <strong><?= htmlspecialchars($sessionyear) ?> (<?= htmlspecialchars($session_pattern) ?>)</strong> | Total Unique Voters: <strong><?= count($voter_clusters) ?></strong>
                     </p>
                 </div>
                 <div class="d-flex gap-2">
@@ -170,7 +180,7 @@ $stmt->close();
                 <h3 class="fw-bold mb-1" style="color: #1a237e;"><?= htmlspecialchars($scname ?? 'Educational Institution') ?></h3>
                 <p class="text-muted mb-1"><?= htmlspecialchars($scaddress ?? '') ?></p>
                 <h5 class="fw-bold mt-2 mb-1 text-dark">
-                    Managing Committee Election &mdash; Final Guardian Electoral Roll
+                    Managing Committee Election &mdash; Final Guardian Electoral Roll (Classes Six &ndash; Twelve)
                 </h5>
                 <span class="badge bg-label-primary px-3 py-1">Academic Session: <?= htmlspecialchars($sessionyear) ?></span>
             </div>
@@ -180,10 +190,10 @@ $stmt->close();
                     <table class="table table-bordered table-voter table-print align-middle mb-0">
                         <thead>
                             <tr>
-                                <th style="width: 8%;" class="text-center">Voter No.</th>
-                                <th style="width: 26%;">Guardian Name & NID</th>
-                                <th style="width: 20%;">Mobile & Address</th>
-                                <th style="width: 32%;">Enrolled Children / Siblings Details</th>
+                                <th style="width: 7%;" class="text-center">Voter No.</th>
+                                <th style="width: 25%;">Guardian Name & NID</th>
+                                <th style="width: 18%;">Mobile & Address</th>
+                                <th style="width: 36%;">Enrolled Children / Siblings Details (with ID & Session)</th>
                                 <th style="width: 14%;" class="text-center">Signature</th>
                             </tr>
                         </thead>
@@ -217,10 +227,12 @@ $stmt->close();
                                     <td>
                                         <?php foreach ($voter['children'] as $idx => $child): ?>
                                             <div class="child-badge w-100 mb-1">
-                                                <strong><?= ($idx + 1) ?>. <?= htmlspecialchars($child['name']) ?></strong> &mdash; 
+                                                <strong><?= ($idx + 1) ?>. <?= htmlspecialchars($child['name']) ?></strong> 
+                                                <span class="text-primary fw-semibold">[ID: <?= htmlspecialchars($child['stid']) ?>]</span> &mdash; 
                                                 <span class="text-muted">Class:</span> <strong><?= htmlspecialchars($child['classname']) ?></strong>, 
                                                 <span class="text-muted">Sec:</span> <?= htmlspecialchars($child['sectionname']) ?>, 
-                                                <span class="text-muted">Roll:</span> <strong><?= htmlspecialchars($child['rollno']) ?></strong>
+                                                <span class="text-muted">Roll:</span> <strong><?= htmlspecialchars($child['rollno']) ?></strong>,
+                                                <span class="text-muted">Session:</span> <span class="badge bg-label-info py-0 px-1"><?= htmlspecialchars($child['sessionyear']) ?></span>
                                             </div>
                                         <?php endforeach; ?>
                                     </td>

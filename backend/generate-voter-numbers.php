@@ -20,6 +20,11 @@ $action = $_POST['action'] ?? 'generate';
 $sessionyear = $_POST['sessionyear'] ?? ($_COOKIE['chain-session'] ?? date('Y'));
 $slot = $_POST['slot'] ?? ($_COOKIE['chain-slot'] ?? '');
 
+// Extract 2 digit year pattern (e.g., '26' matches 2026, 2025-26, 2026-27)
+$yr_digits = preg_replace('/\D/', '', $sessionyear);
+$yr_last2 = substr($yr_digits, -2);
+$session_pattern = !empty($yr_last2) ? ('%' . $yr_last2 . '%') : ('%' . date('y') . '%');
+
 function clean_phone_val($phone) {
     if (!$phone) return '';
     $digits = preg_replace('/\D/', '', $phone);
@@ -40,10 +45,10 @@ function clean_nid_val($nid) {
 }
 
 if ($action === 'reset') {
-    // Reset all voter_no to 0 / NULL in sessioninfo for this session & sccode
-    $reset_sql = "UPDATE sessioninfo SET voter_no = 0 WHERE sccode = ? AND sessionyear = ?";
+    // Reset all voter_no to 0 in sessioninfo for this session pattern & sccode
+    $reset_sql = "UPDATE sessioninfo SET voter_no = 0 WHERE sccode = ? AND sessionyear LIKE ?";
     $stmt = $conn->prepare($reset_sql);
-    $stmt->bind_param("is", $sccode, $sessionyear);
+    $stmt->bind_param("is", $sccode, $session_pattern);
     if ($stmt->execute()) {
         $stmt->close();
         
@@ -64,21 +69,23 @@ if ($action === 'reset') {
 }
 
 if ($action === 'generate') {
-    // Fetch all active students strictly from Class Six to Ten sorted hierarchically:
-    // Six -> Seven -> Eight -> Nine -> Ten -> Section -> Roll
+    // Fetch all active students strictly from Class Six to Twelve sorted hierarchically:
+    // Six -> Seven -> Eight -> Nine -> Ten -> Eleven -> Twelve -> Section -> Roll
     $sql = "
         SELECT 
-            si.id as sessioninfo_id, si.stid, si.classname, si.sectionname, si.rollno, si.slot,
+            si.id as sessioninfo_id, si.stid, si.sessionyear, si.classname, si.sectionname, si.rollno, si.slot,
             s.fname, s.mname, s.guarname, s.fnid, s.mnid, s.fmobile, s.mmobile, s.guarmobile, s.previll
         FROM sessioninfo si
         JOIN students s ON si.stid = s.stid AND si.sccode = s.sccode
-        WHERE si.sccode = ? AND si.sessionyear = ? AND si.status = 1
+        WHERE si.sccode = ? AND si.sessionyear LIKE ? AND si.status = 1
         AND (
             LOWER(TRIM(si.classname)) IN ('six', '6', 'class 6', 'class six')
             OR LOWER(TRIM(si.classname)) IN ('seven', '7', 'class 7', 'class seven')
             OR LOWER(TRIM(si.classname)) IN ('eight', '8', 'class 8', 'class eight')
             OR LOWER(TRIM(si.classname)) IN ('nine', '9', 'class 9', 'class nine')
             OR LOWER(TRIM(si.classname)) IN ('ten', '10', 'class 10', 'class ten')
+            OR LOWER(TRIM(si.classname)) IN ('eleven', '11', 'class 11', 'class eleven', 'xi')
+            OR LOWER(TRIM(si.classname)) IN ('twelve', '12', 'class 12', 'class twelve', 'xii')
         )
         ORDER BY 
           CASE 
@@ -87,6 +94,8 @@ if ($action === 'generate') {
             WHEN LOWER(TRIM(si.classname)) IN ('eight', '8', 'class 8', 'class eight') THEN 3
             WHEN LOWER(TRIM(si.classname)) IN ('nine', '9', 'class 9', 'class nine') THEN 4
             WHEN LOWER(TRIM(si.classname)) IN ('ten', '10', 'class 10', 'class ten') THEN 5
+            WHEN LOWER(TRIM(si.classname)) IN ('eleven', '11', 'class 11', 'class eleven', 'xi') THEN 6
+            WHEN LOWER(TRIM(si.classname)) IN ('twelve', '12', 'class 12', 'class twelve', 'xii') THEN 7
             ELSE 99
           END ASC,
           si.classname ASC,
@@ -95,7 +104,7 @@ if ($action === 'generate') {
     ";
 
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("is", $sccode, $sessionyear);
+    $stmt->bind_param("is", $sccode, $session_pattern);
     $stmt->execute();
     $result = $stmt->get_result();
 
@@ -109,7 +118,7 @@ if ($action === 'generate') {
     if ($total_students === 0) {
         echo json_encode([
             'status' => 'error',
-            'message' => 'No active student records found for the selected session.'
+            'message' => 'No active student records found matching the session pattern (' . $session_pattern . ').'
         ]);
         exit;
     }
@@ -179,7 +188,7 @@ if ($action === 'generate') {
         }
     }
 
-    // Now iterate through the ordered students list (Class Six -> Seven -> Eight -> Nine -> Ten...)
+    // Now iterate through the ordered students list (Class Six -> Seven -> Eight -> Nine -> Ten -> Eleven -> Twelve...)
     // Assign sequential voter numbers 1, 2, 3... to clusters as they appear
     $cluster_voter_map = [];
     $voter_counter = 1;
@@ -245,7 +254,8 @@ if ($action === 'generate') {
                 'total_students' => $total_students,
                 'total_unique_voters' => $total_unique_voters,
                 'sibling_clusters_count' => $sibling_clusters_count,
-                'sessionyear' => $sessionyear
+                'sessionyear' => $sessionyear,
+                'session_pattern' => $session_pattern
             ]
         ]);
     } catch (Exception $e) {

@@ -11,7 +11,7 @@ $students_list = [];
 if (!empty($class) && !empty($sessionyear)) {
     $stmt = $conn->prepare("
         SELECT 
-           si.id, si.stid, si.rollno, si.icardst, si.voter_no,
+           si.id, si.stid, si.sessionyear, si.rollno, si.icardst, si.voter_no,
             s.stnameeng, s.stnameben, s.fname, s.mname, 
             s.previll, s.prepo, s.preps, s.predist,
             s.fmobile, s.mmobile, s.fnid, s.mnid, s.guarmobile
@@ -139,6 +139,7 @@ if (!empty($class) && !empty($sessionyear)) {
                                 <td>
                                     <div class="editable fw-semibold" data-stid="<?= $student['stid'] ?>" data-field="stnameeng"><?= htmlspecialchars($student['stnameeng']) ?></div>
                                     <div class="editable text-muted small" data-stid="<?= $student['stid'] ?>" data-field="stnameben"><?= htmlspecialchars($student['stnameben']) ?></div>
+                                    <small class="text-primary fw-semibold">[ID: <?= htmlspecialchars($student['stid']) ?>]</small>
                                 </td>
                                 <td>
                                     <div class="editable" data-stid="<?= $student['stid'] ?>" data-field="fname">F: <?= htmlspecialchars($student['fname']) ?></div>
