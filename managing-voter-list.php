@@ -34,6 +34,12 @@ $section = $_COOKIE['chain-section'] ?? '';
         align-items: center;
         gap: 6px;
     }
+    #studentDetailModal {
+        z-index: 1085 !important;
+    }
+    .modal-backdrop.student-detail-backdrop {
+        z-index: 1080 !important;
+    }
 </style>
 
 <div class="container-xxl flex-grow-1 container-p-y">
@@ -318,7 +324,7 @@ $section = $_COOKIE['chain-section'] ?? '';
 </div>
 
 <!-- Modal 4: Student Complete Detail Profile Popup -->
-<div class="modal fade" id="studentDetailModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+<div class="modal fade" id="studentDetailModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header bg-primary text-white py-3">
@@ -349,6 +355,21 @@ $section = $_COOKIE['chain-section'] ?? '';
     function chainBtnFunc() {
         window.location.href = 'voter-info.php';
     }
+
+    // Handle nested modal z-index stacking and scrolling
+    $(document).on('show.bs.modal', '#studentDetailModal', function () {
+        var baseZ = 1080;
+        $(this).css('z-index', baseZ + 10);
+        setTimeout(function () {
+            $('.modal-backdrop').not('.modal-stack').last().css('z-index', baseZ + 5).addClass('modal-stack student-detail-backdrop');
+        }, 10);
+    });
+
+    $(document).on('hidden.bs.modal', '#studentDetailModal', function () {
+        if ($('.modal.show').length > 0) {
+            $('body').addClass('modal-open');
+        }
+    });
 
     // Load Overview Analytics on page load
     $(document).ready(function () {
