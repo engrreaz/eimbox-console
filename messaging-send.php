@@ -65,6 +65,9 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
                     <i class="bi bi-bug-fill"></i> Sandbox Mode Active (০ টাকা খরচ)
                 </span>
             <?php endif; ?>
+            <a href="sms-templates.php" class="btn btn-outline-info me-2">
+                <i class="bi bi-file-earmark-text me-1"></i> SMS Templates
+            </a>
             <a href="sms-gateway.php" class="btn btn-outline-secondary me-2">
                 <i class="bi bi-gear me-1"></i> Gateway Settings
             </a>
@@ -480,6 +483,14 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
             .replace(/\[\[CUR\]\]/g, "<?= date('Y-m-d H:i:s') ?>");
 
         $("#live_preview_box").text(replaced);
+    }
+
+    // Check if redirected from SMS Template Manager
+    let pickedTemplate = sessionStorage.getItem("picked_template_text");
+    if (pickedTemplate) {
+        $("#message_text").val(pickedTemplate);
+        sessionStorage.removeItem("picked_template_text");
+        updateCounter();
     }
 
     $("#message_text").on("input keyup", updateCounter);
