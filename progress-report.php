@@ -279,6 +279,103 @@ if (!$students) {
 ?>
 
 <style>
+    @page {
+        size: A4 portrait;
+        margin: 8mm 10mm;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        background: #f4f5f7;
+        font-family: 'Inter', 'Noto Sans Bengali', sans-serif;
+    }
+
+    /* Screen Display: A4 Sheet Card */
+    .paper {
+        width: 210mm;
+        min-height: 297mm;
+        box-sizing: border-box;
+        margin: 25px auto;
+        padding: 8mm 10mm;
+        border: 1px solid #d0d7de;
+        border-radius: 6px;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+        page-break-after: always;
+        page-break-inside: avoid;
+        break-after: page;
+        break-inside: avoid;
+        background: #ffffff;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .logo-watermark {
+        position: absolute;
+        width: 70mm;
+        height: 70mm;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1;
+        opacity: 0.07;
+        pointer-events: none;
+    }
+
+    /* Print View: Exactly 1 A4 Page Per Student */
+    @media print {
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #ffffff !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        body * {
+            visibility: hidden;
+        }
+
+        #print-box, #print-box * {
+            visibility: visible;
+        }
+
+        #print-box {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        .paper {
+            width: 100% !important;
+            height: 100vh !important;
+            min-height: 100vh !important;
+            max-height: 100vh !important;
+            margin: 0 !important;
+            padding: 6mm 10mm !important;
+            border: none !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            page-break-after: always !important;
+            page-break-inside: avoid !important;
+            break-after: page !important;
+            break-inside: avoid !important;
+            overflow: hidden !important;
+        }
+
+        .noprint, #print-tools, .layout-navbar, .layout-menu, .content-footer, header, footer {
+            display: none !important;
+        }
+    }
+
     #print-tools {
         position: fixed;
         right: 20px;
@@ -318,27 +415,6 @@ if (!$students) {
     #print-settings label {
         display: block;
         margin-bottom: 6px;
-    }
-
-    /* ===== Print শুধুই print-box ===== */
-    @media print {
-        body * {
-            visibility: hidden;
-        }
-
-        #print-box,
-        #print-box * {
-            visibility: visible;
-
-        }
-
-        #print-box {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            background: white;
-        }
     }
 </style>
 
