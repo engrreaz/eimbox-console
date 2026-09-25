@@ -58,14 +58,15 @@ function gv($k, $d = '')
     return $_GET[$k] ?? $_COOKIE[$k] ?? $d;
 }
 
-$slot = gv('slot', 'School');
-$sessionyear = gv('sy');
-$cn = gv('cls');
-$secname = gv('sec');
-$exam = gv('exam');
+$slot = gv('slot', $_COOKIE['chain-slot'] ?? 'School');
+$sessionyear = $_GET['session'] ?? gv('sy', $_COOKIE['chain-session'] ?? '');
+$cn = $_GET['classname'] ?? gv('cls', $_COOKIE['chain-class'] ?? '');
+$secname = $_GET['sectionname'] ?? gv('sec', $_COOKIE['chain-section'] ?? '');
+$exam = $_GET['exam'] ?? gv('exam', $_COOKIE['chain-exam'] ?? '');
+$stid = $_GET['stid'] ?? '';
 $color = $_GET['clr'] ?? 0;
 
-if (!$sessionyear || !$cn || !$secname || !$exam) {
+if (!$sessionyear || !$cn || !$exam) {
     echo "<script>location.href='result-report-manager.php'</script>";
     exit;
 }
@@ -223,8 +224,13 @@ $tsheetex_map = map_by($tsheetex, 'stid');
 /* =========================
    SUBJECT DATA
 ========================= */
-$subjects = fetch_all($conn, "SELECT * FROM subjects WHERE sccategory='$sctype'");
-$subjects_map = map_by($subjects, 'subcode');
+$subjects = fetch_all($conn, "SELECT * FROM subjects WHERE (sccode='$sccode' OR sccode=0)");
+$subjects_map = [];
+foreach ($subjects as $sub) {
+    if (!isset($subjects_map[$sub['subcode']]) || $sub['sccode'] == $sccode) {
+        $subjects_map[$sub['subcode']] = $sub;
+    }
+}
 
 $subsetup = fetch_all($conn, "
     SELECT * FROM subsetup
@@ -251,6 +257,9 @@ $rpubdt = fetch_row($conn, "
 /* =========================
    STUDENTS
 ========================= */
+$tail = ($preview != '') ? ' LIMIT 1' : '';
+$stCond = ($stid != '') ? " AND stid='$stid'" : '';
+
 $students = fetch_all($conn, "
     SELECT * FROM sessioninfo
     WHERE sccode='$sccode'
@@ -258,11 +267,12 @@ $students = fetch_all($conn, "
       AND sectionname='$secname'
       AND sessionyear='$sessionyear'
       AND slot='$slot'
+      $stCond
     ORDER BY rollno $tail
 ");
 
 if (!$students) {
-    echo 'No Student Found.';
+    echo '<div style="padding:20px; text-align:center; font-size:16px;">No Student Found for the selected criteria.</div>';
     exit;
 }
 

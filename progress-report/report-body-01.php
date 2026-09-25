@@ -86,76 +86,14 @@
         </tr>
     </table>
 
-    <!-- ===== Marks Table ===== -->
-    <table style="width:100%;border-collapse:collapse; border:1px solid black; font-size:13px; z-index:5;"
-        cellpadding="5">
-        <thead style="background:#f2f2f2">
-            <tr>
-                <th>#</th>
-                <th style="text-align:left;">Subject</th>
-                <th>Full</th>
-                <th>Obtained</th>
-                <th>Highest</th>
-                <th>GPA</th>
-                <th>Grade</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php
-            $i = 1;
-            $total_obt = 0;
-            $total_full = 0;
-
-            foreach ($subsetup as $ss) {
-                $subcode = $ss['subject'];
-                if (!$subcode)
-                    continue;
-
-                $sub = $subjects_map[$subcode] ?? [];
-                $subname = $sub['subname'] ?? $subcode;
-
-                $fm = (int) ($ss['fullmarks'] ?? 0);
-
-                $obt_key = 'sub_' . $i . '_total';
-                $gpa_key = 'sub_' . $i . '_gpa';
-                $gl_key = 'sub_' . $i . '_gl';
-
-                $obt = (int) ($stmark[$obt_key] ?? 0);
-                $gpa = $stmark[$gpa_key] ?? '';
-                $gl = $stmark[$gl_key] ?? '';
-
-                $hi = $hmark_map[$subcode]['kkk'] ?? '';
-
-                $total_obt += $obt;
-                $total_full += $fm;
-                ?>
-                <tr>
-                    <td align="center"><?= $i ?></td>
-                    <td><?= htmlspecialchars($subname) ?></td>
-                    <td align="center"><?= $fm ?></td>
-                    <td align="center"><?= $obt ?></td>
-                    <td align="center"><?= $hi ?></td>
-                    <td align="center"><?= htmlspecialchars($gpa) ?></td>
-                    <td align="center"><?= htmlspecialchars($gl) ?></td>
-                </tr>
-                <?php
-                $i++;
-            }
-            ?>
-        </tbody>
-
-        <!-- ===== Totals ===== -->
-        <tfoot style="background:#fafafa;font-weight:bold">
-            <tr>
-                <td colspan="2" align="right">Total</td>
-                <td align="center"><?= $total_full ?></td>
-                <td align="center"><?= $totalmarks ?></td>
-                <td align="center"><?= $hmarktot ?></td>
-                <td align="center"><?= htmlspecialchars($gpa) ?></td>
-                <td align="center" style="color:<?= $clc ?>"><?= htmlspecialchars($gla) ?></td>
-            </tr>
-        </tfoot>
-    </table>
+    <!-- ===== Marks Table (Modular Template) ===== -->
+    <?php
+    $marks_template = $settings['marks_table_template'] ?? 'progress-report/marks-table-template-1.php';
+    if (!file_exists($marks_template)) {
+        $marks_template = 'progress-report/marks-table-template-1.php';
+    }
+    include $marks_template;
+    ?>
 
     <!-- ===== Summary ===== -->
     <table style="width:100%;margin-top:10px;font-size:14px">
