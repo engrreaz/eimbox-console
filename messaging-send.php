@@ -3,20 +3,20 @@ require_once 'header.php';
 require_once 'core/sms-var.php';
 
 // Fetch classes
-$class_query = $conn->query("SELECT DISTINCT classname FROM sessioninfo WHERE sccode='$sccode' AND sessionyear LIKE '%$y_v2%' ORDER BY id ASC");
+$class_query = $conn->query("SELECT DISTINCT classname FROM sessioninfo WHERE sccode='$sccode' AND classname IS NOT NULL AND classname != '' ORDER BY id ASC");
 $classes = [];
 if ($class_query) {
     while ($r = $class_query->fetch_assoc()) {
-        if (!empty($r['classname'])) $classes[] = $r['classname'];
+        $classes[] = $r['classname'];
     }
 }
 
 // Fetch sections
-$section_query = $conn->query("SELECT DISTINCT sectionname FROM sessioninfo WHERE sccode='$sccode' AND sessionyear LIKE '%$y_v2%' ORDER BY id ASC");
+$section_query = $conn->query("SELECT DISTINCT sectionname FROM sessioninfo WHERE sccode='$sccode' AND sectionname IS NOT NULL AND sectionname != '' ORDER BY id ASC");
 $sections = [];
 if ($section_query) {
     while ($r = $section_query->fetch_assoc()) {
-        if (!empty($r['sectionname'])) $sections[] = $r['sectionname'];
+        $sections[] = $r['sectionname'];
     }
 }
 
@@ -43,7 +43,7 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
                 <i class="bi bi-gear me-1"></i> Gateway Settings
             </a>
             <a href="sms-log.php" class="btn btn-outline-primary">
-                <i class="bi bi-journal-text me-1"></i> Logs
+                <i class="bi bi-journal-text me-1"></i> SMS Logs
             </a>
         </div>
     </div>
@@ -102,13 +102,6 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
-                                <div class="col-12">
-                                    <label class="form-label small text-muted">Filter Category</label>
-                                    <select class="form-select form-select-sm" id="st_filter">
-                                        <option value="all">All Active Students</option>
-                                        <option value="dues">Only Due Fee Defaulters</option>
-                                    </select>
-                                </div>
                             </div>
                             <button type="button" class="btn btn-outline-primary btn-sm w-100" id="btn_fetch_students">
                                 <i class="bi bi-funnel me-1"></i> Fetch Student List
@@ -149,7 +142,7 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
                         <span class="badge bg-primary fs-6" id="recipient_count_badge">0</span>
                     </div>
 
-                    <div class="mt-2" style="max-height: 200px; overflow-y: auto;">
+                    <div class="mt-2" style="max-height: 220px; overflow-y: auto;">
                         <div id="recipient_list_preview" class="small text-muted text-center py-3 border rounded bg-light">
                             No recipients selected yet. Use the filters above.
                         </div>
@@ -193,14 +186,14 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
 
                     <div class="mb-2" id="composer">
                         <label class="form-label small text-muted fw-semibold">Message Text</label>
-                        <textarea id="message_text" class="form-control form-control-sm" rows="5" placeholder="Type your message here or use templates... You can use [[STUDENT_NAME]], [[CLASS_NAME]], [[DUE_AMOUNT]], [[DATE]]..."></textarea>
+                        <textarea id="message_text" class="form-control form-control-sm" rows="5" placeholder="Type your message here or select a template... Use dynamic tags like [[STUDENT_NAME]], [[CLASS_NAME]], [[DUE_AMOUNT]], [[DATE]]..."></textarea>
                     </div>
 
                     <!-- Character & Parts Counter -->
                     <div class="d-flex justify-content-between align-items-center mb-3 text-muted small bg-light p-2 rounded border">
                         <div>
                             <span>Characters: <b id="char_count" class="text-dark">0</b></span>
-                            <span class="ms-3">Type: <b id="lang_type" class="text-primary">English (160)</b></span>
+                            <span class="ms-3">Encoding: <b id="lang_type" class="text-primary">English (160)</b></span>
                         </div>
                         <div>
                             <span>Estimated SMS Parts: <b id="parts_count" class="text-success">0</b></span>
@@ -210,9 +203,9 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
                     <!-- Dynamic Live Sample Preview -->
                     <div class="card border border-info bg-info bg-opacity-10 mb-3">
                         <div class="card-body p-2">
-                            <span class="small fw-bold text-info"><i class="bi bi-eye-fill me-1"></i> Sample Preview (First Recipient):</span>
+                            <span class="small fw-bold text-info"><i class="bi bi-eye-fill me-1"></i> Sample Live Preview (First Recipient):</span>
                             <div id="live_preview_box" class="small text-dark mt-1 font-monospace" style="white-space:pre-wrap;">
-                                Type message or choose template to see preview...
+                                Type message or choose template to see live preview...
                             </div>
                         </div>
                     </div>
@@ -224,7 +217,7 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
                         </button>
                     </div>
 
-                    <!-- Progress & Feedback Modal/Alert -->
+                    <!-- Progress Feedback -->
                     <div id="dispatch_feedback" class="mt-3" style="display:none;"></div>
                 </div>
             </div>
@@ -234,7 +227,7 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
 
 <?php require_once 'footer.php'; ?>
 
-<!-- Shared Modals (Templates & Variables) -->
+<!-- Modals -->
 <div class="modal fade" id="smsTempModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content" style="max-height:85vh; overflow-y:auto;">
@@ -287,7 +280,6 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
 <script>
     let currentRecipients = [];
 
-    // Character & Part counter
     function updateCounter() {
         let text = $("#message_text").val();
         let len = text.length;
@@ -306,8 +298,6 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
 
         $("#char_count").text(len);
         $("#parts_count").text(parts);
-
-        // Update live preview with sample or first recipient
         updateLivePreview();
     }
 
@@ -349,11 +339,10 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
 
     $("#message_text").on("input keyup", updateCounter);
 
-    // Fetch Students
+    // Fetch Students with SweetAlert
     $("#btn_fetch_students").on("click", function () {
         let cls = $("#st_class").val();
         let sec = $("#st_section").val();
-        let filter = $("#st_filter").val();
 
         let btn = $(this);
         btn.prop("disabled", true).html('<span class="spinner-border spinner-border-sm me-1"></span> Fetching...');
@@ -361,25 +350,48 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
         $.ajax({
             url: "ajax/fetch-messaging-audience.php",
             type: "POST",
-            data: { audience: "students", classname: cls, sectionname: sec, filter: filter },
+            data: { audience: "students", classname: cls, sectionname: sec },
             dataType: "json",
             success: function (res) {
                 btn.prop("disabled", false).html('<i class="bi bi-funnel me-1"></i> Fetch Student List');
                 if (res.status === 'success') {
                     currentRecipients = res.data;
                     renderRecipientList();
+                    if (res.total === 0) {
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'No Students Found',
+                            text: 'No active student records with valid mobile numbers were found for the selected filter.'
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Students Loaded',
+                            text: `Successfully loaded ${res.total} student recipient(s).`,
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    }
                 } else {
-                    alert(res.message);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Fetch Failed',
+                        text: res.message || 'Unable to retrieve students.'
+                    });
                 }
             },
-            error: function () {
+            error: function (xhr, status, error) {
                 btn.prop("disabled", false).html('<i class="bi bi-funnel me-1"></i> Fetch Student List');
-                alert("Failed to fetch student list!");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Server Error',
+                    text: 'Error connecting to student fetch service: ' + (xhr.responseText ? xhr.responseText.substring(0, 150) : error)
+                });
             }
         });
     });
 
-    // Fetch Teachers
+    // Fetch Teachers with SweetAlert
     $("#btn_fetch_teachers").on("click", function () {
         let btn = $(this);
         btn.prop("disabled", true).html('<span class="spinner-border spinner-border-sm me-1"></span> Fetching...');
@@ -394,12 +406,27 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
                 if (res.status === 'success') {
                     currentRecipients = res.data;
                     renderRecipientList();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Teachers Loaded',
+                        text: `Loaded ${res.total} teacher(s) and staff members.`,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
                 }
+            },
+            error: function () {
+                btn.prop("disabled", false).html('<i class="bi bi-people me-1"></i> Fetch All Teachers & Staff');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Fetch Error',
+                    text: 'Failed to fetch teacher list.'
+                });
             }
         });
     });
 
-    // Fetch Committee
+    // Fetch Committee with SweetAlert
     $("#btn_fetch_committee").on("click", function () {
         let btn = $(this);
         btn.prop("disabled", true).html('<span class="spinner-border spinner-border-sm me-1"></span> Fetching...');
@@ -414,7 +441,22 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
                 if (res.status === 'success') {
                     currentRecipients = res.data;
                     renderRecipientList();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Committee Loaded',
+                        text: `Loaded ${res.total} SMC / Governing body member(s).`,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
                 }
+            },
+            error: function () {
+                btn.prop("disabled", false).html('<i class="bi bi-diagram-3 me-1"></i> Fetch SMC Members');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Fetch Error',
+                    text: 'Failed to fetch committee members.'
+                });
             }
         });
     });
@@ -425,13 +467,17 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
         let list = raw.split(/[\n,;]+/).map(s => s.trim()).filter(s => s.length >= 10);
 
         if (list.length === 0) {
-            alert("Please enter valid mobile numbers!");
+            Swal.fire({
+                icon: 'warning',
+                title: 'Invalid Input',
+                text: 'Please enter at least one valid mobile number.'
+            });
             return;
         }
 
         currentRecipients = list.map(num => ({
             id: "",
-            name: "Direct Number",
+            name: "Direct Recipient",
             mobile: num,
             recipient_type: "custom",
             classname: "",
@@ -440,6 +486,13 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
         }));
 
         renderRecipientList();
+        Swal.fire({
+            icon: 'success',
+            title: 'Numbers Loaded',
+            text: `Added ${currentRecipients.length} custom mobile number(s).`,
+            timer: 2000,
+            showConfirmButton: false
+        });
     });
 
     function renderRecipientList() {
@@ -466,7 +519,7 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
 
     // Load Templates
     $(document).on("click", ".loadTemp", function () {
-        $("#smsTempBody").html('<div class="text-center py-4"><span class="spinner-border text-primary"></span> Loading...</div>');
+        $("#smsTempBody").html('<div class="text-center py-4"><span class="spinner-border text-primary"></span> Loading templates...</div>');
         new bootstrap.Modal(document.getElementById('smsTempModal')).show();
 
         $.ajax({
@@ -505,88 +558,115 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
         updateCounter();
     });
 
-    // Send Bulk Messages
+    // Send Bulk Messages with SweetAlert Confirmation & Feedback
     $("#btn_send_bulk").on("click", function () {
         if (currentRecipients.length === 0) {
-            alert("Please select target recipients first!");
+            Swal.fire({
+                icon: 'warning',
+                title: 'No Recipients',
+                text: 'Please select or fetch your target audience first!'
+            });
             return;
         }
 
         let rawText = $("#message_text").val().trim();
         if (!rawText) {
-            alert("Please compose message text!");
+            Swal.fire({
+                icon: 'warning',
+                title: 'Empty Message',
+                text: 'Please enter message content or choose a template!'
+            });
             return;
         }
 
-        if (!confirm(`Are you sure you want to send this message to ${currentRecipients.length} recipient(s)?`)) {
-            return;
-        }
+        Swal.fire({
+            title: 'Send Bulk SMS?',
+            html: `You are about to queue <b>${currentRecipients.length}</b> personalized message(s).<br><small class="text-muted">The queue worker will dispatch these in the background.</small>`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: '<i class="bi bi-send me-1"></i> Yes, Dispatch Queue'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                let btn = $("#btn_send_bulk");
+                btn.prop("disabled", true).html('<span class="spinner-border spinner-border-sm me-2"></span> Queueing Messages...');
 
-        let btn = $(this);
-        btn.prop("disabled", true).html('<span class="spinner-border spinner-border-sm me-2"></span> Queueing Messages...');
+                // Compile personalized text for each recipient
+                let compiledRecipients = currentRecipients.map(r => {
+                    let personalized = rawText
+                        .replace(/\[\[INSTITUTE_NAME\]\]/g, "EIMBox Model School & College")
+                        .replace(/\[\[STUDENT_NAME\]\]/g, r.name || "")
+                        .replace(/\[\[STUDENT_NAME_ENG\]\]/g, r.name || "")
+                        .replace(/\[\[STUDENT_NAME_BEN\]\]/g, r.name || "")
+                        .replace(/\[\[CLASS_NAME\]\]/g, r.classname || "")
+                        .replace(/\[\[SECTION_NAME\]\]/g, r.sectionname || "")
+                        .replace(/\[\[ROLL_NO\]\]/g, r.rollno || "")
+                        .replace(/\[\[DUE_AMOUNT\]\]/g, r.dueamount || "0.00")
+                        .replace(/\[\[PAID_AMOUNT\]\]/g, r.paymentamount || "0.00")
+                        .replace(/\[\[PAYMENT_AMOUNT\]\]/g, r.paymentamount || "0.00")
+                        .replace(/\[\[RECEIPT_NO\]\]/g, r.receiptno || "")
+                        .replace(/\[\[DATE\]\]/g, "<?= date('Y-m-d') ?>")
+                        .replace(/\[\[TIME\]\]/g, "<?= date('h:i A') ?>")
+                        .replace(/\[\[CUR\]\]/g, "<?= date('Y-m-d H:i:s') ?>");
 
-        // Compile personalized text for each recipient
-        let compiledRecipients = currentRecipients.map(r => {
-            let personalized = rawText
-                .replace(/\[\[INSTITUTE_NAME\]\]/g, "EIMBox Model School & College")
-                .replace(/\[\[STUDENT_NAME\]\]/g, r.name || "")
-                .replace(/\[\[STUDENT_NAME_ENG\]\]/g, r.name || "")
-                .replace(/\[\[STUDENT_NAME_BEN\]\]/g, r.name || "")
-                .replace(/\[\[CLASS_NAME\]\]/g, r.classname || "")
-                .replace(/\[\[SECTION_NAME\]\]/g, r.sectionname || "")
-                .replace(/\[\[ROLL_NO\]\]/g, r.rollno || "")
-                .replace(/\[\[DUE_AMOUNT\]\]/g, r.dueamount || "0.00")
-                .replace(/\[\[PAID_AMOUNT\]\]/g, r.paymentamount || "0.00")
-                .replace(/\[\[PAYMENT_AMOUNT\]\]/g, r.paymentamount || "0.00")
-                .replace(/\[\[RECEIPT_NO\]\]/g, r.receiptno || "")
-                .replace(/\[\[DATE\]\]/g, "<?= date('Y-m-d') ?>")
-                .replace(/\[\[TIME\]\]/g, "<?= date('h:i A') ?>")
-                .replace(/\[\[CUR\]\]/g, "<?= date('Y-m-d H:i:s') ?>");
+                    return {
+                        id: r.id || "",
+                        name: r.name || "",
+                        mobile: r.mobile || "",
+                        classname: r.classname || "",
+                        sectionname: r.sectionname || "",
+                        rollno: r.rollno || 0,
+                        recipient_type: r.recipient_type || "guardian",
+                        text: personalized
+                    };
+                });
 
-            return {
-                id: r.id || "",
-                name: r.name || "",
-                mobile: r.mobile || "",
-                classname: r.classname || "",
-                sectionname: r.sectionname || "",
-                rollno: r.rollno || 0,
-                recipient_type: r.recipient_type || "guardian",
-                text: personalized
-            };
-        });
+                $.ajax({
+                    url: "ajax/ajax-queue-sms.php",
+                    type: "POST",
+                    data: {
+                        campaign: $("#campaign_name").val(),
+                        sms_type: $("#sms_type").val(),
+                        recipients: compiledRecipients
+                    },
+                    dataType: "json",
+                    success: function (res) {
+                        btn.prop("disabled", false).html('<i class="bi bi-send-fill me-2"></i> Send Now (Instant Async Queue)');
+                        if (res.status === 'success') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Dispatched to Queue!',
+                                html: `<b>${res.total_recipients}</b> messages successfully queued (Total parts: <b>${res.total_sms_parts}</b>).<br><small class="text-muted">Batch ID: <code>${res.batch_id}</code>.<br>You can safely close this page while messages are sent in the background.</small>`,
+                                confirmButtonText: 'Great!'
+                            });
 
-        $.ajax({
-            url: "ajax/ajax-queue-sms.php",
-            type: "POST",
-            data: {
-                campaign: $("#campaign_name").val(),
-                sms_type: $("#sms_type").val(),
-                recipients: compiledRecipients
-            },
-            dataType: "json",
-            success: function (res) {
-                btn.prop("disabled", false).html('<i class="bi bi-send-fill me-2"></i> Send Now (Instant Async Queue)');
-                if (res.status === 'success') {
-                    $("#dispatch_feedback").show().html(`
-                        <div class="alert alert-success d-flex align-items-center">
-                            <i class="bi bi-check-circle-fill fs-3 me-3"></i>
-                            <div>
-                                <h6 class="alert-heading mb-1 fw-bold">Success! ${res.message}</h6>
-                                <p class="mb-0 small text-muted">Batch ID: <code>${res.batch_id}</code> | Total SMS Parts: <b>${res.total_sms_parts}</b></p>
-                                <p class="mb-0 small text-muted">You can close this window at any time. Messages are being dispatched in the background.</p>
-                            </div>
-                        </div>
-                    `);
-                    if (typeof showToast === 'function') {
-                        showToast('success', res.message, 'Queued Successfully');
+                            $("#dispatch_feedback").show().html(`
+                                <div class="alert alert-success d-flex align-items-center">
+                                    <i class="bi bi-check-circle-fill fs-3 me-3"></i>
+                                    <div>
+                                        <h6 class="alert-heading mb-1 fw-bold">Success! ${res.message}</h6>
+                                        <p class="mb-0 small text-muted">Batch ID: <code>${res.batch_id}</code> | Total SMS Parts: <b>${res.total_sms_parts}</b></p>
+                                    </div>
+                                </div>
+                            `);
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Queueing Error',
+                                text: res.message
+                            });
+                        }
+                    },
+                    error: function () {
+                        btn.prop("disabled", false).html('<i class="bi bi-send-fill me-2"></i> Send Now (Instant Async Queue)');
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Network Error',
+                            text: 'Failed to reach server while queueing messages.'
+                        });
                     }
-                } else {
-                    alert("Error: " + res.message);
-                }
-            },
-            error: function () {
-                btn.prop("disabled", false).html('<i class="bi bi-send-fill me-2"></i> Send Now (Instant Async Queue)');
-                alert("Failed to queue messages!");
+                });
             }
         });
     });
