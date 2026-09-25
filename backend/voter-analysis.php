@@ -2,6 +2,7 @@
 require_once '../core/config.php';
 require_once '../core/db.php';
 require_once '../core/global_values.php';
+require_once '../core/functions.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -18,6 +19,56 @@ if (!$sccode) {
 
 $action = $_GET['action'] ?? $_POST['action'] ?? 'get_summary';
 $sessionyear = $_GET['sessionyear'] ?? $_POST['sessionyear'] ?? ($_COOKIE['chain-session'] ?? date('Y'));
+
+// Handle individual student detail popup query
+if ($action === 'get_student_detail') {
+    $stid = trim($_GET['stid'] ?? $_POST['stid'] ?? '');
+    if (empty($stid)) {
+        echo json_encode(['status' => 'error', 'message' => 'Student ID is required.']);
+        exit;
+    }
+
+    // Query student profile
+    $stmt = $conn->prepare("SELECT * FROM students WHERE stid = ? AND sccode = ? LIMIT 1");
+    $stmt->bind_param("si", $stid, $sccode);
+    $stmt->execute();
+    $st_res = $stmt->get_result();
+    $student = $st_res->fetch_assoc();
+    $stmt->close();
+
+    if (!$student) {
+        echo json_encode(['status' => 'error', 'message' => 'Student profile not found.']);
+        exit;
+    }
+
+    // Query all sessions from sessioninfo
+    $stmt = $conn->prepare("
+        SELECT id, sessionyear, classname, sectionname, rollno, slot, groupname, status, voter_no
+        FROM sessioninfo
+        WHERE stid = ? AND sccode = ?
+        ORDER BY sessionyear DESC, id DESC
+    ");
+    $stmt->bind_param("si", $stid, $sccode);
+    $stmt->execute();
+    $sess_res = $stmt->get_result();
+    $sessions = [];
+    while ($row = $sess_res->fetch_assoc()) {
+        $sessions[] = $row;
+    }
+    $stmt->close();
+
+    $photo_url = student_profile_image_path($stid);
+
+    echo json_encode([
+        'status' => 'success',
+        'data' => [
+            'student' => $student,
+            'sessions' => $sessions,
+            'photo_url' => $photo_url
+        ]
+    ]);
+    exit;
+}
 
 // Extract 2 digit year pattern (e.g., '26' matches 2026, 2025-26, 2026-27)
 $yr_digits = preg_replace('/\D/', '', $sessionyear);
@@ -49,7 +100,8 @@ $query = "
         si.id as sessioninfo_id, si.stid, si.sessionyear, si.classname, si.sectionname, si.rollno, si.voter_no, si.slot,
         s.stnameeng, s.stnameben, s.fname, s.fnameben, s.mname, s.mnameben,
         s.fnid, s.mnid, s.fmobile, s.mmobile, s.guarmobile, s.guarname,
-        s.previll, s.prepo, s.preps, s.predist
+        s.previll, s.prepo, s.preps, s.predist,
+        s.pervill, s.perpo, s.perps, s.perdist
     FROM sessioninfo si
     JOIN students s ON si.stid = s.stid AND si.sccode = s.sccode
     WHERE si.sccode = ? AND si.sessionyear LIKE ? AND si.status = 1
@@ -186,6 +238,8 @@ if ($action === 'check_nid') {
                 'section' => $st['sectionname'],
                 'roll' => $st['rollno'],
                 'sessionyear' => $st['sessionyear'],
+                'previll' => $st['previll'] ?? '',
+                'pervill' => $st['pervill'] ?? '',
                 'father' => $st['fname'],
                 'mother' => $st['mname'],
                 'mobile' => $st['fmobile'] ?: $st['mmobile']
@@ -201,7 +255,9 @@ if ($action === 'check_nid') {
                 'class' => $st['classname'],
                 'section' => $st['sectionname'],
                 'roll' => $st['rollno'],
-                'sessionyear' => $st['sessionyear']
+                'sessionyear' => $st['sessionyear'],
+                'previll' => $st['previll'] ?? '',
+                'pervill' => $st['pervill'] ?? ''
             ];
         }
 
@@ -214,20 +270,26 @@ if ($action === 'check_nid') {
                 'class' => $st['classname'],
                 'section' => $st['sectionname'],
                 'roll' => $st['rollno'],
-                'sessionyear' => $st['sessionyear']
+                'sessionyear' => $st['sessionyear'],
+                'previll' => $st['previll'] ?? '',
+                'pervill' => $st['pervill'] ?? ''
             ];
         }
 
         if (!empty($fnid)) {
             $nid_clusters[$fnid]['type'] = "Father NID ($fnid)";
             $nid_clusters[$fnid]['guardian_name'] = $st['fname'] ?: $st['fnameben'];
+            $nid_clusters[$fnid]['previll'] = $st['previll'] ?? '';
+            $nid_clusters[$fnid]['pervill'] = $st['pervill'] ?? '';
             $nid_clusters[$fnid]['students'][] = [
                 'stid' => $st['stid'],
                 'name' => $st['stnameeng'] ?: $st['stnameben'],
                 'class' => $st['classname'],
                 'section' => $st['sectionname'],
                 'roll' => $st['rollno'],
-                'sessionyear' => $st['sessionyear']
+                'sessionyear' => $st['sessionyear'],
+                'previll' => $st['previll'] ?? '',
+                'pervill' => $st['pervill'] ?? ''
             ];
         }
     }
@@ -240,6 +302,8 @@ if ($action === 'check_nid') {
                 'nid' => $nid,
                 'type' => $info['type'],
                 'guardian_name' => $info['guardian_name'],
+                'previll' => $info['previll'] ?? '',
+                'pervill' => $info['pervill'] ?? '',
                 'count' => count($info['students']),
                 'students' => $info['students']
             ];
@@ -281,6 +345,8 @@ if ($action === 'check_mobile') {
                 'section' => $st['sectionname'],
                 'roll' => $st['rollno'],
                 'sessionyear' => $st['sessionyear'],
+                'previll' => $st['previll'] ?? '',
+                'pervill' => $st['pervill'] ?? '',
                 'father' => $st['fname']
             ];
         }
@@ -294,14 +360,18 @@ if ($action === 'check_mobile') {
                 'class' => $st['classname'],
                 'section' => $st['sectionname'],
                 'roll' => $st['rollno'],
-                'sessionyear' => $st['sessionyear']
+                'sessionyear' => $st['sessionyear'],
+                'previll' => $st['previll'] ?? '',
+                'pervill' => $st['pervill'] ?? ''
             ];
         }
 
         if (!empty($primary_phone)) {
             $mobile_clusters[$primary_phone]['phone'] = $primary_phone;
             $mobile_clusters[$primary_phone]['father'] = $st['fname'] ?: $st['fnameben'];
-            $mobile_clusters[$primary_phone]['village'] = $st['previll'];
+            $mobile_clusters[$primary_phone]['village'] = $st['previll'] ?: ($st['pervill'] ?? '');
+            $mobile_clusters[$primary_phone]['previll'] = $st['previll'] ?? '';
+            $mobile_clusters[$primary_phone]['pervill'] = $st['pervill'] ?? '';
             $mobile_clusters[$primary_phone]['students'][] = [
                 'stid' => $st['stid'],
                 'name' => $st['stnameeng'] ?: $st['stnameben'],
@@ -309,6 +379,8 @@ if ($action === 'check_mobile') {
                 'section' => $st['sectionname'],
                 'roll' => $st['rollno'],
                 'sessionyear' => $st['sessionyear'],
+                'previll' => $st['previll'] ?? '',
+                'pervill' => $st['pervill'] ?? '',
                 'father' => $st['fname']
             ];
         }
@@ -321,6 +393,8 @@ if ($action === 'check_mobile') {
                 'phone' => $phone,
                 'father' => $info['father'],
                 'village' => $info['village'],
+                'previll' => $info['previll'] ?? '',
+                'pervill' => $info['pervill'] ?? '',
                 'count' => count($info['students']),
                 'students' => $info['students']
             ];
@@ -422,7 +496,9 @@ if ($action === 'preview_siblings') {
                 'guardian_name' => $primary['fname'] ?: ($primary['mname'] ?: $primary['guarname']),
                 'nid' => $primary['fnid'] ?: $primary['mnid'],
                 'mobile' => $primary['fmobile'] ?: ($primary['mmobile'] ?: $primary['guarmobile']),
-                'village' => $primary['previll'],
+                'village' => $primary['previll'] ?: ($primary['pervill'] ?? ''),
+                'previll' => $primary['previll'] ?? '',
+                'pervill' => $primary['pervill'] ?? '',
                 'count' => count($members),
                 'children' => array_map(function($m) {
                     return [
@@ -432,6 +508,8 @@ if ($action === 'preview_siblings') {
                         'section' => $m['sectionname'],
                         'roll' => $m['rollno'],
                         'sessionyear' => $m['sessionyear'],
+                        'previll' => $m['previll'] ?? '',
+                        'pervill' => $m['pervill'] ?? '',
                         'current_voter_no' => $m['voter_no']
                     ];
                 }, $members)

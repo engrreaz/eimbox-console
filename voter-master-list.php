@@ -14,7 +14,8 @@ $query = "
         si.id, si.stid, si.sessionyear, si.classname, si.sectionname, si.rollno, si.voter_no,
         s.stnameeng, s.stnameben, s.fname, s.fnameben, s.mname, s.mnameben,
         s.fnid, s.mnid, s.fmobile, s.mmobile, s.guarmobile, s.guarname,
-        s.previll, s.prepo, s.preps, s.predist
+        s.previll, s.prepo, s.preps, s.predist,
+        s.pervill, s.perpo, s.perps, s.perdist
     FROM sessioninfo si
     JOIN students s ON si.stid = s.stid AND si.sccode = s.sccode
     WHERE si.sccode = ? AND si.sessionyear LIKE ? AND si.status = 1
@@ -64,8 +65,10 @@ while ($row = $result->fetch_assoc()) {
                 'fnid' => $row['fnid'],
                 'mnid' => $row['mnid'],
                 'mobile' => $row['fmobile'] ?: ($row['mmobile'] ?: $row['guarmobile']),
-                'village' => $row['previll'],
-                'post' => $row['prepo'],
+                'village' => $row['previll'] ?: ($row['pervill'] ?? ''),
+                'post' => $row['prepo'] ?: ($row['perpo'] ?? ''),
+                'previll' => $row['previll'] ?? '',
+                'pervill' => $row['pervill'] ?? '',
                 'children' => []
             ];
         }
@@ -75,7 +78,9 @@ while ($row = $result->fetch_assoc()) {
             'classname' => $row['classname'],
             'sectionname' => $row['sectionname'],
             'rollno' => $row['rollno'],
-            'sessionyear' => $row['sessionyear']
+            'sessionyear' => $row['sessionyear'],
+            'previll' => $row['previll'] ?? '',
+            'pervill' => $row['pervill'] ?? ''
         ];
     } else {
         $unassigned_students[] = $row;
