@@ -11,6 +11,8 @@ header('Content-Type: application/json; charset=utf-8');
 
 try {
     $audience = $_POST['audience'] ?? 'students';
+    $sessionyear = mysqli_real_escape_string($conn, trim($_POST['sessionyear'] ?? ''));
+    $slot = mysqli_real_escape_string($conn, trim($_POST['slot'] ?? ''));
     $classname = mysqli_real_escape_string($conn, trim($_POST['classname'] ?? ''));
     $sectionname = mysqli_real_escape_string($conn, trim($_POST['sectionname'] ?? ''));
     $filter = $_POST['filter'] ?? 'all';
@@ -32,6 +34,12 @@ try {
     // 1. Students Audience
     if ($audience === 'students') {
         $where = "si.sccode='$sccode'";
+        if (!empty($sessionyear)) {
+            $where .= " AND si.sessionyear='$sessionyear'";
+        }
+        if (!empty($slot)) {
+            $where .= " AND si.slot='$slot'";
+        }
         if (!empty($classname)) {
             $where .= " AND si.classname='$classname'";
         }
@@ -39,7 +47,7 @@ try {
             $where .= " AND si.sectionname='$sectionname'";
         }
 
-        $sql = "SELECT si.stid, si.classname, si.sectionname, si.rollno, 
+        $sql = "SELECT si.stid, si.sessionyear, si.slot, si.classname, si.sectionname, si.rollno, 
                        s.stnameeng, s.stnameben, s.guarname,
                        COALESCE(NULLIF(s.guarmobile, ''), NULLIF(s.mobileself, ''), NULLIF(s.fmobile, ''), NULLIF(s.mmobile, '')) AS mobile
                 FROM sessioninfo si
@@ -60,6 +68,8 @@ try {
                     'name' => $st_name,
                     'mobile' => $mobile,
                     'recipient_type' => 'guardian',
+                    'sessionyear' => $r['sessionyear'] ?? '',
+                    'slot' => $r['slot'] ?? '',
                     'classname' => $r['classname'] ?? '',
                     'sectionname' => $r['sectionname'] ?? '',
                     'rollno' => intval($r['rollno'] ?? 0),
@@ -92,7 +102,6 @@ try {
     }
     // 3. Committee Audience
     else if ($audience === 'committee') {
-        // Check if managing_committee table exists
         $table_check = $conn->query("SHOW TABLES LIKE 'managing_committee'");
         if ($table_check && $table_check->num_rows > 0) {
             $sql = "SELECT id, member_name, mobile, designation FROM managing_committee WHERE sccode='$sccode' ORDER BY id ASC";

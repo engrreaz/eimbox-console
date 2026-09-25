@@ -2,19 +2,45 @@
 require_once 'header.php';
 require_once 'core/sms-var.php';
 
-// Fetch classes
-$class_query = $conn->query("SELECT DISTINCT classname FROM sessioninfo WHERE sccode='$sccode' AND classname IS NOT NULL AND classname != '' ORDER BY id ASC");
+// 1. Fetch Session Years strictly for this sccode
+$session_query = $conn->query("SELECT DISTINCT syear, active FROM sessionyear WHERE sccode='$sccode' ORDER BY active DESC, syear DESC");
+$session_years = [];
+$active_syear = date('Y');
+if ($session_query && $session_query->num_rows > 0) {
+    while ($r = $session_query->fetch_assoc()) {
+        $session_years[] = $r['syear'];
+        if ($r['active'] == 1) {
+            $active_syear = $r['syear'];
+        }
+    }
+}
+if (empty($session_years)) {
+    $session_years = [date('Y'), date('Y') - 1];
+}
+
+// 2. Fetch Slots strictly for this sccode
+$slots = [];
+$slot_query = $conn->prepare("SELECT slotname FROM slots WHERE sccode = ? AND slotname IS NOT NULL AND slotname != '' ORDER BY id ASC");
+$slot_query->bind_param("i", $sccode);
+$slot_query->execute();
+$slot_res = $slot_query->get_result();
+while ($r = $slot_res->fetch_assoc()) {
+    $slots[] = $r['slotname'];
+}
+
+// 3. Initial Classes for active session
 $classes = [];
-if ($class_query) {
+$class_query = $conn->query("SELECT DISTINCT classname FROM sessioninfo WHERE sccode='$sccode' AND sessionyear='$active_syear' AND classname IS NOT NULL AND classname != '' ORDER BY id ASC");
+if ($class_query && $class_query->num_rows > 0) {
     while ($r = $class_query->fetch_assoc()) {
         $classes[] = $r['classname'];
     }
 }
 
-// Fetch sections
-$section_query = $conn->query("SELECT DISTINCT sectionname FROM sessioninfo WHERE sccode='$sccode' AND sectionname IS NOT NULL AND sectionname != '' ORDER BY id ASC");
+// 4. Initial Sections for active session
 $sections = [];
-if ($section_query) {
+$section_query = $conn->query("SELECT DISTINCT sectionname FROM sessioninfo WHERE sccode='$sccode' AND sessionyear='$active_syear' AND sectionname IS NOT NULL AND sectionname != '' ORDER BY id ASC");
+if ($section_query && $section_query->num_rows > 0) {
     while ($r = $section_query->fetch_assoc()) {
         $sections[] = $r['sectionname'];
     }
@@ -83,9 +109,31 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
                     <div class="tab-content pt-2" id="audienceTabContent">
                         <!-- Panel: Students -->
                         <div class="tab-pane fade show active" id="panel-students">
+                            <div class="row g-2 mb-2">
+                                <div class="col-md-6">
+                                    <label class="form-label small text-muted fw-semibold">Academic Session</label>
+                                    <select class="form-select form-select-sm" id="st_sessionyear">
+                                        <?php foreach ($session_years as $sy): ?>
+                                            <option value="<?= htmlspecialchars($sy) ?>" <?= ($sy == $active_syear) ? 'selected' : '' ?>>
+                                                Session: <?= htmlspecialchars($sy) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small text-muted fw-semibold">Slot / Shift</label>
+                                    <select class="form-select form-select-sm" id="st_slot">
+                                        <option value="">All Slots</option>
+                                        <?php foreach ($slots as $sl): ?>
+                                            <option value="<?= htmlspecialchars($sl) ?>"><?= htmlspecialchars($sl) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                            </div>
+
                             <div class="row g-2 mb-3">
                                 <div class="col-md-6">
-                                    <label class="form-label small text-muted">Class</label>
+                                    <label class="form-label small text-muted fw-semibold">Class</label>
                                     <select class="form-select form-select-sm" id="st_class">
                                         <option value="">All Classes</option>
                                         <?php foreach ($classes as $c): ?>
@@ -94,7 +142,7 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
                                     </select>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label small text-muted">Section</label>
+                                    <label class="form-label small text-muted fw-semibold">Section</label>
                                     <select class="form-select form-select-sm" id="st_section">
                                         <option value="">All Sections</option>
                                         <?php foreach ($sections as $s): ?>
@@ -103,6 +151,7 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
                                     </select>
                                 </div>
                             </div>
+
                             <button type="button" class="btn btn-outline-primary btn-sm w-100" id="btn_fetch_students">
                                 <i class="bi bi-funnel me-1"></i> Fetch Student List
                             </button>
@@ -280,6 +329,39 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
 <script>
     let currentRecipients = [];
 
+    // Cascading Dropdown Handler for Session & Slot changes
+    function reloadCascadingOptions() {
+        let sy = $("#st_sessionyear").val();
+        let slot = $("#st_slot").val();
+        let cls = $("#st_class").val();
+
+        $.ajax({
+            url: "ajax/fetch-academic-cascading.php",
+            type: "POST",
+            data: { sessionyear: sy, slot: slot, classname: cls },
+            dataType: "json",
+            success: function (res) {
+                if (res.status === 'success') {
+                    // Update classes dropdown
+                    let classHtml = '<option value="">All Classes</option>';
+                    res.classes.forEach(c => {
+                        classHtml += `<option value="${c}">${c}</option>`;
+                    });
+                    $("#st_class").html(classHtml);
+
+                    // Update sections dropdown
+                    let secHtml = '<option value="">All Sections</option>';
+                    res.sections.forEach(s => {
+                        secHtml += `<option value="${s}">${s}</option>`;
+                    });
+                    $("#st_section").html(secHtml);
+                }
+            }
+        });
+    }
+
+    $("#st_sessionyear, #st_slot").on("change", reloadCascadingOptions);
+
     function updateCounter() {
         let text = $("#message_text").val();
         let len = text.length;
@@ -341,6 +423,8 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
 
     // Fetch Students with SweetAlert
     $("#btn_fetch_students").on("click", function () {
+        let sy = $("#st_sessionyear").val();
+        let slot = $("#st_slot").val();
         let cls = $("#st_class").val();
         let sec = $("#st_section").val();
 
@@ -350,7 +434,7 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
         $.ajax({
             url: "ajax/fetch-messaging-audience.php",
             type: "POST",
-            data: { audience: "students", classname: cls, sectionname: sec },
+            data: { audience: "students", sessionyear: sy, slot: slot, classname: cls, sectionname: sec },
             dataType: "json",
             success: function (res) {
                 btn.prop("disabled", false).html('<i class="bi bi-funnel me-1"></i> Fetch Student List');
@@ -361,13 +445,13 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
                         Swal.fire({
                             icon: 'info',
                             title: 'No Students Found',
-                            text: 'No active student records with valid mobile numbers were found for the selected filter.'
+                            text: `No active student records with valid mobile numbers were found for session ${sy}.`
                         });
                     } else {
                         Swal.fire({
                             icon: 'success',
                             title: 'Students Loaded',
-                            text: `Successfully loaded ${res.total} student recipient(s).`,
+                            text: `Successfully loaded ${res.total} student recipient(s) for session ${sy}.`,
                             timer: 2000,
                             showConfirmButton: false
                         });
@@ -385,7 +469,7 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
                 Swal.fire({
                     icon: 'error',
                     title: 'Server Error',
-                    text: 'Error connecting to student fetch service: ' + (xhr.responseText ? xhr.responseText.substring(0, 150) : error)
+                    text: 'Error connecting to student fetch service.'
                 });
             }
         });
@@ -414,14 +498,6 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
                         showConfirmButton: false
                     });
                 }
-            },
-            error: function () {
-                btn.prop("disabled", false).html('<i class="bi bi-people me-1"></i> Fetch All Teachers & Staff');
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Fetch Error',
-                    text: 'Failed to fetch teacher list.'
-                });
             }
         });
     });
@@ -449,14 +525,6 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
                         showConfirmButton: false
                     });
                 }
-            },
-            error: function () {
-                btn.prop("disabled", false).html('<i class="bi bi-diagram-3 me-1"></i> Fetch SMC Members');
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Fetch Error',
-                    text: 'Failed to fetch committee members.'
-                });
             }
         });
     });
@@ -504,9 +572,10 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
 
         let html = '<ul class="list-group list-group-flush">';
         currentRecipients.slice(0, 10).forEach(r => {
+            let meta = r.classname ? (r.sessionyear ? r.sessionyear + ' | ' : '') + r.classname + (r.sectionname ? '-' + r.sectionname : '') : r.recipient_type;
             html += `<li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 small">
                 <span><b>${r.name || 'Recipient'}</b> <span class="text-muted">(${r.mobile})</span></span>
-                <span class="badge bg-light text-dark border">${r.classname ? r.classname + '-' + r.sectionname : r.recipient_type}</span>
+                <span class="badge bg-light text-dark border">${meta}</span>
             </li>`;
         });
         if (currentRecipients.length > 10) {
@@ -592,7 +661,6 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
                 let btn = $("#btn_send_bulk");
                 btn.prop("disabled", true).html('<span class="spinner-border spinner-border-sm me-2"></span> Queueing Messages...');
 
-                // Compile personalized text for each recipient
                 let compiledRecipients = currentRecipients.map(r => {
                     let personalized = rawText
                         .replace(/\[\[INSTITUTE_NAME\]\]/g, "EIMBox Model School & College")
