@@ -1008,11 +1008,11 @@ $is_sandbox = intval($gw_conf['sandbox_mode'] ?? 0);
                     },
                     error: function (xhr, status, error) {
                         btn.prop("disabled", false).html('<i class="bi bi-send-fill me-2"></i> Send Now (Instant Async Queue)');
-                        let errText = xhr.responseText ? xhr.responseText.substring(0, 200) : (status + ' - ' + error);
+                        let errText = xhr.responseText ? xhr.responseText.substring(0, 500) : (status + ' - ' + error);
                         Swal.fire({
                             icon: 'error',
                             title: 'Network / Server Error',
-                            text: 'Failed to reach server: ' + errText
+                            html: `<b>Server response:</b><br><div class="p-2 bg-light text-danger text-start small border rounded font-monospace mt-2" style="max-height:160px; overflow-y:auto; white-space:pre-wrap;">${errText}</div>`
                         });
                     }
                 });

@@ -1,4 +1,6 @@
 <?php
+ob_start();
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -37,23 +39,23 @@ try {
     $sms_type_raw = $payload['sms_type'] ?? 'notice';
     $recipients = $payload['recipients'] ?? [];
 
-    if (empty($sccode)) {
-        $sccode = $_SESSION['sccode'] ?? '';
-    }
+    $sccode = $sccode ?? ($_SESSION['sccode'] ?? '');
 
     if (empty($sccode)) {
+        ob_clean();
         echo json_encode([
             'status' => 'error',
             'message' => 'Institution code (sccode) session missing. Please log in again.'
-        ]);
+        ], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
     if (empty($recipients) || !is_array($recipients)) {
+        ob_clean();
         echo json_encode([
             'status' => 'error',
             'message' => 'No recipients selected to queue!'
-        ]);
+        ], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
@@ -68,7 +70,7 @@ try {
     $total_parts = 0;
 
     foreach ($recipients as $r) {
-        $mobile = trim($r['mobile'] ?? '');
+        $mobile = preg_replace('/[^0-9]/', '', trim($r['mobile'] ?? ''));
         $text = trim($r['text'] ?? '');
         if (empty($mobile) || empty($text)) continue;
 
@@ -79,7 +81,11 @@ try {
         $cls_esc = mysqli_real_escape_string($conn, $r['classname'] ?? '');
         $sec_esc = mysqli_real_escape_string($conn, $r['sectionname'] ?? '');
         $roll = intval($r['rollno'] ?? 0);
-        $rec_type_esc = mysqli_real_escape_string($conn, $r['recipient_type'] ?? 'guardian');
+        $rec_type = $r['recipient_type'] ?? 'guardian';
+        if (!in_array($rec_type, ['student', 'guardian', 'teacher', 'committee', 'staff', 'custom'])) {
+            $rec_type = 'custom';
+        }
+        $rec_type_esc = mysqli_real_escape_string($conn, $rec_type);
         $s_year = !empty($r['sessionyear']) ? mysqli_real_escape_string($conn, $r['sessionyear']) : $sessionyear;
 
         $len = mb_strlen($text);
@@ -91,10 +97,11 @@ try {
     }
 
     if (empty($insert_rows)) {
+        ob_clean();
         echo json_encode([
             'status' => 'error',
             'message' => 'No valid recipient phone numbers found in the list.'
-        ]);
+        ], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
@@ -113,27 +120,29 @@ try {
         $dispatcher_path = dirname(__DIR__) . '/cron-job/sms-dispatcher.php';
         $php_bin = defined('PHP_BINARY') && file_exists(PHP_BINARY) ? PHP_BINARY : 'php';
         if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-            $cmd = 'start /B "" "' . $php_bin . '" "' . $dispatcher_path . '" > NUL 2>&1';
+            $cmd = 'cmd /c start /B "" "' . $php_bin . '" "' . $dispatcher_path . '" > NUL 2>&1';
             $h = @popen($cmd, "r");
             if ($h) @pclose($h);
         } else {
-            @exec('"' . $php_bin . '" "' . $dispatcher_path . '" > /dev/null 2>&1 &');
+            @exec('nohup "' . $php_bin . '" "' . $dispatcher_path . '" > /dev/null 2>&1 &');
         }
-    } catch (Exception $e) {
-        // Log background trigger failure without failing the user response
+    } catch (Throwable $e) {
         error_log("Background trigger error: " . $e->getMessage());
     }
 
+    ob_clean();
     echo json_encode([
         'status' => 'success',
         'batch_id' => $batch_id,
         'total_recipients' => count($insert_rows),
         'total_sms_parts' => $total_parts,
         'message' => count($insert_rows) . ' টি মেসেজ সফলভাবে কিউতে যুক্ত হয়েছে। ব্যাকগ্রাউন্ডে স্বয়ংক্রিয়ভাবে প্রেরিত হচ্ছে।'
-    ]);
-} catch (Exception $e) {
+    ], JSON_UNESCAPED_UNICODE);
+} catch (Throwable $e) {
+    ob_clean();
     echo json_encode([
         'status' => 'error',
         'message' => 'Queueing failed: ' . $e->getMessage()
-    ]);
+    ], JSON_UNESCAPED_UNICODE);
 }
+
