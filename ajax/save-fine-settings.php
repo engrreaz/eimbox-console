@@ -37,7 +37,10 @@ $class_rates = $_POST['class_rates'] ?? [];
 
 $updated_by = $_SESSION['user_id'] ?? 'Admin';
 
-// 1. Ensure Table Exists
+$absent_detection_mode = in_array($_POST['absent_detection_mode'] ?? '', ['attendance_based', 'calendar_based']) ? $_POST['absent_detection_mode'] : 'attendance_based';
+$weekly_off = in_array($_POST['weekly_off'] ?? '', ['friday_saturday', 'friday', 'sunday']) ? $_POST['weekly_off'] : 'friday_saturday';
+
+// 1. Ensure Table & Columns Exist
 $conn->query("CREATE TABLE IF NOT EXISTS `fine_settings` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `sccode` int(11) NOT NULL,
@@ -48,6 +51,8 @@ $conn->query("CREATE TABLE IF NOT EXISTS `fine_settings` (
   `absent_rate` decimal(10,2) NOT NULL DEFAULT 0.00,
   `bunk_rate` decimal(10,2) NOT NULL DEFAULT 0.00,
   `bunk_rule_type` enum('flat_daily','per_period') NOT NULL DEFAULT 'flat_daily',
+  `absent_detection_mode` enum('attendance_based','calendar_based') NOT NULL DEFAULT 'attendance_based',
+  `weekly_off` varchar(30) NOT NULL DEFAULT 'friday_saturday',
   `posting_mode` enum('daily','monthly','manual') NOT NULL DEFAULT 'manual',
   `daily_run_time` time DEFAULT '18:00:00',
   `monthly_run_day` tinyint(2) DEFAULT 1,
@@ -62,6 +67,15 @@ $conn->query("CREATE TABLE IF NOT EXISTS `fine_settings` (
   UNIQUE KEY `uniq_fine_rule` (`sccode`, `sessionyear`, `slot`, `scope`, `classname`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci");
 
+$chkCol = $conn->query("SHOW COLUMNS FROM fine_settings LIKE 'absent_detection_mode'");
+if ($chkCol && $chkCol->num_rows == 0) {
+    $conn->query("ALTER TABLE fine_settings ADD COLUMN `absent_detection_mode` enum('attendance_based','calendar_based') NOT NULL DEFAULT 'attendance_based' AFTER `bunk_rule_type`");
+}
+$chkCol2 = $conn->query("SHOW COLUMNS FROM fine_settings LIKE 'weekly_off'");
+if ($chkCol2 && $chkCol2->num_rows == 0) {
+    $conn->query("ALTER TABLE fine_settings ADD COLUMN `weekly_off` varchar(30) NOT NULL DEFAULT 'friday_saturday' AFTER `absent_detection_mode`");
+}
+
 // 2. Save Global Rule
 $chkStmt = $conn->prepare("SELECT id FROM fine_settings WHERE sccode = ? AND sessionyear = ? AND slot = ? AND scope = 'global' LIMIT 1");
 $chkStmt->bind_param('iss', $sccode, $sessionyear, $slot);
@@ -70,25 +84,26 @@ $chkRes = $chkStmt->get_result();
 
 if ($row = $chkRes->fetch_assoc()) {
     $upStmt = $conn->prepare("UPDATE fine_settings SET 
-        absent_rate = ?, bunk_rate = ?, bunk_rule_type = ?, posting_mode = ?, 
-        daily_run_time = ?, monthly_run_day = ?, itemcode = ?, particulareng = ?, 
+        absent_rate = ?, bunk_rate = ?, bunk_rule_type = ?, absent_detection_mode = ?, weekly_off = ?, 
+        posting_mode = ?, daily_run_time = ?, monthly_run_day = ?, itemcode = ?, particulareng = ?, 
         particularben = ?, updated_by = ?, updated_at = NOW() 
         WHERE id = ? AND sccode = ?");
-    $upStmt->bind_param('ddsssissssii', 
-        $absent_rate, $bunk_rate, $bunk_rule_type, $posting_mode, 
-        $daily_run_time, $monthly_run_day, $itemcode, $particulareng, 
+    $upStmt->bind_param('ddsssssissssii', 
+        $absent_rate, $bunk_rate, $bunk_rule_type, $absent_detection_mode, $weekly_off, 
+        $posting_mode, $daily_run_time, $monthly_run_day, $itemcode, $particulareng, 
         $particularben, $updated_by, $row['id'], $sccode);
     $upStmt->execute();
     $upStmt->close();
 } else {
     $inStmt = $conn->prepare("INSERT INTO fine_settings 
         (sccode, sessionyear, slot, scope, classname, absent_rate, bunk_rate, bunk_rule_type, 
-         posting_mode, daily_run_time, monthly_run_day, itemcode, particulareng, particularben, updated_by)
-        VALUES (?, ?, ?, 'global', NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    $inStmt->bind_param('issddsssissss', 
+         absent_detection_mode, weekly_off, posting_mode, daily_run_time, monthly_run_day, itemcode, 
+         particulareng, particularben, updated_by)
+        VALUES (?, ?, ?, 'global', NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $inStmt->bind_param('issddsssssissss', 
         $sccode, $sessionyear, $slot, $absent_rate, $bunk_rate, $bunk_rule_type, 
-        $posting_mode, $daily_run_time, $monthly_run_day, $itemcode, $particulareng, 
-        $particularben, $updated_by);
+        $absent_detection_mode, $weekly_off, $posting_mode, $daily_run_time, $monthly_run_day, 
+        $itemcode, $particulareng, $particularben, $updated_by);
     $inStmt->execute();
     $inStmt->close();
 }

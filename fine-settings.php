@@ -34,29 +34,64 @@ $conn->query("CREATE TABLE IF NOT EXISTS `student_leave_app` (
   `rollno` int(11) DEFAULT NULL,
   `classname` varchar(50) NOT NULL,
   `sectionname` varchar(50) DEFAULT NULL,
-  `app_type` enum('advance_leave','post_leave','fine_waiver') NOT NULL DEFAULT 'advance_leave',
-  `from_date` date DEFAULT NULL,
-  `to_date` date DEFAULT NULL,
-  `total_days` int(11) DEFAULT 1,
+  `date_from` date DEFAULT NULL,
+  `date_to` date DEFAULT NULL,
+  `days` int(11) DEFAULT 1,
   `stfinance_id` int(11) DEFAULT NULL,
   `claimed_fine_amt` decimal(10,2) DEFAULT 0.00,
   `waiver_requested_amt` decimal(10,2) DEFAULT 0.00,
   `waiver_approved_amt` decimal(10,2) DEFAULT 0.00,
-  `reason` text NOT NULL,
-  `attachment` varchar(255) DEFAULT NULL,
-  `status` enum('pending','approved','rejected') NOT NULL DEFAULT 'pending',
-  `applied_by` varchar(50) DEFAULT 'Student',
-  `applied_at` datetime DEFAULT CURRENT_TIMESTAMP,
-  `action_by` varchar(100) DEFAULT NULL,
-  `action_at` datetime DEFAULT NULL,
-  `action_remarks` text DEFAULT NULL,
+  `reason` text DEFAULT NULL,
+  `status` varchar(20) NOT NULL DEFAULT 'pending',
+  `apply_by` varchar(100) DEFAULT 'Student',
+  `apply_date` datetime DEFAULT CURRENT_TIMESTAMP,
+  `response_by` varchar(100) DEFAULT NULL,
+  `response_date` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_lookup` (`sccode`, `sessionyear`, `stid`, `status`),
-  KEY `idx_dates` (`sccode`, `from_date`, `to_date`)
+  KEY `idx_dates` (`sccode`, `date_from`, `date_to`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci");
+
+$conn->query("CREATE TABLE IF NOT EXISTS `student_fine_logs` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `sccode` int(11) NOT NULL,
+  `sessionyear` varchar(10) NOT NULL,
+  `classname` varchar(50) NOT NULL,
+  `sectionname` varchar(50) DEFAULT NULL,
+  `stid` bigint(20) NOT NULL,
+  `rollno` int(11) DEFAULT NULL,
+  `fine_date` date NOT NULL,
+  `fine_type` enum('absent','bunk') NOT NULL DEFAULT 'absent',
+  `fine_rate` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `stfinance_id` int(11) DEFAULT NULL,
+  `month` tinyint(2) NOT NULL,
+  `status` enum('posted','waived','cancelled') NOT NULL DEFAULT 'posted',
+  `created_by` varchar(100) DEFAULT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_fine_entry` (`sccode`, `sessionyear`, `stid`, `fine_date`, `fine_type`),
+  KEY `idx_lookup` (`sccode`, `sessionyear`, `stid`, `fine_date`),
+  KEY `idx_month` (`sccode`, `sessionyear`, `month`),
+  KEY `idx_status` (`sccode`, `status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci");
 
 $slot = $_COOKIE['slot'] ?? $_GET['slot'] ?? 'School';
 $session = $_COOKIE['session'] ?? $_GET['session'] ?? $sessionyear;
+
+// Fetch Available Sessions
+$sessions_list = [];
+$ses_stmt = $conn->prepare("SELECT DISTINCT syear FROM sessionyear WHERE sccode = ? AND active = 1 ORDER BY syear DESC");
+$ses_stmt->bind_param('i', $sccode);
+$ses_stmt->execute();
+$ses_res = $ses_stmt->get_result();
+while ($s_row = $ses_res->fetch_assoc()) {
+    $sessions_list[] = $s_row['syear'];
+}
+$ses_stmt->close();
+if (empty($sessions_list)) {
+    $sessions_list[] = $session;
+}
 
 // 1. Fetch Existing Global Settings
 $global_stmt = $conn->prepare("SELECT * FROM fine_settings WHERE sccode = ? AND sessionyear = ? AND slot = ? AND scope = 'global' LIMIT 1");
@@ -67,6 +102,8 @@ $global = $global_res->fetch_assoc() ?: [
     'absent_rate' => 10.00,
     'bunk_rate' => 20.00,
     'bunk_rule_type' => 'flat_daily',
+    'absent_detection_mode' => 'attendance_based',
+    'weekly_off' => 'friday_saturday',
     'posting_mode' => 'manual',
     'daily_run_time' => '18:00:00',
     'monthly_run_day' => 1,
@@ -74,6 +111,8 @@ $global = $global_res->fetch_assoc() ?: [
     'particulareng' => 'Absence / Bunk Fine',
     'particularben' => 'Absence / Bunk Fine'
 ];
+if (!isset($global['absent_detection_mode'])) $global['absent_detection_mode'] = 'attendance_based';
+if (!isset($global['weekly_off'])) $global['weekly_off'] = 'friday_saturday';
 $global_stmt->close();
 
 $fine_itemcode = (!empty($global['itemcode']) && $global['itemcode'] !== 'FINE01') ? $global['itemcode'] : uniqid();
@@ -91,7 +130,7 @@ $cls_stmt->close();
 
 // 3. Fetch Available Classes from sessioninfo
 $classes = [];
-$cQuery = $conn->prepare("SELECT DISTINCT classname FROM sessioninfo WHERE sccode = ? AND sessionyear = ? AND classname IS NOT NULL AND classname != '' ORDER BY id ASC");
+$cQuery = $conn->prepare("SELECT DISTINCT classname FROM sessioninfo WHERE sccode = ? AND sessionyear = ? AND classname IS NOT NULL AND classname != '' ORDER BY classname ASC");
 $cQuery->bind_param('is', $sccode, $session);
 $cQuery->execute();
 $cRes = $cQuery->get_result();
@@ -100,9 +139,26 @@ while ($row = $cRes->fetch_assoc()) {
 }
 $cQuery->close();
 
-// 4. Fetch Recent Disaster / Exemption Events
+// Fetch Available Sections
+$sections = [];
+$secQuery = $conn->prepare("SELECT DISTINCT sectionname FROM sessioninfo WHERE sccode = ? AND sessionyear = ? AND sectionname IS NOT NULL AND sectionname != '' ORDER BY sectionname ASC");
+$secQuery->bind_param('is', $sccode, $session);
+$secQuery->execute();
+$secRes = $secQuery->get_result();
+while ($sRow = $secRes->fetch_assoc()) {
+    $sections[] = $sRow['sectionname'];
+}
+$secQuery->close();
+
+// Fetch Latest Attendance Date for smart default date range
+$latest_att_res = $conn->query("SELECT MAX(adate) AS max_date FROM stattnd WHERE sccode = '$sccode'");
+$latest_adate = ($latest_att_res && $row = $latest_att_res->fetch_assoc()) ? $row['max_date'] : null;
+$default_from_date = $latest_adate ? date('Y-m-01', strtotime($latest_adate)) : date('Y-m-01');
+$default_to_date = $latest_adate ? $latest_adate : date('Y-m-d');
+
+// 4. Fetch Recent Disaster / Exemption Events (sccode = ? AND class = 0)
 $exemptEvents = [];
-$evStmt = $conn->prepare("SELECT id, title, start, end, color FROM events WHERE sccode = ? AND event_type IN ('holiday', 'other') ORDER BY start DESC LIMIT 20");
+$evStmt = $conn->prepare("SELECT id, title, start, end, color FROM events WHERE sccode = ? AND class = 0 ORDER BY start DESC LIMIT 20");
 $evStmt->bind_param('i', $sccode);
 $evStmt->execute();
 $evRes = $evStmt->get_result();
@@ -110,6 +166,27 @@ while ($e = $evRes->fetch_assoc()) {
     $exemptEvents[] = $e;
 }
 $evStmt->close();
+
+// 5. Fetch Institutional Weekends from settings table (setting_title = 'Weekends', dot-separated)
+$weekendDays = [];
+$rawWeekends = '';
+$wStmt = $conn->prepare("SELECT settings_value FROM settings WHERE (sccode = ? OR sccode = 0) AND LOWER(setting_title) = 'weekends' ORDER BY (sccode = ?) DESC, id DESC LIMIT 1");
+if ($wStmt) {
+    $wStmt->bind_param('ii', $sccode, $sccode);
+    $wStmt->execute();
+    $wRes = $wStmt->get_result();
+    if ($wRow = $wRes->fetch_assoc()) {
+        $rawWeekends = trim($wRow['settings_value'] ?? '');
+    }
+    $wStmt->close();
+}
+if (!empty($rawWeekends)) {
+    $weekendDays = array_values(array_filter(array_map('trim', preg_split('/[\.,\s]+/', $rawWeekends))));
+}
+if (empty($weekendDays)) {
+    $weekendDays = ['Friday', 'Saturday'];
+}
+$weekends_display = implode(', ', array_map('ucfirst', $weekendDays));
 ?>
 
 <div class="container-xxl flex-grow-1 container-p-y">
@@ -270,6 +347,52 @@ $evStmt->close();
                                             <span class="input-group-text">Day</span>
                                             <input type="number" min="1" max="28" class="form-control" name="monthly_run_day" id="monthly_run_day" value="<?= htmlspecialchars($global['monthly_run_day']) ?>">
                                             <span class="input-group-text">of every month</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Absent Detection Strategy Card -->
+                        <div class="col-12">
+                            <div class="card border shadow-none">
+                                <div class="card-header border-bottom bg-light py-2">
+                                    <h6 class="mb-0 fw-bold"><i class="bi bi-person-x text-danger me-2"></i>Absent Detection Policy (অনুপস্থিতি নির্ধারণ পদ্ধতি)</h6>
+                                </div>
+                                <div class="card-body pt-3">
+                                    <div class="row g-3">
+                                        <div class="col-md-7">
+                                            <label class="form-label fw-bold">Calculation Strategy</label>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="radio" name="absent_detection_mode" id="mode_att_based" value="attendance_based" <?= $global['absent_detection_mode'] === 'attendance_based' ? 'checked' : '' ?>>
+                                                <label class="form-check-label" for="mode_att_based">
+                                                    <strong>Option A: Smart Active Attendance Days (হাজিরা গ্রহণ ভিত্তিক)</strong>
+                                                    <div class="text-muted small">শুধুমাত্র যেসব তারিখে ক্লাসে অন্তত ১ জন শিক্ষার্থীর হাজিরা রয়েছে (`yn = 1`), সেদিন অনুপস্থিতদের জরিমানা হিসাব করবে। (ডিজিটাল বা বায়োমেট্রিক হাজিরা চালুর জন্য)।</div>
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="absent_detection_mode" id="mode_cal_based" value="calendar_based" <?= $global['absent_detection_mode'] === 'calendar_based' ? 'checked' : '' ?>>
+                                                <label class="form-check-label" for="mode_cal_based">
+                                                    <strong>Option B: Calendar Working Days (ক্যালেন্ডার কর্মদিবস ভিত্তিক)</strong>
+                                                    <div class="text-muted small">নির্বাচিত তারিখ রেঞ্জের প্রতিটি কর্মদিবসে (সাপ্তাহিক ছুটি ও বিশেষ ছুটি বাদে) যাদের `yn = 1` নেই, তাদের সবাইকে অনুপস্থিত ধরে জরিমানা হিসাব করবে।</div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-5">
+                                            <label class="form-label fw-bold">Institutional Weekends (সাপ্তাহিক ছুটি)</label>
+                                            <div class="p-3 border rounded bg-light">
+                                                <div class="d-flex align-items-center gap-2 mb-2">
+                                                    <span class="badge bg-label-info fs-6 px-3 py-2">
+                                                        <i class="bi bi-calendar2-week me-1"></i> <?= htmlspecialchars($weekends_display) ?>
+                                                    </span>
+                                                </div>
+                                                <div class="small text-muted mb-1">
+                                                    <i class="bi bi-database-check text-success me-1"></i> <code>settings</code> টেবিল থেকে রিড করা হয়েছে (<code>setting_title = 'Weekends'</code>, মান: <code><?= htmlspecialchars($rawWeekends ?: implode('.', $weekendDays)) ?></code>)।
+                                                </div>
+                                                <div class="small text-muted">
+                                                    <i class="bi bi-info-circle text-primary me-1"></i> <strong>Option B</strong> মোডে এই সাপ্তাহিক ছুটির দিনগুলোতে স্বয়ংক্রিয়ভাবে শিক্ষার্থীদের অনুপস্থিতি জরিমানা ছাড়া বিবেচনা করা হবে।
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -472,29 +595,55 @@ $evStmt->close();
                     </div>
                     <div class="card-body pt-3">
                         <div class="row g-3 align-items-end">
-                            <div class="col-md-3">
-                                <label class="form-label fw-bold">Start Date <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" id="gen_from_date" value="<?= date('Y-m-01') ?>">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label fw-bold">End Date <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" id="gen_to_date" value="<?= date('Y-m-d') ?>">
-                            </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <label class="form-label fw-bold">Class Filter</label>
-                                <select class="form-select" id="gen_class">
+                                <select class="form-select" id="gen_class" onchange="onGeneratorClassChange()">
                                     <option value="all">All Classes</option>
                                     <?php foreach ($classes as $c): ?>
                                         <option value="<?= htmlspecialchars($c) ?>"><?= htmlspecialchars($c) ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-bold">Section Filter</label>
+                                <select class="form-select" id="gen_section">
+                                    <option value="all">All Sections</option>
+                                    <?php foreach ($sections as $sec): ?>
+                                        <option value="<?= htmlspecialchars($sec) ?>"><?= htmlspecialchars($sec) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
                             <div class="col-md-3">
-                                <button type="button" class="btn btn-info w-100" id="btnPreviewFines" onclick="previewFines()">
-                                    <i class="bi bi-search me-1"></i> Preview Calculation
+                                <label class="form-label fw-bold">Calculation Mode</label>
+                                <select class="form-select" id="gen_calc_mode">
+                                    <option value="policy">Use Policy Setting (<?= $global['absent_detection_mode'] === 'calendar_based' ? 'Option B: Calendar Days' : 'Option A: Attendance Days' ?>)</option>
+                                    <option value="attendance_based">Option A: Attendance Taken Days (হাজিরা এন্ট্রি থাকলে)</option>
+                                    <option value="calendar_based">Option B: Calendar Working Days (প্রতি কর্মদিবস)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-bold">Start Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="gen_from_date" value="<?= htmlspecialchars($default_from_date) ?>">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-bold">End Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="gen_to_date" value="<?= htmlspecialchars($default_to_date) ?>">
+                            </div>
+                            <div class="col-md-1">
+                                <button type="button" class="btn btn-info w-100 px-1" id="btnPreviewFines" onclick="previewFines()" title="Preview Calculation">
+                                    <i class="bi bi-search"></i> Preview
                                 </button>
                             </div>
                         </div>
+                        <?php if ($latest_adate): ?>
+                            <div class="mt-2 text-muted small d-flex align-items-center gap-2">
+                                <i class="bi bi-info-circle text-primary"></i> 
+                                <span>Latest attendance in database: <strong class="text-dark"><?= date('d M, Y', strtotime($latest_adate)) ?></strong></span>
+                                <a href="javascript:void(0)" class="text-primary text-decoration-underline" onclick="$('#gen_from_date').val('<?= date('Y-m-01', strtotime($latest_adate)) ?>'); $('#gen_to_date').val('<?= $latest_adate ?>'); previewFines();">
+                                    Use This Month
+                                </a>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -502,54 +651,85 @@ $evStmt->close();
                 <div id="previewSummaryBox" class="d-none mb-4">
                     <div class="row g-3">
                         <div class="col-sm-6 col-lg-3">
-                            <div class="card border shadow-none p-3 text-center">
-                                <div class="text-muted small">Total Fined Students</div>
+                            <div class="card border shadow-none p-3 text-center h-100">
+                                <div class="text-muted small">Total Impacted Students</div>
                                 <h4 class="mb-0 text-primary fw-bold" id="kpiStudents">0</h4>
                             </div>
                         </div>
                         <div class="col-sm-6 col-lg-3">
-                            <div class="card border shadow-none p-3 text-center">
-                                <div class="text-muted small">Absent Days Count</div>
-                                <h4 class="mb-0 text-warning fw-bold" id="kpiAbsentDays">0</h4>
-                            </div>
-                        </div>
-                        <div class="col-sm-6 col-lg-3">
-                            <div class="card border shadow-none p-3 text-center">
-                                <div class="text-muted small">Bunk Days Count</div>
-                                <h4 class="mb-0 text-danger fw-bold" id="kpiBunkDays">0</h4>
-                            </div>
-                        </div>
-                        <div class="col-sm-6 col-lg-3">
-                            <div class="card border shadow-none p-3 text-center">
-                                <div class="text-muted small">Total Fine Amount</div>
+                            <div class="card border shadow-none p-3 text-center h-100">
+                                <div class="text-muted small">New Fine to Post</div>
                                 <h4 class="mb-0 text-success fw-bold">৳ <span id="kpiTotalFine">0.00</span></h4>
+                                <small class="text-muted" id="kpiNewDaysBreakdown">0 Absent, 0 Bunk</small>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-3">
+                            <div class="card border shadow-none p-3 text-center h-100">
+                                <div class="text-muted small">Already Billed / Logged</div>
+                                <h4 class="mb-0 text-info fw-bold">৳ <span id="kpiAlreadyBilledAmount">0.00</span></h4>
+                                <small class="text-muted"><span id="kpiAlreadyBilledDays">0</span> days previously logged</small>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-3">
+                            <div class="card border shadow-none p-3 text-center h-100">
+                                <div class="text-muted small">Active School Days</div>
+                                <h4 class="mb-0 text-dark fw-bold" id="kpiActiveDays">0</h4>
+                                <small class="text-muted" id="kpiExemptInfo">0 exempted</small>
                             </div>
                         </div>
                     </div>
 
                     <!-- Post Button Bar -->
-                    <div class="d-flex justify-content-between align-items-center mt-3 p-3 bg-light rounded border">
+                    <div class="d-flex justify-content-between align-items-center mt-3 p-3 bg-light rounded border flex-wrap gap-2">
                         <div>
                             <span class="fw-bold text-dark" id="previewRangeLabel"></span>
-                            <div class="text-muted small">If the calculation looks accurate, click the button to post directly to student accounts.</div>
+                            <div class="text-muted small">
+                                <i class="bi bi-shield-check text-success me-1"></i>
+                                New fines will be recorded in <code>student_fine_logs</code> and consolidated automatically into <code>stfinance</code> without affecting paid balances.
+                            </div>
                         </div>
                         <button type="button" class="btn btn-success px-4" id="btnPostFines" onclick="postFines()">
-                            <i class="bi bi-send-check me-1"></i> Post to stfinance Ledger
+                            <i class="bi bi-send-check me-1"></i> Post Fines to Ledger
                         </button>
                     </div>
 
                     <!-- Breakdown Table -->
                     <div class="mt-4">
-                        <h6 class="fw-bold mb-2"><i class="bi bi-list-check me-1"></i> Class-wise Summary</h6>
-                        <div class="table-responsive border rounded">
+                        <h6 class="fw-bold mb-2"><i class="bi bi-list-check me-1"></i> Class-wise Fine Summary</h6>
+                        <div class="table-responsive border rounded mb-4">
                             <table class="table table-sm table-striped align-middle mb-0" id="previewBreakdownTable">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Class Name</th>
                                         <th class="text-center">Students</th>
-                                        <th class="text-center">Absent Days</th>
-                                        <th class="text-center">Bunk Days</th>
-                                        <th class="text-end">Total Fine</th>
+                                        <th class="text-center">New Absent</th>
+                                        <th class="text-center">New Bunk</th>
+                                        <th class="text-center">Already Billed</th>
+                                        <th class="text-end">New Fine (৳)</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+
+                        <!-- Detailed Student Breakdown Table -->
+                        <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                            <h6 class="fw-bold mb-0"><i class="bi bi-people me-1"></i> Student-wise Fine Details</h6>
+                            <input type="text" id="filterStudentPreview" class="form-control form-control-sm" style="max-width: 250px;" placeholder="Search student name / roll / ID..." onkeyup="filterStudentTable()">
+                        </div>
+                        <div class="table-responsive border rounded" style="max-height: 420px; overflow-y: auto;">
+                            <table class="table table-sm table-hover align-middle mb-0" id="previewStudentTable">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th style="width: 60px;">Roll</th>
+                                        <th>Student ID</th>
+                                        <th>Student Name</th>
+                                        <th>Class</th>
+                                        <th>Section</th>
+                                        <th class="text-center">New Absent</th>
+                                        <th class="text-center">New Bunk</th>
+                                        <th class="text-center">Already Billed</th>
+                                        <th class="text-end">New Fine (৳)</th>
                                     </tr>
                                 </thead>
                                 <tbody></tbody>
@@ -852,12 +1032,55 @@ function deleteExemption(eventId) {
     });
 }
 
+function onGeneratorClassChange() {
+    const selectedClass = $('#gen_class').val();
+    const sectionSelect = $('#gen_section');
+    sectionSelect.prop('disabled', true);
+
+    $.ajax({
+        url: 'ajax/fetch-academic-cascading.php',
+        type: 'POST',
+        data: {
+            sccode: '<?= htmlspecialchars($sccode) ?>',
+            sessionyear: '<?= htmlspecialchars($session) ?>',
+            slot: '<?= htmlspecialchars($slot) ?>',
+            classname: selectedClass === 'all' ? '' : selectedClass
+        },
+        dataType: 'json',
+        success: function(res) {
+            sectionSelect.empty().append('<option value="all">All Sections</option>');
+            if (res.status === 'success' && res.sections && res.sections.length > 0) {
+                res.sections.forEach(sec => {
+                    sectionSelect.append(`<option value="${sec}">${sec}</option>`);
+                });
+            }
+            sectionSelect.prop('disabled', false);
+        },
+        error: function() {
+            sectionSelect.prop('disabled', false);
+        }
+    });
+}
+
+function filterStudentTable() {
+    const filter = $('#filterStudentPreview').val().toLowerCase();
+    $('#previewStudentTable tbody tr').each(function() {
+        const text = $(this).text().toLowerCase();
+        $(this).toggle(text.indexOf(filter) > -1);
+    });
+}
+
 function previewFines() {
     const fromDate = $('#gen_from_date').val();
     const toDate = $('#gen_to_date').val();
     const className = $('#gen_class').val();
+    const sectionName = $('#gen_section').val() || 'all';
     const sessionYear = '<?= htmlspecialchars($session) ?>';
     const slot = '<?= htmlspecialchars($slot) ?>';
+    const absentRate = $('#absent_rate').val();
+    const bunkRate = $('#bunk_rate').val();
+
+    const calcMode = $('#gen_calc_mode').val() || 'policy';
 
     if (!fromDate || !toDate) {
         Swal.fire({
@@ -881,7 +1104,11 @@ function previewFines() {
             slot: slot,
             from_date: fromDate,
             to_date: toDate,
-            classname: className
+            classname: className,
+            sectionname: sectionName,
+            calc_mode: calcMode,
+            temp_absent_rate: absentRate,
+            temp_bunk_rate: bunkRate
         },
         dataType: 'json',
         success: function(res) {
@@ -889,34 +1116,77 @@ function previewFines() {
             if (res.status === 'success') {
                 $('#previewSummaryBox').removeClass('d-none');
                 $('#kpiStudents').text(res.summary.total_students);
-                $('#kpiAbsentDays').text(res.summary.total_absent_days);
-                $('#kpiBunkDays').text(res.summary.total_bunk_days);
-                $('#kpiTotalFine').text(Number(res.summary.total_fine_amount).toFixed(2));
-                $('#previewRangeLabel').text(`Calculated Range: ${res.summary.date_range} (Exempted Dates: ${res.summary.exempt_days_found})`);
+                $('#kpiTotalFine').text(Number(res.summary.total_new_fine_amount || 0).toFixed(2));
+                $('#kpiNewDaysBreakdown').text(`${res.summary.new_absent_days || 0} Absent, ${res.summary.new_bunk_days || 0} Bunk`);
+                $('#kpiAlreadyBilledAmount').text(Number(res.summary.already_billed_amount || 0).toFixed(2));
+                $('#kpiAlreadyBilledDays').text(res.summary.already_billed_days || 0);
+                $('#kpiActiveDays').text(res.summary.active_school_days || 0);
+                $('#kpiExemptInfo').text(`${res.summary.exempt_days_found || 0} exempted day(s)`);
 
-                // Render breakdown table
+                const modeLabel = res.summary.calc_mode === 'calendar_based' ? '<span class="badge bg-label-info ms-1">Calendar Working Days</span>' : '<span class="badge bg-label-primary ms-1">Attendance Days</span>';
+                const weekendsTxt = res.summary.weekends_setting ? ` | Weekends: <strong class="text-dark">${res.summary.weekends_setting}</strong>` : '';
+                $('#previewRangeLabel').html(`Calculated Range: ${res.summary.date_range} (Active: ${res.summary.active_school_days}, Exempted: ${res.summary.exempt_days_found}${weekendsTxt}) ${modeLabel}`);
+
+                // 1. Render class-wise breakdown table
                 const tbody = $('#previewBreakdownTable tbody');
                 tbody.empty();
-                if (res.class_breakdown.length === 0) {
-                    tbody.append('<tr><td colspan="5" class="text-center text-muted py-2">No fine records found for this period.</td></tr>');
+                if (!res.class_breakdown || res.class_breakdown.length === 0) {
+                    tbody.append('<tr><td colspan="6" class="text-center text-muted py-2">No fine records found for this period.</td></tr>');
                 } else {
                     res.class_breakdown.forEach(item => {
                         tbody.append(`
                             <tr>
                                 <td class="fw-bold">${item.classname}</td>
                                 <td class="text-center">${item.students_count}</td>
-                                <td class="text-center">${item.absent_days}</td>
-                                <td class="text-center">${item.bunk_days}</td>
-                                <td class="text-end fw-bold text-success">৳ ${Number(item.total_fine).toFixed(2)}</td>
+                                <td class="text-center"><span class="badge bg-label-warning">${item.new_absent_days || 0}</span></td>
+                                <td class="text-center"><span class="badge bg-label-danger">${item.new_bunk_days || 0}</span></td>
+                                <td class="text-center"><span class="badge bg-label-info">${item.already_posted_days || 0} days</span></td>
+                                <td class="text-end fw-bold text-success">৳ ${Number(item.total_new_fine || 0).toFixed(2)}</td>
                             </tr>
                         `);
                     });
                 }
 
-                Toast.fire({
-                    icon: 'success',
-                    title: `Calculation complete: ${res.summary.total_students} student(s) found.`
-                });
+                // 2. Render student-wise breakdown table
+                const stBody = $('#previewStudentTable tbody');
+                stBody.empty();
+                if (!res.student_preview || res.student_preview.length === 0) {
+                    stBody.append('<tr><td colspan="9" class="text-center text-muted py-3"><i class="bi bi-info-circle me-1"></i> No absent or bunk student records found for the selected dates.</td></tr>');
+                } else {
+                    res.student_preview.forEach(st => {
+                        stBody.append(`
+                            <tr>
+                                <td class="fw-bold">${st.rollno || '—'}</td>
+                                <td><code>${st.stid}</code></td>
+                                <td class="fw-bold text-dark">${st.stname || '—'}</td>
+                                <td>${st.classname || '—'}</td>
+                                <td>${st.sectionname || '—'}</td>
+                                <td class="text-center"><span class="badge bg-label-warning">${st.new_absent_days || 0}</span></td>
+                                <td class="text-center"><span class="badge bg-label-danger">${st.new_bunk_days || 0}</span></td>
+                                <td class="text-center">${st.already_posted_days > 0 ? `<span class="badge bg-label-info">${st.already_posted_days} days (৳${Number(st.already_posted_amount).toFixed(0)})</span>` : '<span class="text-muted">—</span>'}</td>
+                                <td class="text-end fw-bold text-success">৳ ${Number(st.new_fine_amount || 0).toFixed(2)}</td>
+                            </tr>
+                        `);
+                    });
+                }
+
+                if (res.summary.total_students > 0) {
+                    Toast.fire({
+                        icon: 'success',
+                        title: `Calculation complete: ${res.summary.total_students} student(s) found with fines.`
+                    });
+                } else {
+                    let zeroMsg = 'No fine records generated for the selected date range.';
+                    if (res.summary.active_school_days === 0) {
+                        zeroMsg = 'No attendance entries were found in the database for the selected date range.';
+                    } else {
+                        zeroMsg = `Found ${res.summary.active_school_days} active school day(s), but all students were Present (100% attendance).`;
+                    }
+                    Toast.fire({
+                        icon: 'info',
+                        title: zeroMsg
+                    });
+                }
             } else {
                 Swal.fire({
                     icon: 'error',
@@ -940,8 +1210,12 @@ function postFines() {
     const fromDate = $('#gen_from_date').val();
     const toDate = $('#gen_to_date').val();
     const className = $('#gen_class').val();
+    const sectionName = $('#gen_section').val() || 'all';
+    const calcMode = $('#gen_calc_mode').val() || 'policy';
     const sessionYear = '<?= htmlspecialchars($session) ?>';
     const slot = '<?= htmlspecialchars($slot) ?>';
+    const absentRate = $('#absent_rate').val();
+    const bunkRate = $('#bunk_rate').val();
 
     Swal.fire({
         title: 'Confirm Fine Posting',
@@ -979,7 +1253,11 @@ function postFines() {
                     slot: slot,
                     from_date: fromDate,
                     to_date: toDate,
-                    classname: className
+                    classname: className,
+                    sectionname: sectionName,
+                    calc_mode: calcMode,
+                    temp_absent_rate: absentRate,
+                    temp_bunk_rate: bunkRate
                 },
                 dataType: 'json',
                 success: function(res) {

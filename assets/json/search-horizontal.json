@@ -1,0 +1,590 @@
+{
+  "suggestions": {
+    "Top Shortcuts": [
+      {
+        "name": "Students List",
+        "url": "students-list.php",
+        "icon": "bi-people"
+      },
+      {
+        "name": "Student Admission",
+        "url": "enroll-students.php",
+        "icon": "bi-person-plus"
+      },
+      {
+        "name": "Cash Book",
+        "url": "cash-book.php",
+        "icon": "bi-cash-stack"
+      },
+      {
+        "name": "Fees Collection",
+        "url": "students-payment.php",
+        "icon": "bi-credit-card"
+      },
+      {
+        "name": "Mark Entry",
+        "url": "mark-entry.php",
+        "icon": "bi-pencil-square"
+      },
+      {
+        "name": "Inventory POS",
+        "url": "inventory-pos.php",
+        "icon": "bi-cart-check"
+      }
+    ]
+  },
+  "navigation": {
+    "Students & Academics": [
+      {
+        "name": "Students Directory / List",
+        "url": "students-list.php",
+        "subtitle": "Active student list, search and profiles",
+        "meta": "Student",
+        "icon": "bi-people"
+      },
+      {
+        "name": "Enroll / Admit New Student",
+        "url": "enroll-students.php",
+        "subtitle": "New student admission form and entry",
+        "meta": "Admission",
+        "icon": "bi-person-plus"
+      },
+      {
+        "name": "Online Admission Dashboard",
+        "url": "admission-dashboard.php",
+        "subtitle": "Admission application statistics",
+        "meta": "Admission",
+        "icon": "bi-speedometer"
+      },
+      {
+        "name": "Admission Applications List",
+        "url": "admission-list.php",
+        "subtitle": "Applicant review and verification",
+        "meta": "Admission",
+        "icon": "bi-card-checklist"
+      },
+      {
+        "name": "Student Leave Management",
+        "url": "student-leave-approval.php",
+        "subtitle": "Student leave applications and approvals",
+        "meta": "Student",
+        "icon": "bi-envelope-paper"
+      },
+      {
+        "name": "Student Testimonials",
+        "url": "testimonial-print.php",
+        "subtitle": "Character certificate and testimonial print",
+        "meta": "Certificates",
+        "icon": "bi-award"
+      },
+      {
+        "name": "Bonafide Certificate",
+        "url": "student-bonafide.php",
+        "subtitle": "Print student bonafide certificate",
+        "meta": "Certificates",
+        "icon": "bi-file-earmark-check"
+      },
+      {
+        "name": "Transfer Certificate (TC)",
+        "url": "tc.php",
+        "subtitle": "Issue student transfer certificate",
+        "meta": "Student",
+        "icon": "bi-box-arrow-right"
+      },
+      {
+        "name": "Archived Students",
+        "url": "students-archived.php",
+        "subtitle": "Ex-students and archived database",
+        "meta": "Student",
+        "icon": "bi-archive"
+      },
+      {
+        "name": "Student Overall Analytics",
+        "url": "student-overall-report.php",
+        "subtitle": "Performance, fees and summary analytics",
+        "meta": "Reports",
+        "icon": "bi-bar-chart"
+      }
+    ],
+    "Teachers & Staff": [
+      {
+        "name": "Teachers & Staff Directory",
+        "url": "teachers-list.php",
+        "subtitle": "All teacher profiles, designations and ranks",
+        "meta": "Teacher",
+        "icon": "bi-person-workspace"
+      },
+      {
+        "name": "Teacher Attendance Report",
+        "url": "teacher-attendance-report.php",
+        "subtitle": "Daily & monthly staff attendance logs",
+        "meta": "Attendance",
+        "icon": "bi-calendar2-week"
+      },
+      {
+        "name": "Staff Salary Settings",
+        "url": "salary-settings.php",
+        "subtitle": "Monthly salary structures & scales",
+        "meta": "Payroll",
+        "icon": "bi-gear"
+      },
+      {
+        "name": "Teacher Payroll & Salary Issue",
+        "url": "payroll-dashboard.php",
+        "subtitle": "Monthly payroll batches, MPO & school salary disbursement",
+        "meta": "Payroll",
+        "icon": "bi-cash-stack"
+      }
+    ],
+    "Attendance & Routines": [
+      {
+        "name": "Daily Attendance Register",
+        "url": "attendance-register.php",
+        "subtitle": "Classroom student daily attendance",
+        "meta": "Attendance",
+        "icon": "bi-calendar-check"
+      },
+      {
+        "name": "Attendance View & Monthly Sheet",
+        "url": "attendance-view.php",
+        "subtitle": "Monthly attendance summary & percentage",
+        "meta": "Attendance",
+        "icon": "bi-calendar-range"
+      },
+      {
+        "name": "Class Routine Manager",
+        "url": "class-routine.php",
+        "subtitle": "Period schedules, teacher allocations & routines",
+        "meta": "Routine",
+        "icon": "bi-clock-history"
+      },
+      {
+        "name": "Academic Calendar & Holidays",
+        "url": "academic-calendar.php",
+        "subtitle": "School holiday events and calendar",
+        "meta": "Calendar",
+        "icon": "bi-calendar3"
+      }
+    ],
+    "Examinations & Results": [
+      {
+        "name": "Exam Manager",
+        "url": "exam-manager.php",
+        "subtitle": "Exam terms, setup and schedules",
+        "meta": "Exam",
+        "icon": "bi-clipboard2-check"
+      },
+      {
+        "name": "Exam Routine",
+        "url": "exam-routine.php",
+        "subtitle": "Exam date-sheets and routines",
+        "meta": "Exam",
+        "icon": "bi-calendar2-date"
+      },
+      {
+        "name": "Mark Entry",
+        "url": "mark-entry.php",
+        "subtitle": "Enter CA, CQ, Practical & MCQ marks",
+        "meta": "Marks",
+        "icon": "bi-pencil"
+      },
+      {
+        "name": "Marks Distribution Matrix",
+        "url": "marks-distribution.php",
+        "subtitle": "Configure pass marks and full marks",
+        "meta": "Exam",
+        "icon": "bi-sliders"
+      },
+      {
+        "name": "Merge Exam Marks",
+        "url": "merge-marks.php",
+        "subtitle": "Merge multiple term marks & grand totals",
+        "meta": "Results",
+        "icon": "bi-intersect"
+      },
+      {
+        "name": "Result Processor",
+        "url": "result-processor.php",
+        "subtitle": "GPA, grade calculation and merit list generator",
+        "meta": "Results",
+        "icon": "bi-cpu"
+      },
+      {
+        "name": "Tabulation Sheet",
+        "url": "tabulating-report.php",
+        "subtitle": "Master student tabulation and grade sheet",
+        "meta": "Results",
+        "icon": "bi-file-earmark-spreadsheet"
+      },
+      {
+        "name": "Progress Report Card",
+        "url": "progress-report.php",
+        "subtitle": "Individual student progress report print",
+        "meta": "Results",
+        "icon": "bi-file-earmark-text"
+      },
+      {
+        "name": "Admit Card Generator",
+        "url": "admit-card.php",
+        "subtitle": "Print student examination admit cards",
+        "meta": "Exam",
+        "icon": "bi-card-heading"
+      },
+      {
+        "name": "Seat Card & Roll Plan",
+        "url": "seat-card.php",
+        "subtitle": "Exam hall seat plan and roll cards",
+        "meta": "Exam",
+        "icon": "bi-layout-text-window"
+      },
+      {
+        "name": "Exam Analytics & Reports",
+        "url": "analytics-exam.php",
+        "subtitle": "Performance charts and pass rate statistics",
+        "meta": "Analytics",
+        "icon": "bi-pie-chart"
+      },
+      {
+        "name": "OMR Sheet Mapping",
+        "url": "omr-mapping.php",
+        "subtitle": "OMR scanner mapping and evaluate MCQ",
+        "meta": "Exam",
+        "icon": "bi-qr-code-scan"
+      }
+    ],
+    "Accounts & Finance": [
+      {
+        "name": "Cash Book & Daily Ledger",
+        "url": "cash-book.php",
+        "subtitle": "Cash inflows, outflows & current balance",
+        "meta": "Finance",
+        "icon": "bi-wallet2"
+      },
+      {
+        "name": "Cash Book Reports & Statement",
+        "url": "cashbook-report.php",
+        "subtitle": "Cash ledger statements and audit reports",
+        "meta": "Finance",
+        "icon": "bi-journal-text"
+      },
+      {
+        "name": "Cash Sanction Vouchers",
+        "url": "cashbook-sanction.php",
+        "subtitle": "Expense sanctions and payment approvals",
+        "meta": "Finance",
+        "icon": "bi-check2-circle"
+      },
+      {
+        "name": "Student Fees Collection",
+        "url": "students-payment.php",
+        "subtitle": "Collect monthly fees, tuitions & dues",
+        "meta": "Collection",
+        "icon": "bi-cash-coin"
+      },
+      {
+        "name": "Student Payables & Fee Setup",
+        "url": "student-payable.php",
+        "subtitle": "Setup class fees, discounts & waivers",
+        "meta": "Finance",
+        "icon": "bi-receipt-cutoff"
+      },
+      {
+        "name": "Daily Collection Summary",
+        "url": "daily-collection-summery.php",
+        "subtitle": "Daily fee collection breakdown and head-wise reports",
+        "meta": "Finance",
+        "icon": "bi-bar-chart-line"
+      },
+      {
+        "name": "Financial Income Statement",
+        "url": "financial-statement.php",
+        "subtitle": "Annual income and expenditure balance sheet",
+        "meta": "Finance",
+        "icon": "bi-file-earmark-ruled"
+      },
+      {
+        "name": "Bank Accounts Manager",
+        "url": "bank-manager.php",
+        "subtitle": "Bank deposits, cheques and bank ledger",
+        "meta": "Finance",
+        "icon": "bi-bank"
+      },
+      {
+        "name": "Late Fine & Fee Settings",
+        "url": "fine-settings.php",
+        "subtitle": "Configure late fee policies and fines",
+        "meta": "Finance",
+        "icon": "bi-exclamation-triangle"
+      },
+      {
+        "name": "Online Payment Gateway (bKash)",
+        "url": "payment-gateway.php",
+        "subtitle": "Payment gateway and bKash setup",
+        "meta": "PGW",
+        "icon": "bi-phone"
+      },
+      {
+        "name": "Sync Online Payments",
+        "url": "sync-payments.php",
+        "subtitle": "Reconcile online portal fee payments",
+        "meta": "PGW",
+        "icon": "bi-arrow-repeat"
+      }
+    ],
+    "Inventory & Stock": [
+      {
+        "name": "Inventory Dashboard",
+        "url": "inventory-dashboard.php",
+        "subtitle": "Stock overview, low stock alerts & valuation",
+        "meta": "Inventory",
+        "icon": "bi-speedometer2"
+      },
+      {
+        "name": "Inventory POS Billing Counter",
+        "url": "inventory-pos.php",
+        "subtitle": "Fast sales counter, student billing & receipt print",
+        "meta": "POS",
+        "icon": "bi-cart-check"
+      },
+      {
+        "name": "Item Catalog Master",
+        "url": "inventory-items.php",
+        "subtitle": "Manage items, barcodes, prices & stock",
+        "meta": "Inventory",
+        "icon": "bi-box-seam"
+      },
+      {
+        "name": "Purchases & Inward Stock",
+        "url": "inventory-purchases.php",
+        "subtitle": "Supplier purchase invoices & inventory GRN",
+        "meta": "Inventory",
+        "icon": "bi-truck"
+      },
+      {
+        "name": "Item Issues & Distribution",
+        "url": "inventory-issues.php",
+        "subtitle": "Issue assets/items to departments & staff",
+        "meta": "Inventory",
+        "icon": "bi-arrow-left-right"
+      },
+      {
+        "name": "Suppliers & Vendors",
+        "url": "inventory-suppliers.php",
+        "subtitle": "Vendor master and supplier details",
+        "meta": "Inventory",
+        "icon": "bi-building"
+      },
+      {
+        "name": "Inventory Stock Reports",
+        "url": "inventory-reports.php",
+        "subtitle": "Stock ledger, sales, valuation & profit reports",
+        "meta": "Reports",
+        "icon": "bi-file-earmark-bar-graph"
+      },
+      {
+        "name": "Fixed Assets Register",
+        "url": "fixed-assets.php",
+        "subtitle": "Institutional property, land & fixed asset records",
+        "meta": "Assets",
+        "icon": "bi-buildings"
+      }
+    ],
+    "Settings & Administration": [
+      {
+        "name": "Admin Panel Home",
+        "url": "admin-home.php",
+        "subtitle": "Super admin & headmaster control center",
+        "meta": "Admin",
+        "icon": "bi-shield-lock"
+      },
+      {
+        "name": "Institute Profile Setup",
+        "url": "institute-profile.php",
+        "subtitle": "School info, address, EIIN & contact",
+        "meta": "Settings",
+        "icon": "bi-building-gear"
+      },
+      {
+        "name": "Basic Academic Settings",
+        "url": "settings-basic.php",
+        "subtitle": "Active session year, shift & settings",
+        "meta": "Settings",
+        "icon": "bi-gear"
+      },
+      {
+        "name": "Shift & Slot Management",
+        "url": "slot.php",
+        "subtitle": "Morning / Day shift & timing slots",
+        "meta": "Settings",
+        "icon": "bi-sun"
+      },
+      {
+        "name": "Class, Section & Area Manager",
+        "url": "academics-classes.php",
+        "subtitle": "Manage classes, sections, groups & departments",
+        "meta": "Settings",
+        "icon": "bi-diagram-3"
+      },
+      {
+        "name": "Subjects & Curriculum List",
+        "url": "subjects-list.php",
+        "subtitle": "Academic subject codes and names",
+        "meta": "Academics",
+        "icon": "bi-book"
+      },
+      {
+        "name": "GPA & Grading Scale Setup",
+        "url": "settings-gpa.php",
+        "subtitle": "GPA rules, marks range and letter grades",
+        "meta": "Settings",
+        "icon": "bi-calculator"
+      },
+      {
+        "name": "System Users & Login Accounts",
+        "url": "users-list.php",
+        "subtitle": "Manage user accounts, logins & credentials",
+        "meta": "Security",
+        "icon": "bi-person-gear"
+      },
+      {
+        "name": "Role & RBAC Permissions",
+        "url": "role-manager.php",
+        "subtitle": "Role privileges & menu access levels",
+        "meta": "Security",
+        "icon": "bi-shield-check"
+      },
+      {
+        "name": "Permissions & Access Mapper",
+        "url": "permissions-mapper.php",
+        "subtitle": "Map pages to roles and users",
+        "meta": "Security",
+        "icon": "bi-toggles"
+      },
+      {
+        "name": "Module Hierarchy & Structure",
+        "url": "module-structure.php",
+        "subtitle": "Menu structure and nav ordering",
+        "meta": "System",
+        "icon": "bi-list-nested"
+      },
+      {
+        "name": "Subscription & Packages",
+        "url": "settings-subscription.php",
+        "subtitle": "EIMBox license, tier & cloud storage",
+        "meta": "Billing",
+        "icon": "bi-gem"
+      }
+    ],
+    "Messaging & Notices": [
+      {
+        "name": "Send SMS Broadcast",
+        "url": "messaging-send.php",
+        "subtitle": "Send SMS alerts to students, parents and teachers",
+        "meta": "SMS",
+        "icon": "bi-chat-dots"
+      },
+      {
+        "name": "SMS Gateway Configuration",
+        "url": "sms-gateway.php",
+        "subtitle": "SMS API provider keys and sender ID",
+        "meta": "SMS",
+        "icon": "bi-broadcast-pin"
+      },
+      {
+        "name": "SMS Delivery Logs",
+        "url": "sms-log.php",
+        "subtitle": "Delivered, queued and failed message logs",
+        "meta": "SMS",
+        "icon": "bi-list-check"
+      },
+      {
+        "name": "SMS Message Templates",
+        "url": "sms-templates.php",
+        "subtitle": "Predefined SMS templates and placeholders",
+        "meta": "SMS",
+        "icon": "bi-chat-square-quote"
+      },
+      {
+        "name": "Notice Board Manager",
+        "url": "notice-manager.php",
+        "subtitle": "Publish announcements & circulars",
+        "meta": "Notice",
+        "icon": "bi-bell"
+      },
+      {
+        "name": "Notifications Center",
+        "url": "notifications.php",
+        "subtitle": "View system notifications and alerts",
+        "meta": "Alerts",
+        "icon": "bi-bell-fill"
+      },
+      {
+        "name": "Internal User Chat",
+        "url": "users-chat.php",
+        "subtitle": "Chat between teachers and staff",
+        "meta": "Chat",
+        "icon": "bi-chat-left-text"
+      }
+    ],
+    "Elections & Managing Committee": [
+      {
+        "name": "Voter Master List",
+        "url": "managing-voter-list.php",
+        "subtitle": "Managing committee voter master list",
+        "meta": "Election",
+        "icon": "bi-person-vcard"
+      },
+      {
+        "name": "Voter Entry & Verification",
+        "url": "voter-info.php",
+        "subtitle": "Register voters and print ballot cards",
+        "meta": "Election",
+        "icon": "bi-card-text"
+      }
+    ],
+    "Tools & Help": [
+      {
+        "name": "System Help & Documentation",
+        "url": "documentation.php",
+        "subtitle": "User guides and feature tutorials",
+        "meta": "Help",
+        "icon": "bi-question-circle"
+      },
+      {
+        "name": "Feature & Module Tracker",
+        "url": "feature-tracker.php",
+        "subtitle": "Track features, releases and roadmaps",
+        "meta": "Dev",
+        "icon": "bi-kanban"
+      },
+      {
+        "name": "Issue Tracker",
+        "url": "issue-tracker-all.php",
+        "subtitle": "Report bugs and system tickets",
+        "meta": "Dev",
+        "icon": "bi-bug"
+      },
+      {
+        "name": "Data Duplicator (Session Copy)",
+        "url": "data-duplicator.php",
+        "subtitle": "Duplicate students, fees & setup between sessions",
+        "meta": "Tools",
+        "icon": "bi-copy"
+      },
+      {
+        "name": "My Profile & Password",
+        "url": "user-profile.php",
+        "subtitle": "Manage profile, 2FA and password",
+        "meta": "Security",
+        "icon": "bi-person-circle"
+      },
+      {
+        "name": "Lock Screen",
+        "url": "lock.php",
+        "subtitle": "Lock current session safely",
+        "meta": "Security",
+        "icon": "bi-lock"
+      }
+    ]
+  }
+}

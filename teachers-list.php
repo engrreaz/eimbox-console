@@ -56,6 +56,9 @@ $result = $conn->query($sql);
             <p class="text-muted small mb-0">Manage institute faculty members, administrative staff, and assignments</p>
         </div>
         <div class="d-flex gap-2">
+            <a href="payroll-dashboard.php" class="btn btn-outline-success btn-sm">
+                <i class="bi bi-cash-stack me-1"></i> Teacher Payroll
+            </a>
             <a href="teacher-attendance-report.php" class="btn btn-outline-info btn-sm">
                 <i class="bi bi-calendar-check me-1"></i> Attendance Matrix
             </a>

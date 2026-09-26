@@ -453,137 +453,101 @@ function initializeAutocomplete() {
             a(e, t));
       },
       getSources() {
-        var e,
-          t = [];
-        return (
-          data.navigation &&
-          ((e = Object.keys(data.navigation)
-            .filter((e) => "files" !== e && "members" !== e)
-            .map((a) => ({
-              sourceId: "nav-" + a,
-              getItems({ query: t }) {
-                var e = data.navigation[a];
-                return t
-                  ? e.filter((e) =>
-                    e.name.toLowerCase().includes(t.toLowerCase())
-                  )
-                  : e;
-              },
-              getItemUrl({ item: e }) {
-                return e.url;
-              },
-              templates: {
-                header({ items: e, html: t }) {
-                  return 0 === e.length
-                    ? null
-                    : t`<span class="search-headings">${a}</span>`;
+        const sources = [];
+
+        // 1. Static & Local JSON Navigation Sources
+        if (data && data.navigation) {
+          Object.keys(data.navigation)
+            .filter((key) => key !== "files" && key !== "members")
+            .forEach((category) => {
+              sources.push({
+                sourceId: "nav-" + category,
+                getItems({ query }) {
+                  const q = (query || "").trim().toLowerCase();
+                  const items = data.navigation[category] || [];
+                  if (!q) return items;
+                  return items.filter((item) =>
+                    (item.name || "").toLowerCase().includes(q) ||
+                    (item.subtitle || "").toLowerCase().includes(q) ||
+                    (item.meta || "").toLowerCase().includes(q)
+                  );
                 },
-                item({ item: e, html: t }) {
-                  return t`
-                  <a href="${e.url}" class="d-flex justify-content-between align-items-center">
-                    <span class="item-wrapper"><i class="icon-base bi ${e.icon}"></i>${e.name}</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
-                      <path fill="currentColor" d="M16 13h-6v-3l-5 4l5 4v-3h7a1 1 0 0 0 1-1V5h-2z" />
-                    </svg>
-                  </a>
-                `;
+                getItemUrl({ item }) {
+                  return item.url;
                 },
-              },
-            }))),
-            t.push(...e),
-            data.navigation.files &&
-
-            t.push({
-              sourceId: "global-db",
-
-              getItems({ query }) {
-                if (!query || query.length < 2) return [];
-
-                const deepEnabled = isDeepSearchEnabled();
-
-                // STEP–1: Normal search (always)
-                return fetch("search/search-api.php?q=" + encodeURIComponent(query))
-                  .then(r => r.json())
-                  .then(normalResults => {
-
-                    // 👉 UI এখানেই normal result পেয়ে যাবে
-                    if (!deepEnabled) {
-                      return normalResults;
-                    }
-
-                    // STEP–2: Deep search (after normal)
-                    return fetch("search/search-api-deep.php?q=" + encodeURIComponent(query))
-                      .then(r => r.json())
-                      .then(deepResults => {
-                        // 🔥 merge করে ফেরত
-                        return [...normalResults, ...deepResults];
-                      })
-                      .catch(() => normalResults);
-                  })
-                  .catch(() => []);
-              },
-
-
-
-              getItemUrl({ item }) {
-                return item.url;
-              },
-
-              templates: {
-                header({ html }) {
-                  return html`<span class="search-headings">Search Results</span>`;
+                templates: {
+                  header({ items, html }) {
+                    if (!items || items.length === 0) return null;
+                    return html`<span class="search-headings">${category}</span>`;
+                  },
+                  item({ item, html }) {
+                    return html`
+                      <a href="${item.url}" class="d-flex justify-content-between align-items-center">
+                        <span class="item-wrapper"><i class="icon-base bi ${item.icon}"></i>${item.name}</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+                          <path fill="currentColor" d="M16 13h-6v-3l-5 4l5 4v-3h7a1 1 0 0 0 1-1V5h-2z" />
+                        </svg>
+                      </a>
+                    `;
+                  },
                 },
+              });
+            });
+        }
 
-                item({ item, html }) {
-                  return html`
-          <a href="${item.url}" class="d-flex align-items-center">
-            <i class="icon-base bi ${item.icon} me-2"></i>
-            <span>${item.name}</span>
-             <small class="text-body-secondary fs-small">${item.subtitle}</small>
-             <span class="text-secondary fs-tiny float-end">${item.meta}</span>
-          </a>
-        `;
+        // 2. Live Global Database Search Source (Students, Teachers, Cashbook, Inventory, Menus)
+        sources.push({
+          sourceId: "global-db",
+          getItems({ query }) {
+            const currentQ = (query || "").trim();
+            if (!currentQ || currentQ.length < 1) return [];
+
+            const deepEnabled = isDeepSearchEnabled();
+
+            return fetch("search/search-api.php?q=" + encodeURIComponent(currentQ))
+              .then((r) => r.json())
+              .then((normalResults) => {
+                if (!deepEnabled) {
+                  return normalResults || [];
                 }
-              }
-            })
-            ,
-            data.navigation.members) &&
-          t.push({
-            sourceId: "members",
-            getItems({ query: t }) {
-              var e = data.navigation.members;
-              return t
-                ? e.filter((e) =>
-                  e.name.toLowerCase().includes(t.toLowerCase())
-                )
-                : e;
+                return fetch("search/search-api-deep.php?q=" + encodeURIComponent(currentQ))
+                  .then((r) => r.json())
+                  .then((deepResults) => {
+                    return [...(normalResults || []), ...(deepResults || [])];
+                  })
+                  .catch(() => normalResults || []);
+              })
+              .catch((err) => {
+                console.error("Global search error:", err);
+                return [];
+              });
+          },
+          getItemUrl({ item }) {
+            return item.url;
+          },
+          templates: {
+            header({ items, html }) {
+              if (!items || items.length === 0) return null;
+              return html`<span class="search-headings">Live System Records</span>`;
             },
-            getItemUrl({ item: e }) {
-              return e.url;
-            },
-            templates: {
-              header({ items: e, html: t }) {
-                return 0 === e.length
-                  ? null
-                  : t`<span class="search-headings">Members</span>`;
-              },
-              item({ item: e, html: t }) {
-                return t`
-                  <a href="${e.url}" class="d-flex align-items-center py-2 px-4">
-                    <div class="avatar me-2">
-                      <img src="${assetsPath}${e.src}" alt="${e.name}" class="rounded-circle" width="32" />
+            item({ item, html }) {
+              return html`
+                <a href="${item.url}" class="d-flex justify-content-between align-items-center py-2 px-3">
+                  <div class="d-flex align-items-center overflow-hidden">
+                    <i class="icon-base bi ${item.icon || 'bi-search'} me-2 text-primary fs-5"></i>
+                    <div class="d-flex flex-column text-truncate">
+                      <span class="fw-semibold text-heading text-truncate">${item.name}</span>
+                      ${item.subtitle ? html`<small class="text-body-secondary fs-tiny text-truncate">${item.subtitle}</small>` : ''}
                     </div>
-                    <div class="flex-grow-1">
-                      <h6 class="mb-0">${e.name}</h6>
-                      <small class="text-body-secondary">${e.subtitle}</small>
-                    </div>
-                  </a>
-                `;
-              },
+                  </div>
+                  ${item.meta ? html`<span class="badge bg-label-info ms-2">${item.meta}</span>` : ''}
+                </a>
+              `;
             },
-          }),
-          t
-        );
+          },
+        });
+
+        return sources;
       },
     });
 }
@@ -665,6 +629,10 @@ function isDeepSearchEnabled() {
   return localStorage.getItem('deepSearch') === '1';
 }
 
-function setDeepSearch(enabled) {
+function setDeepSearchEnabled(enabled) {
   localStorage.setItem('deepSearch', enabled ? '1' : '0');
+}
+
+function setDeepSearch(enabled) {
+  setDeepSearchEnabled(enabled);
 }

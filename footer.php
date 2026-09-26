@@ -834,7 +834,7 @@ if ($monitorPanel === true) { ?>
 <script src="assets/js/eimbox.js"></script>
 
 <!-- Main JS -->
-<script src="assets/js/main.js"></script>
+<script src="assets/js/main.js?v=<?= time() ?>"></script>
 
 
 
