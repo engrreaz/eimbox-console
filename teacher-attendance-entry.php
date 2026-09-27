@@ -38,7 +38,7 @@ if (!empty($selected_slot)) {
     $types .= "ss";
 }
 
-$t_sql = "SELECT tid, tname, position, ranks, sl, mobile, photo, slots 
+$t_sql = "SELECT tid, tname, position, ranks, sl, mobile, slots 
           FROM teacher 
           WHERE sccode = ? $slot_where 
           ORDER BY CAST(ranks AS UNSIGNED) ASC, CAST(sl AS UNSIGNED) ASC, tid ASC";
@@ -364,13 +364,8 @@ $cal_stmt->close();
                                 <td class="text-center fw-bold text-muted"><?= $sl++ ?></td>
                                 <td>
                                     <div class="d-flex align-items-center gap-3">
-                                        <?php if (!empty($t['photo'])): ?>
-                                            <img src="uploads/teachers/<?= htmlspecialchars($t['photo']) ?>" alt="Photo" class="teacher-photo-thumb" onerror="this.onerror=null;this.src='assets/img/avatars/1.png';">
-                                        <?php else: ?>
-                                            <div class="teacher-initial-thumb">
-                                                <?= strtoupper(substr($t['tname'], 0, 1)) ?>
-                                            </div>
-                                        <?php endif; ?>
+                                        <?php $tphoto_url = teacher_profile_image_path($tid); ?>
+                                        <img src="<?= htmlspecialchars($tphoto_url) ?>" alt="Photo" class="teacher-photo-thumb" onerror="this.onerror=null;this.src='assets/img/avatars/1.png';">
                                         <div>
                                             <div class="fw-bold text-dark fs-6"><?= htmlspecialchars($t['tname']) ?></div>
                                             <div class="small text-muted">
