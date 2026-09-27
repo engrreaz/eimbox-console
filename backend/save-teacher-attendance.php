@@ -40,7 +40,7 @@ try {
 
     $saved_count = 0;
 
-    $chkStmt = $conn->prepare("SELECT id FROM teacherattnd WHERE sccode = ? AND tid = ? AND adate = ? LIMIT 1");
+    $chkStmt = $conn->prepare("SELECT id, realin, realout FROM teacherattnd WHERE sccode = ? AND tid = ? AND adate = ? LIMIT 1");
     $upStmt  = $conn->prepare("UPDATE teacherattnd SET 
                                 realin = ?, 
                                 realout = ?, 
@@ -59,17 +59,39 @@ try {
         $tid = intval($item['tid'] ?? 0);
         if ($tid <= 0) continue;
 
-        $status = strtolower(trim($item['status'] ?? 'present'));
-        $realin = !empty($item['realin']) ? trim($item['realin']) : null;
-        $realout = !empty($item['realout']) ? trim($item['realout']) : null;
+        $status = strtolower(trim($item['status'] ?? 'unmarked'));
+        $raw_realin = trim($item['realin'] ?? '');
+        $raw_realout = trim($item['realout'] ?? '');
         $detect = !empty($item['detectin']) ? trim($item['detectin']) : 'Manual';
 
-        // Normalize time strings to HH:MM:SS format if provided
-        if (!empty($realin) && strlen($realin) == 5) {
-            $realin .= ':00';
+        // Check if existing record exists in DB
+        $chkStmt->bind_param("iis", $sccode, $tid, $adate);
+        $chkStmt->execute();
+        $chkRes = $chkStmt->get_result()->fetch_assoc();
+
+        // If status is 'unmarked' / empty and no realin/realout:
+        if ($status === 'unmarked' || $status === 'none') {
+            if ($chkRes) {
+                // Remove or mark as absent if unmarked
+                $delStmt = $conn->prepare("DELETE FROM teacherattnd WHERE id = ? AND sccode = ?");
+                $delStmt->bind_param("ii", $chkRes['id'], $sccode);
+                $delStmt->execute();
+                $delStmt->close();
+            }
+            continue;
         }
-        if (!empty($realout) && strlen($realout) == 5) {
-            $realout .= ':00';
+
+        // Normalize time strings to HH:MM:SS format
+        $realin = !empty($raw_realin) ? (strlen($raw_realin) == 5 ? ($raw_realin . ':00') : $raw_realin) : null;
+        $realout = !empty($raw_realout) ? (strlen($raw_realout) == 5 ? ($raw_realout . ':00') : $raw_realout) : null;
+
+        // If updating afternoon Out-Time and user didn't change/provide In-Time, preserve existing In-Time from DB
+        if (empty($realin) && $chkRes && !empty($chkRes['realin']) && ($status === 'present' || $status === 'late')) {
+            $realin = $chkRes['realin'];
+        }
+        // If updating morning In-Time and user didn't provide Out-Time, preserve existing Out-Time from DB if any
+        if (empty($realout) && $chkRes && !empty($chkRes['realout']) && ($status === 'present' || $status === 'late')) {
+            $realout = $chkRes['realout'];
         }
 
         // Determine status labels
@@ -90,11 +112,6 @@ try {
             $statusin = 'Normal';
             $statusout = !empty($realout) ? 'Normal' : '';
         }
-
-        // Check if existing record exists
-        $chkStmt->bind_param("iis", $sccode, $tid, $adate);
-        $chkStmt->execute();
-        $chkRes = $chkStmt->get_result()->fetch_assoc();
 
         if ($chkRes) {
             $rec_id = intval($chkRes['id']);
@@ -139,7 +156,7 @@ try {
 
     echo json_encode([
         'status' => 'success',
-        'message' => "Successfully saved attendance for {$saved_count} teachers.",
+        'message' => "Attendance updated successfully for {$saved_count} records.",
         'date' => $adate,
         'saved_count' => $saved_count
     ]);
@@ -147,6 +164,6 @@ try {
     $conn->rollback();
     echo json_encode([
         'status' => 'error',
-        'message' => 'Database error occurred: ' . $e->getMessage()
+        'message' => 'Database error: ' . $e->getMessage()
     ]);
 }
