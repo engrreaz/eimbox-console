@@ -1,5 +1,17 @@
 <?php
-require_once 'header.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once 'core/config.php';
+require_once 'core/db.php';
+require_once 'core/global_values.php';
+
+$conn = db_connect();
+
+if (empty($_SESSION['user_id']) || empty($sccode)) {
+    echo "<div style='font-family:sans-serif; padding:30px; text-align:center;'><h3>Please login to view report.</h3></div>";
+    exit;
+}
 
 $slot = $_COOKIE['chain-slot'] ?? ($_GET['slot'] ?? '');
 $sessionyear = $_COOKIE['chain-session'] ?? ($_GET['sessionyear'] ?? date('Y'));
@@ -8,6 +20,13 @@ $sessionyear = $_COOKIE['chain-session'] ?? ($_GET['sessionyear'] ?? date('Y'));
 $yr_digits = preg_replace('/\D/', '', $sessionyear);
 $yr_last2 = substr($yr_digits, -2);
 $session_pattern = !empty($yr_last2) ? ('%' . $yr_last2 . '%') : ('%' . date('y') . '%');
+
+// Fetch Institution Info
+$sc_stmt = $conn->prepare("SELECT * FROM scinfo WHERE sccode = ? LIMIT 1");
+$sc_stmt->bind_param("i", $sccode);
+$sc_stmt->execute();
+$institute = $sc_stmt->get_result()->fetch_assoc();
+$sc_stmt->close();
 
 function clean_phone($phone) {
     if (!$phone) return '';
@@ -171,301 +190,260 @@ foreach ($clusters as $root => $members) {
     }
 }
 ?>
-
-<style>
-    /* Sticky Dark Toolbar Header */
-    .no-print-bar {
-        background: #1e293b;
-        color: #f8fafc;
-        padding: 12px 24px;
-        position: sticky;
-        top: 0;
-        z-index: 1050;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-    .no-print-bar .badge-stat {
-        background: rgba(255, 255, 255, 0.15);
-        color: #fff;
-        font-weight: 600;
-        padding: 6px 12px;
-        border-radius: 6px;
-        font-size: 0.85rem;
-    }
-
-    /* Print & Document Styles */
-    .printable-sheet {
-        background: #fff;
-        max-width: 1100px;
-        margin: 20px auto;
-        padding: 30px;
-        border-radius: 10px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    }
-
-    .table-siblings {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.88rem;
-    }
-    .table-siblings th {
-        background-color: #f1f5f9;
-        color: #1e293b;
-        font-weight: 700;
-        text-align: center;
-        border: 1px solid #cbd5e1;
-        padding: 8px 10px;
-    }
-    .table-siblings td {
-        border: 1px solid #cbd5e1;
-        padding: 8px 10px;
-        vertical-align: middle;
-    }
-    .sibling-item-row {
-        padding: 6px 0;
-        border-bottom: 1px dashed #e2e8f0;
-    }
-    .sibling-item-row:last-child {
-        border-bottom: none;
-        padding-bottom: 0;
-    }
-
-    .signature-area {
-        margin-top: 60px;
-        display: flex;
-        justify-content: space-between;
-        text-align: center;
-    }
-    .signature-box {
-        width: 200px;
-        border-top: 1px dashed #475569;
-        padding-top: 6px;
-        font-weight: 600;
-        font-size: 0.85rem;
-        color: #1e293b;
-    }
-
-    @media print {
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sibling Students / Multi-Child Family Audit Report - <?= htmlspecialchars($sessionyear) ?></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
         @page {
             size: A4 portrait;
-            margin: 12mm 10mm 15mm 10mm;
+            margin: 8mm 8mm 12mm 8mm;
         }
         body {
-            background: #fff !important;
-            color: #000 !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
+            background-color: #f8f9fa;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            color: #111;
             font-size: 11.5px;
-            padding: 0 !important;
-            margin: 0 !important;
+            line-height: 1.3;
+            margin: 0;
+            padding: 0;
         }
-        .no-print-bar,
-        .no-print,
-        .layout-navbar,
-        .layout-menu,
-        .footer,
-        .content-backdrop,
-        nav {
-            display: none !important;
+        .report-wrapper {
+            background: #fff;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
         }
-        .container-xxl,
-        .content-wrapper {
-            padding: 0 !important;
-            margin: 0 !important;
-            max-width: 100% !important;
+        .inst-header {
+            text-align: center;
+            border-bottom: 2px solid #222;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
         }
-        .printable-sheet {
-            max-width: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            box-shadow: none !important;
-            border-radius: 0 !important;
+        .report-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
         }
-        .table-siblings th,
-        .table-siblings td {
-            border: 1px solid #333 !important;
-            padding: 5px 6px !important;
+        .report-table th, .report-table td {
+            border: 1px solid #666;
+            padding: 5px 6px;
+            vertical-align: middle;
         }
-        .table-siblings tr {
-            page-break-inside: avoid !important;
+        .report-table th {
+            background-color: #f1f5f9 !important;
+            font-weight: 700;
+            text-align: center;
+            color: #0f172a;
         }
-        thead {
-            display: table-header-group !important;
+        .sibling-item-row {
+            padding: 4px 0;
+            border-bottom: 1px dashed #cbd5e1;
         }
-        .badge-voter {
-            border: 1px solid #000 !important;
-            color: #000 !important;
-            background: transparent !important;
+        .sibling-item-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
         }
-    }
-</style>
+        .no-print-bar {
+            background: #1e293b;
+            padding: 10px 20px;
+            color: #fff;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .signature-section {
+            margin-top: 45px;
+            display: flex;
+            justify-content: space-between;
+            page-break-inside: avoid;
+        }
+        .sig-block {
+            text-align: center;
+            width: 200px;
+        }
+        .sig-line {
+            border-top: 1px dashed #333;
+            padding-top: 4px;
+            font-weight: 600;
+            font-size: 11px;
+        }
+        @media print {
+            body {
+                background: #fff;
+            }
+            .no-print-bar {
+                display: none !important;
+            }
+            .report-wrapper {
+                padding: 0;
+                max-width: 100% !important;
+            }
+            .report-table th, .report-table td {
+                border-color: #333 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .report-table tr {
+                page-break-inside: avoid !important;
+            }
+            thead {
+                display: table-header-group !important;
+            }
+            .badge-voter-print {
+                border: 1px solid #000 !important;
+                background: transparent !important;
+                color: #000 !important;
+            }
+        }
+    </style>
+</head>
+<body>
 
-<!-- Sticky Dark Header / Toolbar -->
-<div class="no-print-bar d-flex flex-wrap justify-content-between align-items-center gap-3">
-    <div class="d-flex align-items-center flex-wrap gap-3">
-        <h5 class="mb-0 text-white fw-bold">
-            <i class="bi bi-people-fill text-warning me-2"></i> EIMBox Sibling Students & Multi-Child Families Report
-        </h5>
-        <div class="d-flex align-items-center gap-2">
-            <span class="badge-stat">
-                <i class="bi bi-house-door me-1"></i> Sibling Families: <strong><?= count($sibling_groups) ?></strong>
-            </span>
-            <span class="badge-stat">
-                <i class="bi bi-mortarboard me-1"></i> Total Enrolled Children: <strong><?= $total_sibling_students ?></strong>
-            </span>
-            <span class="badge-stat">
-                <i class="bi bi-calendar3 me-1"></i> Session: <strong><?= htmlspecialchars($sessionyear) ?></strong>
-            </span>
-        </div>
+<div class="no-print-bar d-flex justify-content-between align-items-center">
+    <div>
+        <strong><i class="bi bi-people-fill me-1"></i> Sibling Students & Multi-Child Family Audit Report</strong>
+        <span class="ms-2 text-white-50">Session: <?= htmlspecialchars($sessionyear) ?> | Families: <strong><?= count($sibling_groups) ?></strong> | Total Children: <strong><?= $total_sibling_students ?></strong></span>
     </div>
-    <div class="d-flex align-items-center gap-2">
+    <div class="d-flex gap-2">
         <a href="managing-voter-list.php" class="btn btn-sm btn-outline-light">
             <i class="bi bi-arrow-left me-1"></i> Control Panel
         </a>
         <a href="voter-master-list.php" class="btn btn-sm btn-outline-info">
             <i class="bi bi-file-earmark-text me-1"></i> Master Voter List
         </a>
-        <button class="btn btn-sm btn-warning fw-bold px-3" onclick="window.print()">
+        <button class="btn btn-sm btn-light fw-bold" onclick="window.print()">
             <i class="bi bi-printer-fill me-1"></i> Print / Save PDF
         </button>
-        <button class="btn btn-sm btn-outline-secondary text-white" onclick="window.close()" title="Close Viewer">
-            <i class="bi bi-x-lg"></i>
+        <button class="btn btn-sm btn-outline-light" onclick="window.close()">
+            <i class="bi bi-x-lg me-1"></i> Close
         </button>
     </div>
 </div>
 
-<div class="container-xxl flex-grow-1 container-p-y">
-    <div class="printable-sheet">
+<div class="report-wrapper">
+    <!-- Header -->
+    <div class="inst-header">
+        <h3 class="fw-bold mb-0 text-uppercase"><?= htmlspecialchars($institute['scname'] ?? 'EDUCATIONAL INSTITUTION') ?></h3>
+        <div class="text-muted small">
+            <?= htmlspecialchars($institute['scadd1'] ?? ($institute['scaddress'] ?? '')) ?>
+            <?php if (!empty($institute['scadd2'])): ?>
+                , <?= htmlspecialchars($institute['scadd2']) ?>
+            <?php endif; ?>
+        </div>
+        <h5 class="fw-bold mt-2 mb-1 text-dark text-uppercase">
+            <i class="bi bi-diagram-3 me-1"></i> Sibling Students / Multi-Child Family Audit Report
+        </h5>
+        <div class="d-flex justify-content-center align-items-center gap-3 mt-1 text-muted" style="font-size: 11px;">
+            <span><strong>Target Scope:</strong> Class Six &ndash; Twelve</span>
+            <span>&bull;</span>
+            <span><strong>Session Year:</strong> <?= htmlspecialchars($sessionyear) ?> (<?= htmlspecialchars($session_pattern) ?>)</span>
+            <span>&bull;</span>
+            <span><strong>Printed Date:</strong> <?= date('d M Y, h:i A') ?></span>
+        </div>
+    </div>
 
-        <!-- Institution & Report Header -->
-        <div class="text-center mb-4 pb-3 border-bottom">
-            <h3 class="fw-bold mb-1" style="color: #0f172a;"><?= htmlspecialchars($scname ?? 'Educational Institution') ?></h3>
-            <p class="text-muted mb-2 small"><?= htmlspecialchars($scaddress ?? '') ?></p>
-            <h5 class="fw-bold mb-1 text-dark text-uppercase letter-spacing-1">
-                <i class="bi bi-diagram-3 me-1"></i> Sibling Students / Multi-Child Family Audit Report
-            </h5>
-            <div class="d-flex justify-content-center align-items-center gap-3 mt-2 text-muted small">
-                <span><strong>Target Classes:</strong> Six &ndash; Twelve</span>
-                <span>&bull;</span>
-                <span><strong>Academic Session:</strong> <?= htmlspecialchars($sessionyear) ?> (<?= htmlspecialchars($session_pattern) ?>)</span>
-                <span>&bull;</span>
-                <span><strong>Generated On:</strong> <?= date('d M Y, h:i A') ?></span>
+    <?php if (!empty($sibling_groups)): ?>
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th style="width: 5%;">SL</th>
+                    <th style="width: 25%; text-align: left;">Guardian / Parents Details</th>
+                    <th style="width: 22%; text-align: left;">Contact & Address</th>
+                    <th style="width: 40%; text-align: left;">Enrolled Sibling Students Details</th>
+                    <th style="width: 8%;">Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($sibling_groups as $idx => $group): ?>
+                    <tr>
+                        <td class="text-center fw-bold text-muted"><?= $idx + 1 ?></td>
+                        <td>
+                            <div class="fw-bold text-dark">
+                                <?= htmlspecialchars($group['guardian_name'] ?: '—') ?>
+                            </div>
+                            <?php if (!empty($group['fname']) && $group['fname'] !== $group['guardian_name']): ?>
+                                <div class="text-muted" style="font-size: 10px;">Father: <?= htmlspecialchars($group['fname']) ?></div>
+                            <?php endif; ?>
+                            <?php if (!empty($group['mname'])): ?>
+                                <div class="text-muted" style="font-size: 10px;">Mother: <?= htmlspecialchars($group['mname']) ?></div>
+                            <?php endif; ?>
+                            <?php if (!empty($group['fnid'])): ?>
+                                <div class="text-dark" style="font-size: 10px;"><i class="bi bi-card-heading me-1"></i>NID: <strong><?= htmlspecialchars($group['fnid']) ?></strong></div>
+                            <?php elseif (!empty($group['mnid'])): ?>
+                                <div class="text-dark" style="font-size: 10px;"><i class="bi bi-card-heading me-1"></i>NID: <strong><?= htmlspecialchars($group['mnid']) ?></strong></div>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <?php if (!empty($group['mobile'])): ?>
+                                <div class="fw-semibold text-dark mb-1">
+                                    <i class="bi bi-telephone-fill text-success me-1"></i><?= htmlspecialchars($group['mobile']) ?>
+                                </div>
+                            <?php endif; ?>
+                            <div class="text-muted" style="font-size: 10px;">
+                                <i class="bi bi-geo-alt-fill text-secondary me-1"></i>
+                                <?= htmlspecialchars($group['village'] ?: '—') ?>
+                                <?= !empty($group['post']) ? (', ' . htmlspecialchars($group['post'])) : '' ?>
+                                <?= !empty($group['ps']) ? (', ' . htmlspecialchars($group['ps'])) : '' ?>
+                            </div>
+                        </td>
+                        <td>
+                            <?php foreach ($group['children'] as $cidx => $child): ?>
+                                <div class="sibling-item-row d-flex justify-content-between align-items-center flex-wrap gap-1">
+                                    <div>
+                                        <span class="badge bg-light text-dark border me-1 fw-bold"><?= $cidx + 1 ?></span>
+                                        <strong><?= htmlspecialchars($child['stnameeng'] ?: $child['stnameben']) ?></strong>
+                                        <span class="text-primary fw-semibold">[ID: <?= htmlspecialchars($child['stid']) ?>]</span>
+                                        <div class="text-muted ps-3" style="font-size: 10px;">
+                                            Class: <strong><?= htmlspecialchars($child['classname']) ?></strong> | 
+                                            Sec: <strong><?= htmlspecialchars($child['sectionname'] ?: 'All') ?></strong> | 
+                                            Roll: <strong><?= htmlspecialchars($child['rollno']) ?></strong> | 
+                                            Session: <strong><?= htmlspecialchars($child['sessionyear']) ?></strong>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <?php if (!empty($child['voter_no']) && intval($child['voter_no']) > 0): ?>
+                                            <span class="badge bg-primary badge-voter-print">
+                                                Voter #<?= str_pad($child['voter_no'], 3, '0', STR_PAD_LEFT) ?>
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </td>
+                        <td class="text-center fw-bold fs-6">
+                            <?= count($group['children']) ?>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+
+        <!-- Signature Section -->
+        <div class="signature-section">
+            <div class="sig-block">
+                <div class="sig-line">Prepared / Audited By</div>
+            </div>
+            <div class="sig-block">
+                <div class="sig-line">Convener / Member Secretary</div>
+            </div>
+            <div class="sig-block">
+                <div class="sig-line">Head of Institution / Returning Officer</div>
             </div>
         </div>
 
-        <?php if (!empty($sibling_groups)): ?>
-            <div class="table-responsive">
-                <table class="table table-bordered table-siblings align-middle mb-0">
-                    <thead>
-                        <tr>
-                            <th style="width: 5%;" class="text-center">SL</th>
-                            <th style="width: 25%;">Guardian & Parents' Information</th>
-                            <th style="width: 22%;">Contact & Residential Address</th>
-                            <th style="width: 40%;">Enrolled Sibling Students Details</th>
-                            <th style="width: 8%;" class="text-center">Siblings Count</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($sibling_groups as $idx => $group): ?>
-                            <tr>
-                                <td class="text-center fw-bold text-muted">
-                                    <?= $idx + 1 ?>
-                                </td>
-                                <td>
-                                    <div class="fw-bold text-dark fs-6 mb-1">
-                                        <i class="bi bi-person-fill text-primary me-1"></i>
-                                        <?= htmlspecialchars($group['guardian_name'] ?: '—') ?>
-                                    </div>
-                                    <?php if (!empty($group['fname']) && $group['fname'] !== $group['guardian_name']): ?>
-                                        <div class="small text-muted">Father: <?= htmlspecialchars($group['fname']) ?></div>
-                                    <?php endif; ?>
-                                    <?php if (!empty($group['mname'])): ?>
-                                        <div class="small text-muted">Mother: <?= htmlspecialchars($group['mname']) ?></div>
-                                    <?php endif; ?>
-                                    <?php if (!empty($group['fnid'])): ?>
-                                        <div class="small text-dark mt-1">
-                                            <i class="bi bi-card-heading text-secondary me-1"></i>F-NID: <strong><?= htmlspecialchars($group['fnid']) ?></strong>
-                                        </div>
-                                    <?php elseif (!empty($group['mnid'])): ?>
-                                        <div class="small text-dark mt-1">
-                                            <i class="bi bi-card-heading text-secondary me-1"></i>M-NID: <strong><?= htmlspecialchars($group['mnid']) ?></strong>
-                                        </div>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <?php if (!empty($group['mobile'])): ?>
-                                        <div class="fw-semibold text-dark mb-1">
-                                            <i class="bi bi-telephone-fill text-success me-1"></i><?= htmlspecialchars($group['mobile']) ?>
-                                        </div>
-                                    <?php endif; ?>
-                                    <div class="small text-muted">
-                                        <i class="bi bi-geo-alt-fill text-danger me-1"></i>
-                                        <?= htmlspecialchars($group['village'] ?: '—') ?>
-                                        <?= !empty($group['post']) ? (', ' . htmlspecialchars($group['post'])) : '' ?>
-                                        <?= !empty($group['ps']) ? (', ' . htmlspecialchars($group['ps'])) : '' ?>
-                                    </div>
-                                </td>
-                                <td>
-                                    <?php foreach ($group['children'] as $cidx => $child): ?>
-                                        <div class="sibling-item-row d-flex justify-content-between align-items-center flex-wrap gap-2">
-                                            <div>
-                                                <span class="badge bg-light text-dark border me-1 fw-bold"><?= $cidx + 1 ?></span>
-                                                <strong><?= htmlspecialchars($child['stnameeng'] ?: $child['stnameben']) ?></strong>
-                                                <span class="text-primary small fw-semibold ms-1">[ID: <?= htmlspecialchars($child['stid']) ?>]</span>
-                                                <div class="small text-muted ps-4">
-                                                    Class: <strong><?= htmlspecialchars($child['classname']) ?></strong> | 
-                                                    Sec: <strong><?= htmlspecialchars($child['sectionname'] ?: 'All') ?></strong> | 
-                                                    Roll: <strong><?= htmlspecialchars($child['rollno']) ?></strong> | 
-                                                    Session: <strong><?= htmlspecialchars($child['sessionyear']) ?></strong>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <?php if (!empty($child['voter_no']) && intval($child['voter_no']) > 0): ?>
-                                                    <span class="badge bg-label-primary border badge-voter">
-                                                        Voter: #<?= str_pad($child['voter_no'], 3, '0', STR_PAD_LEFT) ?>
-                                                    </span>
-                                                <?php else: ?>
-                                                    <span class="badge bg-label-secondary border small text-muted">No Voter #</span>
-                                                <?php endif; ?>
-                                            </div>
-                                        </div>
-                                    <?php endforeach; ?>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge bg-primary rounded-pill fs-6 px-3">
-                                        <?= count($group['children']) ?>
-                                    </span>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
+    <?php else: ?>
+        <div class="alert alert-secondary text-center py-4 my-4">
+            <h5>No Sibling Clusters Detected</h5>
+            <p class="mb-0">No multi-student families were found matching the selected session.</p>
+        </div>
+    <?php endif; ?>
 
-            <!-- Summary & Signature Block -->
-            <div class="row mt-4 pt-3 align-items-center">
-                <div class="col-6">
-                    <div class="card bg-light border-0 p-3 small text-muted">
-                        <div><i class="bi bi-check-circle-fill text-success me-1"></i> Audit Scope: <strong>Class Six to Twelve (Secondary & Higher Secondary)</strong></div>
-                        <div><i class="bi bi-info-circle-fill text-primary me-1"></i> Sibling identification algorithm uses verified Parent NID with secondary Mobile & Parent Name similarity matching.</div>
-                    </div>
-                </div>
-                <div class="col-6">
-                    <div class="signature-area">
-                        <div class="signature-box">Prepared / Verified By</div>
-                        <div class="signature-box">Head of Institution / Returning Officer</div>
-                    </div>
-                </div>
-            </div>
-
-        <?php else: ?>
-            <div class="alert alert-info text-center py-4 my-4">
-                <i class="bi bi-info-circle-fill fs-3 mb-2 d-block text-info"></i>
-                <h5 class="fw-bold">No Sibling Clusters Found</h5>
-                <p class="text-muted mb-0">No multi-student families were detected matching the current session criteria.</p>
-            </div>
-        <?php endif; ?>
-
-    </div>
 </div>
 
-<?php require_once 'footer.php'; ?>
+</body>
+</html>
