@@ -57,6 +57,9 @@ $section = $_COOKIE['chain-section'] ?? '';
                     </p>
                 </div>
                 <div class="d-flex flex-wrap gap-2">
+                    <a href="voter-siblings-report.php" target="_blank" class="btn btn-outline-warning action-btn-custom">
+                        <i class="bi bi-people-fill"></i> Sibling Report
+                    </a>
                     <a href="voter-master-list.php" class="btn btn-outline-primary action-btn-custom">
                         <i class="bi bi-file-earmark-text"></i> Master Voter List
                     </a>
@@ -313,11 +316,18 @@ $section = $_COOKIE['chain-section'] ?? '';
                     <div class="text-center py-4"><i class="bi bi-arrow-repeat spin fs-4"></i> Loading...</div>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" onclick="generateVoterList()">
-                    <i class="bi bi-lightning-charge-fill me-1"></i> Confirm & Generate Voter Numbers
-                </button>
+            <div class="modal-footer d-flex justify-content-between">
+                <div>
+                    <a href="voter-siblings-report.php" target="_blank" class="btn btn-outline-warning">
+                        <i class="bi bi-printer me-1"></i> Open Full Printable Sibling Report
+                    </a>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="generateVoterList()">
+                        <i class="bi bi-lightning-charge-fill me-1"></i> Confirm & Generate Voter Numbers
+                    </button>
+                </div>
             </div>
         </div>
     </div>
