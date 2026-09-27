@@ -12,6 +12,7 @@
    - 'components/slot-tree-ui.php' is a UI component for slot tree structure, I have used it in many places, So, never modify or remove this line if it have in any script. It is a cascade chain selection tool.
     - in all CRUD (create, update) operations, allways update modifieddate coloum with current timestamp. It's very important.
     - always try to keep existing table structure. Tables are connected with other platforms, app etc.
+    - Report page design with Standalone Print Viewer or Sticky Toolbar Print style.
 
 
 

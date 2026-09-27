@@ -211,12 +211,14 @@ while ($r = $lr->fetch_assoc()) {
                         <?php endfor; ?>
                     </select>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-6 d-flex flex-wrap gap-1 align-items-end">
                     <button type="submit" class="btn btn-sm btn-dark"><i class="bi bi-filter me-1"></i> Filter</button>
                     <button type="button" class="btn btn-sm btn-primary" onclick="window.print()"><i
                             class="bi bi-printer me-1"></i> Print</button>
                     <button type="button" class="btn btn-sm btn-outline-danger" onclick="exportPDF()"><i
                             class="bi bi-file-pdf me-1"></i> PDF</button>
+                    <a href="teacher-attendance-entry.php" class="btn btn-sm btn-outline-primary"><i
+                            class="bi bi-pencil-square me-1"></i> Daily Entry</a>
                 </div>
             </form>
         </div>
