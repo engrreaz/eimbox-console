@@ -92,11 +92,12 @@ $initKeysSql = "CREATE TABLE IF NOT EXISTS `payment_gateway_keys` (
     `biller_id` VARCHAR(50) NOT NULL,
     `api_key` VARCHAR(100) NOT NULL,
     `secret_key` VARCHAR(100) NOT NULL,
+    `year_calc_month` INT NOT NULL DEFAULT 12,
     `is_active` TINYINT(1) NOT NULL DEFAULT 1,
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX `idx_sccode` (`sccode`),
-    INDEX `idx_gateway` (`gateway_name`),
+    INDEX `idx_gateway` (`gateway_name`), 
     INDEX `idx_api_key` (`api_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 @$conn->query($initKeysSql);
@@ -190,36 +191,56 @@ function validate_bkash_auth($input, $sccode = null) {
         send_bkash_response('202', 'Mandatory Field missing: username or password is required');
     }
 
+    // Helper to get year_calc_month for sccode if available
+    $resolveYearCalcMonth = function($sc) use ($conn) {
+        if ($sc && $sc > 0) {
+            $st = $conn->prepare("SELECT year_calc_month FROM payment_gateway_keys WHERE sccode = ? AND is_active = 1 LIMIT 1");
+            if ($st) {
+                $st->bind_param("i", $sc);
+                $st->execute();
+                $res = $st->get_result();
+                if ($r = $res->fetch_assoc()) {
+                    $st->close();
+                    return (int)($r['year_calc_month'] ?? 12);
+                }
+                $st->close();
+            }
+        }
+        return 12;
+    };
+
     // 3. Match against Default bKash Partner / Demo Credentials
     if (($reqUser === BKASH_DEFAULT_USER && $reqPass === BKASH_DEFAULT_PASS) ||
         ($reqUser === BKASH_DEMO_USER && $reqPass === BKASH_DEMO_PASS)) {
-        return true;
+        return $resolveYearCalcMonth($sccode);
     }
 
     // 4. Match against School-Specific API Key / Secret Key in payment_gateway_keys (if sccode provided)
     if ($sccode && $sccode > 0) {
-        $stmt = $conn->prepare("SELECT api_key, secret_key, biller_id FROM payment_gateway_keys WHERE sccode = ? AND (gateway_name = 'bKash' OR gateway_name = 'All' OR gateway_name = '') AND is_active = 1 LIMIT 1");
+        $stmt = $conn->prepare("SELECT api_key, secret_key, biller_id, year_calc_month FROM payment_gateway_keys WHERE sccode = ? AND (gateway_name = 'bKash' OR gateway_name = 'All' OR gateway_name = '') AND is_active = 1 LIMIT 1");
         $stmt->bind_param("i", $sccode);
         $stmt->execute();
         $res = $stmt->get_result();
         if ($row = $res->fetch_assoc()) {
             if (($reqUser === $row['biller_id'] || $reqUser === $row['api_key']) && ($reqPass === $row['secret_key'])) {
+                $yearCalcMonth = (int)($row['year_calc_month'] ?? 12);
                 $stmt->close();
-                return true;
+                return $yearCalcMonth;
             }
         }
         $stmt->close();
     }
 
     // 5. Match against any school in payment_gateway_keys with matching username
-    $keyStmt = $conn->prepare("SELECT sccode, biller_id, secret_key FROM payment_gateway_keys WHERE (biller_id = ? OR api_key = ?) AND is_active = 1 LIMIT 1");
+    $keyStmt = $conn->prepare("SELECT sccode, biller_id, secret_key, year_calc_month FROM payment_gateway_keys WHERE (biller_id = ? OR api_key = ?) AND is_active = 1 LIMIT 1");
     $keyStmt->bind_param("ss", $reqUser, $reqUser);
     $keyStmt->execute();
     $keyRes = $keyStmt->get_result();
     if ($keyRow = $keyRes->fetch_assoc()) {
         if ($reqPass === $keyRow['secret_key']) {
+            $yearCalcMonth = (int)($keyRow['year_calc_month'] ?? 12);
             $keyStmt->close();
-            return true;
+            return $yearCalcMonth;
         }
     }
     $keyStmt->close();

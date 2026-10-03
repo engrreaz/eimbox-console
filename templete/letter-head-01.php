@@ -30,7 +30,7 @@
 <table id="letter-head" style="margin:auto; border:0;">
     <tr>
         <td style="padding-right:10px; width:90px; border:0;">
-            <img src="<?php echo BASE_PATH . 'logo/' . $sccode; ?>.png" width="80">
+            <img src="<?php echo institute_logo($sccode); ?>" onerror="this.onerror=null; this.src='https://eimbox.com/logo/<?php echo $sccode; ?>.png';" width="80">
         </td>
         <td style="border:0;">
             <div class="a"><?php echo $scname; ?></div>

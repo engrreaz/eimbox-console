@@ -37,14 +37,14 @@ $sccode = (int)$refInfo['sccode'];
 $stid = (int)$refInfo['stid'];
 
 if ($stid <= 0) {
-    send_bkash_response('205', 'Data not found: Invalid student reference');
+    send_bkash_response('205', 'Invalid Student ID. Student not found.');
 }
 if ($sccode <= 0) {
-    send_bkash_response('210', 'School not found: Institution code cannot be resolved');
+    send_bkash_response('210', 'Invalid Student ID. Student not found.');
 }
 
 // 3. Security & Authentication Check
-validate_bkash_auth($input, $sccode);
+$yearCalcMonth = validate_bkash_auth($input, $sccode);
 
 // 4. Idempotency Check: Avoid double posting of the same trxid
 $checkTxnStmt = $conn->prepare("SELECT id, sccode, stid, prno, amount, status, error_code, error_msg FROM bkash_transactions WHERE trxid = ? LIMIT 1");
@@ -73,7 +73,7 @@ $student = $stRes->fetch_assoc();
 $stStmt->close();
 
 if (!$student) {
-    send_bkash_response('205', 'Data not found: Student record not found in EIMBox');
+    send_bkash_response('205', 'Invalid Student ID. Student not found.');
 }
 
 $consumerName = trim($student['stnameeng'] ?? '');
@@ -93,7 +93,7 @@ $session = $sessRes->fetch_assoc();
 $sessStmt->close();
 
 if (!$session) {
-    send_bkash_response('205', 'Data not found: Academic session record not found in sessioninfo');
+    send_bkash_response('205', 'Invalid Student ID. Student not found.');
 }
 
 $className = $session['classname'] ?? '';
@@ -104,7 +104,7 @@ $syPattern = "%" . $actualYear . "%";
 
 // 7. Validate Outstanding Dues from `stfinance` table
 $currMonth = (int)date('n');
-if ($currMonth >= 10) {
+if ($currMonth >= $yearCalcMonth) {
     $currMonth = 12;
 }
 
@@ -115,7 +115,7 @@ if (!empty($billMonth) && strtolower($billMonth) !== 'na' && strlen($billMonth) 
                                WHERE sccode = ? 
                                  AND sessionyear LIKE ? 
                                  AND stid = ? 
-                                 AND month = ? 
+                                 AND month <= ? 
                                  AND dues > 0");
     $dueStmt->bind_param("isis", $sccode, $syPattern, $stid, $targetMonth);
 } else {

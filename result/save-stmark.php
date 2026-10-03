@@ -55,42 +55,44 @@ $q = mysqli_query($conn, $q_str);
 if (mysqli_num_rows($q) > 0) {
 
     $row = mysqli_fetch_assoc($q);
-    $sub_full = $row['subj'];
-    $obj_full = $row['obj'];
-    $pra_full = $row['pra'];
-    $full_full = $row['fullmarks'];
+    $sub_full = $row['subj'] ?? 0;
+    $obj_full = $row['obj'] ?? 0;
+    $pra_full = $row['pra'] ?? 0;
+    $full_full = $row['fullmarks'] ?? 0;
+    $add_ctest = (int) ($row['add_ctest'] ?? 0);
+    $add_mtest = (int) ($row['add_mtest'] ?? 0);
 
 } else {
     $sub_full = 0;
     $obj_full = 0;
     $pra_full = 0;
     $full_full = 0;
+    $add_ctest = 0;
+    $add_mtest = 0;
 }
+
+// add_ctest এবং add_mtest এর ভিত্তিতে গ্রেড গণনার জন্য মোট নম্বর
+$ct_calc = ($add_ctest == 1) ? $ct : 0;
+$mt_calc = ($add_mtest == 1) ? $mt : 0;
+$total_for_grade = $sub + $obj + $pra + $ca + $ct_calc + $mt_calc;
 
 $on100 = 0;
-if ($total > 0) {
-    $on100 = $total * 100 / $full_full;
+if ($full_full > 0 && $total_for_grade > 0) {
+    $on100 = $total_for_grade * 100 / $full_full;
 }
 
-// echo $sub_full . '-' . $obj_full . '-' . $pra_full . '-' . $full_full . '***' ;
 // delete old if exists
 $chk = "DELETE FROM stmark WHERE sccode='$sccode' AND stid='$stid' AND sessionyear='$session' 
         AND exam='$exam' AND subject='$subject' AND classname='$class' AND sectionname='$section'";
 mysqli_query($conn, $chk);
 
-// echo $ct . '-' . $mt . '-' . $sub . '-' . $obj . '-' . $pra . '-' . $ca . '-' . $total . '***' ;
-// echo $sub_full . '-' . $obj_full . '-' . $pra_full . '-' . $full_full . '***' ;
-$p = pass_validation($ct, $mt, $sub, $obj, $pra, $ca, $sub_full, $obj_full, $pra_full, $full_full, $alg, $min, $decimal);
+$p = pass_validation($ct, $mt, $sub, $obj, $pra, $ca, $sub_full, $obj_full, $pra_full, $full_full, $alg, $min, $decimal, $add_ctest, $add_mtest);
 
-
-// echo $p;
 if ($p === false || $p == 0) {
-
     $gp = 0;
     $gl = 'F';
 } else {
-    // echo 'check';
-    $gpgl = get_GP_GL($total, $full_full);
+    $gpgl = get_GP_GL($total_for_grade, $full_full, $slot, $decimal);
     $gp = $gpgl['gp'];
     $gl = $gpgl['gl'];
 }

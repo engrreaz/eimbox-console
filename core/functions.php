@@ -979,21 +979,18 @@ function pass_validation(
     $fm = 0,
     $alg = 0,
     $min = 33,
-    $decimal = 0
+    $decimal = 0,
+    $add_ctest = 0,
+    $add_mtest = 0
 ) {
 
-// echo 'A';
     // Full mark zero হলে অনিয়মিত (Fail)
     if ($fm <= 0) {
-
         return false;
     }
-    // echo $fm;
-    // echo 'B';
 
     // helper function: percentage calculation
     $calc = function ($got, $full, $decimal) {
-        // echo $got . '...' . $full . '...' . $decimal . '///';
         if ($full <= 0)
             return 0;
 
@@ -1006,41 +1003,33 @@ function pass_validation(
         return $p; // default float
     };
 
+    // add_ctest / add_mtest অনুযায়ী CT ও MT মার্ক অন্তর্ভুক্তিকরণ
+    $ct_val = ($add_ctest == 1) ? (float) $ct : 0;
+    $mt_val = ($add_mtest == 1) ? (float) $mt : 0;
+
     // Total Marks
-    $total_chk = ((float) $sub + (float) $obj + (float) $pra);
-    $total = ((float) $ct + (float) $mt + (float) $sub + (float) $obj + (float) $pra + (float) $ca);
+    $total_chk = ((float) $sub + (float) $obj + (float) $pra + $ct_val + $mt_val);
+    $total = ($ct_val + $mt_val + (float) $sub + (float) $obj + (float) $pra + (float) $ca);
     $rate_chk = $calc($total_chk, $fm, $decimal);
     $rate = $calc($total, $fm, $decimal);
 
-    // echo 'c' . $alg;
     // ---------------- Algorithm 0 ----------------
     // Only total percentage check
     if ($alg == 0) {
-        // echo $rate_chk . '....' . $min . '//';
         return ($rate_chk >= $min);
     } 
 
     // ---------------- Algorithm 1 ----------------
     // Individual (sub/obj/pra) mandatory pass + total pass
-
     $sub_pass = $calc($sub, $fm_sub, $decimal);
     $obj_pass = $calc($obj, $fm_obj, $decimal);
     $pra_pass = $calc($pra, $fm_pra, $decimal);
 
-    // echo '//' . $fm_sub . '/' . $fm_obj . '/' . $fm_pra . '/' . $decimal . '//';
-    // echo '//' . $sub . '/' . $obj . '/' . $pra .  '//';
-    // echo '//' . $sub_pass . '/' . $obj_pass . '/' . $pra_pass . '/' . $min . '//';
-    // One fail = total fail
-
-
-
-
     if (
-        ($sub_pass != 0 && $sub_pass < $min) ||
-        ($obj_pass != 0 && $obj_pass < $min) ||
-        ($pra_pass != 0 && $pra_pass < $min)
+        ($fm_sub > 0 && $sub_pass < $min) ||
+        ($fm_obj > 0 && $obj_pass < $min) ||
+        ($fm_pra > 0 && $pra_pass < $min)
     ) {
-
         return false;
     }
 
@@ -1166,12 +1155,15 @@ function teacher_profile_image_path($teacher_id)
 
 function institute_logo($sccode)
 {
-    $possible_extensions = ['png'];
+    $possible_extensions = ['png', 'jpg', 'jpeg', 'webp', 'svg'];
     foreach ($possible_extensions as $ext) {
         $file_path = BASE_ROOT . 'logo/' . $sccode . '.' . $ext;
         if (file_exists($file_path)) {
             return BASE_PATH . 'logo/' . $sccode . '.' . $ext;
         }
     }
-    return BASE_PATH . 'logo/logo.png';
+    if (file_exists(BASE_ROOT . 'logo/logo.png')) {
+        return BASE_PATH . 'logo/logo.png';
+    }
+    return "https://eimbox.com/logo/{$sccode}.png";
 }
