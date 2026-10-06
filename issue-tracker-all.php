@@ -1,5 +1,13 @@
 <?php 
 require_once 'header.php'; 
+
+$isAdminUser = intval($admin ?? $is_admin ?? $_SESSION['admin'] ?? $_SESSION['isadmin'] ?? 0);
+if ($isAdminUser <= 0) {
+    echo '<div class="container-xxl flex-grow-1 container-p-y"><div class="alert alert-danger d-flex align-items-center gap-2"><i class="bi bi-shield-lock-fill fs-4"></i><div><strong>Access Restricted:</strong> Administrator privilege required (admin > 0) to view and manage Issue Tracker.</div></div></div>';
+    require_once 'footer.php';
+    exit;
+}
+$currentUserEmail = $_SESSION['user_email'] ?? $_SESSION['email'] ?? $usr ?? 'Admin';
 ?>
 
 <div class="container-xxl flex-grow-1 container-p-y">
@@ -13,14 +21,17 @@ require_once 'header.php';
                 Unified issue management and 18-dimension screen verification across Console, Dashboard, Android & Desktop
             </p>
         </div>
-        <div class="d-flex gap-2">
-            <button class="btn btn-outline-primary btn-sm rounded-pill px-3" onclick="loadAllIssues()">
+        <div class="d-flex gap-2 flex-wrap">
+            <button class="btn btn-outline-info btn-sm rounded-pill px-3 shadow-xs" onclick="openAuditHistoryModal()">
+                <i class="bi bi-clock-history me-1"></i> Update History
+            </button>
+            <button class="btn btn-outline-primary btn-sm rounded-pill px-3 shadow-xs" onclick="loadAllIssues()">
                 <i class="bi bi-arrow-clockwise me-1"></i> Refresh Data
             </button>
-            <button class="btn btn-primary btn-sm rounded-pill px-3" onclick="openCreateFeatureModal()">
+            <button class="btn btn-primary btn-sm rounded-pill px-3 shadow-xs" onclick="openCreateFeatureModal()">
                 <i class="bi bi-folder-plus me-1"></i> Add Feature
             </button>
-            <button class="btn btn-success btn-sm rounded-pill px-3" onclick="openCreateIssueModal()">
+            <button class="btn btn-success btn-sm rounded-pill px-3 shadow-xs" onclick="openCreateIssueModal()">
                 <i class="bi bi-plus-circle me-1"></i> Report New Issue
             </button>
         </div>
@@ -51,7 +62,7 @@ require_once 'header.php';
                     </button>
                 </li>
                 <li class="nav-item">
-                    <button class="nav-link fw-bold py-2" data-platform="Android Premium" onclick="setPlatformFilter('Android Premium', this)">
+                    <button class="nav-link fw-bold py-2" data-platform="Android Native" onclick="setPlatformFilter('Android Native', this)">
                         <i class="bi bi-android2 me-1 text-success"></i> Android Native
                     </button>
                 </li>
@@ -171,7 +182,7 @@ require_once 'header.php';
                         <option value="Console">Console</option>
                         <option value="Dashboard">Dashboard</option>
                         <option value="Android Lite">Android Lite</option>
-                        <option value="Android Premium">Android Premium</option>
+                        <option value="Android Native">Android Native</option>
                         <option value="Desktop">Desktop</option>
                         <option value="General">General</option>
                     </select>
@@ -340,7 +351,7 @@ require_once 'header.php';
                             <option value="Console">Console</option>
                             <option value="Dashboard">Dashboard</option>
                             <option value="Android Lite">Android Lite</option>
-                            <option value="Android Premium">Android Premium</option>
+                            <option value="Android Native">Android Native</option>
                             <option value="Desktop">Desktop</option>
                             <option value="General">General (Cross-platform)</option>
                         </select>
@@ -853,13 +864,126 @@ html.dark-style #featureMasterModal .form-select,
     </div>
 </div>
 
+<!-- Cross-Platform Update & Activity History Modal -->
+<div class="modal fade" id="auditHistoryModal" tabindex="-1" aria-hidden="true" style="z-index: 105600;">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 14px; overflow: hidden;">
+            <div class="modal-header bg-dark text-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom border-secondary border-opacity-25">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="p-2 bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                        <i class="bi bi-clock-history fs-5"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold text-white mb-0" style="font-size: 16px;">
+                            System Update & Activity History Log
+                        </h5>
+                        <p class="text-white-50 small mb-0" style="font-size: 11px;">
+                            Chronological history of recent issue updates and 18-dimension modifications with user details
+                        </p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="btn btn-outline-light btn-sm rounded-pill py-1 px-2.5" style="font-size: 11.5px;" onclick="loadAllIssues().then(() => renderAuditHistoryModal())">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+                    </button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+
+            <!-- Modal Nav Tabs & Search Bar -->
+            <div class="bg-light border-bottom px-3 px-md-4 py-2 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <ul class="nav nav-pills gap-1" id="auditHistoryTabs" role="tablist">
+                    <li class="nav-item">
+                        <button class="nav-link active py-1.5 px-3 fw-bold rounded-pill" id="tab-audit-issues-btn" data-bs-toggle="pill" data-bs-target="#tab-audit-issues" type="button" style="font-size: 12px;">
+                            <i class="bi bi-bug-fill me-1 text-danger"></i> Recent Issue Updates (<span id="audit-issues-badge">0</span>)
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link py-1.5 px-3 fw-bold rounded-pill" id="tab-audit-dims-btn" data-bs-toggle="pill" data-bs-target="#tab-audit-dims" type="button" style="font-size: 12px;">
+                            <i class="bi bi-grid-3x3-gap-fill me-1 text-primary"></i> Dimension Changes (<span id="audit-dims-badge">0</span>)
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="d-flex align-items-center gap-2">
+                    <div class="input-group input-group-sm" style="width: 230px;">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" id="audit-history-search" class="form-control border-start-0" placeholder="Filter history logs..." oninput="filterAuditHistory(this.value)">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body p-3 bg-light bg-opacity-25" style="min-height: 380px;">
+                <div class="tab-content" id="auditHistoryTabsContent">
+                    <!-- TAB 1: Issue Updates -->
+                    <div class="tab-pane fade show active" id="tab-audit-issues" role="tabpanel">
+                        <div class="card border shadow-xs bg-white p-0" style="border-radius: 10px; overflow: hidden;">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0" id="auditIssuesTable" style="font-size: 11.5px;">
+                                    <thead class="table-light text-muted border-bottom" style="font-size: 10.5px; text-transform: uppercase;">
+                                        <tr>
+                                            <th>Feature / Issue</th>
+                                            <th>Topic / Script</th>
+                                            <th>Platform</th>
+                                            <th>Status / Progress</th>
+                                            <th>Modified By</th>
+                                            <th class="text-end pe-3">Last Updated</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="auditIssuesTableBody">
+                                        <!-- Populated via JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: Dimension Changes -->
+                    <div class="tab-pane fade" id="tab-audit-dims" role="tabpanel">
+                        <div class="card border shadow-xs bg-white p-0" style="border-radius: 10px; overflow: hidden;">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0" id="auditDimsTable" style="font-size: 11.5px;">
+                                    <thead class="table-light text-muted border-bottom" style="font-size: 10.5px; text-transform: uppercase;">
+                                        <tr>
+                                            <th>Feature / Screen Route</th>
+                                            <th>Platform</th>
+                                            <th>Dimension</th>
+                                            <th>Status Transition</th>
+                                            <th>Modified By</th>
+                                            <th class="text-end pe-3">Timestamp</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="auditDimsTableBody">
+                                        <!-- Populated via JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer py-2 px-4 d-flex justify-content-between align-items-center bg-white border-top">
+                <span class="text-muted small" style="font-size: 11px;">
+                    <i class="bi bi-shield-check text-success me-1"></i> Audit logs are recorded automatically on all modifications.
+                </span>
+                <button type="button" class="btn btn-secondary btn-sm rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?php require_once 'footer.php'; ?>
 
 <!-- Master Issue Tracker Script -->
 <script>
+const CURRENT_USER_EMAIL = "<?= htmlspecialchars($currentUserEmail) ?>";
 let allIssuesCache = [];
 let allDimensionsCache = [];
 let allFeaturesCatalogCache = [];
+let recentIssueUpdatesCache = [];
+let recentDimensionLogsCache = [];
 let activePlatformFilter = 'All';
 
 const DIMENSION_CONFIG = [
@@ -940,6 +1064,8 @@ function loadAllIssues() {
                 allIssuesCache = res.data.issues || [];
                 allDimensionsCache = res.data.dimension_screens || [];
                 allFeaturesCatalogCache = res.data.features_catalog || [];
+                recentIssueUpdatesCache = res.data.recent_issue_updates || [];
+                recentDimensionLogsCache = res.data.recent_dimension_logs || [];
 
                 updateKpiDashboard(res.data.kpis);
                 populateModuleFilter(res.data.modules);
@@ -947,6 +1073,13 @@ function loadAllIssues() {
                 populateFeatureFilterDropdown(curMod);
                 applyFilters();
                 renderDimensionsMatrix(allDimensionsCache);
+
+                // If audit history modal is open, refresh its content
+                const auditModalEl = document.getElementById('auditHistoryModal');
+                if (auditModalEl && auditModalEl.classList.contains('show')) {
+                    const searchVal = document.getElementById('audit-history-search')?.value || '';
+                    renderAuditHistoryModal(searchVal);
+                }
             }
             return res;
         })
@@ -1181,7 +1314,7 @@ function getAggregatedDimensionIcon(f, dimConfig, platformFilter) {
     }
 
     // 2. All 5 platforms aggregated calculation
-    const platforms = ['Console', 'Dashboard', 'Android Lite', 'Android Premium', 'Desktop'];
+    const platforms = ['Console', 'Dashboard', 'Android Lite', 'Android Native', 'Desktop'];
     let okCount = 0;
     let errorCount = 0;
     let bugCount = 0;
@@ -1419,7 +1552,7 @@ function renderFeaturesCatalogTable(features) {
 
                     <!-- 5 Platforms Cards Grid with distinct 15 Dimensions & Inline Status Dropdowns -->
                     <div class="row row-cols-1 row-cols-md-2 row-cols-xl-5 g-2 mb-2">
-                        ${['Console', 'Dashboard', 'Android Lite', 'Android Premium', 'Desktop'].map(pl => {
+                        ${['Console', 'Dashboard', 'Android Lite', 'Android Native', 'Desktop'].map(pl => {
                             const plSafe = pl.replace(/\s+/g, '_');
                             const pData = (f.platforms_data && f.platforms_data[pl]) ? f.platforms_data[pl] : { error_percent: 100, issue_count: 0, status: 'Untested', dimensions: {} };
                             const plDims = pData.dimensions || {};
@@ -1427,7 +1560,7 @@ function renderFeaturesCatalogTable(features) {
                                 'Console': 'bi-terminal-split text-primary',
                                 'Dashboard': 'bi-grid-1x2 text-info',
                                 'Android Lite': 'bi-phone text-warning',
-                                'Android Premium': 'bi-android2 text-success',
+                                'Android Native': 'bi-android2 text-success',
                                 'Desktop': 'bi-display text-secondary'
                             };
                             const pErr = pData.error_percent !== undefined ? pData.error_percent : 100;
@@ -1563,7 +1696,8 @@ function setDimensionStatusInline(featureId, route, platform, dimension, newStat
             title: f ? (f.feature_name || f.screen_title || '') : '',
             platform: platform,
             dimension: dimension,
-            status: newStatus
+            status: newStatus,
+            updated_by: CURRENT_USER_EMAIL
         })
     })
     .then(r => r.json())
@@ -1582,7 +1716,7 @@ function setDimensionStatusInline(featureId, route, platform, dimension, newStat
             // Recalculate 5-platform average for feature
             if (f && f.platforms_data) {
                 let sum5 = 0;
-                ['Console', 'Dashboard', 'Android Lite', 'Android Premium', 'Desktop'].forEach(p => {
+                ['Console', 'Dashboard', 'Android Lite', 'Android Native', 'Desktop'].forEach(p => {
                     if (f.platforms_data[p]) sum5 += (f.platforms_data[p].error_percent || 0);
                 });
                 f.avg_5_platform_error = Math.round((sum5 / 5) * 10) / 10;
@@ -1600,8 +1734,9 @@ function setDimensionStatusInline(featureId, route, platform, dimension, newStat
                 const dObj = DIMENSION_CONFIG.find(x => x.key === dimension);
                 const shortLbl = dObj ? dObj.short : dimension;
                 const fullLbl = dObj ? dObj.label : dimension;
+                const modifierEmail = data.updated_by || CURRENT_USER_EMAIL;
                 chipBtn.className = `btn btn-sm ${chipClass} py-0 px-1 dropdown-toggle dropdown-toggle-split-none`;
-                chipBtn.title = `${fullLbl}: ${newStatus} (Click to change status)`;
+                chipBtn.title = `${fullLbl}: ${newStatus} • Modified by: ${modifierEmail} (Click to change status)`;
                 chipBtn.innerHTML = `<i class="bi ${chipIcon} me-0.5" style="font-size: 7.5px;"></i> <span>${shortLbl}</span>`;
             }
 
@@ -1648,7 +1783,8 @@ function setDimensionStatusInline(featureId, route, platform, dimension, newStat
                 dimsBox.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
             }
 
-            showToast(`${platform}: ${dimension.toUpperCase()} updated to ${newStatus}`);
+            const modifierUser = data.updated_by || CURRENT_USER_EMAIL;
+            showToast(`${platform}: ${dimension.toUpperCase()} ➔ ${newStatus} (${modifierUser})`);
         } else {
             showToast(res.message || 'Failed to update dimension', true);
             renderFeaturesCatalogTable(allFeaturesCatalogCache);
@@ -1674,7 +1810,8 @@ function setAllPlatformDimensionsOK(featureId, route, platform, featIdx) {
             route: route,
             title: f ? (f.feature_name || f.screen_title || '') : '',
             platform: platform,
-            dimensions: allDims
+            dimensions: allDims,
+            updated_by: CURRENT_USER_EMAIL
         })
     })
     .then(r => r.json())
@@ -1764,7 +1901,7 @@ function renderFeatureIssuesModal(f, idx, activePlat) {
     const allIssues = f.issues || [];
 
     // Platform pill counts
-    const platforms = ['All', 'Console', 'Dashboard', 'Android Lite', 'Android Premium', 'Desktop'];
+    const platforms = ['All', 'Console', 'Dashboard', 'Android Lite', 'Android Native', 'Desktop'];
     const platCounts = { 'All': allIssues.length };
     platforms.forEach(p => {
         if (p !== 'All') {
@@ -1837,16 +1974,20 @@ function renderFeatureIssuesModal(f, idx, activePlat) {
                     </div>
                 </div>
                 <p class="mb-2 text-secondary small">${escapeHtml(iss.issues || 'No description provided')}</p>
-                <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top">
-                    <div class="d-flex align-items-center gap-2 w-50">
+                <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2" style="min-width: 140px;">
                         <span class="small text-muted" style="font-size: 11px;">Progress:</span>
-                        <div class="progress flex-grow-1" style="height: 6px;">
+                        <div class="progress" style="height: 6px; width: 60px;">
                             <div class="progress-bar bg-success" style="width: ${iss.progress_percent || 0}%;"></div>
                         </div>
                         <span class="small fw-bold" style="font-size: 11px;">${iss.progress_percent || 0}%</span>
                     </div>
-                    <div class="small text-muted" style="font-size: 11px;">
-                        <i class="bi bi-person me-1"></i>${escapeHtml(iss.assigned_to || 'Unassigned')}
+                    <div class="small text-muted d-flex align-items-center gap-2" style="font-size: 10.5px;">
+                        <span><i class="bi bi-person me-1"></i>${escapeHtml(iss.assigned_to || 'Unassigned')}</span>
+                        ${(iss.created_by || iss.modified_by) ? `
+                        <span class="text-secondary opacity-75" title="Logged by: ${escapeHtml(iss.created_by || '')} • Modified by: ${escapeHtml(iss.modified_by || '')}">
+                            • <i class="bi bi-envelope-at me-0.5"></i>${escapeHtml(iss.modified_by || iss.created_by)}
+                        </span>` : ''}
                     </div>
                 </div>
             </div>`;
@@ -1977,7 +2118,7 @@ function renderIssuesTable(issues) {
 
         const platformBadge = iss.platform === 'Console' ? 'bg-primary' :
                              (iss.platform === 'Dashboard' ? 'bg-info' :
-                             (iss.platform === 'Android Premium' ? 'bg-success' : 'bg-secondary'));
+                             (iss.platform === 'Android Native' ? 'bg-success' : 'bg-secondary'));
 
         html += `
         <tr>
@@ -2002,7 +2143,11 @@ function renderIssuesTable(issues) {
                 </div>
             </td>
             <td>
-                <span class="small text-secondary"><i class="bi bi-person me-1"></i>${iss.assigned_to || 'Unassigned'}</span>
+                <span class="small text-secondary d-block"><i class="bi bi-person me-1"></i>${iss.assigned_to || 'Unassigned'}</span>
+                ${(iss.modified_by || iss.created_by) ? `
+                <span class="small text-muted d-block opacity-75" style="font-size: 10px;" title="Created by: ${iss.created_by || ''} • Modified by: ${iss.modified_by || ''}">
+                    <i class="bi bi-envelope-at me-0.5"></i>${iss.modified_by || iss.created_by}
+                </span>` : ''}
             </td>
             <td class="text-end pe-3">
                 <div class="btn-group btn-group-sm">
@@ -2126,6 +2271,8 @@ function saveMasterIssue() {
         priority: document.getElementById('modal-priority').value,
         progress_percent: parseInt(document.getElementById('modal-progress').value) || 0,
         assigned_to: document.getElementById('modal-assignee').value,
+        created_by: CURRENT_USER_EMAIL,
+        modified_by: CURRENT_USER_EMAIL,
         possible_closing_at: document.getElementById('modal-closing-date').value || null
     };
 
@@ -2625,5 +2772,163 @@ function deleteFeature(featureId) {
         console.error('Delete feature error:', err);
         alert('An unexpected error occurred while deleting the feature.');
     });
+}
+
+function openAuditHistoryModal() {
+    renderAuditHistoryModal();
+    const modalEl = document.getElementById('auditHistoryModal');
+    if (modalEl) {
+        const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        bsModal.show();
+    }
+}
+
+function renderAuditHistoryModal(searchTerm = '') {
+    const term = (searchTerm || '').toLowerCase().trim();
+
+    // 1. Render Issue Updates
+    const issuesTbody = document.getElementById('auditIssuesTableBody');
+    const issuesBadge = document.getElementById('audit-issues-badge');
+    let filteredIssues = (recentIssueUpdatesCache || []);
+    if (term) {
+        filteredIssues = filteredIssues.filter(item => {
+            return (item.feature || '').toLowerCase().includes(term) ||
+                   (item.topic || '').toLowerCase().includes(term) ||
+                   (item.script || '').toLowerCase().includes(term) ||
+                   (item.status || '').toLowerCase().includes(term) ||
+                   (item.platform || '').toLowerCase().includes(term) ||
+                   (item.module || '').toLowerCase().includes(term) ||
+                   (item.modified_by || '').toLowerCase().includes(term) ||
+                   (item.created_by || '').toLowerCase().includes(term);
+        });
+    }
+
+    if (issuesBadge) issuesBadge.innerText = filteredIssues.length;
+
+    if (issuesTbody) {
+        if (filteredIssues.length === 0) {
+            issuesTbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4"><em>No matching issue updates found.</em></td></tr>`;
+        } else {
+            issuesTbody.innerHTML = filteredIssues.map(item => {
+                const priorityBadge = item.priority === 'Critical' ? 'bg-danger text-white' : 
+                                     (item.priority === 'High' ? 'bg-warning text-dark' : 'bg-secondary text-white');
+
+                const statusBadge = item.status === 'Completed' ? 'bg-success text-white' :
+                                   (item.status === 'Ongoing' ? 'bg-primary text-white' :
+                                   (item.status === 'Testing' ? 'bg-info text-dark' : 'bg-secondary text-white'));
+
+                const modDate = item.modifieddate || item.created_at || '—';
+                const user = item.modified_by || item.created_by || 'Admin';
+                const prog = parseInt(item.progress_percent) || 0;
+
+                return `
+                <tr>
+                    <td>
+                        <div class="fw-bold text-dark">${escapeHtmlAudit(item.feature || 'Feature Issue')}</div>
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25" style="font-size: 9.5px;">${escapeHtmlAudit(item.module || 'General')}</span>
+                    </td>
+                    <td>
+                        <div class="fw-semibold">${escapeHtmlAudit(item.topic || 'General Topic')}</div>
+                        <code class="text-muted small">${escapeHtmlAudit(item.script || '—')}</code>
+                    </td>
+                    <td>
+                        <span class="badge border" style="font-size: 10px;">${escapeHtmlAudit(item.platform || 'Dashboard')}</span>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-1.5 mb-1">
+                            <span class="badge ${statusBadge}" style="font-size: 9.5px;">${escapeHtmlAudit(item.status || 'Open')}</span>
+                            <span class="badge ${priorityBadge}" style="font-size: 9px;">${escapeHtmlAudit(item.priority || 'Medium')}</span>
+                        </div>
+                        <div class="progress" style="height: 4px; width: 80px;">
+                            <div class="progress-bar ${prog === 100 ? 'bg-success' : 'bg-primary'}" role="progressbar" style="width: ${prog}%"></div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-dark border d-inline-flex align-items-center gap-1" style="font-size: 10.5px;">
+                            <i class="bi bi-person-circle text-primary"></i> ${escapeHtmlAudit(user)}
+                        </span>
+                    </td>
+                    <td class="text-end pe-3 text-nowrap text-muted" style="font-size: 11px;">
+                        <i class="bi bi-clock me-1 text-secondary"></i>${modDate}
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+    }
+
+    // 2. Render Dimension Logs
+    const dimsTbody = document.getElementById('auditDimsTableBody');
+    const dimsBadge = document.getElementById('audit-dims-badge');
+    let filteredDims = (recentDimensionLogsCache || []);
+    if (term) {
+        filteredDims = filteredDims.filter(log => {
+            return (log.feature_name || '').toLowerCase().includes(term) ||
+                   (log.route || '').toLowerCase().includes(term) ||
+                   (log.dimension || '').toLowerCase().includes(term) ||
+                   (log.old_status || '').toLowerCase().includes(term) ||
+                   (log.new_status || '').toLowerCase().includes(term) ||
+                   (log.platform || '').toLowerCase().includes(term) ||
+                   (log.updated_by || '').toLowerCase().includes(term);
+        });
+    }
+
+    if (dimsBadge) dimsBadge.innerText = filteredDims.length;
+
+    if (dimsTbody) {
+        if (filteredDims.length === 0) {
+            dimsTbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4"><em>No matching dimension changes recorded.</em></td></tr>`;
+        } else {
+            dimsTbody.innerHTML = filteredDims.map(log => {
+                const dimObj = DIMENSION_CONFIG.find(d => d.key.toLowerCase() === (log.dimension || '').toLowerCase());
+                const dimLbl = dimObj ? dimObj.label : log.dimension;
+                const oldClass = getDimChipBadgeClass(log.old_status);
+                const newClass = getDimChipBadgeClass(log.new_status);
+                const user = log.updated_by || 'Admin';
+
+                return `
+                <tr>
+                    <td>
+                        <div class="fw-bold text-dark">${escapeHtmlAudit(log.feature_name || 'Tracked Screen')}</div>
+                        <code class="text-secondary small">${escapeHtmlAudit(log.route || '—')}</code>
+                    </td>
+                    <td>
+                        <span class="badge border" style="font-size: 10px;">${escapeHtmlAudit(log.platform || 'Console')}</span>
+                    </td>
+                    <td class="fw-semibold text-dark text-nowrap">
+                        <i class="bi bi-grid-3x3 text-primary me-1"></i>${escapeHtmlAudit(dimLbl)}
+                    </td>
+                    <td class="text-nowrap">
+                        <span class="badge ${oldClass}" style="font-size: 9px;">${escapeHtmlAudit(log.old_status || 'Not Tested')}</span>
+                        <i class="bi bi-arrow-right mx-1 text-muted"></i>
+                        <span class="badge ${newClass}" style="font-size: 9px;">${escapeHtmlAudit(log.new_status || 'OK')}</span>
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-dark border d-inline-flex align-items-center gap-1" style="font-size: 10.5px;">
+                            <i class="bi bi-person-fill text-info"></i> ${escapeHtmlAudit(user)}
+                        </span>
+                    </td>
+                    <td class="text-end pe-3 text-nowrap text-muted" style="font-size: 11px;">
+                        <i class="bi bi-calendar3 me-1 text-secondary"></i>${log.created_at || '—'}
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+    }
+}
+
+function filterAuditHistory(val) {
+    renderAuditHistoryModal(val);
+}
+
+function escapeHtmlAudit(text) {
+    if (!text) return '';
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return String(text).replace(/[&<>"']/g, m => map[m]);
 }
 </script>

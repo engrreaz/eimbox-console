@@ -82,7 +82,7 @@ $platformStats = [
     'Dashboard' => 0,
     'Console' => 0,
     'Android Lite' => 0,
-    'Android Premium' => 0,
+    'Android Native' => 0,
     'Desktop' => 0
 ];
 
@@ -195,7 +195,7 @@ if ($featRes) {
         $fName = $fRow['feature_name'];
         $fRoute = $fRow['route'] ?? '';
         $fIssues = [];
-        $fPlatformBreakdown = ['Console' => 0, 'Dashboard' => 0, 'Android Lite' => 0, 'Android Premium' => 0, 'Desktop' => 0, 'General' => 0];
+        $fPlatformBreakdown = ['Console' => 0, 'Dashboard' => 0, 'Android Lite' => 0, 'Android Native' => 0, 'Desktop' => 0, 'General' => 0];
 
         foreach ($issues as $iss) {
             $match = false;
@@ -242,7 +242,7 @@ if ($unlinkedRes) {
         $uRoute = $uRow['route'] ?? '';
         $uTitle = $uRow['title'] ?: $uRoute;
         $uIssues = [];
-        $uPlatformBreakdown = ['Console' => 0, 'Dashboard' => 0, 'Android Lite' => 0, 'Android Premium' => 0, 'Desktop' => 0, 'General' => 0];
+        $uPlatformBreakdown = ['Console' => 0, 'Dashboard' => 0, 'Android Lite' => 0, 'Android Native' => 0, 'Desktop' => 0, 'General' => 0];
 
         foreach ($issues as $iss) {
             $match = false;

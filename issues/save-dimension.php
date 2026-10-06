@@ -109,6 +109,88 @@ if (isset($input['dimensions']) && is_array($input['dimensions'])) {
     }
 }
 
+// Ensure audit logging table exists
+$conn->query("CREATE TABLE IF NOT EXISTS `issues_dimension_logs` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `tracker_id` INT(11) DEFAULT NULL,
+  `feature_id` INT(11) DEFAULT NULL,
+  `route` VARCHAR(255) NOT NULL,
+  `platform` VARCHAR(50) NOT NULL DEFAULT 'All',
+  `dimension` VARCHAR(50) NOT NULL COMMENT 'e.g. ui, light, dark, insert, delete',
+  `old_status` VARCHAR(50) DEFAULT 'Not Tested',
+  `new_status` VARCHAR(50) NOT NULL,
+  `updated_by` VARCHAR(100) NOT NULL COMMENT 'User Email',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  INDEX `idx_route_plat` (`route`, `platform`),
+  INDEX `idx_feature` (`feature_id`),
+  INDEX `idx_dimension` (`dimension`),
+  INDEX `idx_created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+
+// Ensure issues_tracker has created_by and modified_by columns
+$chkCols = $conn->query("SHOW COLUMNS FROM `issues_tracker` LIKE 'created_by'");
+if ($chkCols && $chkCols->num_rows === 0) {
+    $conn->query("ALTER TABLE `issues_tracker` ADD COLUMN `created_by` VARCHAR(100) DEFAULT NULL AFTER `notes`");
+}
+$chkCols2 = $conn->query("SHOW COLUMNS FROM `issues_tracker` LIKE 'modified_by'");
+if ($chkCols2 && $chkCols2->num_rows === 0) {
+    $conn->query("ALTER TABLE `issues_tracker` ADD COLUMN `modified_by` VARCHAR(100) DEFAULT NULL AFTER `created_by`");
+}
+
+// Robust User Email Resolution for Audit Logging
+$userEmail = '';
+if (!empty($_SESSION['user_email'])) {
+    $userEmail = trim($_SESSION['user_email']);
+} elseif (!empty($_SESSION['email'])) {
+    $userEmail = trim($_SESSION['email']);
+} elseif (!empty($_SESSION['useremail'])) {
+    $userEmail = trim($_SESSION['useremail']);
+} elseif (!empty($input['updated_by']) && filter_var($input['updated_by'], FILTER_VALIDATE_EMAIL)) {
+    $userEmail = trim($input['updated_by']);
+} elseif (!empty($input['modified_by']) && filter_var($input['modified_by'], FILTER_VALIDATE_EMAIL)) {
+    $userEmail = trim($input['modified_by']);
+} elseif (!empty($input['created_by']) && filter_var($input['created_by'], FILTER_VALIDATE_EMAIL)) {
+    $userEmail = trim($input['created_by']);
+} elseif (!empty($_SESSION['usr']) && filter_var($_SESSION['usr'], FILTER_VALIDATE_EMAIL)) {
+    $userEmail = trim($_SESSION['usr']);
+} elseif (!empty($usr) && filter_var($usr, FILTER_VALIDATE_EMAIL)) {
+    $userEmail = trim($usr);
+} elseif (!empty($_SESSION['username']) && filter_var($_SESSION['username'], FILTER_VALIDATE_EMAIL)) {
+    $userEmail = trim($_SESSION['username']);
+} else {
+    // Lookup user email in users table by session user_id or username
+    $lookupId = (int)($_SESSION['user_id'] ?? $_SESSION['id'] ?? 0);
+    $lookupName = $_SESSION['usr'] ?? $_SESSION['username'] ?? $usr ?? '';
+    if ($lookupId > 0) {
+        $uStmt = $conn->prepare("SELECT email FROM users WHERE id = ? AND email IS NOT NULL AND email != '' LIMIT 1");
+        if ($uStmt) {
+            $uStmt->bind_param("i", $lookupId);
+            $uStmt->execute();
+            $uRow = $uStmt->get_result()->fetch_assoc();
+            if ($uRow && !empty($uRow['email'])) {
+                $userEmail = trim($uRow['email']);
+            }
+            $uStmt->close();
+        }
+    }
+    if (empty($userEmail) && !empty($lookupName)) {
+        $uStmt = $conn->prepare("SELECT email FROM users WHERE (username = ? OR email = ?) AND email IS NOT NULL AND email != '' LIMIT 1");
+        if ($uStmt) {
+            $uStmt->bind_param("ss", $lookupName, $lookupName);
+            $uStmt->execute();
+            $uRow = $uStmt->get_result()->fetch_assoc();
+            if ($uRow && !empty($uRow['email'])) {
+                $userEmail = trim($uRow['email']);
+            }
+            $uStmt->close();
+        }
+    }
+    if (empty($userEmail)) {
+        $userEmail = trim($input['updated_by'] ?? $input['modified_by'] ?? $input['created_by'] ?? $_SESSION['usr'] ?? $_SESSION['username'] ?? $usr ?? 'admin@eimbox.com');
+    }
+}
+
 // Check if record exists for this feature/route AND platform
 $existing = null;
 if ($featureId !== null && $featureId > 0) {
@@ -164,11 +246,31 @@ if ($existing) {
         $types .= "s";
     }
 
+    // Prepare audit logger
+    $logStmt = $conn->prepare("INSERT INTO issues_dimension_logs (`tracker_id`, `feature_id`, `route`, `platform`, `dimension`, `old_status`, `new_status`, `updated_by`, `created_at`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+
     foreach ($dimUpdates as $dim => $status) {
         $setParts[] = "`$dim` = ?";
         $params[] = $status;
         $types .= "s";
+
+        // Audit log if status actually changed
+        $oldStatus = $existing[$dim] ?? 'Not Tested';
+        if (strcasecmp(trim((string)$oldStatus), trim((string)$status)) !== 0) {
+            $fIdParam = $featureId ? (int)$featureId : ((int)($existing['feature_id'] ?? 0) ?: null);
+            $rRouteParam = !empty($route) ? $route : ($existing['route'] ?? '');
+            if ($logStmt) {
+                $logStmt->bind_param("iissssss", $recordId, $fIdParam, $rRouteParam, $platform, $dim, $oldStatus, $status, $userEmail);
+                $logStmt->execute();
+            }
+        }
     }
+    if ($logStmt) $logStmt->close();
+
+    // Always update modified_by and modifieddate
+    $setParts[] = "`modified_by` = ?";
+    $params[] = $userEmail;
+    $types .= "s";
 
     if (!empty($setParts)) {
         $sql = "UPDATE issues_tracker SET " . implode(", ", $setParts) . ", modifieddate = NOW() WHERE id = ?";
@@ -225,6 +327,16 @@ if ($existing) {
         $types .= "s";
     }
 
+    $cols[] = '`created_by`';
+    $placeholders[] = '?';
+    $params[] = $userEmail;
+    $types .= "s";
+
+    $cols[] = '`modified_by`';
+    $placeholders[] = '?';
+    $params[] = $userEmail;
+    $types .= "s";
+
     foreach ($allowedDimensions as $dim) {
         $cols[] = "`$dim`";
         $placeholders[] = '?';
@@ -239,6 +351,18 @@ if ($existing) {
     $insStmt->execute();
     $recordId = $conn->insert_id;
     $insStmt->close();
+
+    // Log newly set non-default dimensions
+    if (!empty($dimUpdates)) {
+        $logStmt = $conn->prepare("INSERT INTO issues_dimension_logs (`tracker_id`, `feature_id`, `route`, `platform`, `dimension`, `old_status`, `new_status`, `updated_by`, `created_at`) VALUES (?, ?, ?, ?, ?, 'Not Tested', ?, ?, NOW())");
+        if ($logStmt) {
+            foreach ($dimUpdates as $dim => $status) {
+                $logStmt->bind_param("iisssss", $recordId, $featureId, $route, $platform, $dim, $status, $userEmail);
+                $logStmt->execute();
+            }
+            $logStmt->close();
+        }
+    }
 }
 
 // Fetch fresh row
@@ -263,7 +387,28 @@ foreach ($allowedDimensions as $dk) {
 }
 $dimErrorPercent = round($dimProbSum / count($allowedDimensions), 1);
 
-api_response('success', 'Dimension saved successfully', [
+// Fetch recent dimension change audit logs
+$recentLogs = [];
+$auditStmt = $conn->prepare("SELECT `id`, `dimension`, `old_status`, `new_status`, `updated_by`, `created_at` 
+                            FROM `issues_dimension_logs` 
+                            WHERE (`route` = ? OR `tracker_id` = ? " . ($featureId ? "OR `feature_id` = ?" : "") . ") 
+                              AND (`platform` = ? OR `platform` = 'All') 
+                            ORDER BY `id` DESC LIMIT 25");
+if ($featureId) {
+    $auditStmt->bind_param("siis", $route, $recordId, $featureId, $platform);
+} else {
+    $auditStmt->bind_param("sis", $route, $recordId, $platform);
+}
+$auditStmt->execute();
+$auditRes = $auditStmt->get_result();
+if ($auditRes) {
+    while ($ar = $auditRes->fetch_assoc()) {
+        $recentLogs[] = $ar;
+    }
+}
+$auditStmt->close();
+
+api_response('success', 'Dimension saved and audited successfully', [
     'id' => $recordId,
     'feature_id' => $featureId,
     'platform' => $platform,
@@ -271,5 +416,7 @@ api_response('success', 'Dimension saved successfully', [
     'error_percent' => $dimErrorPercent,
     'tested_count' => $testedCount,
     'status' => ($testedCount > 0 ? ($dimErrorPercent > 50 ? 'Critical' : ($dimErrorPercent > 20 ? 'Warning' : ($dimErrorPercent > 0 ? 'Attention' : 'OK'))) : 'Untested'),
-    'dimensions' => $dimsClean
+    'dimensions' => $dimsClean,
+    'modified_by' => $userEmail,
+    'audit_logs' => $recentLogs
 ], 200);

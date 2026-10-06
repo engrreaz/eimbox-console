@@ -30,7 +30,7 @@ if ($method === 'POST' && ($action === 'batch_save' || isset($input['records']))
     $stmt = $conn->prepare("UPDATE subsetup SET 
                                 fullmarks = ?, subj = ?, obj = ?, pra = ?, ca = ?, 
                                 ctest = ?, mtest = ?, pass_algorithm = ?, fourth = ?,
-                                combind_1 = ?, combind_2 = ?, modifieddate = NOW()
+                                combind_1 = ?, combind_2 = ?, combind_3 = ?, combind_4 = ?, modifieddate = NOW()
                             WHERE id = ? AND sccode = ?");
 
     foreach ($records as $r) {
@@ -48,11 +48,13 @@ if ($method === 'POST' && ($action === 'batch_save' || isset($input['records']))
         $fourth = intval($r['fourth'] ?? 0);
         $combind1 = intval($r['combind_1'] ?? 0);
         $combind2 = intval($r['combind_2'] ?? 0);
+        $combind3 = intval($r['combind_3'] ?? 0);
+        $combind4 = intval($r['combind_4'] ?? 0);
 
-        $stmt->bind_param("ddddddiiiiiii",
+        $stmt->bind_param("dddddddiiiiiiii",
             $fullmarks, $subj, $obj, $pra, $ca,
             $ctest, $mtest, $passAlgo, $fourth,
-            $combind1, $combind2,
+            $combind1, $combind2, $combind3, $combind4,
             $id, $sccode
         );
         $stmt->execute();
@@ -84,16 +86,18 @@ if ($method === 'POST' || $method === 'PUT') {
     $fourth = intval($input['fourth'] ?? 0);
     $combind1 = intval($input['combind_1'] ?? 0);
     $combind2 = intval($input['combind_2'] ?? 0);
+    $combind3 = intval($input['combind_3'] ?? 0);
+    $combind4 = intval($input['combind_4'] ?? 0);
 
     $stmt = $conn->prepare("UPDATE subsetup SET 
                                 fullmarks = ?, subj = ?, obj = ?, pra = ?, ca = ?, 
                                 ctest = ?, mtest = ?, pass_algorithm = ?, fourth = ?,
-                                combind_1 = ?, combind_2 = ?, modifieddate = NOW()
+                                combind_1 = ?, combind_2 = ?, combind_3 = ?, combind_4 = ?, modifieddate = NOW()
                             WHERE id = ? AND sccode = ?");
-    $stmt->bind_param("ddddddiiiiiii",
+    $stmt->bind_param("dddddddiiiiiiii",
         $fullmarks, $subj, $obj, $pra, $ca,
         $ctest, $mtest, $passAlgo, $fourth,
-        $combind1, $combind2,
+        $combind1, $combind2, $combind3, $combind4,
         $id, $sccode
     );
     $stmt->execute();
@@ -111,7 +115,7 @@ if ($method === 'GET') {
 
     $sql = "SELECT ss.id, ss.sccode, ss.sessionyear, ss.classname, ss.sectionname, ss.slot, ss.slno,
                    ss.subject as subcode, ss.fullmarks, ss.subj, ss.obj, ss.pra, ss.ca, ss.camanual,
-                   ss.ctest, ss.mtest, ss.pass_algorithm, ss.fourth, ss.combind_1, ss.combind_2,
+                   ss.ctest, ss.mtest, ss.pass_algorithm, ss.fourth, ss.combind_1, ss.combind_2, ss.combind_3, ss.combind_4,
                    s.subject as subject_name, s.subben as subject_ben, s.subshname as short_code,
                    t.tname as teacher_name
             FROM subsetup ss
@@ -154,7 +158,9 @@ if ($method === 'GET') {
 
     while ($r = $result->fetch_assoc()) {
         $fm = floatval($r['fullmarks']);
-        $sumComponents = floatval($r['subj']) + floatval($r['obj']) + floatval($r['pra']) + floatval($r['ca']);
+        $ctExtra = intval($r['add_ctest'] ?? 0) ? floatval($r['ctest'] ?? 0) : 0;
+        $mtExtra = intval($r['add_mtest'] ?? 0) ? floatval($r['mtest'] ?? 0) : 0;
+        $sumComponents = floatval($r['subj']) + floatval($r['obj']) + floatval($r['pra']) + floatval($r['ca']) + $ctExtra + $mtExtra;
         $isBalanced = (abs($fm - $sumComponents) < 0.01) || ($sumComponents == 0 && $fm > 0);
 
         $r['calculated_sum'] = $sumComponents;

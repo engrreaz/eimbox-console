@@ -95,46 +95,85 @@ try {
     // 4. Update each stfinance item
     foreach ($items as $itm) {
         $fid = intval($itm['id'] ?? $itm['itemid'] ?? 0);
+        $partid = intval($itm['partid'] ?? 0);
         $paidAmt = floatval($itm['paid'] ?? $itm['paid_amount'] ?? 0);
 
-        if ($fid <= 0 || $paidAmt <= 0) {
+        if ($paidAmt <= 0) {
             continue;
         }
 
-        // Fetch current item
-        $fStmt = $conn->prepare("SELECT id, partid, particulareng, particularben, amount, paid, dues, pr1 FROM stfinance WHERE id = ? AND sccode = ? AND stid = ? LIMIT 1");
-        $fStmt->bind_param('iis', $fid, $sccode, $stid);
-        $fStmt->execute();
-        $fRow = $fStmt->get_result()->fetch_assoc();
-        $fStmt->close();
+        $fRow = null;
+        $itmMonth = intval($itm['month'] ?? 0);
+        $itmPeng = trim($itm['particulareng'] ?? $itm['title_en'] ?? $itm['name'] ?? '');
+
+        // Fetch current item (by id if provided, else fallback to partid+month, partid, or particulareng)
+        if ($fid > 0) {
+            $fStmt = $conn->prepare("SELECT id, partid, particulareng, particularben, amount, payableamt, paid, dues, pr1, pr1no FROM stfinance WHERE id = ? AND sccode = ? AND (CAST(stid AS CHAR) = ? OR stid = ?) LIMIT 1");
+            $fStmt->bind_param('iiss', $fid, $sccode, $stid, $stid);
+            $fStmt->execute();
+            $fRow = $fStmt->get_result()->fetch_assoc();
+            $fStmt->close();
+        }
+
+        if (!$fRow && $partid > 0 && $itmMonth > 0) {
+            $fStmt = $conn->prepare("SELECT id, partid, particulareng, particularben, amount, payableamt, paid, dues, pr1, pr1no FROM stfinance WHERE partid = ? AND month = ? AND sccode = ? AND (CAST(stid AS CHAR) = ? OR stid = ?) AND dues > 0 ORDER BY id ASC LIMIT 1");
+            $fStmt->bind_param('iiiss', $partid, $itmMonth, $sccode, $stid, $stid);
+            $fStmt->execute();
+            $fRow = $fStmt->get_result()->fetch_assoc();
+            $fStmt->close();
+        }
+
+        if (!$fRow && $partid > 0) {
+            $fStmt = $conn->prepare("SELECT id, partid, particulareng, particularben, amount, payableamt, paid, dues, pr1, pr1no FROM stfinance WHERE partid = ? AND sccode = ? AND (CAST(stid AS CHAR) = ? OR stid = ?) AND dues > 0 ORDER BY id ASC LIMIT 1");
+            $fStmt->bind_param('iiss', $partid, $sccode, $stid, $stid);
+            $fStmt->execute();
+            $fRow = $fStmt->get_result()->fetch_assoc();
+            $fStmt->close();
+        }
+
+        if (!$fRow && !empty($itmPeng)) {
+            $fStmt = $conn->prepare("SELECT id, partid, particulareng, particularben, amount, payableamt, paid, dues, pr1, pr1no FROM stfinance WHERE particulareng = ? AND sccode = ? AND (CAST(stid AS CHAR) = ? OR stid = ?) AND dues > 0 ORDER BY id ASC LIMIT 1");
+            $fStmt->bind_param('siss', $itmPeng, $sccode, $stid, $stid);
+            $fStmt->execute();
+            $fRow = $fStmt->get_result()->fetch_assoc();
+            $fStmt->close();
+        }
 
         if (!$fRow) {
             continue;
         }
 
-        $isPr1Used = intval($fRow['pr1']) > 0;
+        $rowId = intval($fRow['id']);
+        $isPr1Used = intval($fRow['pr1']) > 0 || !empty($fRow['pr1no']);
         $fld = $isPr1Used ? 'pr2' : 'pr1';
         $flddt = $isPr1Used ? 'pr2date' : 'pr1date';
         $fldby = $isPr1Used ? 'pr2by' : 'pr1by';
         $fldno = $isPr1Used ? 'pr2no' : 'pr1no';
 
+        $currDue = floatval($fRow['dues']);
+        $newDue = max(0, $currDue - $paidAmt);
+
         $upStmt = $conn->prepare("UPDATE stfinance 
-            SET $fld = ?, $fldno = ?, $flddt = ?, $fldby = ?, paid = paid + ?, dues = dues - ?, modifieddate = NOW() 
+            SET $fld = ?, $fldno = ?, $flddt = ?, $fldby = ?, paid = paid + ?, dues = ?, modifieddate = NOW() 
             WHERE id = ?");
-        $upStmt->bind_param('dissddi', $paidAmt, $prno, $prdate, $entryby, $paidAmt, $paidAmt, $fid);
+        $upStmt->bind_param('dissddi', $paidAmt, $prno, $prdate, $entryby, $paidAmt, $newDue, $rowId);
         $upStmt->execute();
         $upStmt->close();
 
         $totalPaid += $paidAmt;
         $receiptItems[] = [
-            'item_id' => $fid,
-            'title' => $fRow['particulareng'] ?: $fRow['particularben'],
+            'item_id' => $rowId,
+            'title' => $fRow['particulareng'] ?: ($fRow['particularben'] ?: 'Fee Item'),
             'title_bn' => $fRow['particularben'],
             'paid' => $paidAmt
         ];
 
-        $partNamesEng[] = $fRow['particulareng'];
-        $partNamesBen[] = $fRow['particularben'];
+        if (!empty($fRow['particulareng'])) {
+            $partNamesEng[] = $fRow['particulareng'];
+        }
+        if (!empty($fRow['particularben'])) {
+            $partNamesBen[] = $fRow['particularben'];
+        }
     }
 
     if ($totalPaid <= 0) {
@@ -148,10 +187,10 @@ try {
     $zeroVal = 0;
 
     $insPr = $conn->prepare("INSERT INTO stpr (
-        sessionyear, sccode, classname, sectionname, stid, rollno, prno, prdate, partid, peng, pben, amount, entryby, entrytime, smstxt, smscnt, mobileno, smsstatus, statusvalue, collection_media
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?)");
+        sessionyear, sccode, classname, sectionname, stid, rollno, prno, prdate, partid, peng, pben, amount, entryby, entrytime, smstxt, smscnt, mobileno, smsstatus, statusvalue, collection_media, modifieddate
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, NOW())");
     
-    $insPr->bind_param('iisssisissdsisssis', 
+    $insPr->bind_param('iisssisissdsisssiss', 
         $sessionyear, $sccode, $cls, $sec, $stid, $rollno, $prno, $prdate, 
         $zeroVal, $pengStr, $pbenStr, $totalPaid, $entryby, 
         $emptyTxt, $zeroVal, $mobile, $zeroVal, $emptyTxt, $collectionMedia
@@ -166,10 +205,17 @@ try {
     $upSess->execute();
     $upSess->close();
 
+    // 7. Calculate new overall remaining dues for the student
+    $totDueStmt = $conn->prepare("SELECT COALESCE(SUM(dues), 0) AS remaining_due FROM stfinance WHERE sccode = ? AND stid = ? AND dues > 0");
+    $totDueStmt->bind_param('is', $sccode, $stid);
+    $totDueStmt->execute();
+    $newOverallDue = floatval($totDueStmt->get_result()->fetch_assoc()['remaining_due'] ?? 0);
+    $totDueStmt->close();
+
     // Commit Transaction
     $conn->commit();
 
-    // 7. Generate Print Payload for ESC/POS Thermal Printing
+    // 8. Generate Print Payload for ESC/POS Thermal Printing
     $verifyUrl = "https://eimbox.com/verify-receipt.php?sccode={$sccode}&prno={$prno}";
 
     $printPayload = [
@@ -196,6 +242,7 @@ try {
         'prdate' => $prdate,
         'stid' => $stid,
         'total_paid' => $totalPaid,
+        'new_due' => $newOverallDue,
         'print_payload' => $printPayload
     ]);
 

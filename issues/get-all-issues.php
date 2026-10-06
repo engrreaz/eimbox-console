@@ -97,7 +97,7 @@ $platformStats = [
     'Dashboard' => 0,
     'Console' => 0,
     'Android Lite' => 0,
-    'Android Premium' => 0,
+    'Android Native' => 0,
     'Desktop' => 0
 ];
 
@@ -197,7 +197,7 @@ $featRes = $conn->query($featSql);
 $featuresCatalog = [];
 $trackedIds = [];
 
-$platformsList = ['Console', 'Dashboard', 'Android Lite', 'Android Premium', 'Desktop'];
+$platformsList = ['Console', 'Dashboard', 'Android Lite', 'Android Native', 'Desktop'];
 
 if ($featRes) {
     while ($fRow = $featRes->fetch_assoc()) {
@@ -340,7 +340,7 @@ if ($featRes) {
 
         // Attach issues for this feature
         $fIssues = [];
-        $fPlatformBreakdown = ['Console' => 0, 'Dashboard' => 0, 'Android Lite' => 0, 'Android Premium' => 0, 'Desktop' => 0, 'General' => 0];
+        $fPlatformBreakdown = ['Console' => 0, 'Dashboard' => 0, 'Android Lite' => 0, 'Android Native' => 0, 'Desktop' => 0, 'General' => 0];
 
         foreach ($allRawIssues as $iss) {
             $match = false;
@@ -525,7 +525,7 @@ foreach ($unlinkedTrackers as $uItem) {
     }
 
     $uIssues = [];
-    $uPlatformBreakdown = ['Console' => 0, 'Dashboard' => 0, 'Android Lite' => 0, 'Android Premium' => 0, 'Desktop' => 0, 'General' => 0];
+    $uPlatformBreakdown = ['Console' => 0, 'Dashboard' => 0, 'Android Lite' => 0, 'Android Native' => 0, 'Desktop' => 0, 'General' => 0];
 
     foreach ($allRawIssues as $iss) {
         $match = false;
@@ -668,6 +668,27 @@ $issuePenalty = min(15.0, round($issuePenalty, 1));
 $globalHealth = max(0.0, min(100.0, round($avgFeatureHealth - $issuePenalty, 1)));
 $globalProb = round(100.0 - $globalHealth, 1);
 
+// Fetch Recent Issue Updates
+$recentIssueUpdates = [];
+$rIssRes = $conn->query("SELECT id, module, feature, topic, script, platform, status, priority, progress_percent, created_by, modified_by, created_at, modifieddate FROM eimbox_features ORDER BY COALESCE(modifieddate, created_at) DESC LIMIT 100");
+if ($rIssRes) {
+    while ($ri = $rIssRes->fetch_assoc()) {
+        $recentIssueUpdates[] = $ri;
+    }
+}
+
+// Fetch Recent Dimension Logs
+$recentDimensionLogs = [];
+$tableExists = $conn->query("SHOW TABLES LIKE 'issues_dimension_logs'");
+if ($tableExists && $tableExists->num_rows > 0) {
+    $rDimRes = $conn->query("SELECT l.*, f.feature_name FROM issues_dimension_logs l LEFT JOIN features f ON l.feature_id = f.id ORDER BY l.id DESC LIMIT 100");
+    if ($rDimRes) {
+        while ($rd = $rDimRes->fetch_assoc()) {
+            $recentDimensionLogs[] = $rd;
+        }
+    }
+}
+
 api_response('success', 'All issues data retrieved successfully', [
     'platform' => $platform,
     'total_issues' => $totalIssues,
@@ -689,5 +710,7 @@ api_response('success', 'All issues data retrieved successfully', [
     'issues' => $issues,
     'dimension_screens' => $dimensionScreens,
     'features_catalog' => $featuresCatalog,
-    'modules' => $modules
+    'modules' => $modules,
+    'recent_issue_updates' => $recentIssueUpdates,
+    'recent_dimension_logs' => $recentDimensionLogs
 ], 200);

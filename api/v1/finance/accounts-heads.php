@@ -16,11 +16,16 @@ $method = $_SERVER['REQUEST_METHOD'];
 switch ($method) {
     case 'GET':
         // 1. Load heads for this school
-        $headQuery = "SELECT id, account_head, sccode, modifieddate 
+        $headQuery = "SELECT id, head_code, account_head, head_name_bn, head_type, sccode, modifieddate 
                       FROM account_head 
                       WHERE sccode = ? OR sccode = 0
-                      ORDER BY id ASC";
+                      ORDER BY CAST(COALESCE(head_code, id) AS UNSIGNED) ASC, id ASC";
         $stmt = $conn->prepare($headQuery);
+        if (!$stmt) {
+            // Fallback if head_code column is not yet migrated
+            $headQuery = "SELECT id, account_head, sccode, modifieddate FROM account_head WHERE sccode = ? OR sccode = 0 ORDER BY id ASC";
+            $stmt = $conn->prepare($headQuery);
+        }
         $stmt->bind_param("i", $sccode);
         $stmt->execute();
         $headRes = $stmt->get_result();
@@ -37,11 +42,15 @@ switch ($method) {
         $stmt->close();
 
         // 2. Fetch sub-heads for this school
-        $subQuery = "SELECT id, sccode, account_head_id, account_head, sub_head, income, expenditure, modifieddate 
+        $subQuery = "SELECT id, sccode, account_head_id, head_code, sub_head_code, account_head, sub_head, sub_head_bn, income, expenditure, modifieddate 
                      FROM account_sub_head 
                      WHERE sccode = ? OR sccode = 0
-                     ORDER BY id ASC";
+                     ORDER BY CAST(COALESCE(sub_head_code, id) AS UNSIGNED) ASC, id ASC";
         $subStmt = $conn->prepare($subQuery);
+        if (!$subStmt) {
+            $subQuery = "SELECT id, sccode, account_head_id, account_head, sub_head, income, expenditure, modifieddate FROM account_sub_head WHERE sccode = ? OR sccode = 0 ORDER BY id ASC";
+            $subStmt = $conn->prepare($subQuery);
+        }
         $subStmt->bind_param("i", $sccode);
         $subStmt->execute();
         $subRes = $subStmt->get_result();
@@ -57,10 +66,11 @@ switch ($method) {
             if (isset($headMap[$pId])) {
                 $heads[$headMap[$pId]]['sub_heads'][] = $subRow;
             } else {
-                // If account_head_id is not set, match by account_head string name
+                // If account_head_id is not set, match by head_code or account_head string name
                 $matched = false;
                 foreach ($heads as $idx => $h) {
-                    if (strcasecmp(trim($h['account_head']), trim($subRow['account_head'])) === 0) {
+                    if ((!empty($subRow['head_code']) && !empty($h['head_code']) && trim($h['head_code']) === trim($subRow['head_code'])) ||
+                        (strcasecmp(trim($h['account_head']), trim($subRow['account_head'])) === 0)) {
                         $heads[$idx]['sub_heads'][] = $subRow;
                         $matched = true;
                         break;
@@ -83,15 +93,18 @@ switch ($method) {
             $seededSubHeads = 0;
 
             // Fetch default heads from account_head_default
-            $defHeadsRes = $conn->query("SELECT id, account_head FROM account_head_default ORDER BY id ASC");
+            $defHeadsRes = $conn->query("SELECT * FROM account_head_default ORDER BY id ASC");
             if ($defHeadsRes && $defHeadsRes->num_rows > 0) {
                 while ($dh = $defHeadsRes->fetch_assoc()) {
                     $dhName = trim($dh['account_head']);
+                    $headCode = trim($dh['head_code'] ?? '');
+                    $headNameBn = trim($dh['head_name_bn'] ?? '');
+                    $headType = trim($dh['head_type'] ?? 'expense');
                     if (empty($dhName)) continue;
 
                     // Check if head already exists for this sccode
-                    $chk = $conn->prepare("SELECT id FROM account_head WHERE sccode = ? AND account_head = ?");
-                    $chk->bind_param("is", $sccode, $dhName);
+                    $chk = $conn->prepare("SELECT id FROM account_head WHERE sccode = ? AND (head_code = ? OR account_head = ?)");
+                    $chk->bind_param("iss", $sccode, $headCode, $dhName);
                     $chk->execute();
                     $chkRes = $chk->get_result();
                     
@@ -100,37 +113,54 @@ switch ($method) {
                         $activeHeadId = intval($chkRes->fetch_assoc()['id']);
                     } else {
                         // Insert head for this school
-                        $ins = $conn->prepare("INSERT INTO account_head (sccode, account_head, modifieddate) VALUES (?, ?, NOW())");
-                        $ins->bind_param("is", $sccode, $dhName);
-                        $ins->execute();
-                        $activeHeadId = $conn->insert_id;
-                        $ins->close();
+                        $ins = $conn->prepare("INSERT INTO account_head (sccode, head_code, account_head, head_name, head_name_bn, head_type, modifieddate) VALUES (?, ?, ?, ?, ?, ?, NOW())");
+                        if ($ins) {
+                            $ins->bind_param("isssss", $sccode, $headCode, $dhName, $dhName, $headNameBn, $headType);
+                            $ins->execute();
+                            $activeHeadId = $conn->insert_id;
+                            $ins->close();
+                        } else {
+                            $insFallback = $conn->prepare("INSERT INTO account_head (sccode, account_head, modifieddate) VALUES (?, ?, NOW())");
+                            $insFallback->bind_param("is", $sccode, $dhName);
+                            $insFallback->execute();
+                            $activeHeadId = $conn->insert_id;
+                            $insFallback->close();
+                        }
                         $seededHeads++;
                     }
                     $chk->close();
 
                     // Seed associated sub-heads from account_sub_head_default
-                    $defSubStmt = $conn->prepare("SELECT sub_head, type FROM account_sub_head_default WHERE account_head = ?");
-                    $defSubStmt->bind_param("s", $dhName);
+                    $defSubStmt = $conn->prepare("SELECT * FROM account_sub_head_default WHERE account_head = ? OR head_code = ?");
+                    $defSubStmt->bind_param("ss", $dhName, $headCode);
                     $defSubStmt->execute();
                     $defSubRes = $defSubStmt->get_result();
 
                     while ($dSub = $defSubRes->fetch_assoc()) {
                         $subName = trim($dSub['sub_head']);
+                        $subCode = trim($dSub['sub_head_code'] ?? '');
+                        $subBn = trim($dSub['sub_head_bn'] ?? '');
                         if (empty($subName)) continue;
 
-                        $isIncome = (strtolower(trim($dSub['type'])) === 'income') ? 1 : 0;
-                        $isExp = (strtolower(trim($dSub['type'])) === 'expenditure' || $isIncome === 0) ? 1 : 0;
+                        $isIncome = (isset($dSub['income']) ? intval($dSub['income']) : (strtolower(trim($dSub['type'] ?? '')) === 'income' ? 1 : 0));
+                        $isExp = (isset($dSub['expenditure']) ? intval($dSub['expenditure']) : (strtolower(trim($dSub['type'] ?? '')) === 'expenditure' || $isIncome === 0 ? 1 : 0));
 
                         // Check if sub-head already exists for this sccode and head
-                        $chkSub = $conn->prepare("SELECT id FROM account_sub_head WHERE sccode = ? AND account_head_id = ? AND sub_head = ?");
-                        $chkSub->bind_param("iis", $sccode, $activeHeadId, $subName);
+                        $chkSub = $conn->prepare("SELECT id FROM account_sub_head WHERE sccode = ? AND account_head_id = ? AND (sub_head_code = ? OR sub_head = ?)");
+                        $chkSub->bind_param("iiss", $sccode, $activeHeadId, $subCode, $subName);
                         $chkSub->execute();
                         if ($chkSub->get_result()->num_rows === 0) {
-                            $insSub = $conn->prepare("INSERT INTO account_sub_head (sccode, account_head_id, account_head, sub_head, income, expenditure, modifieddate) VALUES (?, ?, ?, ?, ?, ?, NOW())");
-                            $insSub->bind_param("iissii", $sccode, $activeHeadId, $dhName, $subName, $isIncome, $isExp);
-                            $insSub->execute();
-                            $insSub->close();
+                            $insSub = $conn->prepare("INSERT INTO account_sub_head (sccode, account_head_id, head_code, sub_head_code, account_head, sub_head, sub_head_bn, income, expenditure, modifieddate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                            if ($insSub) {
+                                $insSub->bind_param("iisssssii", $sccode, $activeHeadId, $headCode, $subCode, $dhName, $subName, $subBn, $isIncome, $isExp);
+                                $insSub->execute();
+                                $insSub->close();
+                            } else {
+                                $insSubFallback = $conn->prepare("INSERT INTO account_sub_head (sccode, account_head_id, account_head, sub_head, income, expenditure, modifieddate) VALUES (?, ?, ?, ?, ?, ?, NOW())");
+                                $insSubFallback->bind_param("iissii", $sccode, $activeHeadId, $dhName, $subName, $isIncome, $isExp);
+                                $insSubFallback->execute();
+                                $insSubFallback->close();
+                            }
                             $seededSubHeads++;
                         }
                         $chkSub->close();
@@ -149,7 +179,9 @@ switch ($method) {
         // Action: Create Sub-Head
         if ($action === 'create_sub_head') {
             $headId = intval($data['account_head_id'] ?? 0);
+            $subCode = trim($data['sub_head_code'] ?? '');
             $subHeadName = trim($data['sub_head'] ?? '');
+            $subHeadBn = trim($data['sub_head_bn'] ?? '');
             $income = intval($data['income'] ?? 0);
             $expenditure = intval($data['expenditure'] ?? 1);
 
@@ -157,42 +189,70 @@ switch ($method) {
                 api_response('error', 'Parent Account Head and Sub-head name are required', null, 400);
             }
 
-            // Get head name for denormalized column
-            $hStmt = $conn->prepare("SELECT account_head FROM account_head WHERE id = ?");
+            // Get head name & head_code for denormalized columns
+            $hStmt = $conn->prepare("SELECT account_head, head_code FROM account_head WHERE id = ?");
             $hStmt->bind_param("i", $headId);
             $hStmt->execute();
             $hRes = $hStmt->get_result();
-            $headName = $hRes->num_rows > 0 ? $hRes->fetch_assoc()['account_head'] : '';
+            $hRow = $hRes->num_rows > 0 ? $hRes->fetch_assoc() : [];
+            $headName = $hRow['account_head'] ?? '';
+            $headCode = $hRow['head_code'] ?? '';
             $hStmt->close();
 
-            $ins = $conn->prepare("INSERT INTO account_sub_head (sccode, account_head_id, account_head, sub_head, income, expenditure, modifieddate) VALUES (?, ?, ?, ?, ?, ?, NOW())");
-            $ins->bind_param("iissii", $sccode, $headId, $headName, $subHeadName, $income, $expenditure);
-            
-            if ($ins->execute()) {
-                $newId = $ins->insert_id;
-                $ins->close();
-                api_response('success', 'Sub-head created successfully', ['id' => $newId]);
+            $ins = $conn->prepare("INSERT INTO account_sub_head (sccode, account_head_id, head_code, sub_head_code, account_head, sub_head, sub_head_bn, income, expenditure, modifieddate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+            if ($ins) {
+                $ins->bind_param("iisssssii", $sccode, $headId, $headCode, $subCode, $headName, $subHeadName, $subHeadBn, $income, $expenditure);
+                if ($ins->execute()) {
+                    $newId = $ins->insert_id;
+                    $ins->close();
+                    api_response('success', 'Sub-head created successfully', ['id' => $newId]);
+                } else {
+                    api_response('error', 'Failed to create sub-head: ' . $conn->error, null, 500);
+                }
             } else {
-                api_response('error', 'Failed to create sub-head: ' . $conn->error, null, 500);
+                $insFallback = $conn->prepare("INSERT INTO account_sub_head (sccode, account_head_id, account_head, sub_head, income, expenditure, modifieddate) VALUES (?, ?, ?, ?, ?, ?, NOW())");
+                $insFallback->bind_param("iissii", $sccode, $headId, $headName, $subHeadName, $income, $expenditure);
+                if ($insFallback->execute()) {
+                    $newId = $insFallback->insert_id;
+                    $insFallback->close();
+                    api_response('success', 'Sub-head created successfully', ['id' => $newId]);
+                } else {
+                    api_response('error', 'Failed to create sub-head: ' . $conn->error, null, 500);
+                }
             }
             break;
         }
 
         // Action: Create Head (default)
+        $headCode = trim($data['head_code'] ?? '');
         $headName = trim($data['account_head'] ?? $data['head_name'] ?? '');
+        $headNameBn = trim($data['head_name_bn'] ?? '');
+        $headType = trim($data['head_type'] ?? 'expense');
+
         if (empty($headName)) {
             api_response('error', 'Account Head name is required', null, 400);
         }
 
-        $ins = $conn->prepare("INSERT INTO account_head (sccode, account_head, modifieddate) VALUES (?, ?, NOW())");
-        $ins->bind_param("is", $sccode, $headName);
-
-        if ($ins->execute()) {
-            $newId = $ins->insert_id;
-            $ins->close();
-            api_response('success', 'Account Head created successfully', ['id' => $newId]);
+        $ins = $conn->prepare("INSERT INTO account_head (sccode, head_code, account_head, head_name, head_name_bn, head_type, modifieddate) VALUES (?, ?, ?, ?, ?, ?, NOW())");
+        if ($ins) {
+            $ins->bind_param("isssss", $sccode, $headCode, $headName, $headName, $headNameBn, $headType);
+            if ($ins->execute()) {
+                $newId = $ins->insert_id;
+                $ins->close();
+                api_response('success', 'Account Head created successfully', ['id' => $newId]);
+            } else {
+                api_response('error', 'Failed to create head: ' . $conn->error, null, 500);
+            }
         } else {
-            api_response('error', 'Failed to create head: ' . $conn->error, null, 500);
+            $insFallback = $conn->prepare("INSERT INTO account_head (sccode, account_head, modifieddate) VALUES (?, ?, NOW())");
+            $insFallback->bind_param("is", $sccode, $headName);
+            if ($insFallback->execute()) {
+                $newId = $insFallback->insert_id;
+                $insFallback->close();
+                api_response('success', 'Account Head created successfully', ['id' => $newId]);
+            } else {
+                api_response('error', 'Failed to create head: ' . $conn->error, null, 500);
+            }
         }
         break;
 
@@ -207,7 +267,9 @@ switch ($method) {
 
         if ($target === 'sub_head') {
             $headId = intval($data['account_head_id'] ?? 0);
+            $subCode = trim($data['sub_head_code'] ?? '');
             $subHeadName = trim($data['sub_head'] ?? '');
+            $subHeadBn = trim($data['sub_head_bn'] ?? '');
             $income = intval($data['income'] ?? 0);
             $expenditure = intval($data['expenditure'] ?? 1);
 
@@ -216,19 +278,31 @@ switch ($method) {
             }
 
             if ($headId > 0) {
-                // Get updated parent head name
-                $hStmt = $conn->prepare("SELECT account_head FROM account_head WHERE id = ?");
+                // Get updated parent head name & head_code
+                $hStmt = $conn->prepare("SELECT account_head, head_code FROM account_head WHERE id = ?");
                 $hStmt->bind_param("i", $headId);
                 $hStmt->execute();
                 $hRes = $hStmt->get_result();
-                $headName = $hRes->num_rows > 0 ? $hRes->fetch_assoc()['account_head'] : '';
+                $hRow = $hRes->num_rows > 0 ? $hRes->fetch_assoc() : [];
+                $headName = $hRow['account_head'] ?? '';
+                $headCode = $hRow['head_code'] ?? '';
                 $hStmt->close();
 
-                $upd = $conn->prepare("UPDATE account_sub_head SET sub_head = ?, account_head_id = ?, account_head = ?, income = ?, expenditure = ?, modifieddate = NOW() WHERE id = ? AND (sccode = ? OR sccode = 0)");
-                $upd->bind_param("sisiisi", $subHeadName, $headId, $headName, $income, $expenditure, $id, $sccode);
+                $upd = $conn->prepare("UPDATE account_sub_head SET sub_head = ?, sub_head_code = ?, sub_head_bn = ?, account_head_id = ?, account_head = ?, head_code = ?, income = ?, expenditure = ?, modifieddate = NOW() WHERE id = ? AND (sccode = ? OR sccode = 0)");
+                if ($upd) {
+                    $upd->bind_param("sssisssiiii", $subHeadName, $subCode, $subHeadBn, $headId, $headName, $headCode, $income, $expenditure, $id, $sccode);
+                } else {
+                    $upd = $conn->prepare("UPDATE account_sub_head SET sub_head = ?, account_head_id = ?, account_head = ?, income = ?, expenditure = ?, modifieddate = NOW() WHERE id = ? AND (sccode = ? OR sccode = 0)");
+                    $upd->bind_param("sisiisi", $subHeadName, $headId, $headName, $income, $expenditure, $id, $sccode);
+                }
             } else {
-                $upd = $conn->prepare("UPDATE account_sub_head SET sub_head = ?, income = ?, expenditure = ?, modifieddate = NOW() WHERE id = ? AND (sccode = ? OR sccode = 0)");
-                $upd->bind_param("siiisi", $subHeadName, $income, $expenditure, $id, $sccode);
+                $upd = $conn->prepare("UPDATE account_sub_head SET sub_head = ?, sub_head_code = ?, sub_head_bn = ?, income = ?, expenditure = ?, modifieddate = NOW() WHERE id = ? AND (sccode = ? OR sccode = 0)");
+                if ($upd) {
+                    $upd->bind_param("sssiiisi", $subHeadName, $subCode, $subHeadBn, $income, $expenditure, $id, $sccode);
+                } else {
+                    $upd = $conn->prepare("UPDATE account_sub_head SET sub_head = ?, income = ?, expenditure = ?, modifieddate = NOW() WHERE id = ? AND (sccode = ? OR sccode = 0)");
+                    $upd->bind_param("siiisi", $subHeadName, $income, $expenditure, $id, $sccode);
+                }
             }
 
             $upd->execute();
@@ -236,19 +310,33 @@ switch ($method) {
             api_response('success', 'Sub-head updated successfully');
         } else {
             // Update Head
+            $headCode = trim($data['head_code'] ?? '');
             $headName = trim($data['account_head'] ?? $data['head_name'] ?? '');
+            $headNameBn = trim($data['head_name_bn'] ?? '');
+            $headType = trim($data['head_type'] ?? 'expense');
+
             if (empty($headName)) {
                 api_response('error', 'Account Head name cannot be empty', null, 400);
             }
 
-            $upd = $conn->prepare("UPDATE account_head SET account_head = ?, modifieddate = NOW() WHERE id = ? AND (sccode = ? OR sccode = 0)");
-            $upd->bind_param("sii", $headName, $id, $sccode);
+            $upd = $conn->prepare("UPDATE account_head SET head_code = ?, account_head = ?, head_name = ?, head_name_bn = ?, head_type = ?, modifieddate = NOW() WHERE id = ? AND (sccode = ? OR sccode = 0)");
+            if ($upd) {
+                $upd->bind_param("sssssii", $headCode, $headName, $headName, $headNameBn, $headType, $id, $sccode);
+            } else {
+                $upd = $conn->prepare("UPDATE account_head SET account_head = ?, modifieddate = NOW() WHERE id = ? AND (sccode = ? OR sccode = 0)");
+                $upd->bind_param("sii", $headName, $id, $sccode);
+            }
             $upd->execute();
             $upd->close();
 
-            // Also update account_head string in associated sub_heads for denormalized consistency
-            $updSub = $conn->prepare("UPDATE account_sub_head SET account_head = ?, modifieddate = NOW() WHERE account_head_id = ? AND (sccode = ? OR sccode = 0)");
-            $updSub->bind_param("sii", $headName, $id, $sccode);
+            // Also update account_head string and head_code in associated sub_heads for denormalized consistency
+            $updSub = $conn->prepare("UPDATE account_sub_head SET account_head = ?, head_code = ?, modifieddate = NOW() WHERE account_head_id = ? AND (sccode = ? OR sccode = 0)");
+            if ($updSub) {
+                $updSub->bind_param("ssii", $headName, $headCode, $id, $sccode);
+            } else {
+                $updSub = $conn->prepare("UPDATE account_sub_head SET account_head = ?, modifieddate = NOW() WHERE account_head_id = ? AND (sccode = ? OR sccode = 0)");
+                $updSub->bind_param("sii", $headName, $id, $sccode);
+            }
             $updSub->execute();
             $updSub->close();
 

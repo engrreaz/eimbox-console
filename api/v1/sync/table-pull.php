@@ -19,27 +19,56 @@ $activeSccode = isset($_GET['sccode']) && (int)$_GET['sccode'] > 0 ? (int)$_GET[
 $since = trim($_GET['since'] ?? '');
 $session = trim($_GET['session'] ?? '');
 
-$allowedTables = [
-    'gpa', 'examroutine', 'examlist', 'subjects', 'subsetup', 'areas', 
-    'students', 'sessioninfo', 'stmark', 'stattnd', 'stfinance', 'stpr', 
-    'slots', 'teacher', 'classschedule', 'clsroutine', 'syllabus', 
-    'lesson_tracking', 'sessionyear', 'settings', 'scinfo', 'ben_address',
-    'tickets', 'ticket_messages', 'events', 'notice', 'notice_category',
-    'usersapp', 'permissions_role', 'user_custom_permissions',
-    'account_head', 'account_sub_head', 'bankinfo', 'banktrans', 'cashbook',
-    'account_head_default', 'account_sub_head_default',
-    'app_releases', 'app_roadmap', 'faq_desktop',
-    'tabulatingsheet', 'tabulatingsheetex', 'tabulatingsheetpibi',
-    'issues_tracker', 'features', 'modulelist', 'eimbox_features'
+// Forbidden internal authentication & volatile token tables
+$forbiddenTables = [
+    'active_sessions',
+    'user_sessions',
+    'qrcodelogin',
+    'admin_tokens',
+    'password_resets',
+    'oauth_access_tokens',
+    'oauth_auth_codes',
+    'oauth_clients',
+    'oauth_personal_access_clients',
+    'oauth_refresh_tokens',
+    'sync_history_log',
+    'user_activity_log',
+    'user_screen_logs',
+    'offline_sync_queue',
+    'sync_queue',
+    'connection_log'
 ];
 
-if (empty($tableName) || !in_array($tableName, $allowedTables)) {
+if (empty($tableName) || in_array(strtolower($tableName), $forbiddenTables)) {
     if (function_exists('api_send_response')) {
-        api_send_response(422, false, "Invalid or unauthorized table: " . htmlspecialchars($tableName));
+        api_send_response(422, false, "Invalid, forbidden, or unauthorized table: " . htmlspecialchars($tableName));
     } else {
-        api_response('error', "Invalid or unauthorized table: " . htmlspecialchars($tableName), null, 422);
+        api_response('error', "Invalid, forbidden, or unauthorized table: " . htmlspecialchars($tableName), null, 422);
     }
 }
+
+// 1. Verify table existence and introspect columns reliably using direct MySQL SHOW COLUMNS
+$showColsRes = $conn->query("SHOW COLUMNS FROM `{$tableName}`");
+if (!$showColsRes) {
+    if (function_exists('api_send_response')) {
+        api_send_response(404, false, "Table '{$tableName}' does not exist in the database or cannot be accessed.");
+    } else {
+        api_response('error', "Table '{$tableName}' does not exist in the database or cannot be accessed.", null, 404);
+    }
+}
+
+$tableCols = [];
+while ($cRow = $showColsRes->fetch_assoc()) {
+    if (isset($cRow['Field'])) {
+        $tableCols[] = strtolower($cRow['Field']);
+    }
+}
+$showColsRes->free();
+
+$hasSccode = in_array('sccode', $tableCols);
+$hasSessionyear = in_array('sessionyear', $tableCols);
+$hasModifieddate = in_array('modifieddate', $tableCols);
+$hasId = in_array('id', $tableCols);
 
 // Ensure sync_tombstones exists
 $conn->query("
@@ -56,25 +85,8 @@ $conn->query("
 ");
 
 // =========================================================================
-// 1. EXPLICIT LIST: Tables without sccode column (Global Master Tables)
-// =========================================================================
-$tablesWithoutSccode = [
-    'notice_category', 
-    'ben_address', 
-    'permissions_role', 
-    'account_head_default', 
-    'app_releases', 
-    'app_roadmap', 
-    'faq_desktop', 
-    'issues_tracker', 
-    'features', 
-    'modulelist', 
-    'eimbox_features'
-];
-
-// =========================================================================
-// 2. EXPLICIT LIST: Tables where global default fallback (sccode = 0) is allowed
-// STRICT: 'slots' is strictly institution-specific and MUST NEVER have sccode = 0
+// 1. EXPLICIT LIST: Tables where global default fallback (sccode = 0) is allowed
+// STRICT: 'slots', 'financesetup', 'financesetupind', 'financesetupvalue' are strictly institution-specific and MUST NEVER have sccode = 0
 // =========================================================================
 $tablesAllowedGlobalSccode0 = [
     'gpa',
@@ -82,74 +94,103 @@ $tablesAllowedGlobalSccode0 = [
     'examlist',
     'settings',
     'classschedule',
-    'account_head',
-    'account_sub_head',
-    'account_sub_head_default'
+    'account_head_default',
+    'account_sub_head_default',
+    'bloodgroup',
+    'religions',
+    'designations',
+    'departments',
+    'shifts',
+    'rooms',
+    'holiday',
+    'holidays',
+    'modulelist',
+    'modules',
+    'permissions_role',
+    'district',
+    'upazila',
+    'postoffice'
 ];
-
-// =========================================================================
-// 3. EXPLICIT LIST: Tables strictly scoped to active session (sessionyear)
-// =========================================================================
-$sessionAwareTables = [
-    'examroutine', 'examlist', 'areas', 'sessioninfo', 'subsetup', 
-    'stmark', 'stattnd', 'stfinance', 'stpr', 'classschedule', 
-    'clsroutine', 'syllabus', 'lesson_tracking', 'cashbook',
-    'tabulatingsheet', 'tabulatingsheetex'
-];
-
-// Resolve active session from sessionyear table if not passed from client
-if (empty($session) && $activeSccode > 0) {
-    $syStmt = $conn->prepare("SELECT syear FROM sessionyear WHERE sccode = ? AND active = 1 ORDER BY syear DESC LIMIT 1");
-    if ($syStmt) {
-        $syStmt->bind_param("i", $activeSccode);
-        $syStmt->execute();
-        $syRes = $syStmt->get_result();
-        if ($syRow = $syRes->fetch_assoc()) {
-            $session = trim($syRow['syear'] ?? '');
-        }
-        $syStmt->close();
-    }
-}
 
 $where = [];
 $params = [];
 $types = "";
 
-if (in_array($tableName, $tablesWithoutSccode)) {
-    // Global master table without sccode column -> no sccode filter needed
-} elseif (in_array($tableName, $tablesAllowedGlobalSccode0)) {
-    // Whitelisted global fallback tables allow sccode = ? OR sccode = 0
-    $where[] = "(sccode = ? OR sccode = 0)";
-    $params[] = $activeSccode;
-    $types .= "i";
-} else {
-    // Strict multi-tenant rule: all other tables MUST filter by sccode = ?
-    $where[] = "sccode = ?";
-    $params[] = $activeSccode;
-    $types .= "i";
-}
-
-// Session Filtering: Only fetch records for the active sessionyear
-if (!empty($session) && in_array($tableName, $sessionAwareTables)) {
-    if (in_array($tableName, $tablesAllowedGlobalSccode0)) {
-        $where[] = "(sessionyear = ? OR sccode = 0 OR sessionyear IS NULL OR sessionyear = '')";
-        $params[] = $session;
-        $types .= "s";
+if ($hasSccode) {
+    if (in_array(strtolower($tableName), $tablesAllowedGlobalSccode0) || (isset($_GET['include_global']) && ($_GET['include_global'] === '1' || $_GET['include_global'] === 'true' || $_GET['include_global'] === 1))) {
+        $where[] = "(sccode = ? OR sccode = 0)";
+        $params[] = $activeSccode;
+        $types .= "i";
     } else {
-        $where[] = "sessionyear = ?";
-        $params[] = $session;
-        $types .= "s";
+        $where[] = "sccode = ?";
+        $params[] = $activeSccode;
+        $types .= "i";
     }
 }
 
-if (!empty($since) && strtotime($since)) {
+// Session Filtering:
+// If session is provided, filter by sessionyear.
+// If session is not provided, resolve active session from sessionyear table for this school.
+if ($hasSessionyear) {
+    if (empty($session) && $activeSccode > 0) {
+        $syStmt = $conn->prepare("SELECT syear FROM sessionyear WHERE sccode = ? AND active = 1 ORDER BY syear DESC LIMIT 1");
+        if ($syStmt) {
+            $syStmt->bind_param("i", $activeSccode);
+            $syStmt->execute();
+            $syRes = $syStmt->get_result();
+            if ($syRow = $syRes->fetch_assoc()) {
+                $session = trim($syRow['syear'] ?? '');
+            }
+            $syStmt->close();
+        }
+        if (empty($session)) {
+            $syStmt2 = $conn->prepare("SELECT syear FROM sessionyear WHERE sccode = ? ORDER BY syear DESC LIMIT 1");
+            if ($syStmt2) {
+                $syStmt2->bind_param("i", $activeSccode);
+                $syStmt2->execute();
+                $syRes2 = $syStmt2->get_result();
+                if ($syRow2 = $syRes2->fetch_assoc()) {
+                    $session = trim($syRow2['syear'] ?? '');
+                }
+                $syStmt2->close();
+            }
+        }
+        if (empty($session)) {
+            $scStmt = $conn->prepare("SELECT sessionyear FROM scinfo WHERE sccode = ? LIMIT 1");
+            if ($scStmt) {
+                $scStmt->bind_param("i", $activeSccode);
+                $scStmt->execute();
+                $scRes = $scStmt->get_result();
+                if ($scRow = $scRes->fetch_assoc()) {
+                    $session = trim($scRow['sessionyear'] ?? '');
+                }
+                $scStmt->close();
+            }
+        }
+    }
+
+    if (!empty($session) && strtolower($session) !== 'all' && strtolower($session) !== '*') {
+        if (in_array(strtolower($tableName), $tablesAllowedGlobalSccode0)) {
+            $where[] = "(sessionyear = ? OR sessionyear IS NULL OR sessionyear = '' OR sessionyear = '0' OR sccode = 0)";
+            $params[] = $session;
+            $types .= "s";
+        } else {
+            $where[] = "sessionyear = ?";
+            $params[] = $session;
+            $types .= "s";
+        }
+    }
+}
+
+// Incremental sync filter: Only apply if table has modifieddate and since timestamp is supplied
+if ($hasModifieddate && !empty($since) && strtotime($since)) {
     $where[] = "(modifieddate >= ? OR modifieddate IS NULL)";
     $params[] = $since;
     $types .= "s";
 }
 
 // Category filter for subjects table (e.g. School, Madrasah, College)
-if ($tableName === 'subjects') {
+if (strtolower($tableName) === 'subjects') {
     $sccategory = trim($_GET['sccategory'] ?? $_GET['category'] ?? '');
     if (empty($sccategory)) {
         $scStmt = $conn->prepare("SELECT sccategory FROM scinfo WHERE sccode = ? LIMIT 1");
@@ -174,7 +215,8 @@ if ($tableName === 'subjects') {
 }
 
 $whereClause = !empty($where) ? "WHERE " . implode(" AND ", $where) : "";
-$sql = "SELECT * FROM `{$tableName}` {$whereClause} ORDER BY id ASC LIMIT 25000";
+$orderByClause = $hasId ? "ORDER BY id ASC" : "ORDER BY 1 ASC";
+$sql = "SELECT * FROM `{$tableName}` {$whereClause} {$orderByClause} LIMIT 25000";
 error_log($sql);
 $stmt = $conn->prepare($sql);
 if (!empty($params)) {
@@ -192,7 +234,7 @@ $stmt->close();
 // Fetch deleted tombstones if incremental sync timestamp provided
 $deletedIds = [];
 if (!empty($since) && strtotime($since)) {
-    if (in_array($tableName, $tablesWithoutSccode)) {
+    if (!$hasSccode) {
         $tombStmt = $conn->prepare("SELECT record_id FROM `sync_tombstones` WHERE table_name = ? AND deleted_at >= ? LIMIT 1000");
         if ($tombStmt) {
             $tombStmt->bind_param('ss', $tableName, $since);
@@ -217,14 +259,13 @@ if (!empty($since) && strtotime($since)) {
     }
 }
 
-
-
 $responseData = [
     'table' => $tableName,
     'sccode' => $activeSccode,
     'session' => $session,
-    'allowed_global_sccode0' => in_array($tableName, $tablesAllowedGlobalSccode0),
-    'session_filtered' => in_array($tableName, $sessionAwareTables),
+    'allowed_global_sccode0' => in_array(strtolower($tableName), $tablesAllowedGlobalSccode0),
+    'has_sccode' => $hasSccode,
+    'has_sessionyear' => $hasSessionyear,
     'count' => count($rows),
     'rows' => $rows,
     'deleted_ids' => $deletedIds,

@@ -118,7 +118,8 @@ if ($method === 'GET') {
                    END AS subject_type
             FROM subjects 
             WHERE (sccode = 0 OR sccode = ?)
-              AND (sccategory = ? OR sccategory = '' OR sccategory IS NULL)";
+              AND (sccategory = ? OR sccategory = '' OR sccategory IS NULL)
+              AND (subcode BETWEEN 101 AND 800)";
     
     $params = [$sccode, $targetCategory];
     $types = "is";

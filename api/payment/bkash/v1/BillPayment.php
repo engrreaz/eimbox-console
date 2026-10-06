@@ -54,12 +54,12 @@ $checkTxnRes = $checkTxnStmt->get_result();
 if ($existingTxn = $checkTxnRes->fetch_assoc()) {
     $checkTxnStmt->close();
     // Already processed successfully - return 200 Success immediately
-    send_bkash_response('200', 'Success', [
+    send_bkash_response('204', 'Success', [
         'Consumer_Name' => 'Student #' . $stid,
         'Total_amount' => (string)round($existingTxn['amount']),
         'Trxid' => $trxId,
         'Paytime' => $payTimeInput,
-        'Amount_Breakdown' => 'Already Processed | PR: ' . ($existingTxn['prno'] ?? 'N/A')
+        'Amount_Breakdown' => 'Already paid | PR: ' . ($existingTxn['prno'] ?? 'N/A')
     ]);
 }
 $checkTxnStmt->close();

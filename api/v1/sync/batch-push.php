@@ -38,7 +38,11 @@ $allowedTables = [
     'account_head_default', 'account_sub_head_default',
     'app_releases', 'app_roadmap', 'faq_desktop',
     'tabulatingsheet', 'tabulatingsheetex', 'tabulatingsheetpibi',
-    'issues_tracker', 'features', 'modulelist', 'eimbox_features'
+    'issues_tracker', 'features', 'modulelist', 'eimbox_features',
+    'screen_issues', 'issues_dimension_logs', 'issues_change_logs',
+    'financesetup', 'financesetupind', 'financesetupvalue',
+    'todolist', 'logbook', 'user_actions', 'feesetup', 'feeshead', 'fee_structures',
+    'shifts', 'rooms', 'designations', 'departments', 'holiday', 'holidays'
 ];
 
 $results = [];
@@ -106,27 +110,61 @@ foreach ($transactions as $tx) {
 
             foreach ($items as $itm) {
                 $fid = intval($itm['id'] ?? $itm['itemid'] ?? 0);
+                $partid = intval($itm['partid'] ?? 0);
                 $paidAmt = floatval($itm['paid'] ?? $itm['paid_amount'] ?? 0);
-                if ($fid <= 0 || $paidAmt <= 0) continue;
+                $itmMonth = intval($itm['month'] ?? 0);
+                $itmPeng = trim($itm['particulareng'] ?? $itm['title_en'] ?? $itm['name'] ?? '');
+                if ($paidAmt <= 0) continue;
 
-                $fStmt = $conn->prepare("SELECT id, partid, particulareng, particularben, pr1 FROM stfinance WHERE id = ? AND sccode = ? AND stid = ? LIMIT 1");
-                $fStmt->bind_param('iis', $fid, $sccode, $stid);
-                $fStmt->execute();
-                $fRow = $fStmt->get_result()->fetch_assoc();
-                $fStmt->close();
+                $fRow = null;
+                if ($fid > 0) {
+                    $fStmt = $conn->prepare("SELECT id, partid, particulareng, particularben, amount, payableamt, paid, dues, pr1, pr1no FROM stfinance WHERE id = ? AND sccode = ? AND (CAST(stid AS CHAR) = ? OR stid = ?) LIMIT 1");
+                    $fStmt->bind_param('iiss', $fid, $sccode, $stid, $stid);
+                    $fStmt->execute();
+                    $fRow = $fStmt->get_result()->fetch_assoc();
+                    $fStmt->close();
+                }
+
+                if (!$fRow && $partid > 0 && $itmMonth > 0) {
+                    $fStmt = $conn->prepare("SELECT id, partid, particulareng, particularben, amount, payableamt, paid, dues, pr1, pr1no FROM stfinance WHERE partid = ? AND month = ? AND sccode = ? AND (CAST(stid AS CHAR) = ? OR stid = ?) AND dues > 0 ORDER BY id ASC LIMIT 1");
+                    $fStmt->bind_param('iiiss', $partid, $itmMonth, $sccode, $stid, $stid);
+                    $fStmt->execute();
+                    $fRow = $fStmt->get_result()->fetch_assoc();
+                    $fStmt->close();
+                }
+
+                if (!$fRow && $partid > 0) {
+                    $fStmt = $conn->prepare("SELECT id, partid, particulareng, particularben, amount, payableamt, paid, dues, pr1, pr1no FROM stfinance WHERE partid = ? AND sccode = ? AND (CAST(stid AS CHAR) = ? OR stid = ?) AND dues > 0 ORDER BY id ASC LIMIT 1");
+                    $fStmt->bind_param('iiss', $partid, $sccode, $stid, $stid);
+                    $fStmt->execute();
+                    $fRow = $fStmt->get_result()->fetch_assoc();
+                    $fStmt->close();
+                }
+
+                if (!$fRow && !empty($itmPeng)) {
+                    $fStmt = $conn->prepare("SELECT id, partid, particulareng, particularben, amount, payableamt, paid, dues, pr1, pr1no FROM stfinance WHERE particulareng = ? AND sccode = ? AND (CAST(stid AS CHAR) = ? OR stid = ?) AND dues > 0 ORDER BY id ASC LIMIT 1");
+                    $fStmt->bind_param('siss', $itmPeng, $sccode, $stid, $stid);
+                    $fStmt->execute();
+                    $fRow = $fStmt->get_result()->fetch_assoc();
+                    $fStmt->close();
+                }
 
                 if (!$fRow) continue;
 
-                $isPr1Used = intval($fRow['pr1']) > 0;
+                $rowId = intval($fRow['id']);
+                $isPr1Used = intval($fRow['pr1']) > 0 || !empty($fRow['pr1no']);
                 $fld = $isPr1Used ? 'pr2' : 'pr1';
                 $flddt = $isPr1Used ? 'pr2date' : 'pr1date';
                 $fldby = $isPr1Used ? 'pr2by' : 'pr1by';
                 $fldno = $isPr1Used ? 'pr2no' : 'pr1no';
 
+                $currDue = floatval($fRow['dues']);
+                $newDue = max(0, $currDue - $paidAmt);
+
                 $upStmt = $conn->prepare("UPDATE stfinance 
-                    SET $fld = ?, $fldno = ?, $flddt = ?, $fldby = ?, paid = paid + ?, dues = dues - ?, modifieddate = NOW() 
+                    SET $fld = ?, $fldno = ?, $flddt = ?, $fldby = ?, paid = paid + ?, dues = ?, modifieddate = NOW() 
                     WHERE id = ?");
-                $upStmt->bind_param('dissddi', $paidAmt, $prno, $prdate, $entryby, $paidAmt, $paidAmt, $fid);
+                $upStmt->bind_param('dissddi', $paidAmt, $prno, $prdate, $entryby, $paidAmt, $newDue, $rowId);
                 $upStmt->execute();
                 $upStmt->close();
 
@@ -145,9 +183,9 @@ foreach ($transactions as $tx) {
             $zeroVal = 0;
 
             $insPr = $conn->prepare("INSERT INTO stpr (
-                sessionyear, sccode, classname, sectionname, stid, rollno, prno, prdate, partid, peng, pben, amount, entryby, entrytime, smstxt, smscnt, mobileno, smsstatus, statusvalue, collection_media
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?)");
-            $insPr->bind_param('iisssisissdsisssis', 
+                sessionyear, sccode, classname, sectionname, stid, rollno, prno, prdate, partid, peng, pben, amount, entryby, entrytime, smstxt, smscnt, mobileno, smsstatus, statusvalue, collection_media, modifieddate
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, NOW())");
+            $insPr->bind_param('iisssisissdsisssiss', 
                 $sessionyear, $sccode, $cls, $sec, $stid, $rollno, $prno, $prdate, 
                 $zeroVal, $pengStr, $pbenStr, $totalPaid, $entryby, 
                 $emptyTxt, $zeroVal, $mobile, $zeroVal, $emptyTxt, $collectionMedia
@@ -302,7 +340,12 @@ foreach ($transactions as $tx) {
             $rowRecord = $payload['record'] ?? $payload['data'] ?? $payload;
             unset($rowRecord['table'], $rowRecord['local_id'], $rowRecord['sync_status']);
 
-            if (!in_array($targetTable, ['notice_category', 'ben_address', 'permissions_role', 'account_head_default', 'app_releases', 'app_roadmap', 'faq_desktop'])) {
+            $noSccodeTables = [
+                'notice_category', 'ben_address', 'permissions_role', 'account_head_default', 'account_sub_head_default',
+                'app_releases', 'app_roadmap', 'faq_desktop', 'issues_tracker', 'features', 'modulelist',
+                'eimbox_features', 'screen_issues', 'issues_dimension_logs', 'issues_change_logs'
+            ];
+            if (!in_array($targetTable, $noSccodeTables)) {
                 $rowRecord['sccode'] = $sccode;
             }
 

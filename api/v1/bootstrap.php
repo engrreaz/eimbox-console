@@ -213,9 +213,9 @@ function get_api_input() {
     $rawInput = file_get_contents("php://input");
     $jsonData = json_decode($rawInput, true);
     if (is_array($jsonData)) {
-        return $jsonData;
+        return array_merge($_GET, $_POST, $jsonData);
     }
-    return $_POST;
+    return array_merge($_GET, $_POST);
 }
 
 /**

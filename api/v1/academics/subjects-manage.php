@@ -57,18 +57,47 @@ if ($method === 'DELETE' || ($method === 'POST' && $action === 'delete')) {
     }
 }
 
-// 3. Handle POST: Clone Session Subject Setups
-if ($method === 'POST' && ($action === 'clone_session' || $action === 'copy_session')) {
+// 3. Handle POST: Clone Session / Class / Section Subject Setups
+if ($method === 'POST' && ($action === 'clone_session' || $action === 'copy_session' || $action === 'clone_subjects')) {
     $fromSession = trim($input['from_session'] ?? $input['from_year'] ?? '');
-    $toSession = trim($input['to_session'] ?? $input['to_year'] ?? '');
+    $toSession = trim($input['to_session'] ?? $input['to_year'] ?? $fromSession);
+    $fromSlot = trim($input['from_slot'] ?? '');
+    $toSlot = trim($input['to_slot'] ?? $fromSlot);
+    $fromClass = trim($input['from_class'] ?? '');
+    $toClass = trim($input['to_class'] ?? $fromClass);
+    $fromSection = trim($input['from_section'] ?? '');
+    $toSection = trim($input['to_section'] ?? $fromSection);
 
-    if (empty($fromSession) || empty($toSession)) {
-        api_response('error', 'Both source and target session years are required.', null, 422);
+    if (empty($fromSession)) {
+        api_response('error', 'Source session year is required.', null, 422);
+    }
+    if (empty($toSession)) {
+        $toSession = $fromSession;
     }
 
-    $srcStmt = $conn->prepare("SELECT slno, slot, classname, sectionname, subject, fullmarks, ctest, mtest, subj, obj, pra, ca, camanual, ctmt, pass_algorithm, fourth, combind_1, combind_2, combind_3, combind_4 
-                              FROM subsetup WHERE sccode = ? AND sessionyear = ?");
-    $srcStmt->bind_param("is", $sccode, $fromSession);
+    $query = "SELECT slno, slot, classname, sectionname, subject, fullmarks, ctest, mtest, subj, obj, pra, ca, camanual, ctmt, pass_algorithm, fourth, combind_1, combind_2, combind_3, combind_4 
+              FROM subsetup WHERE sccode = ? AND sessionyear = ?";
+    $params = [$sccode, $fromSession];
+    $types = "is";
+
+    if (!empty($fromSlot)) {
+        $query .= " AND slot = ?";
+        $params[] = $fromSlot;
+        $types .= "s";
+    }
+    if (!empty($fromClass)) {
+        $query .= " AND classname = ?";
+        $params[] = $fromClass;
+        $types .= "s";
+    }
+    if (!empty($fromSection)) {
+        $query .= " AND sectionname = ?";
+        $params[] = $fromSection;
+        $types .= "s";
+    }
+
+    $srcStmt = $conn->prepare($query);
+    $srcStmt->bind_param($types, ...$params);
     $srcStmt->execute();
     $srcRes = $srcStmt->get_result();
 
@@ -81,8 +110,12 @@ if ($method === 'POST' && ($action === 'clone_session' || $action === 'copy_sess
         fullmarks = VALUES(fullmarks), subj = VALUES(subj), obj = VALUES(obj), pra = VALUES(pra), ca = VALUES(ca), modifieddate = NOW()");
 
     while ($r = $srcRes->fetch_assoc()) {
+        $destSlot = !empty($toSlot) ? $toSlot : $r['slot'];
+        $destClass = !empty($toClass) ? $toClass : $r['classname'];
+        $destSection = ($toSection !== '' && $fromSection !== '') ? $toSection : $r['sectionname'];
+
         $insStmt->bind_param("isisssiidddddddiiiiiii",
-            $sccode, $toSession, $r['slno'], $r['slot'], $r['classname'], $r['sectionname'], $r['subject'], $r['fullmarks'],
+            $sccode, $toSession, $r['slno'], $destSlot, $destClass, $destSection, $r['subject'], $r['fullmarks'],
             $r['ctest'], $r['mtest'], $r['subj'], $r['obj'], $r['pra'], $r['ca'], $r['camanual'], $r['ctmt'], $r['pass_algorithm'], $r['fourth'],
             $r['combind_1'], $r['combind_2'], $r['combind_3'], $r['combind_4']
         );
@@ -92,9 +125,13 @@ if ($method === 'POST' && ($action === 'clone_session' || $action === 'copy_sess
     $srcStmt->close();
     $insStmt->close();
 
-    api_response('success', "Successfully cloned $copiedCount subject setups from $fromSession to $toSession.", [
+    api_response('success', "Successfully cloned $copiedCount subject setups.", [
         'from_session' => $fromSession,
         'to_session' => $toSession,
+        'from_class' => $fromClass,
+        'to_class' => $toClass,
+        'from_section' => $fromSection,
+        'to_section' => $toSection,
         'copied_count' => $copiedCount
     ]);
 }

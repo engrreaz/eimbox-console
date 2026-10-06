@@ -2316,8 +2316,9 @@ if ($monitorPanel === true) { ?>
 // echo "</pre>";
 unset($_SESSION['query_log']);
 
-// Include Cross-Platform Issue Tracker & Dimension Health Modal (Only for Admin users)
-if (isset($is_admin) && $is_admin > 0) {
+// Include Cross-Platform Issue Tracker & Dimension Health Modal (Only for Admin users: admin > 0)
+$admin_level = intval($admin ?? $is_admin ?? $_SESSION['admin'] ?? $_SESSION['is_admin'] ?? $_SESSION['isadmin'] ?? 0);
+if ($admin_level > 0 && file_exists(__DIR__ . '/components/issue-tracker-modal.php')) {
     include_once __DIR__ . '/components/issue-tracker-modal.php';
 }
 

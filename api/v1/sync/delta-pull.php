@@ -186,7 +186,7 @@ $attStmt->close();
 // 5. Pull Delta Finance (filtered by sccode and active session)
 $financeDelta = [];
 if (!empty($session)) {
-    $finStmt = $conn->prepare("SELECT id, sccode, sessionyear, classname, sectionname, stid, rollno, partid, itemcode, sub_head, particulareng, particularben, amount, month, idmon, setupdate, setupby, payableamt, modifieddate, modifiedby, paid, paidx, dues, pr1, pr1no, pr1date, pr1by, cashbook1, pr2, pr2no, pr2date, pr2by, cashbook2, remark, extra, last_update, validate, validationtime, splitid, splitid2 
+    $finStmt = $conn->prepare("SELECT id, sccode, sessionyear, classname, sectionname, stid, rollno, partid, itemcode, sub_head, particulareng, particularben, amount, month, idmon, setupdate, setupby, payableamt, modifieddate, modifiedby, paid, paidx, dues, pr1, pr1no, pr1date, pr1by, cashbook1, pr2, pr2no, pr2date, pr2by, cashbook2, remark, extra, last_update, validate, validationtime, deleteby, deletetime, splitid, scan_status, splitid2 
     FROM stfinance 
     WHERE sccode = ? AND sessionyear = ? AND (modifieddate >= ? OR setupdate >= ?)
     ORDER BY id DESC LIMIT 5000");
@@ -194,7 +194,7 @@ if (!empty($session)) {
         $finStmt->bind_param('isss', $sccode, $session, $lastSync, $lastSync);
     }
 } else {
-    $finStmt = $conn->prepare("SELECT id, sccode, sessionyear, classname, sectionname, stid, rollno, partid, itemcode, sub_head, particulareng, particularben, amount, month, idmon, setupdate, setupby, payableamt, modifieddate, modifiedby, paid, paidx, dues, pr1, pr1no, pr1date, pr1by, cashbook1, pr2, pr2no, pr2date, pr2by, cashbook2, remark, extra, last_update, validate, validationtime, splitid, splitid2 
+    $finStmt = $conn->prepare("SELECT id, sccode, sessionyear, classname, sectionname, stid, rollno, partid, itemcode, sub_head, particulareng, particularben, amount, month, idmon, setupdate, setupby, payableamt, modifieddate, modifiedby, paid, paidx, dues, pr1, pr1no, pr1date, pr1by, cashbook1, pr2, pr2no, pr2date, pr2by, cashbook2, remark, extra, last_update, validate, validationtime, deleteby, deletetime, splitid, scan_status, splitid2 
     FROM stfinance 
     WHERE sccode = ? AND (modifieddate >= ? OR setupdate >= ?)
     ORDER BY id DESC LIMIT 5000");

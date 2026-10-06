@@ -22,20 +22,22 @@ $activeSccode = isset($_GET['sccode']) && (int)$_GET['sccode'] > 0 ? (int)$_GET[
 if ($method === 'GET') {
     $sessionyear = trim($_GET['sessionyear'] ?? $_GET['session'] ?? '');
     
-    $sql = "SELECT id, sccode, sessionyear, slot, examtitle, examcode, linkedexam, exam_group, exam_type, 
-                   classname, sectionname, datestart, result_publish, status, hall_code, modifieddate
-            FROM examlist 
-            WHERE (sccode = ? OR sccode = 0)";
-    $params = [$activeSccode];
-    $types = "i";
+    $sql = "SELECT e.id, e.sccode, e.sessionyear, e.slot, e.examtitle, e.examcode, e.linkedexam, e.exam_group, e.exam_type, 
+                   e.classname, e.sectionname, e.datestart, e.result_publish, e.status, e.hall_code, e.modifieddate,
+                   p.examtitle AS parent_exam_title
+            FROM examlist e
+            LEFT JOIN examlist p ON e.linkedexam = p.id AND (p.sccode = ? OR p.sccode = 0)
+            WHERE (e.sccode = ? OR e.sccode = 0)";
+    $params = [$activeSccode, $activeSccode];
+    $types = "ii";
 
     if (!empty($sessionyear) && $sessionyear !== 'All') {
-        $sql .= " AND (sessionyear = ? OR sessionyear IS NULL OR sessionyear = '')";
+        $sql .= " AND (e.sessionyear = ? OR e.sessionyear IS NULL OR e.sessionyear = '')";
         $params[] = $sessionyear;
         $types .= "s";
     }
 
-    $sql .= " ORDER BY sessionyear DESC, id DESC";
+    $sql .= " ORDER BY e.sessionyear DESC, CASE WHEN e.linkedexam = 0 OR e.linkedexam IS NULL THEN e.id ELSE e.linkedexam END ASC, e.linkedexam ASC, e.datestart ASC, e.id ASC";
 
     $stmt = $conn->prepare($sql);
     $stmt->bind_param($types, ...$params);
@@ -51,7 +53,11 @@ if ($method === 'GET') {
             'slot' => $row['slot'] ?: 'School',
             'examtitle' => $row['examtitle'],
             'examname' => $row['examtitle'],
-            'examcode' => $row['examcode'],
+            'examcode' => $row['examcode'] ?: (string)$row['id'],
+            'linkedexam' => (int)($row['linkedexam'] ?? 0),
+            'parent_exam_title' => $row['parent_exam_title'] ?: '',
+            'exam_type' => strtoupper(trim($row['exam_type'] ?? 'PE')) ?: 'PE',
+            'exam_group' => $row['exam_group'] ?: '',
             'datestart' => $row['datestart'],
             'examdate' => $row['datestart'],
             'result_publish' => $row['result_publish'],
@@ -75,7 +81,10 @@ if ($method === 'POST') {
     $examtitle = trim($input['examtitle'] ?? $input['examname'] ?? '');
     $sessionyear = trim($input['sessionyear'] ?? $input['session'] ?? date('Y'));
     $slot = trim($input['slot'] ?? 'School');
-    $examcode = trim($input['examcode'] ?? ($id > 0 ? (string)$id : 'EX-' . substr(time(), -4)));
+    $exam_type = strtoupper(trim($input['exam_type'] ?? 'PE')) ?: 'PE';
+    $linkedexam = ($exam_type === 'PE') ? 0 : (int)($input['linkedexam'] ?? 0);
+    $exam_group = trim($input['exam_group'] ?? '');
+    $examcode = trim($input['examcode'] ?? ($id > 0 ? (string)$id : ''));
     $datestart = !empty($input['datestart']) ? trim($input['datestart']) : (!empty($input['examdate']) ? trim($input['examdate']) : null);
     $resultPublish = !empty($input['result_publish']) ? trim($input['result_publish']) : (!empty($input['pubdate']) ? trim($input['pubdate']) : null);
     $status = isset($input['status']) ? (int)$input['status'] : 1;
@@ -89,23 +98,31 @@ if ($method === 'POST') {
     }
 
     if ($id > 0) {
+        if (empty($examcode)) {
+            $examcode = (string)$id;
+        }
         $stmt = $conn->prepare("
             UPDATE examlist 
-            SET examtitle = ?, sessionyear = ?, slot = ?, examcode = ?, datestart = ?, result_publish = ?, status = ?, hall_code = ?, classname = ?, sectionname = ?, modifieddate = NOW()
+            SET examtitle = ?, sessionyear = ?, slot = ?, examcode = ?, exam_type = ?, linkedexam = ?, exam_group = ?, datestart = ?, result_publish = ?, status = ?, hall_code = ?, classname = ?, sectionname = ?, modifieddate = NOW()
             WHERE id = ? AND sccode = ?
         ");
-        $stmt->bind_param("ssssssisssii", $examtitle, $sessionyear, $slot, $examcode, $datestart, $resultPublish, $status, $hallCode, $classname, $sectionname, $id, $activeSccode);
+        $stmt->bind_param("sssssississsiii", $examtitle, $sessionyear, $slot, $examcode, $exam_type, $linkedexam, $exam_group, $datestart, $resultPublish, $status, $hallCode, $classname, $sectionname, $id, $activeSccode);
         $stmt->execute();
         $stmt->close();
     } else {
         $stmt = $conn->prepare("
-            INSERT INTO examlist (sccode, sessionyear, slot, examtitle, examcode, datestart, result_publish, createdby, createtime, status, hall_code, classname, sectionname, modifieddate)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, NOW())
+            INSERT INTO examlist (sccode, sessionyear, slot, examtitle, examcode, exam_type, linkedexam, exam_group, datestart, result_publish, createdby, createtime, status, hall_code, classname, sectionname, modifieddate)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, NOW())
         ");
-        $stmt->bind_param("isssssssisss", $activeSccode, $sessionyear, $slot, $examtitle, $examcode, $datestart, $resultPublish, $createdby, $status, $hallCode, $classname, $sectionname);
+        $stmt->bind_param("isssssissssisss", $activeSccode, $sessionyear, $slot, $examtitle, $examcode, $exam_type, $linkedexam, $exam_group, $datestart, $resultPublish, $createdby, $status, $hallCode, $classname, $sectionname);
         $stmt->execute();
         $id = $conn->insert_id;
         $stmt->close();
+
+        if (empty($examcode)) {
+            $examcode = (string)$id;
+            $conn->query("UPDATE examlist SET examcode = '$examcode' WHERE id = $id AND sccode = $activeSccode");
+        }
     }
 
     api_send_response(200, true, "Exam saved successfully.", [
@@ -115,10 +132,15 @@ if ($method === 'POST') {
         'slot' => $slot,
         'examtitle' => $examtitle,
         'examcode' => $examcode,
+        'exam_type' => $exam_type,
+        'linkedexam' => $linkedexam,
+        'exam_group' => $exam_group,
         'datestart' => $datestart,
         'result_publish' => $resultPublish,
         'status' => $status,
-        'hall_code' => $hallCode
+        'hall_code' => $hallCode,
+        'classname' => $classname,
+        'sectionname' => $sectionname
     ]);
 }
 

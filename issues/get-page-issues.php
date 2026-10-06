@@ -244,10 +244,77 @@ if ($mRes) {
 }
 
 $features = [];
-$fRes = $conn->query("SELECT id, feature_name, module_name FROM features ORDER BY feature_name ASC");
-if ($fRes) {
-    while ($f = $fRes->fetch_assoc()) {
-        $features[] = $f;
+$fListRes = $conn->query("SELECT id, feature_name, module_name, description FROM features ORDER BY module_name ASC, feature_name ASC");
+if ($fListRes) {
+    while ($fRow = $fListRes->fetch_assoc()) {
+        $features[] = $fRow;
+    }
+}
+
+// 5. Fetch Dimension Change Audit Logs
+$dimensionAuditLogs = [];
+$dimensionLastUpdated = [];
+$trackerId = (int)($dimensions['id'] ?? 0);
+
+$tableExists = $conn->query("SHOW TABLES LIKE 'issues_dimension_logs'");
+if ($tableExists && $tableExists->num_rows > 0) {
+    $logSql = "SELECT `id`, `dimension`, `old_status`, `new_status`, `updated_by`, `created_at` 
+               FROM `issues_dimension_logs` 
+               WHERE (`route` = ? OR `route` = ? " . ($trackerId > 0 ? "OR `tracker_id` = ?" : "") . ($resolvedFeatureId > 0 ? " OR `feature_id` = ?" : "") . ") 
+                 AND (`platform` = ? OR `platform` = 'All') 
+               ORDER BY `id` DESC LIMIT 50";
+    $lStmt = $conn->prepare($logSql);
+    if ($trackerId > 0 && $resolvedFeatureId > 0) {
+        $lStmt->bind_param("ssiis", $target, $basename, $trackerId, $resolvedFeatureId, $platform);
+    } elseif ($trackerId > 0) {
+        $lStmt->bind_param("ssis", $target, $basename, $trackerId, $platform);
+    } elseif ($resolvedFeatureId > 0) {
+        $lStmt->bind_param("ssis", $target, $basename, $resolvedFeatureId, $platform);
+    } else {
+        $lStmt->bind_param("sss", $target, $basename, $platform);
+    }
+
+    if ($lStmt) {
+        $lStmt->execute();
+        $lRes = $lStmt->get_result();
+        if ($lRes) {
+            while ($lRow = $lRes->fetch_assoc()) {
+                $dimensionAuditLogs[] = $lRow;
+                $dimKey = strtolower($lRow['dimension']);
+                if (!isset($dimensionLastUpdated[$dimKey])) {
+                    $dimensionLastUpdated[$dimKey] = [
+                        'updated_by' => $lRow['updated_by'],
+                        'old_status' => $lRow['old_status'],
+                        'new_status' => $lRow['new_status'],
+                        'created_at' => $lRow['created_at']
+                    ];
+                }
+            }
+        }
+        $lStmt->close();
+    }
+}
+
+// 6. Fetch Issue Change Audit Logs
+$issueChangeLogs = [];
+$chkChangeLogs = $conn->query("SHOW TABLES LIKE 'issues_change_logs'");
+if ($chkChangeLogs && $chkChangeLogs->num_rows > 0) {
+    $cStmt = $conn->prepare("SELECT * FROM issues_change_logs WHERE script = ? OR script = ? OR script LIKE ? " . ($resolvedFeatureId > 0 ? "OR feature_id = ? " : "") . "ORDER BY id DESC LIMIT 50");
+    $cPattern = "%$basename%";
+    if ($resolvedFeatureId > 0) {
+        $cStmt->bind_param("sssi", $target, $basename, $cPattern, $resolvedFeatureId);
+    } else {
+        $cStmt->bind_param("sss", $target, $basename, $cPattern);
+    }
+    if ($cStmt) {
+        $cStmt->execute();
+        $cRes = $cStmt->get_result();
+        if ($cRes) {
+            while ($cl = $cRes->fetch_assoc()) {
+                $issueChangeLogs[] = $cl;
+            }
+        }
+        $cStmt->close();
     }
 }
 
@@ -257,6 +324,10 @@ api_response('success', 'Page issue data retrieved successfully', [
     'platform' => $platform,
     'dimensions' => $dimensions,
     'dimension_scores' => $dimScores,
+    'dimension_last_updated' => $dimensionLastUpdated,
+    'dimension_audit_logs' => $dimensionAuditLogs,
+    'dimension_logs' => $dimensionAuditLogs,
+    'issue_change_logs' => $issueChangeLogs,
     'dim_problem_avg' => round($dimProblemAvg, 1),
     'issues' => $issuesList,
     'issue_count' => $issueCount,
@@ -267,3 +338,4 @@ api_response('success', 'Page issue data retrieved successfully', [
     'modules' => $modules,
     'features' => $features
 ], 200);
+

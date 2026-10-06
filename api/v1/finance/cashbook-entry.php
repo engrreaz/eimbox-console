@@ -185,15 +185,53 @@ switch ($method) {
             api_response('error', 'Valid transaction ID is required', null, 400);
         }
 
-        $particulars = trim($data['particulars'] ?? '');
-        $accountHead = (int)($data['account_head'] ?? 0);
-        $accountSubHead = (int)($data['account_sub_head'] ?? 0);
+        $date = trim($data['date'] ?? '');
+        $particulars = trim($data['particulars'] ?? $data['description'] ?? '');
+        $accountHead = (int)($data['account_head'] ?? $data['account_head_id'] ?? $data['head_id'] ?? 0);
+        $accountSubHead = (int)($data['account_sub_head'] ?? $data['sub_head_id'] ?? 0);
+        $amount = isset($data['amount']) ? (float)$data['amount'] : null;
+        $type = !empty($data['type']) ? ucfirst(strtolower(trim($data['type']))) : null;
+        $paymentMethod = !empty($data['payment_method']) ? strtolower(trim($data['payment_method'])) : null;
+        $bankAccountId = isset($data['bank_account_id']) ? (int)$data['bank_account_id'] : null;
+        $chequeNo = isset($data['cheque_no']) ? trim($data['cheque_no']) : null;
+        $chequeDate = !empty($data['cheque_date']) ? $data['cheque_date'] : null;
         $approvedBy = trim($data['approved_by'] ?? '');
         $status = isset($data['status']) ? (int)$data['status'] : 1;
 
-        $upd = $conn->prepare("UPDATE cashbook SET particulars = ?, account_head = ?, account_sub_head = ?, approved_by = ?, status = ?, modifieddate = NOW() WHERE id = ? AND sccode = ?");
-        $upd->bind_param("siisiii", $particulars, $accountHead, $accountSubHead, $approvedBy, $status, $id, $sccode);
-        $upd->execute();
+        if ($amount !== null && $type !== null) {
+            $income = ($type === 'Income') ? $amount : 0;
+            $expenditure = ($type === 'Expense') ? $amount : 0;
+            $month = !empty($date) ? (int)date('n', strtotime($date)) : null;
+            $year = !empty($date) ? (int)date('Y', strtotime($date)) : null;
+
+            $upd = $conn->prepare("UPDATE cashbook SET 
+                date = COALESCE(NULLIF(?, ''), date),
+                particulars = ?,
+                account_head = ?,
+                account_sub_head = ?,
+                type = ?,
+                payment_method = COALESCE(?, payment_method),
+                bank_account_id = ?,
+                cheque_no = COALESCE(?, cheque_no),
+                cheque_date = ?,
+                income = ?,
+                expenditure = ?,
+                amount = ?,
+                approved_by = ?,
+                status = ?,
+                modifieddate = NOW()
+                WHERE id = ? AND sccode = ?");
+            $upd->bind_param("ssisssissdddssiii", 
+                $date, $particulars, $accountHead, $accountSubHead, $type, $paymentMethod,
+                $bankAccountId, $chequeNo, $chequeDate, $income, $expenditure, $amount,
+                $approvedBy, $status, $id, $sccode
+            );
+            $upd->execute();
+        } else {
+            $upd = $conn->prepare("UPDATE cashbook SET particulars = ?, account_head = ?, account_sub_head = ?, approved_by = ?, status = ?, modifieddate = NOW() WHERE id = ? AND sccode = ?");
+            $upd->bind_param("siisiii", $particulars, $accountHead, $accountSubHead, $approvedBy, $status, $id, $sccode);
+            $upd->execute();
+        }
 
         api_response('success', 'Transaction updated successfully');
         break;

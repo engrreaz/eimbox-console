@@ -3,11 +3,12 @@
  * EIMBox Screen Issue & Dimension Health Modal Component
  * Displays screen dimensions health, formula-based problem %, and issue management
  */
-$isAdminUser = intval($is_admin ?? $_SESSION['isadmin'] ?? 0);
+$isAdminUser = intval($admin ?? $is_admin ?? $_SESSION['admin'] ?? $_SESSION['is_admin'] ?? $_SESSION['isadmin'] ?? 0);
 if ($isAdminUser <= 0) {
     return;
 }
 $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
+$currentUserEmail = $_SESSION['user_email'] ?? $_SESSION['email'] ?? $usr ?? 'Admin';
 ?>
 <style>
 .eimbox-floating-wrap {
@@ -144,7 +145,7 @@ $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
                                 <option value="Console" selected>Console</option>
                                 <option value="Dashboard">Dashboard</option>
                                 <option value="Android Lite">Android Lite</option>
-                                <option value="Android Premium">Android Premium</option>
+                                <option value="Android Native">Android Native</option>
                                 <option value="Desktop">Desktop</option>
                             </select>
                         </div>
@@ -262,6 +263,22 @@ $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
                             </div>
                             <textarea id="eimbox-dimension-notes" class="form-control form-control-sm py-1 px-2" rows="1" style="font-size: 11px; border-radius: 6px;" placeholder="Write any specific technical or functional notes here..." onblur="eimboxSaveNotes()"></textarea>
                         </div>
+
+                        <!-- Dimension Audit Trail / Change History (Collapsible) -->
+                        <div class="mt-2 card border bg-white shadow-xs p-2" style="border-radius: 8px;">
+                            <div class="d-flex justify-content-between align-items-center cursor-pointer" onclick="eimboxToggleAuditLogs()" style="cursor: pointer;">
+                                <span class="fw-bold small text-dark d-flex align-items-center gap-1" style="font-size: 11px;">
+                                    <i class="bi bi-clock-history text-primary"></i> Dimension Modification History / Audit Log
+                                    <span id="eimbox-audit-badge" class="badge bg-secondary bg-opacity-10 text-secondary border ms-1" style="font-size: 9.5px;">0 logs</span>
+                                </span>
+                                <i class="bi bi-chevron-down text-muted" id="eimbox-audit-toggle-icon" style="font-size: 11px; transition: transform 0.2s ease;"></i>
+                            </div>
+                            <div id="eimbox-audit-panel" class="mt-2 pt-2 border-top" style="display: none; max-height: 180px; overflow-y: auto;">
+                                <div id="eimbox-audit-logs-list" class="small text-muted" style="font-size: 10.5px;">
+                                    <em>No dimension changes recorded yet.</em>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- TAB 2: ISSUES -->
@@ -360,6 +377,7 @@ $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
 <script>
 const EIMBOX_ISSUE_CONFIG = {
     script: "<?= $currentScript ?>",
+    userEmail: "<?= htmlspecialchars($currentUserEmail) ?>",
     apiBase: "issues/",
     featureId: 0,
     featureName: "",
@@ -389,9 +407,13 @@ const EIMBOX_ISSUE_CONFIG = {
 let eimboxCurrentIssueData = null;
 
 // Initialize on page ready
-document.addEventListener("DOMContentLoaded", function () {
+if (document.readyState === 'loading') {
+    document.addEventListener("DOMContentLoaded", function () {
+        eimboxLoadPageIssues(false);
+    });
+} else {
     eimboxLoadPageIssues(false);
-});
+}
 
 function eimboxOpenIssueModal() {
     const modalEl = document.getElementById('eimboxIssueTrackerModal');
@@ -659,6 +681,9 @@ function eimboxRenderDimensions(data) {
     if (!container) return;
 
     const dims = data.dimensions || {};
+    const lastUpdated = data.dimension_last_updated || {};
+    const auditLogs = data.dimension_audit_logs || [];
+
     const notesEl = document.getElementById('eimbox-dimension-notes');
     if (notesEl) notesEl.value = dims.notes || '';
 
@@ -680,17 +705,22 @@ function eimboxRenderDimensions(data) {
     EIMBOX_ISSUE_CONFIG.dimensions.forEach(d => {
         const val = dims[d.key] || 'Not Tested';
         const badgeClass = eimboxGetStatusBadgeClass(val);
+        const lastUp = lastUpdated[d.key.toLowerCase()] || null;
+        const auditInfo = lastUp ? `Modified by: ${lastUp.updated_by || 'Unknown'} (${lastUp.created_at}) [${lastUp.old_status} ➔ ${lastUp.new_status}]` : 'Not modified yet';
 
         html += `
         <div class="col">
-            <div class="eimbox-dim-tile h-100 d-flex flex-column justify-content-between">
-                <!-- Top: Icon & Label -->
-                <div class="d-flex align-items-center gap-1 text-truncate mb-1" title="${d.label}: ${val}">
-                    <i class="bi ${d.icon} text-primary" style="font-size: 11.5px; flex-shrink: 0;"></i>
-                    <span class="fw-bold text-truncate" style="font-size: 10px; line-height: 1.2;">
-                        <span class="d-none d-lg-inline">${d.label}</span>
-                        <span class="d-inline d-lg-none">${d.short}</span>
-                    </span>
+            <div class="eimbox-dim-tile h-100 d-flex flex-column justify-content-between" title="${d.label}: ${val} • ${auditInfo}">
+                <!-- Top: Icon & Label & Modifier Indicator -->
+                <div class="d-flex align-items-center justify-content-between text-truncate mb-1">
+                    <div class="d-flex align-items-center gap-1 text-truncate">
+                        <i class="bi ${d.icon} text-primary" style="font-size: 11.5px; flex-shrink: 0;"></i>
+                        <span class="fw-bold text-truncate" style="font-size: 10px; line-height: 1.2;">
+                            <span class="d-none d-lg-inline">${d.label}</span>
+                            <span class="d-inline d-lg-none">${d.short}</span>
+                        </span>
+                    </div>
+                    ${lastUp ? `<i class="bi bi-person-check-fill text-info opacity-75" style="font-size: 9px;" title="${auditInfo}"></i>` : ''}
                 </div>
                 <!-- Bottom: Compact Select Dropdown -->
                 <select class="form-select form-select-sm fw-bold eimbox-dim-select ${badgeClass}" 
@@ -707,6 +737,72 @@ function eimboxRenderDimensions(data) {
     });
 
     container.innerHTML = html;
+    eimboxRenderAuditLogs(auditLogs);
+}
+
+function eimboxToggleAuditLogs() {
+    const panel = document.getElementById('eimbox-audit-panel');
+    const icon = document.getElementById('eimbox-audit-toggle-icon');
+    if (!panel) return;
+    const isHidden = panel.style.display === 'none';
+    panel.style.display = isHidden ? 'block' : 'none';
+    if (icon) {
+        icon.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+    }
+}
+
+function eimboxRenderAuditLogs(logs) {
+    const listEl = document.getElementById('eimbox-audit-logs-list');
+    const badgeEl = document.getElementById('eimbox-audit-badge');
+    if (!listEl) return;
+
+    if (badgeEl) {
+        badgeEl.innerText = `${(logs || []).length} log${(logs || []).length === 1 ? '' : 's'}`;
+    }
+
+    if (!logs || logs.length === 0) {
+        listEl.innerHTML = `<div class="text-muted text-center py-2"><em>No dimension modifications recorded yet.</em></div>`;
+        return;
+    }
+
+    let html = `<div class="table-responsive"><table class="table table-sm table-borderless align-middle mb-0" style="font-size: 10.5px;">
+        <thead>
+            <tr class="text-muted border-bottom" style="font-size: 9.5px;">
+                <th>Dimension</th>
+                <th>Change</th>
+                <th>Updated By</th>
+                <th class="text-end">Timestamp</th>
+            </tr>
+        </thead>
+        <tbody>`;
+
+    logs.forEach(log => {
+        const dimObj = EIMBOX_ISSUE_CONFIG.dimensions.find(d => d.key.toLowerCase() === (log.dimension || '').toLowerCase());
+        const dimLbl = dimObj ? dimObj.label : log.dimension;
+        const oldBadge = eimboxGetStatusBadgeClass(log.old_status);
+        const newBadge = eimboxGetStatusBadgeClass(log.new_status);
+
+        html += `
+        <tr class="border-bottom border-light">
+            <td class="fw-semibold text-dark text-nowrap">
+                <i class="bi ${dimObj ? dimObj.icon : 'bi-circle'} text-primary me-1"></i>${dimLbl}
+            </td>
+            <td class="text-nowrap">
+                <span class="badge ${oldBadge}" style="font-size: 8.5px;">${log.old_status}</span>
+                <i class="bi bi-arrow-right mx-0.5 text-muted" style="font-size: 8.5px;"></i>
+                <span class="badge ${newBadge}" style="font-size: 8.5px;">${log.new_status}</span>
+            </td>
+            <td class="text-truncate" style="max-width: 140px;" title="${log.updated_by || 'Unknown'}">
+                <i class="bi bi-person-fill text-secondary me-0.5"></i>${log.updated_by || 'Unknown'}
+            </td>
+            <td class="text-end text-muted text-nowrap" style="font-size: 9.5px;">
+                ${log.created_at || ''}
+            </td>
+        </tr>`;
+    });
+
+    html += `</tbody></table></div>`;
+    listEl.innerHTML = html;
 }
 
 let eimboxAutosaveTimer = null;
@@ -789,13 +885,20 @@ function eimboxChangeDimensionBadge(selectEl) {
             feature_id: EIMBOX_ISSUE_CONFIG.featureId || null,
             platform: platform,
             dimension: dimKey,
-            status: val
+            status: val,
+            updated_by: EIMBOX_ISSUE_CONFIG.userEmail
         })
     })
     .then(res => res.json())
     .then(res => {
         if (res.status === 'success') {
             eimboxShowAutosaveStatus('saved', 'Auto-saved ✓');
+            if (res.data && res.data.audit_logs) {
+                if (eimboxCurrentIssueData) {
+                    eimboxCurrentIssueData.dimension_audit_logs = res.data.audit_logs;
+                }
+                eimboxRenderAuditLogs(res.data.audit_logs);
+            }
         } else {
             eimboxShowAutosaveStatus('error', res.message || 'Save failed');
             console.error('Dimension save error:', res.message);
@@ -835,13 +938,20 @@ function eimboxMarkAllDimensionsOK() {
             route: EIMBOX_ISSUE_CONFIG.script,
             feature_id: EIMBOX_ISSUE_CONFIG.featureId || null,
             platform: platform,
-            dimensions: allDims
+            dimensions: allDims,
+            updated_by: EIMBOX_ISSUE_CONFIG.userEmail
         })
     })
     .then(r => r.json())
     .then(res => {
         if (res.status === 'success') {
             eimboxShowAutosaveStatus('saved', 'All 18 dimensions OK');
+            if (res.data && res.data.audit_logs) {
+                if (eimboxCurrentIssueData) {
+                    eimboxCurrentIssueData.dimension_audit_logs = res.data.audit_logs;
+                }
+                eimboxRenderAuditLogs(res.data.audit_logs);
+            }
         } else {
             eimboxShowAutosaveStatus('error', res.message || 'Error updating');
         }
@@ -866,7 +976,8 @@ function eimboxSaveNotes() {
             route: EIMBOX_ISSUE_CONFIG.script,
             feature_id: EIMBOX_ISSUE_CONFIG.featureId || null,
             platform: platform,
-            notes: notes
+            notes: notes,
+            updated_by: EIMBOX_ISSUE_CONFIG.userEmail
         })
     })
     .then(res => res.json())
@@ -978,16 +1089,20 @@ function eimboxRenderIssues(data) {
             
             <p class="mb-2 text-secondary small">${iss.issues || 'No description provided'}</p>
 
-            <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top">
-                <div class="d-flex align-items-center gap-2 w-50">
+            <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-2" style="min-width: 140px;">
                     <span class="small text-muted" style="font-size: 11px;">Progress:</span>
-                    <div class="progress flex-grow-1" style="height: 6px;">
+                    <div class="progress" style="height: 6px; width: 60px;">
                         <div class="progress-bar bg-success" style="width: ${iss.progress_percent || 0}%;"></div>
                     </div>
                     <span class="small fw-bold" style="font-size: 11px;">${iss.progress_percent || 0}%</span>
                 </div>
-                <div class="small text-muted" style="font-size: 11px;">
-                    <i class="bi bi-person me-1"></i>${iss.assigned_to || 'Unassigned'}
+                <div class="small text-muted d-flex align-items-center gap-2" style="font-size: 10.5px;">
+                    <span><i class="bi bi-person me-1"></i>${iss.assigned_to || 'Unassigned'}</span>
+                    ${(iss.created_by || iss.modified_by) ? `
+                    <span class="text-secondary opacity-75" title="Logged by: ${iss.created_by || ''} • Modified by: ${iss.modified_by || ''}">
+                        • <i class="bi bi-envelope-at me-0.5"></i>${iss.modified_by || iss.created_by}
+                    </span>` : ''}
                 </div>
             </div>
         </div>`;
@@ -1043,6 +1158,8 @@ function eimboxSaveIssue() {
         priority: document.getElementById('eimbox-issue-priority').value,
         progress_percent: parseInt(document.getElementById('eimbox-issue-progress').value) || 0,
         assigned_to: document.getElementById('eimbox-issue-assignee').value,
+        created_by: EIMBOX_ISSUE_CONFIG.userEmail,
+        modified_by: EIMBOX_ISSUE_CONFIG.userEmail,
         platform: platform,
         script: EIMBOX_ISSUE_CONFIG.script
     };
