@@ -210,16 +210,33 @@ $stmtPr->close();
 
 $lastPr = count($paymentHistory) > 0 ? $paymentHistory[0] : null;
 
-// Compute Next Receipt Number suggestion
-$suggestedPrNo = null;
-if ($lastPr && !empty($lastPr['prno'])) {
-    $suggestedPrNo = intval($lastPr['prno']) + 1;
-} else {
-    // Generate base PR from year + stid suffix
-    $shortYear = date('y');
-    $numericSuffix = intval(substr($stid, -4)) ?: 1;
-    $suggestedPrNo = intval($shortYear . sprintf("%04d", $numericSuffix) . '01');
+// Compute Next Receipt Number suggestion following YYSTIDSL (8-digit) standard:
+// First 2 digits: current Year (YY)
+// Next 4 digits: Student ID's last 4 digits (STID)
+// Last 2 digits: Student's last receipt no 2 digits + 1 (SL)
+$shortYear = date('y');
+$stidStr = trim((string)$stid);
+$stidSuffix = sprintf("%04d", intval(substr($stidStr, -4)) ?: 1);
+$prefix = $shortYear . $stidSuffix;
+
+$nextSl = 1;
+if (!empty($paymentHistory)) {
+    foreach ($paymentHistory as $pr) {
+        $prStr = trim((string)($pr['prno'] ?? ''));
+        if (str_starts_with($prStr, $prefix) && strlen($prStr) === 8) {
+            $sl = intval(substr($prStr, -2));
+            if ($sl >= $nextSl) {
+                $nextSl = $sl + 1;
+            }
+        } elseif (strlen($prStr) >= 2) {
+            $sl = intval(substr($prStr, -2));
+            if ($sl >= $nextSl) {
+                $nextSl = $sl + 1;
+            }
+        }
+    }
 }
+$suggestedPrNo = intval($prefix . sprintf("%02d", $nextSl));
 
 api_response('success', 'Student dues loaded successfully.', [
     'student' => [

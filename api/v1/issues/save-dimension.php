@@ -9,8 +9,8 @@ $input = get_api_input();
 $route = trim($input['route'] ?? $input['script'] ?? '');
 $title = trim($input['title'] ?? basename($route));
 $featureId = !empty($input['feature_id']) ? (int)$input['feature_id'] : null;
-$platform = trim($input['platform'] ?? 'All');
-if (empty($platform)) $platform = 'All';
+$platform = trim($input['platform'] ?? 'Desktop');
+if (empty($platform)) $platform = 'Desktop';
 $notes = trim($input['notes'] ?? '');
 $userEmail = $_SESSION['user_email'] ?? $_SESSION['email'] ?? $input['updated_by'] ?? $input['user'] ?? 'Admin';
 
@@ -48,7 +48,7 @@ $conn->query("CREATE TABLE IF NOT EXISTS `issues_dimension_logs` (
   `tracker_id` INT(11) DEFAULT NULL,
   `feature_id` INT(11) DEFAULT NULL,
   `route` VARCHAR(255) NOT NULL,
-  `platform` VARCHAR(50) NOT NULL DEFAULT 'All',
+  `platform` VARCHAR(50) NOT NULL DEFAULT 'Desktop',
   `dimension` VARCHAR(50) NOT NULL,
   `old_status` VARCHAR(50) DEFAULT 'Not Tested',
   `new_status` VARCHAR(50) NOT NULL,

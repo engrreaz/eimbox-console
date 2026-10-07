@@ -337,15 +337,96 @@ foreach ($transactions as $tx) {
                 throw new Exception("Unauthorized table for generic push: {$targetTable}");
             }
 
+            // Ensure special tables exist on remote MySQL if needed
+            if ($targetTable === 'issues_dimension_logs') {
+                $conn->query("CREATE TABLE IF NOT EXISTS `issues_dimension_logs` (
+                  `id` INT(11) NOT NULL AUTO_INCREMENT,
+                  `tracker_id` INT(11) DEFAULT NULL,
+                  `feature_id` INT(11) DEFAULT NULL,
+                  `route` VARCHAR(255) NOT NULL,
+                  `platform` VARCHAR(50) NOT NULL DEFAULT 'Desktop',
+                  `dimension` VARCHAR(50) NOT NULL,
+                  `old_status` VARCHAR(50) DEFAULT 'Not Tested',
+                  `new_status` VARCHAR(50) NOT NULL,
+                  `updated_by` VARCHAR(100) NOT NULL,
+                  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                  PRIMARY KEY (`id`),
+                  INDEX `idx_dim_tracker` (`tracker_id`),
+                  INDEX `idx_dim_route_plat` (`route`, `platform`),
+                  INDEX `idx_dim_created` (`created_at`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+            } elseif ($targetTable === 'issues_change_logs') {
+                $conn->query("CREATE TABLE IF NOT EXISTS `issues_change_logs` (
+                  `id` INT(11) NOT NULL AUTO_INCREMENT,
+                  `issue_id` INT(11) NOT NULL,
+                  `feature_id` INT(11) DEFAULT NULL,
+                  `module` VARCHAR(100) DEFAULT NULL,
+                  `feature` VARCHAR(150) DEFAULT NULL,
+                  `script` VARCHAR(255) DEFAULT NULL,
+                  `platform` VARCHAR(50) NOT NULL DEFAULT 'Desktop',
+                  `action` VARCHAR(50) NOT NULL,
+                  `old_status` VARCHAR(50) DEFAULT NULL,
+                  `new_status` VARCHAR(50) DEFAULT NULL,
+                  `old_progress` INT(11) DEFAULT NULL,
+                  `new_progress` INT(11) DEFAULT NULL,
+                  `changes_summary` TEXT DEFAULT NULL,
+                  `updated_by` VARCHAR(100) NOT NULL,
+                  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                  PRIMARY KEY (`id`),
+                  INDEX `idx_chg_issue_id` (`issue_id`),
+                  INDEX `idx_chg_feature_id` (`feature_id`),
+                  INDEX `idx_chg_script_plat` (`script`, `platform`),
+                  INDEX `idx_chg_created` (`created_at`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+            } elseif ($targetTable === 'screen_issues') {
+                $conn->query("CREATE TABLE IF NOT EXISTS `screen_issues` (
+                  `id` INT(11) NOT NULL AUTO_INCREMENT,
+                  `feature_id` INT(11) DEFAULT NULL,
+                  `module` VARCHAR(100) DEFAULT NULL,
+                  `feature` VARCHAR(150) DEFAULT NULL,
+                  `script` VARCHAR(255) DEFAULT NULL,
+                  `platform` VARCHAR(50) NOT NULL DEFAULT 'Desktop',
+                  `screen_title` VARCHAR(100) DEFAULT NULL,
+                  `topic` VARCHAR(255) DEFAULT NULL,
+                  `issues` TEXT DEFAULT NULL,
+                  `response` TEXT DEFAULT NULL,
+                  `status` VARCHAR(50) NOT NULL DEFAULT 'Open',
+                  `priority` VARCHAR(50) NOT NULL DEFAULT 'Medium',
+                  `progress_percent` INT(11) NOT NULL DEFAULT 0,
+                  `assigned_to` VARCHAR(100) DEFAULT NULL,
+                  `created_by` VARCHAR(100) DEFAULT NULL,
+                  `modified_by` VARCHAR(100) DEFAULT NULL,
+                  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                  PRIMARY KEY (`id`),
+                  INDEX `idx_screen_script` (`script`),
+                  INDEX `idx_screen_plat` (`platform`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+            }
+
             $rowRecord = $payload['record'] ?? $payload['data'] ?? $payload;
-            unset($rowRecord['table'], $rowRecord['local_id'], $rowRecord['sync_status']);
+            unset($rowRecord['table'], $rowRecord['local_id'], $rowRecord['sync_status'], $rowRecord['is_synced']);
+
+            // Query actual column list of target table
+            static $tableColumnsCache = [];
+            if (!isset($tableColumnsCache[$targetTable])) {
+                $colRes = $conn->query("SHOW COLUMNS FROM `{$targetTable}`");
+                $cols = [];
+                if ($colRes) {
+                    while ($cRow = $colRes->fetch_assoc()) {
+                        $cols[] = $cRow['Field'];
+                    }
+                }
+                $tableColumnsCache[$targetTable] = $cols;
+            }
+            $existingCols = $tableColumnsCache[$targetTable];
 
             $noSccodeTables = [
                 'notice_category', 'ben_address', 'permissions_role', 'account_head_default', 'account_sub_head_default',
                 'app_releases', 'app_roadmap', 'faq_desktop', 'issues_tracker', 'features', 'modulelist',
                 'eimbox_features', 'screen_issues', 'issues_dimension_logs', 'issues_change_logs'
             ];
-            if (!in_array($targetTable, $noSccodeTables)) {
+            if (!in_array($targetTable, $noSccodeTables) && in_array('sccode', $existingCols)) {
                 $rowRecord['sccode'] = $sccode;
             }
 
@@ -357,7 +438,107 @@ foreach ($transactions as $tx) {
                 }
             }
 
-            $rowRecord['modifieddate'] = date('Y-m-d H:i:s');
+            // Handle student photo Base64 decoding & disk writing (students/[sccode]/[stid].jpg)
+            if ($targetTable === 'students') {
+                $rawPhoto = $rowRecord['photo_path'] ?? '';
+                $studentStid = trim($rowRecord['stid'] ?? '');
+                if (!empty($rawPhoto) && !empty($studentStid) && (str_starts_with($rawPhoto, 'data:image/') || strlen($rawPhoto) > 255)) {
+                    try {
+                        $binData = null;
+                        if (str_contains($rawPhoto, ';base64,')) {
+                            $parts = explode(';base64,', $rawPhoto);
+                            $binData = base64_decode($parts[1]);
+                        } else {
+                            $binData = base64_decode($rawPhoto);
+                        }
+
+                        if ($binData !== false && strlen($binData) > 10) {
+                            $rootDir = dirname(dirname(dirname(__DIR__)));
+                            // Canonical path: students/[sccode]/[stid].jpg
+                            $scFolder = $rootDir . '/students/' . $sccode;
+                            if (!is_dir($scFolder)) @mkdir($scFolder, 0777, true);
+                            @file_put_contents($scFolder . '/' . $studentStid . '.jpg', $binData);
+                        }
+                    } catch (\Throwable $e) {
+                        error_log("[BatchPush] Student photo write error: " . $e->getMessage());
+                    }
+                    $rowRecord['photo_path'] = "students/{$sccode}/{$studentStid}.jpg";
+                    $rowRecord['photo_id'] = "{$studentStid}.jpg";
+                }
+            }
+
+            // Handle teacher photo & signature Base64 decoding & disk writing
+            if ($targetTable === 'teacher') {
+                $rawPhoto = $rowRecord['photo_path'] ?? $rowRecord['photo'] ?? '';
+                $teacherTid = trim($rowRecord['tid'] ?? $rowRecord['id'] ?? '');
+                if (!empty($rawPhoto) && !empty($teacherTid) && (str_starts_with($rawPhoto, 'data:image/') || strlen($rawPhoto) > 255)) {
+                    try {
+                        $binData = null;
+                        if (str_contains($rawPhoto, ';base64,')) {
+                            $parts = explode(';base64,', $rawPhoto);
+                            $binData = base64_decode($parts[1]);
+                        } else {
+                            $binData = base64_decode($rawPhoto);
+                        }
+
+                        if ($binData !== false && strlen($binData) > 10) {
+                            $rootDir = dirname(dirname(dirname(__DIR__)));
+                            // Canonical path: teacher/[sccode]/[tid].jpg
+                            $scTeacherFolder = $rootDir . '/teacher/' . $sccode;
+                            if (!is_dir($scTeacherFolder)) @mkdir($scTeacherFolder, 0777, true);
+                            @file_put_contents($scTeacherFolder . '/' . $teacherTid . '.jpg', $binData);
+                        }
+                    } catch (\Throwable $e) {
+                        error_log("[BatchPush] Teacher photo write error: " . $e->getMessage());
+                    }
+                    $rowRecord['photo_path'] = "teacher/{$sccode}/{$teacherTid}.jpg";
+                    if (isset($rowRecord['photo'])) $rowRecord['photo'] = "{$teacherTid}.jpg";
+                }
+
+                $rawSign = $rowRecord['sign_path'] ?? $rowRecord['sign'] ?? '';
+                if (!empty($rawSign) && !empty($teacherTid) && (str_starts_with($rawSign, 'data:image/') || strlen($rawSign) > 255)) {
+                    try {
+                        $binSignData = null;
+                        if (str_contains($rawSign, ';base64,')) {
+                            $parts = explode(';base64,', $rawSign);
+                            $binSignData = base64_decode($parts[1]);
+                        } else {
+                            $binSignData = base64_decode($rawSign);
+                        }
+
+                        if ($binSignData !== false && strlen($binSignData) > 10) {
+                            $rootDir = dirname(dirname(dirname(__DIR__)));
+                            // Canonical path: sign/[sccode]/[tid].png
+                            $scSignFolder = $rootDir . '/sign/' . $sccode;
+                            if (!is_dir($scSignFolder)) @mkdir($scSignFolder, 0777, true);
+                            @file_put_contents($scSignFolder . '/' . $teacherTid . '.png', $binSignData);
+                        }
+                    } catch (\Throwable $e) {
+                        error_log("[BatchPush] Teacher signature write error: " . $e->getMessage());
+                    }
+                    $rowRecord['sign_path'] = "sign/{$sccode}/{$teacherTid}.png";
+                    if (isset($rowRecord['sign'])) $rowRecord['sign'] = "{$teacherTid}.png";
+                }
+            }
+
+            if (in_array('modifieddate', $existingCols)) {
+                $rowRecord['modifieddate'] = date('Y-m-d H:i:s');
+            } elseif (in_array('updated_at', $existingCols)) {
+                $rowRecord['updated_at'] = date('Y-m-d H:i:s');
+            }
+
+            // Filter rowRecord to only include valid existing columns in MySQL
+            if (!empty($existingCols)) {
+                $rowRecord = array_filter(
+                    $rowRecord,
+                    fn($key) => in_array($key, $existingCols),
+                    ARRAY_FILTER_USE_KEY
+                );
+            }
+
+            if (empty($rowRecord)) {
+                throw new Exception("No valid fields to upsert for table {$targetTable}");
+            }
 
             $existingId = intval($rowRecord['id'] ?? 0);
             $fields = array_keys($rowRecord);
