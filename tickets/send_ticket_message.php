@@ -26,5 +26,11 @@ $stmt->bind_param("iis", $ticket_id, $user_id, $message);
 $stmt->execute();
 $stmt->close();
 
+// টিকেট আপডেট
+$update = $conn->prepare("UPDATE tickets SET status = 'in_progress', modifieddate = NOW() WHERE id = ?");
+$update->bind_param("i", $ticket_id);
+$update->execute();
+$update->close();
+
 echo "sent";
 ?>

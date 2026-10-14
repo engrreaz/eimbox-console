@@ -12,11 +12,11 @@ if ($type === 'Income') {
     $where_type = "s.expenditure = 1";
 }
 
-$sql = "SELECT s.id, s.sub_head, s.account_head_id, COALESCE(h.account_head, 'Unassigned') AS account_head
+$sql = "SELECT s.id, s.sub_head, s.account_head_id, COALESCE(h.head_name, 'Unassigned') AS account_head
         FROM account_sub_head s
         LEFT JOIN account_head h ON s.account_head_id = h.id
         WHERE s.sccode = '$sccode' AND $where_type
-        ORDER BY h.account_head ASC, s.sub_head ASC";
+        ORDER BY account_head ASC, s.sub_head ASC";
 
 $res = $conn->query($sql);
 

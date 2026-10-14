@@ -29,9 +29,15 @@ if (!$ticket || ($ticket['user_id'] != $user_id && $ticket['sccode'] != $sccode 
     exit("<div class='text-danger p-2'>Access denied!</div>");
 }
 
-// মেসেজ লোড
-$q = $conn->prepare("SELECT * FROM ticket_messages WHERE ticket_id=? ORDER BY id DESC");
-$q->bind_param("i", $ticket_id);
+// মেসেজ লোড (ইন্টারনাল নোট শুধুমাত্র অ্যাডমিনদের দৃশ্যমান)
+$canSeeInternal = ($userlevel == 'Administrator' || $userlevel == 'Super Administrator' || $userlevel == 'Chief');
+if ($canSeeInternal) {
+    $q = $conn->prepare("SELECT * FROM ticket_messages WHERE ticket_id=? ORDER BY id ASC");
+    $q->bind_param("i", $ticket_id);
+} else {
+    $q = $conn->prepare("SELECT * FROM ticket_messages WHERE ticket_id=? AND notes=0 ORDER BY id ASC");
+    $q->bind_param("i", $ticket_id);
+}
 $q->execute();
 $res = $q->get_result();
 

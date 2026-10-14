@@ -231,6 +231,24 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
 
                     ?>
 
+                    <?php if (!empty($GLOBALS['PLATFORM_READ_ONLY_ACTIVE'])): ?>
+                        <div class="container no-print mb-2">
+                            <div style="background-color: #1E293B; color: #38BDF8; font-size: 0.82rem; padding: 8px 16px; border-radius: 8px; border: 1px solid #334155; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                <i class="ri-eye-line"></i>
+                                <span>Read-Only Mode Active &mdash; Modifications temporarily paused</span>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if (!empty($GLOBALS['PLATFORM_MAINTENANCE_ADMIN_BYPASS'])): ?>
+                        <div class="container no-print mb-2">
+                            <div style="background-color: #451A03; color: #FDE047; font-size: 0.82rem; padding: 8px 16px; border-radius: 8px; border: 1px solid #78350F; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                <i class="ri-shield-alert-line"></i>
+                                <span>Maintenance Mode Active (Administrator Bypass Enabled)</span>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+
                     <div class=" container pt-0 pb-0 no-print">
                         <div class="divider divider-primary m-0 p-0"
                             style="--bs-divider-color:<?php echo $release_colors[$page_status]; ?>;">

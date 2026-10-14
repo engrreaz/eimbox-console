@@ -155,7 +155,7 @@ try {
                         WHERE sccode = ? 
                           AND sessionyear LIKE ? 
                           AND stid = ? 
-                          AND month = ? 
+                          AND month <= ? 
                           AND dues > 0 
                         ORDER BY month ASC, id ASC";
         $settleStmt = $conn->prepare($settleQuery);
@@ -172,7 +172,9 @@ try {
         $settleStmt = $conn->prepare($settleQuery);
         $settleStmt->bind_param("isis", $sccode, $syPattern, $stid, $currMonth);
     }
-    $settleStmt->execute();
+    // error_log("Settle Query: " . $settleQuery);
+    // error_log("Settle Parameters: " . implode(", ", [$sccode, $syPattern, $stid, $currMonth]));
+    $settleStmt->execute(); 
     $settleRes = $settleStmt->get_result();
 
     // 8.1 Generate PRNO for Student in this Session
@@ -229,13 +231,15 @@ try {
                       `$prDateField` = ?, 
                       `$prByField` = 'bKash' 
                   WHERE id = ? AND sccode = ?";
+                //   error_log("query : " . $upSql);
+                //   error_log("bind_param : " . $payForThisItem . ", " . $payForThisItem . ", " . $payForThisItem . ", " . $intPrNo . ", " . $payDateFormatted . ", " . $fId . ", " . $sccode);
         $upStmt = $conn->prepare($upSql);
         $intPrNo = (int)$newPrNo;
         $upStmt->bind_param("dddisii", $payForThisItem, $payForThisItem, $payForThisItem, $intPrNo, $payDateFormatted, $fId, $sccode);
         $upStmt->execute();
         $upStmt->close();
 
-        $remainingToPay -= $payForThisItem;
+        $remainingToPay -= $payForThisItem; 
         $updatedCount++;
     }
     $settleStmt->close();

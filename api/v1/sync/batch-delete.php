@@ -99,7 +99,7 @@ foreach ($deletions as $del) {
 
         // 2. Record in tombstones table
         if ($tombStmt) {
-            $tombStmt->bind_param('isis', $sccode, $tbl, $serverId, $localId, $deletedBy);
+            $tombStmt->bind_param('isiss', $sccode, $tbl, $serverId, $localId, $deletedBy);
             $tombStmt->execute();
         }
 

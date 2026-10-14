@@ -209,7 +209,6 @@ $chain = ''; // Slot -> Session -> Class -> Section chain holder
 $eimbox_panels = ['Admin', 'Teacher', 'Guardian', 'Student', 'Guest', 'SMC', 'Guest'];
 
 
-
 // $_SESSION['first_name'] . '/ ' .
 // $_SESSION['last_name'] . '/ ' .
 // $_SESSION['phone'] . '/ ' .

@@ -3,7 +3,17 @@ session_start();
 require_once 'core/config.php';
 require_once 'core/db.php';
 require_once 'core/core-val.php';
+require_once 'core/PlatformGuard.php';
 
+$platformStatus = MaterioPlatformGuard::getStatus($conn);
+if ($platformStatus['status'] === 'isolated') {
+    MaterioPlatformGuard::renderScreen(503, 'isolated', $platformStatus);
+    exit;
+}
+if ($platformStatus['status'] === 'maintenance') {
+    MaterioPlatformGuard::renderScreen(503, 'maintenance', $platformStatus);
+    exit;
+}
 
 $reg = $_SESSION['student_reg'] ?? null;
 

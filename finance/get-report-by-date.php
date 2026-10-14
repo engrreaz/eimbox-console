@@ -142,7 +142,7 @@ $slot_filter = ($slot !== '' && $slot !== 'All') ? " AND (c.slots = '$slot' OR c
 if ($type === 1) {
     // টাইপ ১: Detailed Transaction Ledger View (Sanctioned Vouchers Only)
     $sql_rep = "SELECT c.*, 
-                       COALESCE(h.account_head, 'Unassigned') AS main_head_name,
+                       COALESCE(h.head_name, 'Unassigned') AS main_head_name,
                        COALESCE(s.sub_head, c.particulars, 'General') AS sub_head_name
                 FROM cashbook c
                 LEFT JOIN account_sub_head s ON (c.account_sub_head = s.id OR c.partid = s.id)
@@ -154,7 +154,7 @@ if ($type === 1) {
 } elseif ($type === 0) {
     // টাইপ ০: Head-wise & Sub-Head Summary View (Sanctioned Vouchers Only)
     $sql_rep = "SELECT COALESCE(h.id, 0) AS head_id,
-                       COALESCE(h.account_head, 'General / Unassigned') AS main_head_name,
+                       COALESCE(h.head_name, 'General / Unassigned') AS main_head_name,
                        COALESCE(s.sub_head, 'General Items') AS sub_head_name,
                        SUM(c.income) AS total_income,
                        SUM(c.expenditure) AS total_expense,
@@ -166,7 +166,7 @@ if ($type === 1) {
                 WHERE c.sccode = '$sccode' 
                 AND c.status = 1 
                 AND $period_where $slot_filter
-                GROUP BY h.id, h.account_head, s.id, s.sub_head
+                GROUP BY h.id, h.head_name, s.id, s.sub_head
                 ORDER BY main_head_name ASC, sub_head_name ASC";
 } else {
     // টাইপ ২: Date-wise Daily Summary View (Sanctioned Vouchers Only)

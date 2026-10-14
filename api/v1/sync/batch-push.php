@@ -182,17 +182,28 @@ foreach ($transactions as $tx) {
             $emptyTxt = '';
             $zeroVal = 0;
 
-            $insPr = $conn->prepare("INSERT INTO stpr (
-                sessionyear, sccode, classname, sectionname, stid, rollno, prno, prdate, partid, peng, pben, amount, entryby, entrytime, smstxt, smscnt, mobileno, smsstatus, statusvalue, collection_media, modifieddate
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, NOW())");
-            $insPr->bind_param('iisssisissdsisssiss', 
-                $sessionyear, $sccode, $cls, $sec, $stid, $rollno, $prno, $prdate, 
-                $zeroVal, $pengStr, $pbenStr, $totalPaid, $entryby, 
-                $emptyTxt, $zeroVal, $mobile, $zeroVal, $emptyTxt, $collectionMedia
-            );
-            $insPr->execute();
-            $assignedServerId = $conn->insert_id;
-            $insPr->close();
+            // Check if PR already exists to prevent duplicate ingestion loops
+            $chkPrStmt = $conn->prepare("SELECT id FROM stpr WHERE sccode = ? AND prno = ? LIMIT 1");
+            $chkPrStmt->bind_param('is', $sccode, $prno);
+            $chkPrStmt->execute();
+            $existingPrRow = $chkPrStmt->get_result()->fetch_assoc();
+            $chkPrStmt->close();
+
+            if ($existingPrRow && !empty($existingPrRow['id'])) {
+                $assignedServerId = intval($existingPrRow['id']);
+            } else {
+                $insPr = $conn->prepare("INSERT INTO stpr (
+                    sessionyear, sccode, classname, sectionname, stid, rollno, prno, prdate, partid, peng, pben, amount, entryby, entrytime, smstxt, smscnt, mobileno, smsstatus, statusvalue, collection_media, modifieddate
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, NOW())");
+                $insPr->bind_param('iisssisissdsisssiss', 
+                    $sessionyear, $sccode, $cls, $sec, $stid, $rollno, $prno, $prdate, 
+                    $zeroVal, $pengStr, $pbenStr, $totalPaid, $entryby, 
+                    $emptyTxt, $zeroVal, $mobile, $zeroVal, $emptyTxt, $collectionMedia
+                );
+                $insPr->execute();
+                $assignedServerId = $conn->insert_id;
+                $insPr->close();
+            }
 
             $upSess = $conn->prepare("UPDATE sessioninfo SET lastpr = ? WHERE sccode = ? AND stid = ? AND sessionyear LIKE ?");
             $sessLike = "%$sessionyear%";
@@ -211,54 +222,58 @@ foreach ($transactions as $tx) {
             $fullmark = intval($payload['fullmark'] ?? 100);
             $marks = $payload['marks'] ?? [];
 
-            foreach ($marks as $m) {
-                $stid = trim($m['stid'] ?? '');
-                if (empty($stid)) continue;
-
-                $subj = floatval($m['subj'] ?? 0);
-                $obj = floatval($m['obj'] ?? 0);
-                $pra = floatval($m['pra'] ?? $m['prac'] ?? 0);
-                $ca = floatval($m['ca'] ?? 0);
-
-                $markobt = $subj + $obj + $pra + $ca;
-                $on100 = $fullmark > 0 ? round(($markobt / $fullmark) * 100, 2) : $markobt;
-                
-                $gp = 0.0; $gl = 'F';
-                if ($on100 >= 80) { $gp = 5.0; $gl = 'A+'; }
-                elseif ($on100 >= 70) { $gp = 4.0; $gl = 'A'; }
-                elseif ($on100 >= 60) { $gp = 3.5; $gl = 'A-'; }
-                elseif ($on100 >= 50) { $gp = 3.0; $gl = 'B'; }
-                elseif ($on100 >= 40) { $gp = 2.0; $gl = 'C'; }
-                elseif ($on100 >= 33) { $gp = 1.0; $gl = 'D'; }
-
+            if (!empty($marks)) {
                 $chkStmt = $conn->prepare("SELECT id FROM stmark 
                     WHERE sccode = ? AND sessionyear = ? AND exam = ? AND classname = ? AND sectionname = ? AND subject = ? AND stid = ? 
                     LIMIT 1");
-                $chkStmt->bind_param('iisssis', $sccode, $sessionyear, $exam, $classname, $sectionname, $subcode, $stid);
-                $chkStmt->execute();
-                $chkRes = $chkStmt->get_result()->fetch_assoc();
-                $chkStmt->close();
+                $upStmt = $conn->prepare("UPDATE stmark SET 
+                    slot = ?, fullmark = ?, subj = ?, obj = ?, pra = ?, ca = ?, markobt = ?, on100 = ?, gp = ?, gl = ?, modifieddate = NOW(), entryby = ?
+                    WHERE id = ?");
+                $insStmt = $conn->prepare("INSERT INTO stmark (
+                    slot, sessionyear, sccode, exam, classname, sectionname, subject, fullmark, stid, subj, obj, pra, ca, markobt, on100, gp, gl, entrydate, entryby
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)");
 
-                if ($chkRes) {
-                    $upStmt = $conn->prepare("UPDATE stmark SET 
-                        slot = ?, fullmark = ?, subj = ?, obj = ?, pra = ?, ca = ?, markobt = ?, on100 = ?, gp = ?, gl = ?, modifieddate = NOW(), entryby = ?
-                        WHERE id = ?");
-                    $upStmt->bind_param('sdddddddsdsi', $slot, $fullmark, $subj, $obj, $pra, $ca, $markobt, $on100, $gp, $gl, $entryby, $chkRes['id']);
-                    $upStmt->execute();
-                    $assignedServerId = $chkRes['id'];
-                    $upStmt->close();
-                } else {
-                    $insStmt = $conn->prepare("INSERT INTO stmark (
-                        slot, sessionyear, sccode, exam, classname, sectionname, subject, fullmark, stid, subj, obj, pra, ca, markobt, on100, gp, gl, entrydate, entryby
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)");
-                    $insStmt->bind_param('siisssiisddddddsss', 
-                        $slot, $sessionyear, $sccode, $exam, $classname, $sectionname, $subcode, $fullmark, $stid, 
-                        $subj, $obj, $pra, $ca, $markobt, $on100, $gp, $gl, $entryby
-                    );
-                    $insStmt->execute();
-                    $assignedServerId = $conn->insert_id;
-                    $insStmt->close();
+                foreach ($marks as $m) {
+                    $stid = trim($m['stid'] ?? '');
+                    if (empty($stid)) continue;
+
+                    $subj = floatval($m['subj'] ?? 0);
+                    $obj = floatval($m['obj'] ?? 0);
+                    $pra = floatval($m['pra'] ?? $m['prac'] ?? 0);
+                    $ca = floatval($m['ca'] ?? 0);
+
+                    $markobt = $subj + $obj + $pra + $ca;
+                    $on100 = $fullmark > 0 ? round(($markobt / $fullmark) * 100, 2) : $markobt;
+                    
+                    $gp = 0.0; $gl = 'F';
+                    if ($on100 >= 80) { $gp = 5.0; $gl = 'A+'; }
+                    elseif ($on100 >= 70) { $gp = 4.0; $gl = 'A'; }
+                    elseif ($on100 >= 60) { $gp = 3.5; $gl = 'A-'; }
+                    elseif ($on100 >= 50) { $gp = 3.0; $gl = 'B'; }
+                    elseif ($on100 >= 40) { $gp = 2.0; $gl = 'C'; }
+                    elseif ($on100 >= 33) { $gp = 1.0; $gl = 'D'; }
+
+                    $chkStmt->bind_param('iisssis', $sccode, $sessionyear, $exam, $classname, $sectionname, $subcode, $stid);
+                    $chkStmt->execute();
+                    $chkRes = $chkStmt->get_result()->fetch_assoc();
+
+                    if ($chkRes) {
+                        $upStmt->bind_param('sdddddddsdsi', $slot, $fullmark, $subj, $obj, $pra, $ca, $markobt, $on100, $gp, $gl, $entryby, $chkRes['id']);
+                        $upStmt->execute();
+                        $assignedServerId = $chkRes['id'];
+                    } else {
+                        $insStmt->bind_param('siisssiisddddddsss', 
+                            $slot, $sessionyear, $sccode, $exam, $classname, $sectionname, $subcode, $fullmark, $stid, 
+                            $subj, $obj, $pra, $ca, $markobt, $on100, $gp, $gl, $entryby
+                        );
+                        $insStmt->execute();
+                        $assignedServerId = $conn->insert_id;
+                    }
                 }
+
+                $chkStmt->close();
+                $upStmt->close();
+                $insStmt->close();
             }
 
         } elseif ($module === 'attendance' || str_contains($action, 'ATTEND')) {
@@ -267,42 +282,46 @@ foreach ($transactions as $tx) {
             $adate = trim($payload['date'] ?? $payload['adate'] ?? date('Y-m-d'));
             $records = $payload['records'] ?? [];
 
-            foreach ($records as $rec) {
-                $stid = trim($rec['stid'] ?? '');
-                if (empty($stid)) continue;
-
-                $yn = isset($rec['status']) ? intval($rec['status']) : (isset($rec['yn']) ? intval($rec['yn']) : 1);
-                $intime = !empty($rec['in_time']) ? trim($rec['in_time']) : null;
-                $outtime = !empty($rec['out_time']) ? trim($rec['out_time']) : null;
-                $rollno = intval($rec['rollno'] ?? 0);
-                $recClass = trim($rec['classname'] ?? '');
-                $recSec = trim($rec['sectionname'] ?? '');
-
+            if (!empty($records)) {
                 $chkStmt = $conn->prepare("SELECT id FROM stattnd WHERE sccode = ? AND stid = ? AND adate = ? LIMIT 1");
-                $chkStmt->bind_param('iss', $sccode, $stid, $adate);
-                $chkStmt->execute();
-                $chkRes = $chkStmt->get_result()->fetch_assoc();
-                $chkStmt->close();
+                $upStmt = $conn->prepare("UPDATE stattnd SET 
+                    yn = ?, intime = COALESCE(?, intime), outtime = COALESCE(?, outtime), entryby = ?, modifieddate = NOW()
+                    WHERE id = ?");
+                $insStmt = $conn->prepare("INSERT INTO stattnd (
+                    sccode, sessionyear, stid, adate, yn, intime, outtime, classname, sectionname, rollno, entryby, entrytime
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
 
-                if ($chkRes) {
-                    $upStmt = $conn->prepare("UPDATE stattnd SET 
-                        yn = ?, intime = COALESCE(?, intime), outtime = COALESCE(?, outtime), entryby = ?, modifieddate = NOW()
-                        WHERE id = ?");
-                    $upStmt->bind_param('isssi', $yn, $intime, $outtime, $entryby, $chkRes['id']);
-                    $upStmt->execute();
-                    $assignedServerId = $chkRes['id'];
-                    $upStmt->close();
-                } else {
-                    $insStmt = $conn->prepare("INSERT INTO stattnd (
-                        sccode, sessionyear, stid, adate, yn, intime, outtime, classname, sectionname, rollno, entryby, entrytime
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
-                    $insStmt->bind_param('iississssds', 
-                        $sccode, $sessionyear, $stid, $adate, $yn, $intime, $outtime, $recClass, $recSec, $rollno, $entryby
-                    );
-                    $insStmt->execute();
-                    $assignedServerId = $conn->insert_id;
-                    $insStmt->close();
+                foreach ($records as $rec) {
+                    $stid = trim($rec['stid'] ?? '');
+                    if (empty($stid)) continue;
+
+                    $yn = isset($rec['status']) ? intval($rec['status']) : (isset($rec['yn']) ? intval($rec['yn']) : 1);
+                    $intime = !empty($rec['in_time']) ? trim($rec['in_time']) : null;
+                    $outtime = !empty($rec['out_time']) ? trim($rec['out_time']) : null;
+                    $rollno = intval($rec['rollno'] ?? 0);
+                    $recClass = trim($rec['classname'] ?? '');
+                    $recSec = trim($rec['sectionname'] ?? '');
+
+                    $chkStmt->bind_param('iss', $sccode, $stid, $adate);
+                    $chkStmt->execute();
+                    $chkRes = $chkStmt->get_result()->fetch_assoc();
+
+                    if ($chkRes) {
+                        $upStmt->bind_param('isssi', $yn, $intime, $outtime, $entryby, $chkRes['id']);
+                        $upStmt->execute();
+                        $assignedServerId = $chkRes['id'];
+                    } else {
+                        $insStmt->bind_param('iississssds', 
+                            $sccode, $sessionyear, $stid, $adate, $yn, $intime, $outtime, $recClass, $recSec, $rollno, $entryby
+                        );
+                        $insStmt->execute();
+                        $assignedServerId = $conn->insert_id;
+                    }
                 }
+
+                $chkStmt->close();
+                $upStmt->close();
+                $insStmt->close();
             }
 
         } elseif ($module === 'catchment' || str_contains($action, 'ADDRESS')) {
@@ -438,7 +457,7 @@ foreach ($transactions as $tx) {
                 }
             }
 
-            // Handle student photo Base64 decoding & disk writing (students/[sccode]/[stid].jpg)
+            // Handle student photo Base64 decoding & disk writing (students/[sccode]/[stid].webp)
             if ($targetTable === 'students') {
                 $rawPhoto = $rowRecord['photo_path'] ?? '';
                 $studentStid = trim($rowRecord['stid'] ?? '');
@@ -454,16 +473,27 @@ foreach ($transactions as $tx) {
 
                         if ($binData !== false && strlen($binData) > 10) {
                             $rootDir = dirname(dirname(dirname(__DIR__)));
-                            // Canonical path: students/[sccode]/[stid].jpg
+                            // Canonical path: students/[sccode]/[stid].webp
                             $scFolder = $rootDir . '/students/' . $sccode;
                             if (!is_dir($scFolder)) @mkdir($scFolder, 0777, true);
-                            @file_put_contents($scFolder . '/' . $studentStid . '.jpg', $binData);
+
+                            $srcImg = @imagecreatefromstring($binData);
+                            if ($srcImg) {
+                                if (function_exists('imagewebp')) {
+                                    imagewebp($srcImg, $scFolder . '/' . $studentStid . '.webp', 85);
+                                } else {
+                                    imagejpeg($srcImg, $scFolder . '/' . $studentStid . '.webp', 85);
+                                }
+                                imagedestroy($srcImg);
+                            } else {
+                                @file_put_contents($scFolder . '/' . $studentStid . '.webp', $binData);
+                            }
                         }
                     } catch (\Throwable $e) {
                         error_log("[BatchPush] Student photo write error: " . $e->getMessage());
                     }
-                    $rowRecord['photo_path'] = "students/{$sccode}/{$studentStid}.jpg";
-                    $rowRecord['photo_id'] = "{$studentStid}.jpg";
+                    $rowRecord['photo_path'] = "students/{$sccode}/{$studentStid}.webp";
+                    $rowRecord['photo_id'] = "{$studentStid}.webp";
                 }
             }
 
@@ -483,16 +513,27 @@ foreach ($transactions as $tx) {
 
                         if ($binData !== false && strlen($binData) > 10) {
                             $rootDir = dirname(dirname(dirname(__DIR__)));
-                            // Canonical path: teacher/[sccode]/[tid].jpg
+                            // Canonical path: teacher/[sccode]/[tid].webp
                             $scTeacherFolder = $rootDir . '/teacher/' . $sccode;
                             if (!is_dir($scTeacherFolder)) @mkdir($scTeacherFolder, 0777, true);
-                            @file_put_contents($scTeacherFolder . '/' . $teacherTid . '.jpg', $binData);
+
+                            $srcImg = @imagecreatefromstring($binData);
+                            if ($srcImg) {
+                                if (function_exists('imagewebp')) {
+                                    imagewebp($srcImg, $scTeacherFolder . '/' . $teacherTid . '.webp', 85);
+                                } else {
+                                    imagejpeg($srcImg, $scTeacherFolder . '/' . $teacherTid . '.webp', 85);
+                                }
+                                imagedestroy($srcImg);
+                            } else {
+                                @file_put_contents($scTeacherFolder . '/' . $teacherTid . '.webp', $binData);
+                            }
                         }
                     } catch (\Throwable $e) {
                         error_log("[BatchPush] Teacher photo write error: " . $e->getMessage());
                     }
-                    $rowRecord['photo_path'] = "teacher/{$sccode}/{$teacherTid}.jpg";
-                    if (isset($rowRecord['photo'])) $rowRecord['photo'] = "{$teacherTid}.jpg";
+                    $rowRecord['photo_path'] = "teacher/{$sccode}/{$teacherTid}.webp";
+                    if (isset($rowRecord['photo'])) $rowRecord['photo'] = "{$teacherTid}.webp";
                 }
 
                 $rawSign = $rowRecord['sign_path'] ?? $rowRecord['sign'] ?? '';

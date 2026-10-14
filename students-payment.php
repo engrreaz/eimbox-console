@@ -35,8 +35,9 @@
 
         <div class="col-md-8 ">
             <div class="card h-100">
-                <div class="card-header">
-                    <h5 class="fw-bold  text-center text-info">Student Dues List</h5>
+                <div class="card-header d-flex">
+                    <h5 class="fw-bold  text-center text-info flex-grow-1">Student Dues List</h5>
+                    <button class="btn btn-sm btn-outline-info text-end ">Print List</button>
                 </div>
                 <div class="form-group row">
                     <div class="col-12 ">

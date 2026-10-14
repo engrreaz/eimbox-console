@@ -1,0 +1,6 @@
+[11-Oct-2026 20:39:57 Asia/Dhaka] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'partitulars' in 'field list' in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\core\db.php:19
+Stack trace:
+#0 D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\core\db.php(19): mysqli->query('SELECT id, scco...', 0)
+#1 C:\Users\engrr\.gemini\antigravity-ide\brain\b0a6850b-2ea9-4c63-8695-c329ef9d5961\scratch\check.php(22): MyDB->query('SELECT id, scco...')
+#2 {main}
+  thrown in D:\XAMPP\htdocs\eimbox-dashboard\eimbox-materio\core\db.php on line 19

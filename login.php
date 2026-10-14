@@ -1,19 +1,25 @@
 <?php
 require_once 'core/init.php';
 
-
-// var_dump($_SESSION);
+// Check if already logged-in session should be blocked under maintenance
+if (isset($_SESSION['user_id'])) {
+    if ($platformStatus['status'] === 'maintenance' && !MaterioPlatformGuard::isAdminUser()) {
+        MaterioPlatformGuard::renderScreen(503, 'maintenance', $platformStatus);
+        exit;
+    }
+    // Already logged in → redirect to dashboard
+    header('Location: index.php');
+    exit;
+}
 
 $reg = $_SESSION['student_reg'] ?? null;
 $sccode = $_SESSION['scode'] ?? null;
 if ($reg) {
+    if ($platformStatus['status'] === 'maintenance') {
+        MaterioPlatformGuard::renderScreen(503, 'maintenance', $platformStatus);
+        exit;
+    }
     header("Location: admission-dashboard.php");
-    exit;
-}
-
-if (isset($_SESSION['user_id'])) {
-    // Already logged in → redirect to dashboard
-    header('Location: index.php');
     exit;
 }
 
@@ -23,7 +29,6 @@ if (isset($_SESSION['partial_auth'])) {
     exit;
 }
 
-$conn = db_connect();
 $errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -47,9 +52,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $school = $data['school'];
 
             if ($verify_check == 0) {
-                store_user_session($user, $school);
-                header('Location: index.php');
-                exit;
+                if ($platformStatus['status'] === 'maintenance' && !MaterioPlatformGuard::isAdminUser([
+                    'is_admin' => $user['admin'] ?? 0,
+                    'userlevel' => $user['userlevel'] ?? '',
+                    'user_role' => $user['role'] ?? '',
+                    'is_chief' => $user['is_chief'] ?? 0
+                ])) {
+                    $errors[] = 'Platform is currently undergoing scheduled maintenance. Only system administrators can sign in at this time.';
+                } else {
+                    store_user_session($user, $school);
+                    header('Location: index.php');
+                    exit;
+                }
             }
 
         } else {
@@ -59,9 +73,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (!$user) {
                 $errors[] = "Invalid Student";
+            } elseif ($platformStatus['status'] === 'maintenance') {
+                $errors[] = "Platform is currently undergoing scheduled maintenance. Student login is temporarily disabled.";
             } else {
                 store_student_session($user, $school);
                 header('Location: index.php');
+                exit;
             }
 
         }
@@ -85,6 +102,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Check account lock
             if ($lockUntil && strtotime($lockUntil) > time()) {
                 $errors[] = 'Account locked. Try later.';
+            }
+            // Maintenance mode check: block non-admins
+            elseif ($platformStatus['status'] === 'maintenance' && !(intval($user['admin'] ?? 0) >= 4 || intval($user['is_chief'] ?? 0) > 0 || in_array(strtolower($user['userlevel'] ?? ''), ['super administrator', 'chief', 'administrator']))) {
+                $errors[] = 'Platform is currently undergoing scheduled maintenance. Only system administrators can sign in at this time.';
             }
             // Check password
             elseif ($passwordHash && password_verify($password, $passwordHash)) {
@@ -306,6 +327,13 @@ include_once('header-plain.php');
 
                 <div class="card-body mt-1 flex-grow-1">
                     <p class="mb-5">Please sign-in to your account</p>
+
+                    <?php if ($platformStatus['status'] === 'maintenance'): ?>
+                        <div style="background-color: rgba(245, 158, 11, 0.12); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 10px; padding: 10px 14px; font-size: 0.82rem; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; text-align: left;">
+                            <i class="icon-base ri ri-tools-fill icon-20px" style="flex-shrink: 0;"></i>
+                            <div>Scheduled maintenance active. Only authorized system administrators may sign in.</div>
+                        </div>
+                    <?php endif; ?>
 
                     <?php if (!empty($errors)): ?>
                         <div class="error bg-danger text-white rounded p-3 mb-3">

@@ -24,7 +24,7 @@ if (isset($_POST['save_voucher'])) {
     $entry_id = intval($_POST['entry_id'] ?? 0);
     $date = trim($_POST['date'] ?? date('Y-m-d'));
     $slots = trim($_POST['slots'] ?? '');
-    $partid = intval($_POST['partid'] ?? 0); // account_sub_head.id
+    $partid_input = trim($_POST['partid'] ?? ''); // Sub-Head Code or ID
     $head_id = intval($_POST['head_code'] ?? 0); // account_head.id
     $particulars = trim($_POST['particulars'] ?? '');
     $amount = floatval($_POST['amount'] ?? 0);
@@ -36,19 +36,28 @@ if (isset($_POST['save_voucher'])) {
     $year = intval(date('Y', strtotime($date)));
     $target_session = $sessionyear ?? date('Y');
 
+    $partid = 0;
+    $account_sub_head_id = 0;
+
     // যদি head_id বা type অস্পষ্ট থাকে তবে sub_head থেকে বের করা
-    if ($partid > 0) {
-        $chk_h = $conn->prepare("SELECT account_head_id, income, expenditure FROM account_sub_head WHERE id = ? LIMIT 1");
-        $chk_h->bind_param("i", $partid);
+    if ($partid_input !== '') {
+        $partid_id = intval($partid_input);
+        $chk_h = $conn->prepare("SELECT id, account_head_id, sub_head_code, income, expenditure FROM account_sub_head WHERE (sub_head_code = ? OR id = ?) AND (sccode = ? OR sccode = '0' OR sccode = 0) ORDER BY (sccode = ?) DESC LIMIT 1");
+        $chk_h->bind_param("siss", $partid_input, $partid_id, $sccode, $sccode);
         $chk_h->execute();
         $res_h = $chk_h->get_result();
         if ($res_h && $r_sub = $res_h->fetch_assoc()) {
+            $account_sub_head_id = intval($r_sub['id']);
+            $partid = intval($r_sub['sub_head_code'] ?: $r_sub['id']);
             if ($head_id <= 0) {
                 $head_id = intval($r_sub['account_head_id']);
             }
             if (!isset($_POST['type']) || $_POST['type'] === '') {
                 $type = (intval($r_sub['income']) === 1 && intval($r_sub['expenditure']) === 0) ? 'Income' : 'Expenditure';
             }
+        } else {
+            $partid = intval($partid_input);
+            $account_sub_head_id = intval($partid_input);
         }
     }
 
@@ -57,7 +66,7 @@ if (isset($_POST['save_voucher'])) {
 
     if ($amount > 0) {
         if ($entry_id > 0) {
-            // Update (কেবলমাত্র আনলকড এন্ট্রি আপডেট করা যাবে)
+            // Update
             $stmt = $conn->prepare("UPDATE cashbook SET 
                 date = ?, 
                 slots = ?, 
@@ -73,10 +82,10 @@ if (isset($_POST['save_voucher'])) {
                 month = ?, 
                 year = ?, 
                 modifieddate = NOW() 
-                WHERE id = ? AND (sccode = ? OR sccode = ?) AND (is_locked IS NULL OR is_locked = 0)");
+                WHERE id = ? AND (sccode = ? OR sccode = ?)");
             $sc_sanctioned = $sccode;
             $sc_pending = $sccode * 10;
-            $stmt->bind_param("ssiiisdddsiiiiii", $date, $slots, $head_id, $partid, $partid, $particulars, $amount, $inc_val, $exp_val, $type, $memono, $month, $year, $entry_id, $sc_sanctioned, $sc_pending);
+            $stmt->bind_param("ssiiisdddsiiiiii", $date, $slots, $head_id, $account_sub_head_id, $partid, $particulars, $amount, $inc_val, $exp_val, $type, $memono, $month, $year, $entry_id, $sc_sanctioned, $sc_pending);
             if ($stmt->execute()) {
                 $alert_msg = "Voucher #$entry_id updated successfully.";
                 $alert_type = "success";
@@ -84,9 +93,9 @@ if (isset($_POST['save_voucher'])) {
         } else {
             // New Insert (সরাসরি Sanctioned হিসেবে সেভ হবে)
             $stmt = $conn->prepare("INSERT INTO cashbook 
-                (sccode, sessionyear, month, year, date, slots, account_head, account_sub_head, partid, particulars, amount, income, expenditure, type, memono, entryby, entrytime, status) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 1)");
-            $stmt->bind_param("isiissiiisdddsis", $sccode, $target_session, $month, $year, $date, $slots, $head_id, $partid, $partid, $particulars, $amount, $inc_val, $exp_val, $type, $memono, $entryby);
+                (sccode, sessionyear, month, year, date, slots, account_head, account_sub_head, partid, particulars, amount, income, expenditure, type, memono, entryby, entrytime, status, modifieddate) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 1, NOW())");
+            $stmt->bind_param("isiissiiisdddsis", $sccode, $target_session, $month, $year, $date, $slots, $head_id, $account_sub_head_id, $partid, $particulars, $amount, $inc_val, $exp_val, $type, $memono, $entryby);
             if ($stmt->execute()) {
                 $alert_msg = "New transaction voucher recorded successfully.";
                 $alert_type = "success";
@@ -95,11 +104,11 @@ if (isset($_POST['save_voucher'])) {
     }
 }
 
-// ২.২ ডিলিট অপারেশন (POST & GET - কেবল আনলকড এন্ট্রি মুছে ফেলা যাবে)
+// ২.২ ডিলিট অপারেশন (POST & GET)
 if (isset($_POST['delete_id']) || isset($_GET['delete_id'])) {
     $del_id = intval($_POST['delete_id'] ?? $_GET['delete_id']);
     if ($del_id > 0) {
-        $stmt = $conn->prepare("DELETE FROM cashbook WHERE id = ? AND (sccode = ? OR sccode = ?) AND (is_locked IS NULL OR is_locked = 0)");
+        $stmt = $conn->prepare("DELETE FROM cashbook WHERE id = ? AND (sccode = ? OR sccode = ?)");
         $sc_pen = $sccode * 10;
         $stmt->bind_param("iii", $del_id, $sccode, $sc_pen);
         if ($stmt->execute()) {
@@ -113,7 +122,7 @@ if (isset($_POST['delete_id']) || isset($_GET['delete_id'])) {
 if (isset($_POST['approve_id']) || isset($_GET['approve_id'])) {
     $app_id = intval($_POST['approve_id'] ?? $_GET['approve_id']);
     if ($app_id > 0) {
-        $stmt = $conn->prepare("UPDATE cashbook SET status = 1, sccode = ?, modifieddate = NOW() WHERE id = ? AND (sccode = ? OR sccode = ?) AND (is_locked IS NULL OR is_locked = 0)");
+        $stmt = $conn->prepare("UPDATE cashbook SET status = 1, sccode = ?, modifieddate = NOW() WHERE id = ? AND (sccode = ? OR sccode = ?)");
         $sc_pen = $sccode * 10;
         $stmt->bind_param("iiii", $sccode, $app_id, $sccode, $sc_pen);
         if ($stmt->execute()) {
@@ -127,7 +136,7 @@ if (isset($_POST['approve_id']) || isset($_GET['approve_id'])) {
 if (isset($_POST['unapprove_id']) || isset($_GET['unapprove_id'])) {
     $unapp_id = intval($_POST['unapprove_id'] ?? $_GET['unapprove_id']);
     if ($unapp_id > 0) {
-        $stmt = $conn->prepare("UPDATE cashbook SET status = 0, modifieddate = NOW() WHERE id = ? AND (sccode = ? OR sccode = ?) AND (is_locked IS NULL OR is_locked = 0)");
+        $stmt = $conn->prepare("UPDATE cashbook SET status = 0, modifieddate = NOW() WHERE id = ? AND (sccode = ? OR sccode = ?)");
         $sc_pen = $sccode * 10;
         $stmt->bind_param("iii", $unapp_id, $sccode, $sc_pen);
         if ($stmt->execute()) {
@@ -149,8 +158,8 @@ if ($slots_res) {
     }
 }
 
-// সব অ্যাকাউন্ট হেড
-$heads_res = $conn->query("SELECT id, account_head FROM account_head WHERE sccode = '$sccode' ORDER BY account_head ASC");
+// সব অ্যাকাউন্ট হেড (account_head টেবিল থেকে head_name কলাম)
+$heads_res = $conn->query("SELECT id, head_code, head_name, head_name AS account_head, head_name_bn, head_type FROM account_head WHERE (sccode = '$sccode' OR sccode = '0' OR sccode = 0) AND status = 1 ORDER BY display_order ASC, head_name ASC");
 $heads_list = [];
 if ($heads_res) {
     while ($h = $heads_res->fetch_assoc()) {
@@ -158,12 +167,12 @@ if ($heads_res) {
     }
 }
 
-// সব সাব-হেড (গ্রুপ আকারে প্রস্তুত)
-$sub_heads_res = $conn->query("SELECT s.id, s.sub_head, s.account_head_id, s.income, s.expenditure, COALESCE(h.account_head, 'General') AS account_head
+// সব সাব-হেড (account_sub_head টেবিল থেকে sub_head ও sub_head_code কলাম এবং account_head এর সাথে JOIN)
+$sub_heads_res = $conn->query("SELECT s.id, s.sub_head, s.sub_head_code, s.account_head_id, s.income, s.expenditure, COALESCE(h.head_name, 'General') AS account_head
                                FROM account_sub_head s 
                                LEFT JOIN account_head h ON s.account_head_id = h.id 
-                               WHERE s.sccode = '$sccode' 
-                               ORDER BY h.account_head ASC, s.sub_head ASC");
+                               WHERE (s.sccode = '$sccode' OR s.sccode = '0' OR s.sccode = 0) AND s.status = 1 
+                               ORDER BY h.head_name ASC, s.display_order ASC, s.sub_head ASC");
 $all_sub_heads = [];
 if ($sub_heads_res) {
     while ($sh = $sub_heads_res->fetch_assoc()) {
@@ -172,12 +181,11 @@ if ($sub_heads_res) {
 }
 
 // ==========================================
-// 4. CASHBOOK LEDGER FETCH & SUMMARY CALCULATION (EXCLUDE LOCKED ITEMS)
+// 4. CASHBOOK LEDGER FETCH & SUMMARY CALCULATION
 // ==========================================
 $where_clauses = [
     "(c.sccode = '$sccode' OR c.sccode = '" . ($sccode * 10) . "')",
-    "c.date BETWEEN '$date_from' AND '$date_to'",
-    "(c.is_locked IS NULL OR c.is_locked = 0)"
+    "c.date BETWEEN '$date_from' AND '$date_to'"
 ];
 
 if ($filter_head > 0) {
@@ -190,10 +198,11 @@ if ($filter_type === 'Income' || $filter_type === 'Expenditure') {
 $where_sql = implode(" AND ", $where_clauses);
 
 $sql_main = "SELECT c.*, 
+                    s.sub_head_code,
                     COALESCE(s.sub_head, c.particulars, 'General') AS sub_head_name,
-                    COALESCE(h.account_head, 'Unassigned') AS main_head_name
+                    COALESCE(h.head_name, 'Unassigned') AS main_head_name
              FROM cashbook c 
-             LEFT JOIN account_sub_head s ON (c.account_sub_head = s.id OR c.partid = s.id)
+             LEFT JOIN account_sub_head s ON (c.account_sub_head = s.id OR c.partid = s.id OR c.account_sub_head = s.sub_head_code OR c.partid = s.sub_head_code)
              LEFT JOIN account_head h ON (c.account_head = h.id OR s.account_head_id = h.id)
              WHERE $where_sql
              ORDER BY c.date DESC, c.id DESC";
@@ -829,11 +838,12 @@ $net_balance = $total_income - $total_expense;
                         </div>
                     </div>
 
-                    <!-- Sector / Sub-Head Dropdown -->
+                    <!-- Sector / Sub-Head Dropdown & Direct Code Input -->
                     <div class="mb-3">
                         <label class="form-label small fw-bold">ACCOUNT HEAD & SECTOR (SUB-HEAD)</label>
                         <div class="input-group input-group-sm">
                             <span class="input-group-text"><i class="bi bi-tags"></i></span>
+                            <input type="text" id="v_sub_head_input" class="form-control text-center fw-bold text-primary" placeholder="Sub Code" style="max-width: 95px;" title="Directly enter Account Sub Code (e.g. 4101)">
                             <select name="partid" id="v_partid" class="form-select" required>
                                 <option value="">Select Account Sector (Sub-Head)</option>
                                 <?php
@@ -844,12 +854,16 @@ $net_balance = $total_income - $total_expense;
                                 foreach ($grouped_heads as $head_name => $subs):
                                 ?>
                                     <optgroup label="<?= htmlspecialchars($head_name) ?>">
-                                        <?php foreach ($subs as $s): ?>
-                                            <option value="<?= $s['id'] ?>" 
+                                        <?php foreach ($subs as $s): 
+                                            $opt_val = !empty($s['sub_head_code']) ? $s['sub_head_code'] : $s['id'];
+                                        ?>
+                                            <option value="<?= htmlspecialchars($opt_val) ?>" 
+                                                    data-id="<?= $s['id'] ?>"
+                                                    data-code="<?= htmlspecialchars($s['sub_head_code'] ?? '') ?>"
                                                     data-head="<?= $s['account_head_id'] ?>"
                                                     data-income="<?= $s['income'] ?>"
                                                     data-expense="<?= $s['expenditure'] ?>">
-                                                <?= htmlspecialchars($s['sub_head']) ?>
+                                                <?= ($s['sub_head_code'] ? '[' . htmlspecialchars($s['sub_head_code']) . '] ' : '') . htmlspecialchars($s['sub_head']) ?>
                                             </option>
                                         <?php endforeach; ?>
                                     </optgroup>
@@ -906,7 +920,7 @@ $net_balance = $total_income - $total_expense;
         const tableView = document.getElementById('cbTableView');
         const cardsView = document.getElementById('cbCardsView');
         const btnTable = document.getElementById('btnViewTable');
-        const btnCards = document.getElementById('viewCardsBtn');
+        const btnCards = document.getElementById('btnViewCards');
 
         if (mode === 'cards') {
             tableView?.classList.add('d-none');
@@ -921,14 +935,22 @@ $net_balance = $total_income - $total_expense;
         }
     }
 
+    const subHeadInput = document.getElementById('v_sub_head_input');
+    const subHeadSelect = document.getElementById('v_partid');
+
     function openNewVoucherModal() {
         document.getElementById('voucherModalTitle').innerHTML = '<i class="bi bi-receipt me-1"></i> New Transaction Voucher';
         document.getElementById('v_entry_id').value = '';
         document.getElementById('voucherForm').reset();
+        if (subHeadInput) subHeadInput.value = '';
+        if (subHeadSelect) subHeadSelect.value = '';
         document.getElementById('v_slots').value = '';
         document.getElementById('v_date').value = '<?= date('Y-m-d') ?>';
         document.getElementById('v_type').value = 'Expenditure';
         document.getElementById('v_head_code').value = '';
+        document.getElementById('v_particulars').value = '';
+        document.getElementById('v_amount').value = '';
+        document.getElementById('v_memono').value = '';
 
         filterSubHeadsByType('Expenditure', null);
         voucherModal.show();
@@ -945,12 +967,17 @@ $net_balance = $total_income - $total_expense;
         document.getElementById('v_memono').value = (v.memono && v.memono != 0) ? v.memono : '';
         document.getElementById('v_head_code').value = v.account_head || '';
 
-        filterSubHeadsByType(v.type, v.account_sub_head || v.partid);
+        const subKey = v.sub_head_code || v.partid || v.account_sub_head || '';
+        filterSubHeadsByType(v.type, subKey);
+        if (subHeadInput) {
+            subHeadInput.value = subKey;
+        }
         voucherModal.show();
     }
 
-    function filterSubHeadsByType(type, selectedSubId) {
+    function filterSubHeadsByType(type, selectedSubCode) {
         const select = document.getElementById('v_partid');
+        if (!select) return;
         const options = select.querySelectorAll('option[data-head]');
 
         options.forEach(opt => {
@@ -969,22 +996,69 @@ $net_balance = $total_income - $total_expense;
             }
         });
 
-        if (selectedSubId) {
-            select.value = selectedSubId;
-            const chosen = select.querySelector(`option[value="${selectedSubId}"]`);
+        if (selectedSubCode) {
+            const codeStr = String(selectedSubCode).trim().toLowerCase();
+            const chosen = Array.from(options).find(opt => 
+                (opt.value && opt.value.toLowerCase() === codeStr) ||
+                (opt.getAttribute('data-code') && opt.getAttribute('data-code').toLowerCase() === codeStr) ||
+                (opt.getAttribute('data-id') && opt.getAttribute('data-id') === codeStr)
+            );
             if (chosen) {
+                select.value = chosen.value;
                 document.getElementById('v_head_code').value = chosen.getAttribute('data-head') || '';
             }
         }
     }
 
     document.getElementById('v_type')?.addEventListener('change', function() {
-        filterSubHeadsByType(this.value, null);
+        filterSubHeadsByType(this.value, subHeadSelect ? subHeadSelect.value : null);
     });
 
-    document.getElementById('v_partid')?.addEventListener('change', function() {
+    // সরাসরি সাব-হেড কোড টাইপ করলে সেক্টর ড্রপডাউন সিলেক্ট হওয়া
+    subHeadInput?.addEventListener('input', function() {
+        const val = this.value.trim().toLowerCase();
+        if (!val) {
+            if (subHeadSelect) subHeadSelect.value = '';
+            document.getElementById('v_head_code').value = '';
+            return;
+        }
+
+        const options = Array.from(subHeadSelect.querySelectorAll('option[data-head]'));
+        
+        // ম্যাচিং: ১. কোড হুবহু ২. data-code হুবহু ৩. data-id হুবহু ৪. কোড দিয়ে শুরু
+        let matched = options.find(opt => (opt.value || '').toLowerCase() === val)
+                   || options.find(opt => (opt.getAttribute('data-code') || '').toLowerCase() === val)
+                   || options.find(opt => (opt.getAttribute('data-id') || '') === val)
+                   || options.find(opt => (opt.value || '').toLowerCase().startsWith(val));
+
+        if (matched) {
+            const isInc = matched.getAttribute('data-income') === '1';
+            const isExp = matched.getAttribute('data-expense') === '1';
+            const currentType = document.getElementById('v_type').value;
+
+            if (currentType === 'Income' && !isInc && isExp) {
+                document.getElementById('v_type').value = 'Expenditure';
+                filterSubHeadsByType('Expenditure', null);
+            } else if (currentType === 'Expenditure' && !isExp && isInc) {
+                document.getElementById('v_type').value = 'Income';
+                filterSubHeadsByType('Income', null);
+            }
+
+            subHeadSelect.value = matched.value;
+            document.getElementById('v_head_code').value = matched.getAttribute('data-head') || '';
+        } else {
+            subHeadSelect.value = '';
+            document.getElementById('v_head_code').value = '';
+        }
+    });
+
+    // ড্রপডাউন থেকে সিলেক্ট করলে ইনপুট বক্সে কোড বসানো
+    subHeadSelect?.addEventListener('change', function() {
         const chosen = this.options[this.selectedIndex];
         if (chosen && chosen.value) {
+            if (subHeadInput) {
+                subHeadInput.value = chosen.value;
+            }
             document.getElementById('v_head_code').value = chosen.getAttribute('data-head') || '';
             const isInc = chosen.getAttribute('data-income') === '1';
             const isExp = chosen.getAttribute('data-expense') === '1';
@@ -993,6 +1067,9 @@ $net_balance = $total_income - $total_expense;
             } else if (isExp && !isInc) {
                 document.getElementById('v_type').value = 'Expenditure';
             }
+        } else {
+            if (subHeadInput) subHeadInput.value = '';
+            document.getElementById('v_head_code').value = '';
         }
     });
 

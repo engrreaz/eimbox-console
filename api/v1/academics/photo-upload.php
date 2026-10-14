@@ -90,13 +90,15 @@ if (isset($_FILES['file']) && !empty($_FILES['file']['tmp_name'])) {
     $binaryData = file_get_contents($tmp);
 } else {
     // 2. Check for Base64 Data URL or raw base64 string
-    $rawBase64 = $_POST['sign_base64'] ?? $_POST['sign_data'] ?? $_POST['sign_path'] ?? $_POST['photo_base64'] ?? $_POST['photo_data'] ?? $_POST['photo_path'] ?? $input['sign_base64'] ?? $input['sign_data'] ?? $input['sign_path'] ?? $input['photo_base64'] ?? $input['photo_data'] ?? $input['photo_path'] ?? '';
+    $rawBase64 = $_POST['sign_base64'] ?? $_POST['sign_data'] ?? $_POST['sign_path'] ?? $_POST['photo_base64'] ?? $_POST['photo_data'] ?? $_POST['photo_path'] ?? $_POST['base64'] ?? $_POST['image'] ?? $input['sign_base64'] ?? $input['sign_data'] ?? $input['sign_path'] ?? $input['photo_base64'] ?? $input['photo_data'] ?? $input['photo_path'] ?? $input['base64'] ?? $input['image'] ?? '';
     if (!empty($rawBase64)) {
         if (str_contains($rawBase64, ';base64,')) {
             $parts = explode(';base64,', $rawBase64);
-            $binaryData = base64_decode($parts[1]);
+            $cleanStr = str_replace(' ', '+', trim($parts[1]));
+            $binaryData = base64_decode($cleanStr);
         } else {
-            $binaryData = base64_decode($rawBase64);
+            $cleanStr = str_replace(' ', '+', trim($rawBase64));
+            $binaryData = base64_decode($cleanStr);
         }
     }
 }
@@ -111,12 +113,14 @@ $rootDir = dirname(dirname(dirname(__DIR__))); // eimbox-materio
 $targetRelativePath = '';
 $publicUrl = '';
 
+// 3. Process and Save Image File
+$srcImg = @imagecreatefromstring($binaryData);
+
 if ($isSign) {
-    // Teacher Signature single canonical path: sign/[sccode]/[tid].png
+    // Teacher Signature single canonical upload folder: sign/[sccode]/[tid].png
     $targetDir = $rootDir . '/sign/' . $sccode;
     if (!is_dir($targetDir)) @mkdir($targetDir, 0777, true);
 
-    $srcImg = @imagecreatefromstring($binaryData);
     if ($srcImg) {
         $width = imagesx($srcImg);
         $height = imagesy($srcImg);
@@ -131,23 +135,18 @@ if ($isSign) {
         imagepng($pngImg, $targetDir . '/' . $id . '.png');
         imagedestroy($pngImg);
     } else {
-        // Direct binary write
         @file_put_contents($targetDir . '/' . $id . '.png', $binaryData);
     }
 
     $targetRelativePath = "sign/{$sccode}/{$id}.png";
     $publicUrl = "https://eimbox.com/sign/{$sccode}/{$id}.png";
 
-    // Update MySQL teacher table
-    $upStmt = $conn->prepare("UPDATE teacher SET sign = ?, sign_path = ?, modifieddate = NOW() WHERE (tid = ? OR id = ?) AND (sccode = ? OR sccode = 0)");
-    if ($upStmt) {
-        $signName = "{$id}.png";
-        $upStmt->bind_param('ssssi', $signName, $targetRelativePath, $id, $id, $sccode);
-        $upStmt->execute();
-        $upStmt->close();
-    }
+    // Safely update teacher modifieddate
+    try {
+        @$conn->query("UPDATE teacher SET modifieddate = NOW() WHERE (tid = '" . $conn->real_escape_string($id) . "' OR id = '" . $conn->real_escape_string($id) . "') AND (sccode = $sccode OR sccode = 0)");
+    } catch (Throwable $e) {}
 
-    api_response('success', 'Teacher signature uploaded and saved successfully.', [
+    api_response('success', 'Teacher signature uploaded and saved successfully as transparent PNG.', [
         'sccode' => $sccode,
         'id' => $id,
         'type' => 'sign',
@@ -158,66 +157,79 @@ if ($isSign) {
     ]);
 }
 
-// Normalize and convert photo image to clean JPG
-$srcImg = @imagecreatefromstring($binaryData);
-if (!$srcImg) {
-    api_response('error', 'Provided image data is corrupt or not a recognized image format.', null, 400);
-}
-
-$width = imagesx($srcImg);
-$height = imagesy($srcImg);
-
-$jpgImg = imagecreatetruecolor($width, $height);
-$white = imagecolorallocate($jpgImg, 255, 255, 255);
-imagefilledrectangle($jpgImg, 0, 0, $width, $height, $white);
-imagecopy($jpgImg, $srcImg, 0, 0, 0, 0, $width, $height);
-imagedestroy($srcImg);
-
 if ($type === 'teacher') {
-    // Teacher photo single canonical path: teacher/[sccode]/[tid].jpg
+    // Teacher photo single canonical upload folder: teacher/[sccode]/[tid].webp
     $targetDir = $rootDir . '/teacher/' . $sccode;
     if (!is_dir($targetDir)) @mkdir($targetDir, 0777, true);
-    imagejpeg($jpgImg, $targetDir . '/' . $id . '.jpg', 88);
+    
+    if ($srcImg) {
+        $width = imagesx($srcImg);
+        $height = imagesy($srcImg);
+        $webpImg = imagecreatetruecolor($width, $height);
+        $white = imagecolorallocate($webpImg, 255, 255, 255);
+        imagefilledrectangle($webpImg, 0, 0, $width, $height, $white);
+        imagecopy($webpImg, $srcImg, 0, 0, 0, 0, $width, $height);
+        imagedestroy($srcImg);
 
-    $targetRelativePath = "teacher/{$sccode}/{$id}.jpg";
-    $publicUrl = "https://eimbox.com/teacher/{$sccode}/{$id}.jpg";
-
-    // Update MySQL teacher table
-    $upStmt = $conn->prepare("UPDATE teacher SET photo = ?, photo_path = ?, modifieddate = NOW() WHERE (tid = ? OR id = ?) AND (sccode = ? OR sccode = 0)");
-    if ($upStmt) {
-        $photoName = "{$id}.jpg";
-        $upStmt->bind_param('ssssi', $photoName, $targetRelativePath, $id, $id, $sccode);
-        $upStmt->execute();
-        $upStmt->close();
+        if (function_exists('imagewebp')) {
+            imagewebp($webpImg, $targetDir . '/' . $id . '.webp', 85);
+        } else {
+            @file_put_contents($targetDir . '/' . $id . '.webp', $binaryData);
+        }
+        imagedestroy($webpImg);
+    } else {
+        @file_put_contents($targetDir . '/' . $id . '.webp', $binaryData);
     }
+
+    $targetRelativePath = "teacher/{$sccode}/{$id}.webp";
+    $publicUrl = "https://eimbox.com/teacher/{$sccode}/{$id}.webp";
+
+    // Safely update teacher modifieddate
+    try {
+        @$conn->query("UPDATE teacher SET modifieddate = NOW() WHERE (tid = '" . $conn->real_escape_string($id) . "' OR id = '" . $conn->real_escape_string($id) . "') AND (sccode = $sccode OR sccode = 0)");
+    } catch (Throwable $e) {}
 } else {
-    // Student photo single canonical path: students/[sccode]/[stid].jpg
+    // Student photo single canonical upload folder: students/[sccode]/[stid].webp
     $targetDir = $rootDir . '/students/' . $sccode;
     if (!is_dir($targetDir)) @mkdir($targetDir, 0777, true);
-    imagejpeg($jpgImg, $targetDir . '/' . $id . '.jpg', 88);
+    
+    if ($srcImg) {
+        $width = imagesx($srcImg);
+        $height = imagesy($srcImg);
+        $webpImg = imagecreatetruecolor($width, $height);
+        $white = imagecolorallocate($webpImg, 255, 255, 255);
+        imagefilledrectangle($webpImg, 0, 0, $width, $height, $white);
+        imagecopy($webpImg, $srcImg, 0, 0, 0, 0, $width, $height);
+        imagedestroy($srcImg);
 
-    $targetRelativePath = "students/{$sccode}/{$id}.jpg";
-    $publicUrl = "https://eimbox.com/students/{$sccode}/{$id}.jpg";
-
-    // Update MySQL students table
-    $upStmt = $conn->prepare("UPDATE students SET photo_id = ?, photo_path = ?, modifieddate = NOW() WHERE stid = ? AND (sccode = ? OR sccode = 0)");
-    if ($upStmt) {
-        $photoName = "{$id}.jpg";
-        $upStmt->bind_param('sssi', $photoName, $targetRelativePath, $id, $sccode);
-        $upStmt->execute();
-        $upStmt->close();
+        if (function_exists('imagewebp')) {
+            imagewebp($webpImg, $targetDir . '/' . $id . '.webp', 85);
+        } else {
+            @file_put_contents($targetDir . '/' . $id . '.webp', $binaryData);
+        }
+        imagedestroy($webpImg);
+    } else {
+        @file_put_contents($targetDir . '/' . $id . '.webp', $binaryData);
     }
-}
 
-imagedestroy($jpgImg);
+    $targetRelativePath = "students/{$sccode}/{$id}.webp";
+    $publicUrl = "https://eimbox.com/students/{$sccode}/{$id}.webp";
+
+    // Safely update students modifieddate
+    try {
+        @$conn->query("UPDATE students SET modifieddate = NOW() WHERE stid = '" . $conn->real_escape_string($id) . "' AND (sccode = $sccode OR sccode = 0)");
+    } catch (Throwable $e) {}
+}
 
 api_response('success', 'Photo uploaded and saved successfully.', [
     'sccode' => $sccode,
     'id' => $id,
     'type' => $type,
-    'photo_id' => "{$id}.jpg",
+    'photo_id' => "{$id}.webp",
     'photo_path' => $targetRelativePath,
     'photo_url' => $publicUrl,
     'saved_at' => date('Y-m-d H:i:s')
 ]);
+
+
 

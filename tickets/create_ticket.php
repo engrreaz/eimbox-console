@@ -15,9 +15,13 @@ if (!$user_id || !$subject || !$message) {
     exit;
 }
 
+$ticket_for = !empty($_POST['ticket_for']) ? trim($_POST['ticket_for']) : 'Institute';
+$category   = !empty($_POST['category']) ? trim($_POST['category']) : 'General';
+$priority   = !empty($_POST['priority']) ? trim($_POST['priority']) : 'Medium';
+
 // টিকেট ইনসার্ট
-$stmt = $conn->prepare("INSERT INTO tickets (user_id, sccode, subject) VALUES (?, ?, ?)");
-$stmt->bind_param("iss", $user_id, $sccode, $subject);
+$stmt = $conn->prepare("INSERT INTO tickets (user_id, sccode, subject, ticket_for, category, priority) VALUES (?, ?, ?, ?, ?, ?)");
+$stmt->bind_param("isssss", $user_id, $sccode, $subject, $ticket_for, $category, $priority);
 $insertTicket = $stmt->execute();
 $ticket_id = $stmt->insert_id;
 $stmt->close();

@@ -313,8 +313,8 @@ foreach ($clusters as $root => $members) {
         <a href="managing-voter-list.php" class="btn btn-sm btn-outline-light">
             <i class="bi bi-arrow-left me-1"></i> Control Panel
         </a>
-        <a href="voter-master-list.php" class="btn btn-sm btn-outline-info">
-            <i class="bi bi-file-earmark-text me-1"></i> Master Voter List
+        <a href="voter-master-report.php" class="btn btn-sm btn-outline-info">
+            <i class="bi bi-file-earmark-text me-1"></i> Master Voter Report
         </a>
         <button class="btn btn-sm btn-light fw-bold" onclick="window.print()">
             <i class="bi bi-printer-fill me-1"></i> Print / Save PDF

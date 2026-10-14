@@ -84,27 +84,27 @@ $_SESSION['current_page'] = $currentFile;
 
 
 
+/* PLATFORM OPERATIONAL STATUS GUARD ENFORCEMENT */
+require_once __DIR__ . '/PlatformGuard.php';
+$platformStatus = MaterioPlatformGuard::getStatus($conn);
+
+if ($platformStatus['status'] === 'isolated') {
+    $isSuper = MaterioPlatformGuard::isSuperAdminUser();
+    if (empty($platformStatus['allow_admin_bypass']) || !$isSuper) {
+        MaterioPlatformGuard::renderScreen(503, 'isolated', $platformStatus);
+        exit;
+    }
+}
+
+if ($platformStatus['status'] === 'maintenance' && empty($platformStatus['allow_admin_bypass'])) {
+    MaterioPlatformGuard::renderScreen(503, 'maintenance', $platformStatus);
+    exit;
+}
+
 // Publicly accessible pages (no login required)
 $publicPages = ['regd_new.php', 'login.php', 'logout.php', 'mfa_verify.php', 'forgot_password.php', 'forgot_password_process', 'reset_password.php'];
 
-
-
-
-
-// Fingerprint
-// if (!isset($_SESSION['fingerprint'])) {
-//     $_SESSION['fingerprint'] = hash('sha256', $_SERVER['HTTP_USER_AGENT'] . client_ip());
-// } elseif ($_SESSION['fingerprint'] !== hash('sha256', $_SERVER['HTTP_USER_AGENT'] . client_ip())) {
-//     session_destroy();
-//     header('Location: login.php');
-//     exit;
-// }
-
 // Only check session for protected pages
-
-
-
-
 if (!in_array($currentFile, $publicPages)) {
     if (empty($_SESSION['user_id'])) {
         header("Location: login.php");
@@ -118,7 +118,14 @@ if (!in_array($currentFile, $publicPages)) {
         require_once 'permissions.php';
         require_once 'package_checker.php';
 
-
+        // Enforce maintenance mode, isolation, and read-only protections on authenticated routes
+        MaterioPlatformGuard::check($conn, [
+            'is_admin' => $is_admin ?? $_SESSION['isadmin'] ?? $_SESSION['admin'] ?? 0,
+            'userlevel' => $_SESSION['userlevel'] ?? '',
+            'user_role' => $_SESSION['user_role'] ?? '',
+            'user_name' => $_SESSION['user_name'] ?? $_SESSION['user_email'] ?? '',
+            'is_chief' => (isset($_SESSION['userlevel']) && strtolower((string)$_SESSION['userlevel']) === 'chief') ? 1 : 0
+        ]);
     }
 }
 

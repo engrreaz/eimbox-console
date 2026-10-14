@@ -14,48 +14,59 @@ if (isset($_POST['import_default_heads'])) {
     $def_heads_res = $conn->query("SELECT * FROM account_head_default ORDER BY id ASC");
     if ($def_heads_res && $def_heads_res->num_rows > 0) {
         while ($dh = $def_heads_res->fetch_assoc()) {
-            $h_name = trim($dh['account_head']);
+            $h_name = trim($dh['account_head'] ?? $dh['head_name'] ?? '');
             if ($h_name === '') continue;
 
-            // চেক করা অলরেডি এই sccode-এ হেডটি আছে কিনা
-            $stmt = $conn->prepare("SELECT id FROM account_head WHERE sccode = ? AND account_head = ? LIMIT 1");
-            $stmt->bind_param("is", $sccode, $h_name);
+            $h_code = trim($dh['head_code'] ?? '');
+            $h_bn = trim($dh['head_name_bn'] ?? '');
+            $h_type = trim($dh['head_type'] ?? 'expense');
+            $disp_order = intval($dh['display_order'] ?? 0);
+
+            // চেক করা অলরেডি এই sccode-এ হেডটি আছে কিনা (head_name কলাম)
+            $stmt = $conn->prepare("SELECT id FROM account_head WHERE sccode = ? AND head_name = ? LIMIT 1");
+            $stmt->bind_param("ss", $sccode, $h_name);
             $stmt->execute();
             $check_res = $stmt->get_result();
 
-            if ($check_res->num_rows > 0) {
+            if ($check_res && $check_res->num_rows > 0) {
                 $head_id = $check_res->fetch_assoc()['id'];
             } else {
-                $ins_stmt = $conn->prepare("INSERT INTO account_head (account_head, sccode) VALUES (?, ?)");
-                $ins_stmt->bind_param("si", $h_name, $sccode);
+                $ins_stmt = $conn->prepare("INSERT INTO account_head (sccode, head_code, head_name, head_name_bn, head_type, is_system_default, status, display_order, modifieddate) VALUES (?, ?, ?, ?, ?, 1, 1, ?, NOW())");
+                $ins_stmt->bind_param("sssssi", $sccode, $h_code, $h_name, $h_bn, $h_type, $disp_order);
                 $ins_stmt->execute();
                 $head_id = $ins_stmt->insert_id;
                 $imported_heads++;
             }
 
             // এই হেডের আওতায় থাকা ডিফল্ট সাব-হেডগুলো ইমপোর্ট
-            $stmt_sub = $conn->prepare("SELECT * FROM account_sub_head_default WHERE account_head = ?");
-            $stmt_sub->bind_param("s", $h_name);
+            $stmt_sub = $conn->prepare("SELECT * FROM account_sub_head_default WHERE account_head = ? OR head_code = ?");
+            $stmt_sub->bind_param("ss", $h_name, $h_code);
             $stmt_sub->execute();
             $def_subs_res = $stmt_sub->get_result();
 
-            while ($ds = $def_subs_res->fetch_assoc()) {
-                $s_name = trim($ds['sub_head']);
-                if ($s_name === '') continue;
+            if ($def_subs_res) {
+                while ($ds = $def_subs_res->fetch_assoc()) {
+                    $s_name = trim($ds['sub_head'] ?? '');
+                    if ($s_name === '') continue;
 
-                $type = strtolower($ds['type'] ?? 'expenditure');
-                $inc = ($type === 'income') ? 1 : 0;
-                $exp = ($type === 'expenditure') ? 1 : 0;
+                    $s_code = trim($ds['sub_head_code'] ?? '');
+                    $s_bn = trim($ds['sub_head_bn'] ?? '');
+                    $inc = intval($ds['income'] ?? 0);
+                    $exp = intval($ds['expenditure'] ?? 1);
+                    $sub_order = intval($ds['display_order'] ?? 0);
 
-                // সাব-হেড ডুপ্লিকেট চেক
-                $chk_sub = $conn->prepare("SELECT id FROM account_sub_head WHERE sccode = ? AND account_head_id = ? AND sub_head = ? LIMIT 1");
-                $chk_sub->bind_param("iis", $sccode, $head_id, $s_name);
-                $chk_sub->execute();
-                if ($chk_sub->get_result()->num_rows === 0) {
-                    $ins_sub = $conn->prepare("INSERT INTO account_sub_head (sccode, account_head_id, account_head, sub_head, income, expenditure) VALUES (?, ?, ?, ?, ?, ?)");
-                    $ins_sub->bind_param("iissii", $sccode, $head_id, $h_name, $s_name, $inc, $exp);
-                    $ins_sub->execute();
-                    $imported_subs++;
+                    // সাব-হেড ডুপ্লিকেট চেক
+                    $chk_sub = $conn->prepare("SELECT id FROM account_sub_head WHERE sccode = ? AND account_head_id = ? AND sub_head = ? LIMIT 1");
+                    $chk_sub->bind_param("sis", $sccode, $head_id, $s_name);
+                    $chk_sub->execute();
+                    $chk_res = $chk_sub->get_result();
+
+                    if ($chk_res && $chk_res->num_rows === 0) {
+                        $ins_sub = $conn->prepare("INSERT INTO account_sub_head (sccode, account_head_id, sub_head_code, sub_head, sub_head_bn, income, expenditure, status, display_order, modifieddate) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, NOW())");
+                        $ins_sub->bind_param("sisssiii", $sccode, $head_id, $s_code, $s_name, $s_bn, $inc, $exp, $sub_order);
+                        $ins_sub->execute();
+                        $imported_subs++;
+                    }
                 }
             }
         }
@@ -76,20 +87,15 @@ if (isset($_POST['save_head'])) {
 
     if ($head_name !== '') {
         if ($head_id > 0) {
-            $stmt = $conn->prepare("UPDATE account_head SET account_head = ?, modifieddate = NOW() WHERE id = ? AND sccode = ?");
-            $stmt->bind_param("sii", $head_name, $head_id, $sccode);
+            $stmt = $conn->prepare("UPDATE account_head SET head_name = ?, modifieddate = NOW() WHERE id = ? AND sccode = ?");
+            $stmt->bind_param("sis", $head_name, $head_id, $sccode);
             $stmt->execute();
-
-            // সাব-হেড টেবিলেও account_head নাম আপডেট রাখা
-            $stmt_u = $conn->prepare("UPDATE account_sub_head SET account_head = ?, modifieddate = NOW() WHERE account_head_id = ? AND sccode = ?");
-            $stmt_u->bind_param("sii", $head_name, $head_id, $sccode);
-            $stmt_u->execute();
 
             $alert_msg = "Account Head updated successfully.";
             $alert_type = 'success';
         } else {
-            $stmt = $conn->prepare("INSERT INTO account_head (account_head, sccode) VALUES (?, ?)");
-            $stmt->bind_param("si", $head_name, $sccode);
+            $stmt = $conn->prepare("INSERT INTO account_head (sccode, head_name, status, modifieddate) VALUES (?, ?, 1, NOW())");
+            $stmt->bind_param("ss", $sccode, $head_name);
             $stmt->execute();
             $alert_msg = "Account Head created successfully.";
             $alert_type = 'success';
@@ -100,15 +106,17 @@ if (isset($_POST['save_head'])) {
 if (isset($_GET['del_head'])) {
     $del_id = intval($_GET['del_head']);
     if ($del_id > 0) {
-        $stmt1 = $conn->prepare("DELETE FROM account_head WHERE id = ? AND sccode = ?");
-        $stmt1->bind_param("ii", $del_id, $sccode);
-        $stmt1->execute();
+        // ১. প্রথমে চাইল্ড সাব-হেড ডিলিট করতে হবে (FK RESTRICT কনস্ট্রেইন্ট বজায় রাখার জন্য)
+        $stmt_sub = $conn->prepare("DELETE FROM account_sub_head WHERE account_head_id = ? AND sccode = ?");
+        $stmt_sub->bind_param("is", $del_id, $sccode);
+        $stmt_sub->execute();
 
-        $stmt2 = $conn->prepare("DELETE FROM account_sub_head WHERE account_head_id = ? AND sccode = ?");
-        $stmt2->bind_param("ii", $del_id, $sccode);
-        $stmt2->execute();
+        // ২. এরপর প্যারেন্ট অ্যাকাউন্ট হেড ডিলিট করতে হবে
+        $stmt_head = $conn->prepare("DELETE FROM account_head WHERE id = ? AND sccode = ?");
+        $stmt_head->bind_param("is", $del_id, $sccode);
+        $stmt_head->execute();
 
-        $alert_msg = "Account Head and related Sub-Heads deleted.";
+        $alert_msg = "Account Head and related Sub-Heads deleted successfully.";
         $alert_type = 'danger';
     }
 }
@@ -119,7 +127,6 @@ if (isset($_GET['del_head'])) {
 if (isset($_POST['save_sub'])) {
     $sub_id = intval($_POST['sub_id'] ?? 0);
     $h_id = intval($_POST['h_id'] ?? 0);
-    $h_name = trim($_POST['h_name'] ?? '');
     $sub_name = trim($_POST['sub_name'] ?? '');
     $inc = isset($_POST['income']) ? 1 : 0;
     $exp = isset($_POST['expenditure']) ? 1 : 0;
@@ -127,13 +134,13 @@ if (isset($_POST['save_sub'])) {
     if ($sub_name !== '' && $h_id > 0) {
         if ($sub_id > 0) {
             $stmt = $conn->prepare("UPDATE account_sub_head SET sub_head = ?, income = ?, expenditure = ?, modifieddate = NOW() WHERE id = ? AND sccode = ?");
-            $stmt->bind_param("siiii", $sub_name, $inc, $exp, $sub_id, $sccode);
+            $stmt->bind_param("siiis", $sub_name, $inc, $exp, $sub_id, $sccode);
             $stmt->execute();
             $alert_msg = "Sub-Head updated successfully.";
             $alert_type = 'success';
         } else {
-            $stmt = $conn->prepare("INSERT INTO account_sub_head (sccode, account_head_id, account_head, sub_head, income, expenditure) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("iissii", $sccode, $h_id, $h_name, $sub_name, $inc, $exp);
+            $stmt = $conn->prepare("INSERT INTO account_sub_head (sccode, account_head_id, sub_head, income, expenditure, status, modifieddate) VALUES (?, ?, ?, ?, ?, 1, NOW())");
+            $stmt->bind_param("sisii", $sccode, $h_id, $sub_name, $inc, $exp);
             $stmt->execute();
             $alert_msg = "Sub-Head created successfully.";
             $alert_type = 'success';
@@ -145,7 +152,7 @@ if (isset($_GET['del_sub'])) {
     $del_sub_id = intval($_GET['del_sub']);
     if ($del_sub_id > 0) {
         $stmt = $conn->prepare("DELETE FROM account_sub_head WHERE id = ? AND sccode = ?");
-        $stmt->bind_param("ii", $del_sub_id, $sccode);
+        $stmt->bind_param("is", $del_sub_id, $sccode);
         $stmt->execute();
         $alert_msg = "Sub-Head deleted.";
         $alert_type = 'danger';
@@ -155,7 +162,7 @@ if (isset($_GET['del_sub'])) {
 // ==========================================
 // 4. DATA FETCHING & SUMMARY CALCULATIONS
 // ==========================================
-$heads_query = $conn->query("SELECT * FROM account_head WHERE sccode='$sccode' ORDER BY id ASC");
+$heads_query = $conn->query("SELECT *, head_name AS account_head FROM account_head WHERE sccode='$sccode' ORDER BY display_order ASC, id ASC");
 $all_heads = [];
 if ($heads_query) {
     while ($h = $heads_query->fetch_assoc()) {
@@ -163,7 +170,11 @@ if ($heads_query) {
     }
 }
 
-$sub_heads_res = $conn->query("SELECT * FROM account_sub_head WHERE sccode='$sccode' ORDER BY id ASC");
+$sub_heads_res = $conn->query("SELECT s.*, COALESCE(h.head_name, '') AS account_head 
+                               FROM account_sub_head s 
+                               LEFT JOIN account_head h ON s.account_head_id = h.id 
+                               WHERE s.sccode='$sccode' 
+                               ORDER BY s.display_order ASC, s.id ASC");
 $sub_heads = [];
 $flat_sub_heads = [];
 $total_income = 0;
@@ -375,6 +386,40 @@ $head_count = count($all_heads);
         background-color: rgba(30, 143, 7, 0.2);
         color: #66bb6a;
     }
+
+    /* M3 BOTTOM SNACKBAR / TOAST */
+    #m3Snackbar {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%) translateY(100px);
+        background: #313033;
+        color: #F4EFF4;
+        padding: 12px 22px;
+        border-radius: 28px;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+        font-size: 0.88rem;
+        font-weight: 500;
+        z-index: 1090;
+        transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1), opacity 0.3s ease;
+        opacity: 0;
+        pointer-events: none;
+        max-width: 90%;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    #m3Snackbar.show {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    #m3Snackbar.snackbar-success { background: #198754; color: #fff; }
+    #m3Snackbar.snackbar-error { background: #BA1A1A; color: #fff; }
+    #m3Snackbar.snackbar-info { background: #4361ee; color: #fff; }
+    #m3Snackbar.snackbar-warning { background: #E65100; color: #fff; }
 </style>
 
 <div class="container-xxl flex-grow-1 container-p-y">
@@ -393,8 +438,9 @@ $head_count = count($all_heads);
             </div>
 
             <!-- Import Default Button -->
-            <form method="POST" onsubmit="return confirm('Do you want to import default account heads and sub-heads? Existing heads will not be overwritten.');" class="d-inline">
-                <button type="submit" name="import_default_heads" class="btn btn-outline-primary btn-sm px-3 shadow-sm">
+            <form id="importDefaultForm" method="POST" class="d-inline">
+                <input type="hidden" name="import_default_heads" value="1">
+                <button type="button" class="btn btn-outline-primary btn-sm px-3 shadow-sm" onclick="confirmImportDefaults('importDefaultForm')">
                     <i class="bi bi-cloud-arrow-down me-1"></i> Import Defaults
                 </button>
             </form>
@@ -463,8 +509,9 @@ $head_count = count($all_heads);
                     Your chart of accounts is currently empty. You can either import the standard institutional default heads or create your custom account heads.
                 </p>
                 <div class="d-flex justify-content-center gap-2 mt-3">
-                    <form method="POST" onsubmit="return confirm('Import all standard default chart of accounts?');">
-                        <button type="submit" name="import_default_heads" class="btn btn-primary btn-sm px-4 py-2">
+                    <form id="importDefaultFormEmpty" method="POST" class="d-inline">
+                        <input type="hidden" name="import_default_heads" value="1">
+                        <button type="button" class="btn btn-primary btn-sm px-4 py-2 shadow-sm" onclick="confirmImportDefaults('importDefaultFormEmpty')">
                             <i class="bi bi-cloud-arrow-down me-1"></i> Import Standard Defaults
                         </button>
                     </form>
@@ -504,7 +551,7 @@ $head_count = count($all_heads);
                                 <i class="bi bi-pencil"></i>
                             </button>
                             <button class="tonal-icon-btn c-exit" title="Delete Head"
-                                onclick="deleteItem('accounts-manager.php?del_head=<?= $h['id'] ?>')">
+                                onclick="deleteItem('accounts-manager.php?del_head=<?= $h['id'] ?>', true)">
                                 <i class="bi bi-trash3"></i>
                             </button>
                         </div>
@@ -536,7 +583,7 @@ $head_count = count($all_heads);
                                                 <i class="bi bi-pencil tonal-icon c-info" title="Edit"
                                                     onclick="editSub('<?= $sh['id'] ?>', '<?= htmlspecialchars(addslashes($sh['sub_head'])) ?>', '<?= $sh['income'] ?>', '<?= $sh['expenditure'] ?>', '<?= $h['id'] ?>', '<?= htmlspecialchars(addslashes($h['account_head'])) ?>')"></i>
                                                 <i class="bi bi-trash3 tonal-icon c-exit" title="Delete"
-                                                    onclick="deleteItem('accounts-manager.php?del_sub=<?= $sh['id'] ?>')"></i>
+                                                    onclick="deleteItem('accounts-manager.php?del_sub=<?= $sh['id'] ?>', false)"></i>
                                             </div>
                                         </div>
                                     </div>
@@ -616,7 +663,7 @@ $head_count = count($all_heads);
                                                 <i class="bi bi-pencil"></i>
                                             </button>
                                             <button class="tonal-icon-btn c-exit" title="Delete Sub-Head"
-                                                onclick="deleteItem('accounts-manager.php?del_sub=<?= $fsh['id'] ?>')">
+                                                onclick="deleteItem('accounts-manager.php?del_sub=<?= $fsh['id'] ?>', false)">
                                                 <i class="bi bi-trash3"></i>
                                             </button>
                                         </div>
@@ -712,14 +759,149 @@ $head_count = count($all_heads);
     </div>
 </div>
 
+<!-- ==========================================
+     M3 MODAL: ACTION CONFIRMATION (DELETE / IMPORT)
+=========================================== -->
+<div class="modal fade" id="m3ConfirmModal" tabindex="-1" aria-labelledby="m3ConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+        <div class="modal-content m3-modal-content border-0 shadow-lg" style="border-radius: 28px;">
+            <div class="p-4 text-center">
+                <div id="m3ConfirmIconBox" class="mx-auto mb-3 rounded-circle d-flex align-items-center justify-content-center bg-danger-subtle text-danger" style="width: 58px; height: 58px; font-size: 1.6rem;">
+                    <i id="m3ConfirmIcon" class="bi bi-trash3-fill"></i>
+                </div>
+                <h5 class="fw-bold mb-2 text-body" id="m3ConfirmTitle">Confirm Action</h5>
+                <p class="text-muted small mb-4 px-2" id="m3ConfirmMessage">Are you sure you want to proceed?</p>
+                <div class="d-flex justify-content-center gap-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-4 rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" id="m3ConfirmSubmitBtn" class="btn btn-danger btn-sm px-4 rounded-pill shadow-sm" onclick="executeM3ConfirmAction()">
+                        <span id="m3ConfirmBtnText">Confirm</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- M3 BOTTOM SNACKBAR / TOAST -->
+<div id="m3Snackbar">
+    <i id="snackbarIcon" class="bi bi-info-circle-fill fs-5"></i>
+    <span id="snackbarMessage">Notification</span>
+</div>
+
 <?php require_once 'footer.php'; ?>
 
 <script>
     const headModal = new bootstrap.Modal(document.getElementById('headModal'));
     const subModal = new bootstrap.Modal(document.getElementById('subModal'));
+    const confirmModal = new bootstrap.Modal(document.getElementById('m3ConfirmModal'));
 
     let currentFilterType = 'all'; // 'all', 'income', 'expense'
     let currentViewMode = 'cards';   // 'cards', 'table'
+    let m3ConfirmCallback = null;
+    let snackbarTimer = null;
+
+    // M3 Bottom Snackbar Function
+    function showSnackbar(msg, type = 'info') {
+        const snackbar = document.getElementById('m3Snackbar');
+        const icon = document.getElementById('snackbarIcon');
+        const text = document.getElementById('snackbarMessage');
+
+        if (!snackbar || !icon || !text) return;
+
+        text.textContent = msg;
+        snackbar.className = 'show ' + (type === 'success' ? 'snackbar-success' : (type === 'error' ? 'snackbar-error' : (type === 'warning' ? 'snackbar-warning' : 'snackbar-info')));
+
+        if (type === 'success') {
+            icon.className = 'bi bi-check-circle-fill fs-5';
+        } else if (type === 'error') {
+            icon.className = 'bi bi-exclamation-octagon-fill fs-5';
+        } else if (type === 'warning') {
+            icon.className = 'bi bi-exclamation-triangle-fill fs-5';
+        } else {
+            icon.className = 'bi bi-info-circle-fill fs-5';
+        }
+
+        clearTimeout(snackbarTimer);
+        snackbarTimer = setTimeout(() => {
+            snackbar.classList.remove('show');
+        }, 4000);
+    }
+
+    // Trigger Snackbar on Page Load if PHP Alert Exists
+    document.addEventListener('DOMContentLoaded', function () {
+        <?php if (!empty($alert_msg)): ?>
+            showSnackbar(<?= json_encode($alert_msg) ?>, '<?= $alert_type === 'danger' ? 'error' : ($alert_type === 'success' ? 'success' : 'info') ?>');
+        <?php endif; ?>
+    });
+
+    // M3 Confirmation Dialog Trigger
+    function showM3Confirm({ title, message, icon, iconBoxClass, btnText, btnClass, onConfirm }) {
+        document.getElementById('m3ConfirmTitle').innerText = title || 'Confirm Action';
+        document.getElementById('m3ConfirmMessage').innerText = message || 'Are you sure you want to proceed?';
+        
+        const iconEl = document.getElementById('m3ConfirmIcon');
+        const iconBox = document.getElementById('m3ConfirmIconBox');
+        if (iconEl && icon) {
+            iconEl.className = icon;
+        }
+        if (iconBox && iconBoxClass) {
+            iconBox.className = 'mx-auto mb-3 rounded-circle d-flex align-items-center justify-content-center ' + iconBoxClass;
+        }
+
+        const btn = document.getElementById('m3ConfirmSubmitBtn');
+        if (btn) {
+            btn.className = 'btn btn-sm px-4 rounded-pill shadow-sm ' + (btnClass || 'btn-danger');
+        }
+        const btnTextEl = document.getElementById('m3ConfirmBtnText');
+        if (btnTextEl) {
+            btnTextEl.innerText = btnText || 'Confirm';
+        }
+
+        m3ConfirmCallback = onConfirm;
+        confirmModal.show();
+    }
+
+    function executeM3ConfirmAction() {
+        confirmModal.hide();
+        if (typeof m3ConfirmCallback === 'function') {
+            m3ConfirmCallback();
+        }
+    }
+
+    // Import Defaults with M3 Confirmation
+    function confirmImportDefaults(formId = 'importDefaultForm') {
+        showM3Confirm({
+            title: 'Import Default Accounts?',
+            message: 'Default institutional account heads and sub-heads will be imported. Existing custom heads will not be overwritten or modified.',
+            icon: 'bi bi-cloud-arrow-down-fill',
+            iconBoxClass: 'bg-primary-subtle text-primary',
+            btnText: 'Import Defaults',
+            btnClass: 'btn-primary',
+            onConfirm: function() {
+                const targetForm = document.getElementById(formId);
+                if (targetForm) {
+                    targetForm.submit();
+                }
+            }
+        });
+    }
+
+    // Delete Item with M3 Confirmation
+    function deleteItem(url, isHead = false) {
+        showM3Confirm({
+            title: isHead ? 'Delete Account Head?' : 'Delete Sub-Head?',
+            message: isHead 
+                ? 'Warning: Deleting this account head will also delete all of its underlying sub-sectors and related setups. This action cannot be undone.' 
+                : 'Are you sure you want to delete this sub-head? This action cannot be undone.',
+            icon: 'bi bi-trash3-fill',
+            iconBoxClass: 'bg-danger-subtle text-danger',
+            btnText: 'Delete Permanently',
+            btnClass: 'btn-danger',
+            onConfirm: function() {
+                window.location.href = url;
+            }
+        });
+    }
 
     function addHead() {
         document.getElementById('headModalTitle').innerText = "Create New Head";
@@ -757,28 +939,6 @@ $head_count = count($all_heads);
         document.getElementById('income').checked = (inc == 1);
         document.getElementById('expenditure').checked = (exp == 1);
         subModal.show();
-    }
-
-    function deleteItem(url) {
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                title: 'Delete this item?',
-                text: "Warning: Related records may be affected.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#B3261E',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Yes, Delete'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = url;
-                }
-            });
-        } else {
-            if (confirm('Are you sure you want to delete this item?')) {
-                window.location.href = url;
-            }
-        }
     }
 
     // View Switching

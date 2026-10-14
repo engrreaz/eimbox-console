@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_sanction'], $_PO
 
 // Query Pending Vouchers
 $sql_pending = "SELECT c.*, 
-                       COALESCE(h.account_head, s.account_head, 'General') AS main_head_name,
+                       COALESCE(h.head_name, 'General') AS main_head_name,
                        COALESCE(s.sub_head, 'General') AS sub_head_name
                 FROM cashbook c
                 LEFT JOIN account_sub_head s ON (c.account_sub_head = s.id OR c.partid = s.id)

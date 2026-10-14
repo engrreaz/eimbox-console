@@ -140,7 +140,7 @@ $conn->query("UPDATE cashbook SET status = 1 WHERE sccode = '$sccode' AND date B
 // ===================================================
 $sql_coa = "SELECT 
                 COALESCE(h.id, 0) AS head_id,
-                COALESCE(h.account_head, s.account_head, 'General / Unassigned') AS main_head_name,
+                COALESCE(h.head_name, 'General / Unassigned') AS main_head_name,
                 COALESCE(s.id, 0) AS sub_head_id,
                 COALESCE(s.sub_head, 'General Sub-head') AS sub_head_name,
                 SUM(c.income) AS total_income,

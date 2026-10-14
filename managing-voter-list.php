@@ -58,10 +58,10 @@ $section = $_COOKIE['chain-section'] ?? '';
                 </div>
                 <div class="d-flex flex-wrap gap-2">
                     <a href="voter-siblings-report.php" target="_blank" class="btn btn-outline-warning action-btn-custom">
-                        <i class="bi bi-people-fill"></i> Sibling Report
+                        <i class="bi bi-people-fill"></i> Sibling Audit Report
                     </a>
-                    <a href="voter-master-list.php" class="btn btn-outline-primary action-btn-custom">
-                        <i class="bi bi-file-earmark-text"></i> Master Voter List
+                    <a href="voter-master-list.php" target="_blank" class="btn btn-outline-primary action-btn-custom">
+                        <i class="bi bi-file-earmark-text"></i> Master Voter List Report
                     </a>
                     <button class="btn btn-primary action-btn-custom" onclick="generateVoterList()">
                         <i class="bi bi-lightning-charge-fill"></i> Generate Voter Numbers

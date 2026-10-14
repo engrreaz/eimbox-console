@@ -2307,7 +2307,8 @@ if ($monitorPanel === true) { ?>
     }
 
 </script>
-
+<!-- EIMBox Modern Web Push Notifications -->
+<script src="assets/js/fcm-client.js" defer></script>
 <?php
 // echo "<pre>";
 // foreach ($_SESSION['query_log'] ?? [] as $q) {

@@ -5,7 +5,20 @@ require_once "../core/db.php";
 
 db_connect();
 
+require_once __DIR__ . '/../core/PlatformGuard.php';
+$platformStatus = MaterioPlatformGuard::getStatus($conn);
+
 header('Content-Type: application/json'); // JSON must be declared BEFORE any output
+
+if ($platformStatus['status'] === 'isolated') {
+    echo json_encode(["status" => "error", "message" => "Platform is temporarily offline for maintenance."]);
+    exit;
+}
+
+if ($platformStatus['status'] === 'maintenance') {
+    echo json_encode(["status" => "error", "message" => "Platform is currently undergoing scheduled maintenance. Guest access is temporarily disabled."]);
+    exit;
+}
 
 $sccode = $_POST['sccode'] ?? '';
 $session = $_POST['session'] ?? '';
