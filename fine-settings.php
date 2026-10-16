@@ -788,8 +788,8 @@ $weekends_display = implode(', ', array_map('ucfirst', $weekendDays));
 
 <?php include 'footer.php'; ?>
 
-<!-- SweetAlert2 -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- SweetAlert2 replaced by global M3 Dialog System in footer.php -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> -->
 
 <script>
 // Configure SweetAlert Toast for quick status notifications

@@ -116,6 +116,8 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
 
 
     <link rel="stylesheet" href="assets/css/eimbox.css" />
+    <!-- Material Design 3 (M3) Dialog, Alert & Notification Styles -->
+    <link rel="stylesheet" href="assets/css/m3-dialog.css?v=1.0" />
 
     <!-- Helpers -->
     <script src="assets/vendor/js/helpers.js"></script>
@@ -129,6 +131,8 @@ $logo_path = BASE_PATH . 'logo/' . $sccode . '.png';
 
     <script src="assets/vendor/libs/jquery/jquery.js"></script>
     <script src="assets/vendor/js/bootstrap.js"></script>
+    <!-- Material Design 3 (M3) Dialog & Notification Engine (Swal polyfill) -->
+    <script src="assets/js/m3-dialog.js?v=1.0"></script>
     <script src="https://cdn.datatables.net/2.3.5/js/dataTables.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intro.js/minified/introjs.min.css">
     <link rel="stylesheet" href="https://unpkg.com/intro.js/minified/introjs.min.css">

@@ -248,20 +248,20 @@
             <i class="ri ri-notification-3-line"></i>
           </div>
           <div style="flex: 1;">
-            <div style="font-size: 0.88rem; font-weight: 500; color: #f8fafc; margin-bottom: 2px;">নোটিফিকেশন চালু করুন</div>
-            <div style="font-size: 0.78rem; color: #94a3b8; line-height: 1.4;">তাৎক্ষণিক পরীক্ষার ফলাফল ও প্রাতিষ্ঠানিক আপডেট পেতে নোটিফিকেশন অন রাখুন।</div>
+            <div style="font-size: 0.88rem; font-weight: 500; color: #f8fafc; margin-bottom: 2px;">Enable Notifications</div>
+            <div style="font-size: 0.78rem; color: #94a3b8; line-height: 1.4;">Turn on notifications to receive instant exam results and institutional updates.</div>
           </div>
         </div>
         <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px;">
-          <button id="eimbox-push-btn-later" style="padding: 5px 12px; font-size: 0.76rem; border-radius: 6px; background: transparent; color: #94a3b8; border: 1px solid rgba(255,255,255,0.1); cursor: pointer;">পরে</button>
-          <button id="eimbox-push-btn-allow" style="padding: 5px 14px; font-size: 0.76rem; border-radius: 6px; background: #fbbf24; color: #000; font-weight: 500; border: none; cursor: pointer;">অনুমতি দিন</button>
+          <button id="eimbox-push-btn-later" style="padding: 5px 12px; font-size: 0.76rem; border-radius: 6px; background: transparent; color: #94a3b8; border: 1px solid rgba(255,255,255,0.1); cursor: pointer;">Later</button>
+          <button id="eimbox-push-btn-allow" style="padding: 5px 14px; font-size: 0.76rem; border-radius: 6px; background: #fbbf24; color: #000; font-weight: 500; border: none; cursor: pointer;">Allow</button>
         </div>
       `;
 
       document.body.appendChild(banner);
 
       document.getElementById('eimbox-push-btn-later').addEventListener('click', () => {
-        const snoozeUntilTime = Date.now() + (3 * 24 * 60 * 60 * 1000);
+        const snoozeUntilTime = Date.now() + (1 * 24 * 60 * 60 * 1000);
         localStorage.setItem('eimbox_push_snooze_until', snoozeUntilTime);
         banner.remove();
       });
@@ -296,11 +296,11 @@
     showInAppNotification(payload) {
       this.playNotificationChime();
 
-      const title = payload.notification?.title || payload.data?.title || 'বিজ্ঞপ্তি';
+      const title = payload.notification?.title || payload.data?.title || 'Notification';
       const body = payload.notification?.body || payload.data?.body || payload.data?.message || '';
       const imageUrl = payload.notification?.image || payload.data?.image || payload.data?.image_url || null;
       const url = payload.fcmOptions?.link || payload.data?.click_action || payload.data?.url || payload.data?.link || '';
-      const category = payload.data?.category || 'বিজ্ঞপ্তি';
+      const category = payload.data?.category || 'Notification';
 
       const existingOld = document.getElementById('eimbox-modern-notif-card');
       if (existingOld) existingOld.remove();
@@ -352,8 +352,8 @@
         <div style="font-size: 0.83rem; color: #b6bee3; line-height: 1.45; word-break: break-word;">${body}</div>
         ${imgHtml}
         <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px;">
-          <button id="eimbox-modern-dismiss-btn" style="padding: 6px 14px; font-size: 0.8rem; border-radius: 6px; background: transparent; color: #a8aaae; border: 1px solid rgba(255,255,255,0.15); cursor: pointer;">পরে</button>
-          ${url ? `<button id="eimbox-modern-view-btn" style="padding: 6px 18px; font-size: 0.8rem; border-radius: 6px; background: #7367f0; color: #fff; border: none; cursor: pointer;">বিস্তারিত দেখুন <i class="bi bi-arrow-right-short"></i></button>` : ''}
+          <button id="eimbox-modern-dismiss-btn" style="padding: 6px 14px; font-size: 0.8rem; border-radius: 6px; background: transparent; color: #a8aaae; border: 1px solid rgba(255,255,255,0.15); cursor: pointer;">Dismiss</button>
+          ${url ? `<button id="eimbox-modern-view-btn" style="padding: 6px 18px; font-size: 0.8rem; border-radius: 6px; background: #7367f0; color: #fff; border: none; cursor: pointer;">View Details <i class="bi bi-arrow-right-short"></i></button>` : ''}
         </div>
       `;
 

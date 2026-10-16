@@ -15,7 +15,7 @@ $is_today = ($selected_date === date('Y-m-d'));
 
 // 1. Fetch Institution Active Slots / Shifts
 $slots_list = [];
-$slot_stmt = $conn->prepare("SELECT DISTINCT slotname FROM slots WHERE sccode = ? AND slotname IS NOT NULL AND slotname != '' ORDER BY id ASC");
+$slot_stmt = $conn->prepare("SELECT DISTINCT slotname FROM slots WHERE sccode = ? AND slotname IS NOT NULL AND slotname != '' ORDER BY slotname ASC");
 if ($slot_stmt) {
     $slot_stmt->bind_param("i", $sccode);
     $slot_stmt->execute();

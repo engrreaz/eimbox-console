@@ -1,0 +1,437 @@
+/**
+ * EIMBox Material Design 3 (M3) Dialog, Alert, Snackbar & Bottom Sheet Styles
+ * Follows Google Material Design 3 Specification for Android & WebViews
+ * Strict Rules: No bold text, Bootstrap Icons, M3 Tonal Surfaces & Elevation
+ */
+
+:root {
+  --m3-dialog-radius: 28px;
+  --m3-snackbar-radius: 16px;
+  --m3-sheet-radius: 24px 24px 0 0;
+  --m3-btn-radius: 20px;
+  --m3-transition-standard: all 0.28s cubic-bezier(0.2, 0, 0, 1);
+  --m3-font-weight-regular: 400;
+  --m3-font-weight-medium: 500;
+}
+
+/* =========================================================
+   1. M3 Backdrop Overlay
+   ========================================================= */
+.m3-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 17, 23, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 999990;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.24s cubic-bezier(0.2, 0, 0, 1), visibility 0.24s;
+}
+
+.m3-dialog-backdrop.m3-show {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* =========================================================
+   2. M3 Elevated Dialog Card
+   ========================================================= */
+.m3-dialog-card {
+  width: 100%;
+  max-width: 440px;
+  background: #232433;
+  color: #e5e7eb;
+  border-radius: var(--m3-dialog-radius);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.65), 0 4px 12px rgba(0, 0, 0, 0.3);
+  padding: 24px;
+  box-sizing: border-box;
+  transform: scale(0.92) translateY(12px);
+  opacity: 0;
+  transition: transform 0.26s cubic-bezier(0.12, 1, 0.2, 1), opacity 0.24s ease-out;
+  font-family: inherit;
+  font-weight: var(--m3-font-weight-regular);
+}
+
+.m3-dialog-backdrop.m3-show .m3-dialog-card {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+}
+
+/* Light Theme Support */
+html[data-bs-theme="light"] .m3-dialog-card,
+html.light-style .m3-dialog-card {
+  background: #ffffff;
+  color: #1f2937;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.16), 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+/* =========================================================
+   3. Dialog Header & Icon
+   ========================================================= */
+.m3-dialog-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.m3-dialog-icon-circle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.55rem;
+  margin-bottom: 14px;
+  flex-shrink: 0;
+  transition: var(--m3-transition-standard);
+}
+
+/* Iconic Type Styles */
+.m3-icon-success {
+  background: rgba(34, 197, 94, 0.16);
+  color: #4ade80;
+}
+.m3-icon-error, .m3-icon-danger {
+  background: rgba(239, 68, 68, 0.16);
+  color: #f87171;
+}
+.m3-icon-warning {
+  background: rgba(245, 158, 11, 0.16);
+  color: #fbbf24;
+}
+.m3-icon-info, .m3-icon-question {
+  background: rgba(99, 102, 241, 0.16);
+  color: #818cf8;
+}
+
+.m3-dialog-title {
+  font-size: 1.25rem;
+  font-weight: var(--m3-font-weight-medium);
+  line-height: 1.35;
+  color: #f8fafc;
+  margin: 0;
+}
+
+html[data-bs-theme="light"] .m3-dialog-title,
+html.light-style .m3-dialog-title {
+  color: #111827;
+}
+
+/* =========================================================
+   4. Dialog Body
+   ========================================================= */
+.m3-dialog-body {
+  font-size: 0.92rem;
+  font-weight: var(--m3-font-weight-regular);
+  line-height: 1.55;
+  color: #cbd5e1;
+  text-align: center;
+  margin-bottom: 24px;
+  word-break: break-word;
+}
+
+html[data-bs-theme="light"] .m3-dialog-body,
+html.light-style .m3-dialog-body {
+  color: #4b5563;
+}
+
+/* =========================================================
+   5. Dialog Actions (Buttons)
+   ========================================================= */
+.m3-dialog-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.m3-btn-tonal,
+.m3-btn-filled {
+  padding: 8px 18px;
+  border-radius: var(--m3-btn-radius);
+  font-size: 0.88rem;
+  font-weight: var(--m3-font-weight-medium);
+  border: none;
+  cursor: pointer;
+  transition: var(--m3-transition-standard);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  outline: none;
+  font-family: inherit;
+}
+
+.m3-btn-tonal {
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+}
+
+.m3-btn-tonal:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
+
+html[data-bs-theme="light"] .m3-btn-tonal,
+html.light-style .m3-btn-tonal {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+html[data-bs-theme="light"] .m3-btn-tonal:hover,
+html.light-style .m3-btn-tonal:hover {
+  background: #e5e7eb;
+  color: #1f2937;
+}
+
+.m3-btn-filled {
+  background: #7367f0;
+  color: #ffffff;
+}
+
+.m3-btn-filled:hover {
+  background: #6254ed;
+  box-shadow: 0 4px 14px rgba(115, 103, 240, 0.35);
+}
+
+.m3-btn-filled.m3-btn-destructive {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.m3-btn-filled.m3-btn-destructive:hover {
+  background: #b91c1c;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
+}
+
+/* =========================================================
+   6. M3 Bottom Snackbar / Toast
+   ========================================================= */
+.m3-snackbar-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 999999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+/* Android WebView / Mobile Safe Offset (Avoid overlapping bottom navigation bar) */
+@media (max-width: 768px) {
+  .m3-snackbar-container {
+    left: 16px;
+    right: 16px;
+    bottom: 78px;
+    align-items: center;
+  }
+}
+
+.m3-snackbar {
+  min-width: 300px;
+  max-width: 480px;
+  border-radius: var(--m3-snackbar-radius);
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.2);
+  pointer-events: auto;
+  opacity: 0;
+  transform: translateY(18px) scale(0.96);
+  transition: transform 0.28s cubic-bezier(0.12, 1, 0.2, 1), opacity 0.24s ease-out;
+  font-family: inherit;
+  font-weight: var(--m3-font-weight-regular);
+  font-size: 0.88rem;
+  line-height: 1.45;
+  box-sizing: border-box;
+}
+
+.m3-snackbar.m3-snackbar-show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* M3 Snackbar Tonal Themes */
+.m3-snackbar-success {
+  background: #14381b;
+  color: #c3eed0;
+  border: 1px solid rgba(74, 222, 128, 0.25);
+}
+.m3-snackbar-success .m3-sb-icon {
+  color: #4ade80;
+}
+
+.m3-snackbar-error, .m3-snackbar-danger {
+  background: #491512;
+  color: #f8dcd8;
+  border: 1px solid rgba(248, 113, 113, 0.25);
+}
+.m3-snackbar-error .m3-sb-icon {
+  color: #f87171;
+}
+
+.m3-snackbar-warning {
+  background: #3c2c00;
+  color: #ffe082;
+  border: 1px solid rgba(250, 204, 21, 0.25);
+}
+.m3-snackbar-warning .m3-sb-icon {
+  color: #facc15;
+}
+
+.m3-snackbar-info {
+  background: #1c2033;
+  color: #dce3f8;
+  border: 1px solid rgba(96, 165, 250, 0.25);
+}
+.m3-snackbar-info .m3-sb-icon {
+  color: #60a5fa;
+}
+
+.m3-sb-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.m3-sb-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  display: inline-flex;
+}
+
+.m3-sb-text {
+  flex: 1;
+  word-break: break-word;
+}
+
+.m3-sb-action-btn {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: 0.82rem;
+  font-weight: var(--m3-font-weight-medium);
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.88;
+  transition: opacity 0.2s, background-color 0.2s;
+  flex-shrink: 0;
+}
+
+.m3-sb-action-btn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* =========================================================
+   7. M3 Bottom Sheet (Offcanvas / Modal Alternative)
+   ========================================================= */
+.m3-bottom-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 17, 23, 0.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 999980;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.26s cubic-bezier(0.2, 0, 0, 1), visibility 0.26s;
+}
+
+.m3-bottom-sheet-backdrop.m3-show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.m3-bottom-sheet {
+  width: 100%;
+  max-width: 640px;
+  max-height: 85vh;
+  background: #232433;
+  color: #e5e7eb;
+  border-radius: var(--m3-sheet-radius);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 -12px 36px rgba(0, 0, 0, 0.55);
+  padding: 12px 20px 24px 20px;
+  box-sizing: border-box;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.12, 1, 0.2, 1);
+  overflow-y: auto;
+  font-family: inherit;
+  font-weight: var(--m3-font-weight-regular);
+}
+
+.m3-bottom-sheet-backdrop.m3-show .m3-bottom-sheet {
+  transform: translateY(0);
+}
+
+.m3-sheet-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.25);
+  margin: 6px auto 16px auto;
+}
+
+/* =========================================================
+   8. In-Page Alert Enhancement (Bootstrap .alert overrides)
+   ========================================================= */
+.alert.m3-alert,
+.alert {
+  border: none !important;
+  border-radius: 14px !important;
+  padding: 12px 18px !important;
+  font-weight: var(--m3-font-weight-regular) !important;
+  font-size: 0.9rem !important;
+  line-height: 1.5 !important;
+  box-shadow: none !important;
+}
+
+.alert-success {
+  background-color: rgba(34, 197, 94, 0.12) !important;
+  color: #4ade80 !important;
+  border-left: 4px solid #22c55e !important;
+}
+
+.alert-danger {
+  background-color: rgba(239, 68, 68, 0.12) !important;
+  color: #f87171 !important;
+  border-left: 4px solid #ef4444 !important;
+}
+
+.alert-warning {
+  background-color: rgba(245, 158, 11, 0.12) !important;
+  color: #fbbf24 !important;
+  border-left: 4px solid #f59e0b !important;
+}
+
+.alert-info {
+  background-color: rgba(99, 102, 241, 0.12) !important;
+  color: #818cf8 !important;
+  border-left: 4px solid #6366f1 !important;
+}
+
+/* Ensure no strong/bold inside alerts */
+.alert b, .alert strong {
+  font-weight: var(--m3-font-weight-medium) !important;
+}

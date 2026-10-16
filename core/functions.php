@@ -758,136 +758,12 @@ function sms_templete_2_text($msgText)
 }
 
 /**
- * Dispatch SMS to gateway with multi-provider and sandbox/simulation support
+ * Dispatch SMS to gateway using modular drivers in core/gateways/
  */
 function dispatch_gateway_curl($gateway_conf, $mobile, $message_original)
 {
-    // Sandbox / Simulation Mode Check (Zero cost testing)
-    if (!empty($gateway_conf['sandbox_mode']) && intval($gateway_conf['sandbox_mode']) === 1) {
-        return [
-            'status'          => 'success',
-            'response_code'   => 200,
-            'message_id'      => 'SIM_' . uniqid(),
-            'success_message' => 'Sandbox Simulated: SMS sent successfully (No balance deducted)',
-            'error_message'   => ''
-        ];
-    }
-
-    $sms_api_key = $gateway_conf['api_key'] ?? '';
-    $sms_secret_key = $gateway_conf['secret_key'] ?? '';
-    $sms_username = $gateway_conf['username'] ?? '';
-    $sms_url = $gateway_conf['uri'] ?? '';
-
-    $response_code = '';
-    $message_id = '';
-    $success_message = '';
-    $error_message = '';
-    $status = 'failed';
-
-    if (empty($sms_url)) {
-        return [
-            'status' => 'failed',
-            'response_code' => 400,
-            'message_id' => '',
-            'success_message' => '',
-            'error_message' => 'SMS Gateway URL is not configured'
-        ];
-    }
-
-    // 1. bulksmsbd.net API
-    if (str_contains($sms_url, 'bulksmsbd.net')) {
-        $url = "http://bulksmsbd.net/api/smsapi";
-        $data = [
-            "api_key" => $sms_api_key,
-            "senderid" => $sms_username,
-            "number" => $mobile,
-            "message" => $message_original
-        ];
-
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
-
-        $response_raw = curl_exec($ch);
-        $curl_err = curl_error($ch);
-        curl_close($ch);
-
-        if ($curl_err) {
-            $error_message = $curl_err;
-        } else {
-            $response = json_decode($response_raw, true);
-            $response_code = $response['response_code'] ?? '';
-            $message_id = $response['message_id'] ?? '';
-            $success_message = $response['success_message'] ?? '';
-            $error_message = $response['error_message'] ?? '';
-            if ($response_code == 202 || $response_code == 200 || !empty($message_id)) {
-                $status = 'success';
-            }
-        }
-    }
-    // 2. smsvaults.work API
-    else if (str_contains($sms_url, 'cpanel.smsvaults.work')) {
-        $encoded_msg = urlencode($message_original);
-        $url = "http://cpanel.smsvaults.work/sendtext?apikey={$sms_api_key}&secretkey={$sms_secret_key}&callerID=01234567890&toUser={$mobile}&messageContent={$encoded_msg}";
-
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
-
-        $response_raw = curl_exec($ch);
-        $curl_err = curl_error($ch);
-        curl_close($ch);
-
-        if ($curl_err) {
-            $error_message = $curl_err;
-        } else {
-            $response = json_decode($response_raw, true);
-            $response_code = 200;
-            $stat = $response['Status'] ?? '';
-            $message_id = $response['Message_ID'] ?? '';
-            $success_message = $response['Text'] ?? '';
-            if ($stat == '0' || $stat == 'Success' || !empty($message_id)) {
-                $status = 'success';
-            }
-        }
-    }
-    // 3. Generic GET/POST Endpoint
-    else {
-        $encoded_msg = urlencode($message_original);
-        $url = str_replace(
-            ['{apikey}', '{secretkey}', '{senderid}', '{mobile}', '{message}'],
-            [$sms_api_key, $sms_secret_key, $sms_username, $mobile, $encoded_msg],
-            $sms_url
-        );
-
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
-
-        $response_raw = curl_exec($ch);
-        $curl_err = curl_error($ch);
-        curl_close($ch);
-
-        if ($curl_err) {
-            $error_message = $curl_err;
-        } else {
-            $response_code = 200;
-            $success_message = substr($response_raw, 0, 100);
-            $status = 'success';
-        }
-    }
-
-    return [
-        'status'          => $status,
-        'response_code'   => $response_code,
-        'message_id'      => $message_id,
-        'success_message' => $success_message,
-        'error_message'   => $error_message
-    ];
+    require_once __DIR__ . '/gateways/GatewayManager.php';
+    return GatewayManager::dispatch($gateway_conf, $mobile, $message_original);
 }
 
 function global_send_sms($mobile, $message, $campaign = 'Regular', $type = '', $stid = 0)
@@ -921,7 +797,7 @@ function global_send_sms($mobile, $message, $campaign = 'Regular', $type = '', $
     $gateway_conf = get_sms_setting($sc['sms_gateway'] ?? '', 'gateway');
 
     // Cost calculation
-    $price = floatval($gateway_conf['price'] ?? 0.35);
+    $price = floatval($gateway_conf['price'] ?? 0.45);
     $cost = ($gateway_conf['provider'] ?? '') != 'self' ? ($price * $count) : 0;
 
     // Dispatch via gateway helper

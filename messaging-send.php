@@ -30,7 +30,7 @@ while ($r = $slot_res->fetch_assoc()) {
 
 // 3. Initial Classes for active session
 $classes = [];
-$class_query = $conn->query("SELECT DISTINCT classname FROM sessioninfo WHERE sccode='$sccode' AND sessionyear='$active_syear' AND classname IS NOT NULL AND classname != '' ORDER BY id ASC");
+$class_query = $conn->query("SELECT DISTINCT classname FROM sessioninfo WHERE sccode='$sccode' AND sessionyear='$active_syear' AND classname IS NOT NULL AND classname != '' ORDER BY classname ASC");
 if ($class_query && $class_query->num_rows > 0) {
     while ($r = $class_query->fetch_assoc()) {
         $classes[] = $r['classname'];
@@ -39,7 +39,7 @@ if ($class_query && $class_query->num_rows > 0) {
 
 // 4. Initial Sections for active session
 $sections = [];
-$section_query = $conn->query("SELECT DISTINCT sectionname FROM sessioninfo WHERE sccode='$sccode' AND sessionyear='$active_syear' AND sectionname IS NOT NULL AND sectionname != '' ORDER BY id ASC");
+$section_query = $conn->query("SELECT DISTINCT sectionname FROM sessioninfo WHERE sccode='$sccode' AND sessionyear='$active_syear' AND sectionname IS NOT NULL AND sectionname != '' ORDER BY sectionname ASC");
 if ($section_query && $section_query->num_rows > 0) {
     while ($r = $section_query->fetch_assoc()) {
         $sections[] = $r['sectionname'];

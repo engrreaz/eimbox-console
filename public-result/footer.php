@@ -556,8 +556,9 @@
 
 <script src="../ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
-<script src="../assets/js/app-academy-dashboard.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- SweetAlert2 replaced by global M3 Dialog System -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> -->
+<script src="../assets/js/m3-dialog.js?v=1.0"></script>
 
 
 <script src="https://cdn.jsdelivr.net/npm/@algolia/autocomplete-js"></script>

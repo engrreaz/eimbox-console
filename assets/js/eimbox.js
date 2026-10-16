@@ -1,4 +1,10 @@
 function showToast(type, message, title = '') {
+    if (typeof window.showM3Snackbar === 'function') {
+        const fullMsg = title ? `${title}: ${message}` : message;
+        window.showM3Snackbar(fullMsg, type);
+        return;
+    }
+
     const types = {
         success: 'bg-success text-white',
         info: 'bg-info text-dark',
@@ -8,27 +14,35 @@ function showToast(type, message, title = '') {
         error: 'bg-danger text-white'
     };
 
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        container.style.zIndex = '999999';
+        document.body.appendChild(container);
+    }
+
     const toastId = 'toast-' + Date.now();
     const toastHTML = `
         <div id="${toastId}" class="toast align-items-center border-0 mb-2 ${types[type] || 'bg-secondary text-white'}" role="alert" aria-live="assertive" aria-atomic="true">
             <div class="d-flex">
                 <div class="toast-body">
-                    ${title ? `<strong>${title}</strong><br>` : ''}
-                    ${message}
+                    ${title ? `<div>${title}</div>` : ''}
+                    <div>${message}</div>
                 </div>
                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
         </div>
     `;
 
-    const container = document.getElementById('toastContainer');
     container.insertAdjacentHTML('beforeend', toastHTML);
-
     const toastEl = document.getElementById(toastId);
-    const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
-    toast.show();
-
-    toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+    if (toastEl && window.bootstrap && window.bootstrap.Toast) {
+        const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+        toast.show();
+        toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+    }
 }
 
 function setCookie(name, value, days = 30){

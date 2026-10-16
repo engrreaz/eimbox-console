@@ -816,8 +816,9 @@ if ($monitorPanel === true) { ?>
 
 <script src="ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
-<script src="assets/js/app-academy-dashboard.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- SweetAlert2 replaced by native Google Material Design 3 (M3) Dialog Engine -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> -->
+<script src="assets/js/m3-dialog.js?v=1.0"></script>
 
 
 <script src="https://cdn.jsdelivr.net/npm/@algolia/autocomplete-js"></script>
@@ -2308,7 +2309,7 @@ if ($monitorPanel === true) { ?>
 
 </script>
 <!-- EIMBox Modern Web Push Notifications -->
-<script src="assets/js/fcm-client.js" defer></script>
+<script src="assets/js/fcm-client.js?v=2.1" defer></script>
 <?php
 // echo "<pre>";
 // foreach ($_SESSION['query_log'] ?? [] as $q) {

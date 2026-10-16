@@ -427,8 +427,8 @@ function getFrequencyBadge($freq) {
 
 <?php require_once 'footer.php'; ?>
 
-<!-- SweetAlert2 if available -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- SweetAlert2 replaced by global M3 Dialog System in footer.php -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> -->
 
 <!-- ================= JS ================= -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>

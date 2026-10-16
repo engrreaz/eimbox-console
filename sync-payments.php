@@ -118,8 +118,8 @@ if ($qAll && $rowAll = $qAll->fetch_assoc()) {
 
 <?php require_once 'footer.php'; ?>
 
-<!-- SweetAlert2 if available -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- SweetAlert2 replaced by global M3 Dialog System in footer.php -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> -->
 
 <script>
     let initialTotal = <?= max($total, 1) ?>;
