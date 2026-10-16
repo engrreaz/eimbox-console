@@ -189,6 +189,9 @@ function store_user_session($user, $school = [])
 
     $_SESSION['locktime'] = 10000; //$user['admin'] ?? 0;
 
+    $_SESSION['platform_access_user'] = $user['platform_access'] ?? '';
+    $_SESSION['service_access_user'] = $user['service_access'] ?? '';
+
     // স্কুল ইনফো
     $_SESSION['scname'] = $school['scname'] ?? '';
     $_SESSION['sccategory'] = $school['sccategory'] ?? '';
@@ -210,6 +213,8 @@ function store_user_session($user, $school = [])
 
     $_SESSION['valid_module'] = $school['valid_module'] ?? '';
     $_SESSION['active_module'] = $school['active_module'] ?? '';
+    $_SESSION['platform_access'] = $school['platform_access'] ?? '';
+    $_SESSION['service_access'] = $school['service_access'] ?? '';
 
 }
 
@@ -235,6 +240,9 @@ function store_student_session($user, $school = [])
 
     $_SESSION['locktime'] = 10000; //$user['admin'] ?? 0;
 
+    $_SESSION['platform_access_user'] = $user['platform_access'] ?? '';
+    $_SESSION['service_access_user'] = $user['service_access'] ?? '';
+
     // স্কুল ইনফো
     $_SESSION['scname'] = $school['scname'] ?? '';
     $_SESSION['sccategory'] = $school['sccategory'] ?? '';
@@ -250,6 +258,11 @@ function store_student_session($user, $school = [])
     $_SESSION['headname'] = $school['headname'];
     $_SESSION['headtitle'] = $school['headtitle'];
     $_SESSION['sms_gateway'] = $school['sms_gateway'] ?? '';
+
+    $_SESSION['valid_module'] = $school['valid_module'] ?? '';
+    $_SESSION['active_module'] = $school['active_module'] ?? '';
+    $_SESSION['platform_access'] = $school['platform_access'] ?? '';
+    $_SESSION['service_access'] = $school['service_access'] ?? '';
 }
 
 

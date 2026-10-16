@@ -184,6 +184,88 @@ $sms_gateway = isset($_SESSION['sms_gateway']) ? explode(' | ', $_SESSION['sms_g
 $valid_module = isset($_SESSION['valid_module']) ? explode(' | ', $_SESSION['valid_module']) : [];
 $active_module = isset($_SESSION['active_module']) ? explode(' | ', $_SESSION['active_module']) : [];
 
+$platform_access = isset($_SESSION['platform_access']) ? (is_array($_SESSION['platform_access']) ? $_SESSION['platform_access'] : json_decode($_SESSION['platform_access'], true)) : [];
+$platform_access_user = isset($_SESSION['platform_access_user']) ? (is_array($_SESSION['platform_access_user']) ? $_SESSION['platform_access_user'] : json_decode($_SESSION['platform_access_user'], true)) : [];
+$service_access = isset($_SESSION['service_access']) ? (is_array($_SESSION['service_access']) ? $_SESSION['service_access'] : json_decode($_SESSION['service_access'], true)) : [];
+
+$console_access_school = !in_array($platform_access['web_modern']['enabled'] ?? null, [false, 'false', 0, '0'], true);
+$console_access_user = !in_array($platform_access_user['web_modern']['enabled'] ?? null, [false, 'false', 0, '0'], true);
+
+$console_access = ($console_access_school && $console_access_user);
+
+print_r($console_access_user, true);
+
+if (!$console_access) {
+    $current_script = basename($_SERVER['PHP_SELF'] ?? '');
+    if ($current_script !== 'logout.php') {
+        $is_ajax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+            || (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false)
+            || (isset($_GET['format']) && $_GET['format'] === 'json');
+
+        if ($is_ajax) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Platform access is disabled.'
+            ]);
+            exit;
+        }
+
+        $_SESSION = [];
+        session_destroy();
+
+        $is_dark = ($theme === 'dark');
+        $bg_color = $is_dark ? '#141218' : '#f8f9fa';
+        $surface_color = $is_dark ? '#1d1b20' : '#ffffff';
+        $border_color = $is_dark ? '#49454f' : '#e0e0e0';
+        $text_primary = $is_dark ? '#e6e1e5' : '#1c1b1f';
+        $text_secondary = $is_dark ? '#cac4d0' : '#49454e';
+        $accent_color = '#ef4444';
+        $accent_bg = 'rgba(239, 68, 68, 0.15)';
+        $btn_bg = $is_dark ? '#2b2930' : '#f1f1f1';
+        $btn_text = $is_dark ? '#d0bcff' : '#49454e';
+        $logout_url = file_exists('logout.php') ? 'logout.php' : '../logout.php';
+        ?>
+        <!doctype html>
+        <html lang="en">
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Platform Disabled - EIMBox</title>
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+            <style>
+                * {
+                    font-weight: normal !important;
+                    box-sizing: border-box;
+                }
+            </style>
+        </head>
+        <body style="background-color: <?= $bg_color ?>; color: <?= $text_primary ?>; min-height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0; padding: 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+            <div style="background-color: <?= $surface_color ?>; border: 1px solid <?= $border_color ?>; border-radius: 24px; padding: 36px 28px; max-width: 440px; width: 100%; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.12);">
+                <div style="width: 64px; height: 64px; border-radius: 50%; background-color: <?= $accent_bg ?>; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+                    <i class="bi bi-slash-circle" style="font-size: 32px; color: <?= $accent_color ?>;"></i>
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <span style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 9999px; background-color: <?= $accent_bg ?>; color: <?= $accent_color ?>; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <i class="bi bi-shield-x"></i> Access Restricted
+                    </span>
+                </div>
+                <h3 style="margin: 0 0 12px 0; color: <?= $text_primary ?>; font-size: 1.25rem;">Platform Access Disabled</h3>
+                <p style="margin: 0 0 24px 0; color: <?= $text_secondary ?>; font-size: 0.9rem; line-height: 1.5;">Platform access is disabled for your institution. Please contact your system administrator.</p>
+                <div class="d-grid gap-2">
+                    <a href="<?= $logout_url ?>" style="display: block; padding: 10px 20px; border-radius: 100px; background-color: <?= $btn_bg ?>; color: <?= $btn_text ?>; text-decoration: none; font-size: 0.88rem; border: 1px solid <?= $border_color ?>;">
+                        <i class="bi bi-box-arrow-right"></i> Sign Out
+                    </a>
+                </div>
+            </div>
+        </body>
+        </html>
+        <?php
+        exit;
+    }
+} 
+
 // active check: যদি 0 index খালি না থাকে
 $sms_active = !empty($sms_gateway[0]) ? 1 : 0;
 
